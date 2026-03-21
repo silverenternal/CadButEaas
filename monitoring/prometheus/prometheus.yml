@@ -1,0 +1,29 @@
+# CAD EaaS 架构 Prometheus 配置文件
+# 用于收集 Rust 应用的 Prometheus 指标
+
+global:
+  scrape_interval: 5s      # 采集间隔
+  evaluation_interval: 5s  # 规则评估间隔
+
+# 采集目标配置
+scrape_configs:
+  # CAD EaaS 应用指标
+  - job_name: 'cad-eaas'
+    static_configs:
+      - targets: ['localhost:8080']  # 应用暴露指标的端口
+    metrics_path: '/metrics'
+    
+  # Prometheus 自监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+# 告警规则配置
+rule_files:
+  - 'alerts.yml'
+
+# Alertmanager 配置（可选）
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['localhost:9093']

@@ -1,0 +1,20 @@
+[package]
+name = "common-types"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+schemars = { workspace = true }
+geo = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+uuid = { workspace = true }
+image = { workspace = true }
+hdrhistogram = "7"
+sysinfo = "0.30"
+tokio = { workspace = true }
+tracing = { workspace = true }

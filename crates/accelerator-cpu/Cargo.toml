@@ -1,0 +1,19 @@
+[package]
+name = "accelerator-cpu"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "CPU 加速器后端 - 纯 Rust 实现，作为所有 GPU 后端的 fallback"
+
+[dependencies]
+accelerator-api = { path = "../accelerator-api" }
+common-types = { path = "../common-types" }
+image = { workspace = true }
+rstar = { workspace = true }
+rayon = { workspace = true }
+async-trait = { workspace = true }
+log = "0.4"
+tracing = { workspace = true }
+num_cpus = "1.16"

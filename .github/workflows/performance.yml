@@ -1,0 +1,216 @@
+# 性能回归检测 GitHub Action
+# P11 建议：CI 中集成性能回归测试，超过阈值报警
+# 
+# 触发条件：
+# - push 到 main/develop 分支
+# - PR 请求到 main 分支
+#
+# 性能下降阈值：
+# - >10%: 警告（warning）
+# - >20%: blocking（失败）
+
+name: Performance Regression Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-C target-cpu=native"
+  RUSTDOCFLAGS: "-C target-cpu=native"
+  PERF_THRESHOLD_WARNING: "10"  # 性能下降 10% 报警
+  PERF_THRESHOLD_BLOCKING: "20" # 性能下降 20% blocking
+
+jobs:
+  # 零拷贝性能回归测试
+  zero-copy-perf:
+    name: 零拷贝性能回归
+    runs-on: windows-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 安装 Rust
+      uses: dtolnay/rust-action@stable
+      with:
+        components: llvm-tools-preview
+
+    - name: 安装 cargo-criterion
+      run: cargo install cargo-criterion
+
+    - name: 运行零拷贝基准测试
+      run: cargo bench -p orchestrator --bench zero_copy_bench
+      shell: bash
+
+    - name: 运行性能回归测试
+      run: cargo test -p orchestrator --test perf_regression -- --nocapture
+      shell: bash
+
+    - name: 上传基准测试结果
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: zero-copy-benchmark-results
+        path: target/criterion/
+
+  # 取消信号传播延迟测试
+  cancel-signal-perf:
+    name: 取消信号传播延迟测试
+    runs-on: windows-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 安装 Rust
+      uses: dtolnay/rust-action@stable
+
+    - name: 运行取消信号测试
+      run: cargo test -p orchestrator --test cancel_signal_tests -- --nocapture
+      shell: bash
+
+  # 关键场景性能验证
+  critical-benchmarks:
+    name: 关键场景性能验证
+    runs-on: windows-latest
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 安装 Rust
+      uses: dtolnay/rust-action@stable
+
+    - name: 运行关键场景基准测试
+      run: |
+        cargo bench -p topo -- bench_topology_small
+        cargo bench -p topo -- bench_topology_medium
+        cargo bench -p topo -- bench_topology_large
+      shell: bash
+
+    - name: 上传基准测试结果
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: critical-benchmark-results
+        path: target/criterion/
+
+  # 性能回归检测（带阈值报警）
+  regression-check:
+    name: 性能回归检测（阈值报警）
+    runs-on: windows-latest
+    outputs:
+      regression_status: ${{ steps.check.outputs.status }}
+      regression_report: ${{ steps.check.outputs.report }}
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 安装 Rust
+      uses: dtolnay/rust-action@stable
+
+    - name: 安装 Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.x'
+
+    - name: 运行基准测试
+      run: cargo bench -p topo -- --save-baseline latest
+      shell: bash
+
+    - name: 性能回归检测
+      id: check
+      run: |
+        python scripts/check_performance.py \
+          --baseline benches/baseline_v0.1.0.txt \
+          --warning-threshold ${{ env.PERF_THRESHOLD_WARNING }} \
+          --blocking-threshold ${{ env.PERF_THRESHOLD_BLOCKING }} \
+          --output report.md
+        
+        # 读取报告内容
+        REPORT=$(cat report.md)
+        echo "report=$REPORT" >> $GITHUB_OUTPUT
+        
+        # 检查是否失败
+        if grep -q "❌ BLOCKING" report.md; then
+          echo "status=failure" >> $GITHUB_OUTPUT
+          exit 1
+        elif grep -q "⚠️ WARNING" report.md; then
+          echo "status=warning" >> $GITHUB_OUTPUT
+        else
+          echo "status=success" >> $GITHUB_OUTPUT
+        fi
+      shell: bash
+
+    - name: 上传回归报告
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-regression-report
+        path: report.md
+
+  # 性能回归报告
+  performance-report:
+    name: 生成性能报告
+    runs-on: ubuntu-latest
+    needs: [zero-copy-perf, cancel-signal-perf, critical-benchmarks, regression-check]
+    if: always()
+
+    steps:
+    - name: 下载所有基准测试结果
+      uses: actions/download-artifact@v4
+      with:
+        pattern: "*-benchmark-results"
+        merge-multiple: true
+        path: ./benchmark-results
+      continue-on-error: true
+
+    - name: 下载回归报告
+      uses: actions/download-artifact@v4
+      with:
+        name: performance-regression-report
+        path: ./regression-report
+      continue-on-error: true
+
+    - name: 生成性能报告
+      run: |
+        echo "## 🚀 性能测试报告" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        echo "### 测试概览" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| 测试类别 | 状态 |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 零拷贝性能 | ${{ needs.zero-copy-perf.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 取消信号传播 | ${{ needs.cancel-signal-perf.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 关键场景 | ${{ needs.critical-benchmarks.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 回归检测 | ${{ needs.regression-check.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+        # 显示回归检测报告
+        if [ -f "./regression-report/report.md" ]; then
+          echo "### 📊 回归检测详情" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat ./regression-report/report.md >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # 显示基准测试详情
+        if [ -d "./benchmark-results" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📈 基准测试详情" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "查看附件中的详细 HTML 报告。" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # 性能下降警告
+        if [ "${{ needs.regression-check.result }}" == "failure" ]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## ⚠️ 性能下降警告" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**检测到性能下降超过 20%，请检查代码变更。**" >> $GITHUB_STEP_SUMMARY
+        fi

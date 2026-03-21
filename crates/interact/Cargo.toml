@@ -1,0 +1,20 @@
+[package]
+name = "interact"
+version = "0.1.0"
+edition = "2021"
+description = "交互协同服务 - 状态驱动的自动追踪/圈选/补全"
+
+[dependencies]
+common-types = { path = "../common-types" }
+serde = { version = "1.0", features = ["derive"] }
+schemars = "0.8"
+thiserror = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+geo = "0.28"
+nalgebra = "0.33"
+rstar = "0.12"
+log = "0.4"
+async-trait = "0.1"
+
+[dev-dependencies]
+tokio-test = "0.4"

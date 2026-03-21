@@ -1,0 +1,225 @@
+# 声学材料吸声系数数据库
+# 
+# 频率说明：
+# - 125_hz: 125 Hz（低频）
+# - 250_hz: 250 Hz（中低频）
+# - 500_hz: 500 Hz（中频）
+# - 1k_hz: 1000 Hz（中高频）
+# - 2k_hz: 2000 Hz（高频）
+# - 4k_hz: 4000 Hz（高频）
+#
+# 数据来源：建筑声学手册
+
+[[materials]]
+name = "concrete"
+density = 2400.0
+description = "混凝土（Concrete）"
+
+[materials.absorption_coeffs]
+125_hz = 0.01
+250_hz = 0.01
+500_hz = 0.02
+1k_hz = 0.02
+2k_hz = 0.02
+4k_hz = 0.03
+
+[[materials]]
+name = "brick"
+density = 1800.0
+description = "砖墙（Brick Wall）"
+
+[materials.absorption_coeffs]
+125_hz = 0.02
+250_hz = 0.02
+500_hz = 0.03
+1k_hz = 0.04
+2k_hz = 0.05
+4k_hz = 0.06
+
+[[materials]]
+name = "glass"
+density = 2500.0
+description = "玻璃（Glass）"
+
+[materials.absorption_coeffs]
+125_hz = 0.10
+250_hz = 0.06
+500_hz = 0.04
+1k_hz = 0.03
+2k_hz = 0.02
+4k_hz = 0.02
+
+[[materials]]
+name = "wood"
+density = 600.0
+description = "木材（Wood）"
+
+[materials.absorption_coeffs]
+125_hz = 0.05
+250_hz = 0.06
+500_hz = 0.08
+1k_hz = 0.10
+2k_hz = 0.12
+4k_hz = 0.15
+
+[[materials]]
+name = "carpet"
+density = 2.5
+thickness = 10.0
+description = "地毯（Carpet）"
+
+[materials.absorption_coeffs]
+125_hz = 0.02
+250_hz = 0.06
+500_hz = 0.14
+1k_hz = 0.37
+2k_hz = 0.60
+4k_hz = 0.65
+
+[[materials]]
+name = "gypsum"
+density = 800.0
+description = "石膏板（Gypsum Board）"
+
+[materials.absorption_coeffs]
+125_hz = 0.05
+250_hz = 0.06
+500_hz = 0.07
+1k_hz = 0.08
+2k_hz = 0.09
+4k_hz = 0.10
+
+[[materials]]
+name = "acoustic_foam"
+density = 30.0
+thickness = 50.0
+description = "吸音棉（Acoustic Foam）"
+
+[materials.absorption_coeffs]
+125_hz = 0.15
+250_hz = 0.40
+500_hz = 0.75
+1k_hz = 0.90
+2k_hz = 0.95
+4k_hz = 0.98
+
+[[materials]]
+name = "mineral_wool"
+density = 50.0
+thickness = 50.0
+description = "矿棉（Mineral Wool）"
+
+[materials.absorption_coeffs]
+125_hz = 0.20
+250_hz = 0.45
+500_hz = 0.70
+1k_hz = 0.85
+2k_hz = 0.90
+4k_hz = 0.95
+
+[[materials]]
+name = "steel"
+density = 7850.0
+description = "钢材（Steel）"
+
+[materials.absorption_coeffs]
+125_hz = 0.01
+250_hz = 0.01
+500_hz = 0.01
+1k_hz = 0.02
+2k_hz = 0.02
+4k_hz = 0.02
+
+[[materials]]
+name = "aluminum"
+density = 2700.0
+description = "铝合金（Aluminum）"
+
+[materials.absorption_coeffs]
+125_hz = 0.01
+250_hz = 0.01
+500_hz = 0.02
+1k_hz = 0.02
+2k_hz = 0.02
+4k_hz = 0.03
+
+[[materials]]
+name = "plaster"
+density = 1200.0
+description = "抹灰（Plaster）"
+
+[materials.absorption_coeffs]
+125_hz = 0.02
+250_hz = 0.03
+500_hz = 0.04
+1k_hz = 0.05
+2k_hz = 0.06
+4k_hz = 0.07
+
+[[materials]]
+name = "acoustic_ceiling_tile"
+density = 300.0
+thickness = 15.0
+description = "吸音天花板（Acoustic Ceiling Tile）"
+
+[materials.absorption_coeffs]
+125_hz = 0.10
+250_hz = 0.30
+500_hz = 0.55
+1k_hz = 0.75
+2k_hz = 0.80
+4k_hz = 0.85
+
+[[materials]]
+name = "vinyl_floor"
+density = 1500.0
+thickness = 3.0
+description = "乙烯基地板（Vinyl Floor）"
+
+[materials.absorption_coeffs]
+125_hz = 0.01
+250_hz = 0.02
+500_hz = 0.03
+1k_hz = 0.04
+2k_hz = 0.04
+4k_hz = 0.05
+
+[[materials]]
+name = "hardwood_floor"
+density = 750.0
+thickness = 20.0
+description = "硬木地板（Hardwood Floor）"
+
+[materials.absorption_coeffs]
+125_hz = 0.03
+250_hz = 0.04
+500_hz = 0.05
+1k_hz = 0.06
+2k_hz = 0.07
+4k_hz = 0.08
+
+[[materials]]
+name = "curtain_heavy"
+density = 0.5
+thickness = 5.0
+description = "厚窗帘（Heavy Curtain）"
+
+[materials.absorption_coeffs]
+125_hz = 0.05
+250_hz = 0.10
+500_hz = 0.25
+1k_hz = 0.45
+2k_hz = 0.55
+4k_hz = 0.60
+
+[[materials]]
+name = "person"
+description = "人（Person， seated）"
+
+[materials.absorption_coeffs]
+125_hz = 0.15
+250_hz = 0.25
+500_hz = 0.35
+1k_hz = 0.40
+2k_hz = 0.45
+4k_hz = 0.50

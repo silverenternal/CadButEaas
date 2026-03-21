@@ -1,0 +1,95 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/common-types",
+    "crates/parser",
+    "crates/vectorize",
+    "crates/topo",
+    "crates/validator",
+    "crates/export",
+    "crates/orchestrator",
+    "crates/interact",
+    "crates/config",
+    "crates/cad-cli",
+    "crates/cad-viewer",
+    "crates/acoustic",
+    "crates/accelerator-api",
+    "crates/accelerator-registry",
+    "crates/accelerator-cpu",
+    "crates/accelerator-wgpu",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["CAD Team"]
+license = "MIT"
+
+# ========== 性能优化配置 ==========
+[profile.release]
+lto = true              # 链接时优化，性能提升 10-20%
+codegen-units = 1       # 单个代码生成单元，优化更激进
+opt-level = 3           # 最高优化级别
+
+# 带调试信息的 Release 版本
+[profile.release-with-debug]
+inherits = "release"
+debug = true
+
+# 开发环境优化（可选）
+[profile.dev-opt]
+inherits = "dev"
+opt-level = 1
+
+[workspace.dependencies]
+# 序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bincode = "1.3"
+schemars = "0.8"
+
+# 异步
+tokio = { version = "1.0", features = ["full"] }
+async-trait = "0.1"
+
+# Web API
+axum = { version = "0.7", features = ["multipart"] }
+tower = { version = "0.4", features = ["util"] }
+
+# 几何处理
+geo = "0.28"
+rstar = "0.12"
+approx = "0.5"
+euclid = "0.22"
+nalgebra = "0.34"
+
+# 图像处理
+image = "0.25"
+opencv = "0.92"
+
+# CAD 解析
+dxf = "0.6"
+lopdf = "0.34"
+curvo = "0.1"
+
+# 错误处理
+thiserror = "1.0"
+anyhow = "1.0"
+
+# 日志与追踪
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# 并行化
+rayon = "1.10"
+tokio-tungstenite = "0.23"
+
+# UUID
+uuid = { version = "1.8", features = ["v4"] }
+
+# 测试
+insta = "1.36"
+proptest = "1.4"
+
+# 监控指标
+prometheus = "0.13"

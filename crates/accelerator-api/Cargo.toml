@@ -1,0 +1,16 @@
+[package]
+name = "accelerator-api"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "统一加速器抽象层 - 定义 Accelerator trait 和相关类型"
+
+[dependencies]
+common-types = { path = "../common-types" }
+image = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

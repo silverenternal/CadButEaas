@@ -1,0 +1,23 @@
+# 监控栈 .gitignore
+# 忽略 Docker 数据卷和临时文件
+
+# Docker 数据卷
+prometheus_data/
+grafana_data/
+
+# 日志文件
+*.log
+logs/
+
+# 临时文件
+*.tmp
+*.bak
+
+# 本地配置覆盖（如果需要自定义）
+prometheus/prometheus.local.yml
+grafana/grafana.local.ini
+
+# 凭据文件（永远不要提交到版本控制）
+*.env
+.env
+secrets/

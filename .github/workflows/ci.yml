@@ -1,0 +1,236 @@
+# CAD 几何智能处理系统 - CI/CD 工作流
+# 基于 GitHub Actions
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # 每周日凌晨 2 点运行性能基准测试
+    - cron: '0 2 * * 0'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  # ========== 代码质量检查 ==========
+  lint:
+    name: 📋 Lint & Format
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: 📦 缓存依赖
+        uses: Swatinem/rust-cache@v2
+
+      - name: 🔍 检查代码格式
+        run: cargo fmt --all -- --check
+
+      - name: 🔍 运行 Clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+  # ========== 单元测试 ==========
+  test:
+    name: 🧪 Unit Tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+    needs: lint
+
+    strategy:
+      matrix:
+        rust: [stable, beta]
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust (${{ matrix.rust }})
+        uses: dtolnay/rust-action@${{ matrix.rust }}
+
+      - name: 📦 缓存依赖
+        uses: Swatinem/rust-cache@v2
+
+      - name: 🏗️ 构建工作空间
+        run: cargo build --workspace --all-targets
+
+      - name: 🧪 运行测试
+        run: cargo test --workspace --all-targets --verbose
+
+      - name: 📊 生成测试覆盖率报告
+        if: matrix.rust == 'stable'
+        continue-on-error: true
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: 📊 生成覆盖率数据
+        if: matrix.rust == 'stable'
+        continue-on-error: true
+        run: cargo llvm-cov --workspace --lcov --output-path lcov.info
+
+      - name: 📤 上传覆盖率报告
+        if: matrix.rust == 'stable'
+        continue-on-error: true
+        uses: codecov/codecov-action@v4
+        with:
+          files: lcov.info
+          fail_ci_if_error: false
+
+  # ========== 集成测试 ==========
+  integration:
+    name: 🔗 Integration Tests
+    runs-on: windows-latest
+    timeout-minutes: 20
+    needs: test
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: 📦 缓存依赖
+        uses: Swatinem/rust-cache@v2
+
+      - name: 🧪 运行集成测试
+        run: cargo test --test integration_tests --verbose
+
+      - name: 🏗️ 构建 Release 版本
+        run: cargo build --workspace --release
+
+  # ========== 性能基准测试 ==========
+  benchmark:
+    name: ⚡ Performance Benchmarks
+    runs-on: windows-latest
+    timeout-minutes: 30
+    needs: integration
+    if: github.event_name == 'schedule' || github.event_name == 'push'
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: 📦 缓存依赖
+        uses: Swatinem/rust-cache@v2
+
+      - name: 🏗️ 构建基准测试
+        run: cargo build --benches --release
+
+      - name: ⚡ 运行基准测试
+        run: cargo bench --workspace -- --output-format bencher | tee benchmark_results.txt
+
+      - name: 📊 解析基准结果
+        id: parse
+        run: |
+          echo "## 性能基准测试结果" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat benchmark_results.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: 📤 上传基准结果
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark_results.txt
+          retention-days: 30
+
+      - name: 📈 性能回归检测
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Rust Benchmark
+          tool: 'cargo'
+          output-file-path: benchmark_results.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '200%'
+          comment-on-alert: true
+          fail-on-alert: true
+          alert-comment-cc-users: '@CAD Team'
+
+  # ========== Release 构建 ==========
+  release:
+    name: 📦 Release Build
+    runs-on: windows-latest
+    timeout-minutes: 20
+    needs: [test, integration]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: 📦 缓存依赖
+        uses: Swatinem/rust-cache@v2
+
+      - name: 🏗️ 构建 Release 版本
+        run: cargo build --workspace --release
+
+      - name: 🧪 运行测试
+        run: cargo test --workspace --release
+
+      - name: 📊 生成文档
+        run: cargo doc --workspace --no-deps
+
+      - name: 📦 创建 Release 包
+        run: |
+          mkdir release-package
+          cp target/release/*.exe release-package/ 2>$null || true
+          cp target/release/*.dll release-package/ 2>$null || true
+          cp README.md release-package/
+          cp LICENSE release-package/ 2>$null || true
+
+      - name: 📤 创建 GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-package/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+
+  # ========== 安全审计 ==========
+  security:
+    name: 🔒 Security Audit
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🦀 安装 Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: 📦 安装 cargo-audit
+        run: cargo install cargo-audit
+
+      - name: 🔍 运行安全审计
+        run: cargo audit --deny warnings || true
+
+      - name: 🔍 检查过时依赖
+        run: cargo install cargo-outdated && cargo outdated || true

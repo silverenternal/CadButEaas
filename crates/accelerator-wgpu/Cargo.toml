@@ -1,0 +1,19 @@
+[package]
+name = "accelerator-wgpu"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "wgpu 加速器后端 - 使用 WebGPU 计算着色器加速几何处理"
+
+[dependencies]
+accelerator-api = { path = "../accelerator-api" }
+accelerator-cpu = { path = "../accelerator-cpu" }
+common-types = { path = "../common-types" }
+image = { workspace = true }
+wgpu = "0.20"
+async-trait = { workspace = true }
+log = "0.4"
+tracing = { workspace = true }
+pollster = "0.3"

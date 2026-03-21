@@ -1,0 +1,60 @@
+[package]
+name = "cad-viewer"
+version = "0.1.0"
+edition = "2021"
+description = "CAD 几何智能处理系统 - egui 前端查看器"
+authors = ["CAD Team"]
+license = "MIT"
+
+[features]
+default = []
+# GPU 加速特性
+gpu = ["wgpu", "bytemuck", "accelerator-registry/wgpu"]
+# 加速器注册表支持
+registry = ["accelerator-registry"]
+
+[dependencies]
+# GUI
+eframe = "0.29"
+egui = "0.29"
+egui_extras = { version = "0.29", features = ["all_loaders"] }
+rfd = "0.15"
+
+# HTTP 客户端
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# WebSocket 客户端（P11 落实：实时交互）
+tokio-tungstenite = "0.23"
+futures = "0.3"
+
+# 线程安全共享状态
+parking_lot = "0.12"
+
+# 序列化
+bincode = "1.3"
+
+# 几何处理
+geo = "0.28"
+
+# GPU 渲染（可选特性，核显优化）
+wgpu = { version = "0.20", optional = true }
+bytemuck = { version = "1.16", optional = true, features = ["derive"] }
+
+# 项目内部 crates
+common-types = { path = "../common-types" }
+interact = { path = "../interact" }
+config = { path = "../config" }
+orchestrator = { path = "../orchestrator" }
+accelerator-api = { path = "../accelerator-api" }
+accelerator-cpu = { path = "../accelerator-cpu" }
+accelerator-registry = { path = "../accelerator-registry", optional = true }
+
+# 工具
+log = "0.4"
+env_logger = "0.11"
+thiserror = "1.0"
+chrono = "0.4"
+tracing = "0.1"

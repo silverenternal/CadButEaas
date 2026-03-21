@@ -1,0 +1,309 @@
+# CAD 处理系统配置文件 - 场景化预设模板
+# 对齐交付目标.md: 通过图层、颜色、线宽规则过滤候选墙线
+# P11 建议：提供场景化预设配置（建筑/机械/扫描图纸）
+
+# ============================================================================
+# 配置预设（Profiles）
+# ============================================================================
+# 使用方式：复制对应预设到配置文件根目录，或使用 --profile 参数指定
+
+# ============================================================================
+# 预设 1: 建筑图纸（Architectural Plan）
+# ============================================================================
+# 适用于：建筑平面图、施工图、装修图
+# 特点：线条清晰、图层规范、单位明确
+
+[profile.architectural]
+description = "建筑图纸预设 - 适用于 AutoCAD 导出的建筑平面图"
+
+[profile.architectural.parser.dxf]
+# 智能图层识别（支持 AIA 标准和中文变体）
+layer_whitelist = ["WALL", "WALL-*", "A-WALL", "墙", "墙体", "QIANG"]
+# 实体类型白名单
+entity_whitelist = ["LINE", "LWPOLYLINE", "ARC", "CIRCLE", "SPLINE"]
+# ARC/SPLINE 离散化容差（mm）
+arc_tolerance_mm = 0.1
+spline_tolerance_mm = 0.1
+# 忽略注释性实体
+ignore_text = true
+ignore_dimensions = true
+ignore_hatch = true
+
+[profile.architectural.parser.pdf]
+# 矢量化容差（像素）
+vectorize_tolerance_px = 1.0
+# 边缘检测阈值（0.0-1.0）
+edge_threshold = 0.1
+# 最小线段长度（像素）
+min_line_length_px = 5.0
+
+[profile.architectural.topology]
+# 端点吸附容差（mm）- 建筑图纸通常精度较高
+snap_tolerance_mm = 0.5
+# 最小线段长度（mm）- 移除短边/碎线
+min_line_length_mm = 1.0
+# 共线合并角度容差（度）
+merge_angle_tolerance_deg = 5.0
+# 最大间隙桥接长度（mm）- 自动补全缺口
+max_gap_bridge_length_mm = 2.0
+
+[profile.architectural.validator]
+# 闭合性检查容差（mm）
+closure_tolerance_mm = 0.5
+# 最小面积（m²）- 过滤过小区域
+min_area_m2 = 1.0
+# 最短边检查（mm）
+min_edge_length_mm = 10.0
+# 最小角度检查（度）- 避免尖角
+min_angle_deg = 15.0
+
+[profile.architectural.export]
+# 导出格式：json 或 bincode
+format = "json"
+# JSON 缩进空格数
+json_indent = 2
+# 导出前自动验证
+auto_validate = true
+
+
+# ============================================================================
+# 预设 2: 机械图纸（Mechanical Drawing）
+# ============================================================================
+# 适用于：机械零件图、装配图、工程图
+# 特点：精度高、公差严格、包含中心线/剖面线
+
+[profile.mechanical]
+description = "机械图纸预设 - 适用于高精度机械图纸"
+
+[profile.mechanical.parser.dxf]
+# 机械图纸图层
+layer_whitelist = ["DIM", "CENTER", "HATCH", "OBJECT", "标注", "中心线", "剖面线"]
+# 实体类型（包含更多几何类型）
+entity_whitelist = ["LINE", "LWPOLYLINE", "ARC", "CIRCLE", "SPLINE", "ELLIPSE"]
+# 更高的离散化精度
+arc_tolerance_mm = 0.01
+spline_tolerance_mm = 0.01
+# 保留尺寸标注（可选）
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = false
+
+[profile.mechanical.parser.pdf]
+# 更高的矢量化精度
+vectorize_tolerance_px = 0.5
+edge_threshold = 0.08
+min_line_length_px = 3.0
+
+[profile.mechanical.topology]
+# 更小的吸附容差（机械图纸精度高）
+snap_tolerance_mm = 0.1
+min_line_length_mm = 0.5
+merge_angle_tolerance_deg = 2.0
+max_gap_bridge_length_mm = 0.5
+
+[profile.mechanical.validator]
+# 更严格的验证
+closure_tolerance_mm = 0.1
+min_area_m2 = 0.01
+min_edge_length_mm = 1.0
+min_angle_deg = 5.0
+
+[profile.mechanical.export]
+format = "bincode"  # 二进制格式更适合机械仿真
+json_indent = 2
+auto_validate = true
+
+
+# ============================================================================
+# 预设 3: 扫描图纸（Scanned Document）
+# ============================================================================
+# 适用于：扫描版建筑图纸、老旧图纸数字化
+# 特点：图像质量参差不齐、可能存在阴影/折痕/褪色
+# 注意：此预设仅适用于线条相对清晰的扫描图纸
+
+[profile.scanned]
+description = "扫描图纸预设 - 适用于扫描版图纸（仅适用于线条清晰的图纸）"
+
+[profile.scanned.parser.dxf]
+# 扫描转 DXF 后通常图层信息丢失
+layer_whitelist = []  # 不过滤图层
+entity_whitelist = ["LINE", "LWPOLYLINE"]
+# 较大的离散化容差（扫描图纸精度低）
+arc_tolerance_mm = 0.5
+spline_tolerance_mm = 0.5
+ignore_text = true
+ignore_dimensions = true
+ignore_hatch = true
+
+[profile.scanned.parser.pdf]
+# 光栅 PDF 矢量化配置
+vectorize_tolerance_px = 2.0
+# 更宽松的边缘检测阈值
+edge_threshold = 0.15
+min_line_length_px = 8.0
+
+[profile.scanned.topology]
+# 更大的吸附容差（扫描图纸端点可能不精确）
+snap_tolerance_mm = 2.0
+# 移除更多噪点
+min_line_length_mm = 3.0
+merge_angle_tolerance_deg = 10.0
+max_gap_bridge_length_mm = 5.0
+
+[profile.scanned.validator]
+# 更宽松的验证（扫描图纸质量有限）
+closure_tolerance_mm = 2.0
+min_area_m2 = 2.0
+min_edge_length_mm = 20.0
+min_angle_deg = 30.0
+
+[profile.scanned.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+
+# ============================================================================
+# 预设 4: 复杂扫描图纸（Complex Scanned Document）
+# ============================================================================
+# 适用于：存在阴影/折痕/褪色、虚线/中心线/剖面线混合的复杂扫描图纸
+# 重要限制：当前矢量化功能不支持复杂扫描图纸
+# 建议：先转换为 DXF 格式，或使用 P2 阶段增强的矢量化功能
+
+[profile.complex_scanned]
+description = "复杂扫描图纸预设 - ⚠️ 当前不支持，建议先转换为 DXF"
+
+[profile.complex_scanned.parser.pdf]
+# 复杂扫描图纸需要更高级的图像预处理
+# P2 阶段（验收后 4-6 周）将增强以下功能：
+# - 阴影/折痕去除
+# - 虚线/中心线/剖面线识别
+# - 文字标注与线框分离
+edge_threshold = 0.2  # 更宽松的阈值
+vectorize_tolerance_px = 3.0
+min_line_length_px = 10.0
+
+[profile.complex_scanned.topology]
+# 需要更大的容差
+snap_tolerance_mm = 3.0
+min_line_length_mm = 5.0
+
+[profile.complex_scanned.validator]
+# 最宽松的验证
+closure_tolerance_mm = 3.0
+min_area_m2 = 5.0
+
+
+# ============================================================================
+# 预设 5: 快速原型（Quick Prototype）
+# ============================================================================
+# 适用于：快速预览、概念验证、低精度要求场景
+
+[profile.quick]
+description = "快速原型预设 - 低精度要求，快速处理"
+
+[profile.quick.parser.dxf]
+# 跳过复杂实体
+entity_whitelist = ["LINE", "LWPOLYLINE"]
+arc_tolerance_mm = 1.0
+spline_tolerance_mm = 1.0
+ignore_text = true
+ignore_dimensions = true
+ignore_hatch = true
+
+[profile.quick.topology]
+# 跳过精细处理
+snap_tolerance_mm = 1.0
+min_line_length_mm = 5.0
+merge_angle_tolerance_deg = 15.0
+max_gap_bridge_length_mm = 1.0
+
+[profile.quick.validator]
+# 跳过严格验证
+closure_tolerance_mm = 1.0
+min_area_m2 = 0.5
+min_edge_length_mm = 5.0
+min_angle_deg = 10.0
+
+[profile.quick.export]
+format = "json"
+json_indent = 0  # 紧凑格式
+auto_validate = false  # 跳过验证以加速
+
+
+# ============================================================================
+# 默认配置（不使用预设时）
+# ============================================================================
+
+[parser.dxf]
+# 图层白名单（支持 AIA 标准和中文变体）
+# layer_whitelist = ["WALL", "WALL-*", "A-WALL", "墙", "墙体"]
+
+# 实体类型白名单
+# entity_whitelist = ["LINE", "LWPOLYLINE", "ARC", "CIRCLE"]
+
+# 颜色白名单 (ACI 索引 1-255)
+# 1=红色，7=黑色
+# color_whitelist = [1, 7]
+
+# 线宽白名单 (DXF 枚举值，非 mm 单位)
+# 枚举值映射：-3..=-1=BYLAYER/BYBLOCK/DEFAULT, 0=0.00mm, 7=0.25mm, 8=0.30mm, 9=0.35mm, 10=0.40mm, 11=0.50mm, 21=2.11mm
+# 示例：过滤 0.25mm-0.50mm 的墙线
+# lineweight_whitelist = [7, 8, 9, 10, 11]
+
+# ARC 离散化容差 (mm) - 弦高误差
+arc_tolerance_mm = 0.1
+
+# SPLINE 离散化容差 (mm) - 弦高误差
+spline_tolerance_mm = 0.1
+
+# 忽略注释性实体
+ignore_text = true
+ignore_dimensions = true
+ignore_hatch = true
+
+[parser.pdf]
+# 矢量化容差 (像素)
+vectorize_tolerance_px = 1.0
+
+# 边缘检测阈值 (0.0-1.0)
+edge_threshold = 0.1
+
+# 最小线段长度 (像素)
+min_line_length_px = 5.0
+
+[topology]
+# 端点吸附容差 (mm) - 合并距离 < ε 的端点
+snap_tolerance_mm = 0.5
+
+# 最小线段长度 (mm) - 移除短边/碎线
+min_line_length_mm = 1.0
+
+# 共线合并角度容差 (度)
+merge_angle_tolerance_deg = 5.0
+
+# 最大间隙桥接长度 (mm) - 自动补全缺口
+max_gap_bridge_length_mm = 2.0
+
+[validator]
+# 闭合性检查容差 (mm) - 首尾距离
+closure_tolerance_mm = 0.5
+
+# 最小面积 (m²) - 过滤过小区域
+min_area_m2 = 1.0
+
+# 最短边检查 (mm) - 质量检查
+min_edge_length_mm = 10.0
+
+# 最小角度检查 (度) - 避免尖角
+min_angle_deg = 15.0
+
+[export]
+# 导出格式：json 或 bincode
+format = "json"
+
+# JSON 缩进空格数
+json_indent = 2
+
+# 导出前自动验证
+auto_validate = true

@@ -1,0 +1,17 @@
+/target
+
+# Benchmark results
+benchmark-results/
+*.bench
+
+# Coverage
+lcov.info
+coverage/
+
+# Monitoring (Prometheus + Grafana)
+monitoring/prometheus_data/
+monitoring/grafana_data/
+monitoring/*.log
+monitoring/logs/
+monitoring/*.env
+monitoring/secrets/

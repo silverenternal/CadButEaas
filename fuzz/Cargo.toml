@@ -1,0 +1,32 @@
+[package]
+name = "cad-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+common-types = { path = "../crates/common-types" }
+parser = { path = "../crates/parser" }
+topo = { path = "../crates/topo" }
+
+[[bin]]
+name = "parse_dxf"
+path = "fuzz_targets/parse_dxf.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "build_topology"
+path = "fuzz_targets/build_topology.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "nurbs_discretize"
+path = "fuzz_targets/nurbs_discretize.rs"
+test = false
+doc = false

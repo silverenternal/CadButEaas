@@ -1,0 +1,44 @@
+[package]
+name = "vectorize"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+common-types = { path = "../common-types" }
+accelerator-api = { path = "../accelerator-api" }
+accelerator-cpu = { path = "../accelerator-cpu" }
+accelerator-registry = { path = "../accelerator-registry", optional = true }
+serde = { workspace = true }
+image = { workspace = true }
+euclid = { workspace = true }
+thiserror = { workspace = true }
+rstar = { workspace = true }
+approx = { workspace = true }
+tracing = { workspace = true }
+rayon = { workspace = true }
+async-trait = { workspace = true }
+log = "0.4"
+
+# OpenCV 支持（需要系统安装 OpenCV 4.x）
+opencv = { workspace = true, optional = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+
+[features]
+# P11 v5.0 修复：OpenCV 默认禁用，避免 CI/CD 环境配置问题
+# 需要高性能的用户手动启用：cargo build --features opencv
+# 纯 Rust 模式（默认）：适用于 CI/CD 和无 OpenCV 环境
+default = ["pure_rust"]
+# 显式启用 OpenCV（需要系统安装 OpenCV 4.x）
+opencv = ["dep:opencv"]
+# 纯 Rust 模式（用于 CI/CD 或无 OpenCV 环境）
+pure_rust = []
+# 启用加速器注册表支持（运行时动态选择加速器）
+registry = ["dep:accelerator-registry"]
+# 启用 wgpu 支持
+wgpu = ["accelerator-registry/wgpu"]
+# 启用所有 GPU 后端
+gpu = ["registry", "wgpu"]

@@ -1,0 +1,33 @@
+[package]
+name = "parser"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+common-types = { path = "../common-types" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+dxf = { workspace = true }
+lopdf = { workspace = true }
+image = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true, features = ["fs", "io-util", "sync", "rt", "rt-multi-thread", "macros"] }
+curvo = { workspace = true }
+nalgebra = { workspace = true }
+flate2 = "1.0"
+weezl = "0.1"
+rayon = { workspace = true }
+async-trait = { workspace = true }
+geo = { workspace = true }
+lazy_static = "1.4"
+
+# 异步流处理
+tokio-stream = "0.1"
+futures-core = "0.3"
+futures-util = "0.3"
+
+# 线程安全缓存
+dashmap = "5.5"

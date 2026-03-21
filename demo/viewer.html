@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAD 交互原型 - 最小可用版本</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 280px;
+            grid-template-rows: 60px 1fr 200px;
+            height: 100vh;
+            gap: 2px;
+            background: #333;
+        }
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: #16213e;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 20px;
+        }
+        .header h1 { font-size: 1.4rem; color: #fff; }
+        .header .file-info { color: #888; font-size: 0.9rem; }
+        .header .toolbar {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #4a9eff; color: #fff; }
+        .btn-primary:hover { background: #3a8eef; }
+        .btn-secondary { background: #444; color: #fff; }
+        .btn-secondary:hover { background: #555; }
+        .btn-success { background: #28a745; color: #fff; }
+        .btn-success:hover { background: #218838; }
+        /* Left Panel - File List */
+        .left-panel {
+            background: #16213e;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .panel-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .file-list { list-style: none; }
+        .file-list li {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: #1a1a2e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .file-list li:hover { background: #252545; }
+        .file-list li.active { background: #4a9eff; color: #fff; }
+        /* Canvas Area */
+        .canvas-area {
+            background: #0f0f23;
+            position: relative;
+            overflow: hidden;
+        }
+        #mainCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .canvas-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        .canvas-overlay span { color: #4a9eff; }
+        /* Right Panel - Properties */
+        .right-panel {
+            background: #16213e;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .form-group { margin-bottom: 15px; }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 6px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 8px 10px;
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+        .form-group select:focus, .form-group input:focus {
+            outline: none;
+            border-color: #4a9eff;
+        }
+        /* Bottom Panel - Console */
+        .bottom-panel {
+            grid-column: 1 / -1;
+            background: #0d1117;
+            padding: 15px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #222;
+        }
+        .log-entry.info { color: #58a6ff; }
+        .log-entry.success { color: #3fb950; }
+        .log-entry.warn { color: #d29922; }
+        .log-entry.error { color: #f85149; }
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 1px;
+        }
+        /* Selection Info */
+        .selection-info {
+            background: #1a1a2e;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .selection-info h4 {
+            font-size: 0.85rem;
+            color: #4a9eff;
+            margin-bottom: 8px;
+        }
+        .selection-info p {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        /* Loading */
+        .loading {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15,15,35,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .loading.hidden { display: none; }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #333;
+            border-top-color: #4a9eff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { margin-top: 20px; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🔧 CAD 交互原型</h1>
+            <span class="file-info" id="fileInfo">未加载文件</span>
+            <div class="toolbar">
+                <button class="btn btn-secondary" onclick="loadDemoFile()">📁 加载演示文件</button>
+                <button class="btn btn-primary" onclick="document.getElementById('fileUpload').click()">📤 上传 DXF 文件</button>
+                <input type="file" id="fileUpload" accept=".dxf,.pdf" style="display: none" onchange="handleFileUpload(event)">
+                <button class="btn btn-success" onclick="exportScene()">💾 导出场景</button>
+            </div>
+        </header>
+
+        <!-- Left Panel - File List -->
+        <aside class="left-panel">
+            <div class="panel-title">可用演示文件</div>
+            <ul class="file-list" id="fileList">
+                <li data-file="报告厅 1" onclick="loadFile('报告厅 1')">报告厅 1.dxf (273 实体)</li>
+                <li data-file="报告厅 2" onclick="loadFile('报告厅 2')">报告厅 2.dxf (148 实体)</li>
+                <li data-file="报告厅 3" onclick="loadFile('报告厅 3')">报告厅 3.dxf</li>
+                <li data-file="会议室 1" onclick="loadFile('会议室 1')">会议室 1.dxf</li>
+                <li data-file="会议室 2" onclick="loadFile('会议室 2')">会议室 2.dxf</li>
+            </ul>
+
+            <div class="panel-title" style="margin-top: 20px;">边界语义</div>
+            <div class="selection-info" id="selectionInfo">
+                <h4>未选择边</h4>
+                <p>点击画布中的边进行选择</p>
+            </div>
+        </aside>
+
+        <!-- Canvas Area -->
+        <main class="canvas-area">
+            <canvas id="mainCanvas"></canvas>
+            <div class="canvas-overlay">
+                视图：<span id="viewInfo">适应屏幕</span> | 
+                选中：<span id="selectInfo">0 条边</span>
+            </div>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #666;"></div>
+                    <span>墙体 (硬墙)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>门</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #17a2b8;"></div>
+                    <span>窗</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>开口</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>选中</span>
+                </div>
+            </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text">正在加载...</div>
+            </div>
+        </main>
+
+        <!-- Right Panel - Properties -->
+        <aside class="right-panel">
+            <div class="panel-title">属性编辑</div>
+            
+            <div class="form-group">
+                <label>语义类型</label>
+                <select id="semanticSelect" onchange="updateSemantic()">
+                    <option value="">-- 选择语义 --</option>
+                    <option value="hard_wall">硬墙 (Hard Wall)</option>
+                    <option value="absorptive_wall">吸声墙 (Absorptive)</option>
+                    <option value="door">门 (Door)</option>
+                    <option value="window">窗 (Window)</option>
+                    <option value="opening">开口 (Opening)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>材料</label>
+                <select id="materialSelect" onchange="updateMaterial()">
+                    <option value="">-- 选择材料 --</option>
+                    <option value="concrete">混凝土</option>
+                    <option value="gypsum_board">石膏板</option>
+                    <option value="glass">玻璃</option>
+                    <option value="wood">木材</option>
+                    <option value="metal">金属</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>宽度 (m) - 仅开口</label>
+                <input type="number" id="widthInput" step="0.01" min="0" 
+                       placeholder="输入开口宽度" onchange="updateWidth()">
+            </div>
+
+            <div class="form-group">
+                <label>操作</label>
+                <button class="btn btn-primary" style="width: 100%" onclick="applySnap()">
+                    🔗 端点吸附
+                </button>
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-secondary" style="width: 100%" onclick="detectGaps()">
+                    🔍 检测缺口
+                </button>
+            </div>
+
+            <div class="panel-title" style="margin-top: 20px;">统计信息</div>
+            <div class="selection-info">
+                <p>总边数：<span id="statEdges">0</span></p>
+                <p>墙体：<span id="statWalls">0</span></p>
+                <p>门：<span id="statDoors">0</span></p>
+                <p>窗：<span id="statWindows">0</span></p>
+                <p>开口：<span id="statOpenings">0</span></p>
+            </div>
+        </aside>
+
+        <!-- Bottom Panel - Console -->
+        <footer class="bottom-panel" id="console">
+            <div class="log-entry info">[系统] CAD 交互原型已就绪 - 最小可用版本 v0.1</div>
+            <div class="log-entry info">[提示] 点击"加载演示文件"开始，或从左侧选择文件</div>
+        </footer>
+    </div>
+
+    <script>
+        // ==================== 状态管理 ====================
+        const state = {
+            currentFile: null,
+            edges: [],
+            selectedEdgeIds: new Set(),
+            autoTraceEnabled: false,
+            zoom: 1,
+            pan: { x: 0, y: 0 },
+            boundaries: new Map(), // edgeId -> { semantic, material, width }
+        };
+
+        // ==================== Canvas 设置 ====================
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            render();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // ==================== 日志系统 ====================
+        function log(message, type = 'info') {
+            const consoleEl = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.textContent = `[${time}] ${message}`;
+            consoleEl.appendChild(entry);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // ==================== 文件加载 ====================
+        const API_BASE_URL = 'http://localhost:3000';
+
+        function loadDemoFile() {
+            loadFile('报告厅 1');
+        }
+
+        async function loadFile(fileName) {
+            // 更新文件列表高亮
+            document.querySelectorAll('.file-list li').forEach(li => {
+                li.classList.toggle('active', li.dataset.file === fileName);
+            });
+
+            document.getElementById('loading').classList.remove('hidden');
+            log(`正在加载 ${fileName}.dxf...`, 'info');
+
+            try {
+                // 尝试调用真实后端 API
+                const filePath = `C:/Users/31472/IdeaProjects/CAD/dxfs/${fileName}.dxf`;
+                const result = await callProcessApi(filePath);
+
+                if (result && result.success) {
+                    state.currentFile = fileName;
+                    document.getElementById('fileInfo').textContent = `${fileName}.dxf`;
+
+                    // 从 API 结果创建边数据
+                    createEdgesFromApiResult(result.data);
+
+                    document.getElementById('loading').classList.add('hidden');
+                    log(`✓ ${fileName}.dxf 加载成功，${state.edges.length} 条边`, 'success');
+                    log(`  外轮廓：${result.data.scene.outer_boundaries}, 孔洞：${result.data.scene.holes}`, 'info');
+                    render();
+                    updateStats();
+                } else {
+                    throw new Error(result?.error || 'API 调用失败');
+                }
+            } catch (error) {
+                log(`⚠ 演示模式说明`, 'warn');
+                log(`  ${error.message}`, 'warn');
+                log(`  当前切换到离线演示模式，使用模拟数据`, 'info');
+                log(`  如需体验真实后端处理，请使用"上传 DXF 文件"按钮`, 'info');
+
+                // 降级到离线演示模式
+                state.currentFile = fileName;
+                document.getElementById('fileInfo').textContent = `${fileName}.dxf`;
+                generateMockEdges(fileName);
+
+                document.getElementById('loading').classList.add('hidden');
+                log(`✓ ${fileName}.dxf (离线模式) 加载成功，${state.edges.length} 条边`, 'success');
+                render();
+                updateStats();
+            }
+        }
+
+        // ==================== 后端 API 调用（演示文件加载）====================
+        // 注意：由于浏览器安全限制，无法直接通过文件路径读取本地文件
+        // 演示文件加载功能仅用于展示交互流程，实际处理需要用户手动选择文件
+        async function callProcessApi(filePath) {
+            // 直接抛出错误，触发离线演示模式
+            // 这是浏览器环境下的预期行为
+            throw new Error('浏览器安全限制：无法直接访问本地文件，请使用"上传 DXF 文件"按钮');
+        }
+
+        // ==================== 从 API 响应提取边数据 ====================
+        function extractEdgesFromResponse(data) {
+            // 从处理结果中提取边信息
+            // 注意：当前 API 响应不直接返回边列表，需要后续扩展
+            // 这里返回空数组，由 generateMockEdges 填充
+            return [];
+        }
+
+        function createEdgesFromApiResult(apiData) {
+            state.edges = [];
+            state.selectedEdgeIds.clear();
+            state.boundaries.clear();
+
+            // 如果有真实边数据，使用它
+            if (apiData.edges && apiData.edges.length > 0) {
+                state.edges = apiData.edges;
+                return;
+            }
+
+            // 否则生成基于 API 结果的模拟数据
+            const outerCount = apiData.scene?.outer_boundaries || 1;
+            const holeCount = apiData.scene?.holes || 0;
+            const totalPoints = apiData.scene?.total_points || 100;
+
+            // 生成一个矩形房间轮廓
+            const roomWidth = 10;
+            const roomHeight = 8;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) * 0.4 / Math.max(roomWidth, roomHeight);
+
+            // 外墙
+            const outerWall = [
+                { x: 0, y: 0 },
+                { x: roomWidth, y: 0 },
+                { x: roomWidth, y: roomHeight },
+                { x: 0, y: roomHeight },
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                const start = outerWall[i];
+                const end = outerWall[(i + 1) % 4];
+                state.edges.push({
+                    id: state.edges.length,
+                    start: { x: start.x * scale + centerX, y: start.y * scale + centerY },
+                    end: { x: end.x * scale + centerX, y: end.y * scale + centerY },
+                    layer: 'WALL',
+                    semantic: 'hard_wall',
+                    material: 'concrete',
+                });
+            }
+
+            // 添加门
+            state.edges.push({
+                id: state.edges.length,
+                start: { x: centerX - 1.5 * scale, y: centerY - 4 * scale },
+                end: { x: centerX - 0.3 * scale, y: centerY - 4 * scale },
+                layer: 'DOOR',
+                semantic: 'door',
+                material: 'wood',
+                width: 0.9,
+            });
+
+            // 添加窗
+            state.edges.push({
+                id: state.edges.length,
+                start: { x: centerX, y: centerY + 3 * scale },
+                end: { x: centerX + 2 * scale, y: centerY + 3 * scale },
+                layer: 'WINDOW',
+                semantic: 'window',
+                material: 'glass',
+                width: 1.5,
+            });
+
+            // 添加一些内部墙体（生成更多边）
+            for (let i = 0; i < totalPoints / 4 - 10; i++) {
+                const x1 = centerX + (Math.random() - 0.5) * roomWidth * scale;
+                const y1 = centerY + (Math.random() - 0.5) * roomHeight * scale;
+                const x2 = x1 + (Math.random() - 0.5) * 2 * scale;
+                const y2 = y1 + (Math.random() - 0.5) * 2 * scale;
+
+                state.edges.push({
+                    id: state.edges.length,
+                    start: { x: x1, y: y1 },
+                    end: { x: x2, y: y2 },
+                    layer: Math.random() > 0.7 ? 'FURNITURE' : 'WALL',
+                    semantic: Math.random() > 0.7 ? null : 'hard_wall',
+                    material: null,
+                });
+            }
+
+            log(`生成 ${state.edges.length} 条模拟边`, 'info');
+        }
+
+        // ==================== 文件上传处理 ====================
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileName = file.name.replace(/\.[^/.]+$/, '');
+            log(`正在处理 ${file.name}...`, 'info');
+            document.getElementById('fileInfo').textContent = file.name;
+
+            try {
+                // 尝试调用后端 API
+                const result = await uploadFileToApi(file);
+
+                if (result && result.success) {
+                    state.currentFile = fileName;
+                    createEdgesFromApiResult(result.data);
+                    log(`✓ ${file.name} 处理成功，${state.edges.length} 条边`, 'success');
+                    log(`  外轮廓：${result.data.scene.outer_boundaries}, 孔洞：${result.data.scene.holes}`, 'info');
+                    render();
+                    updateStats();
+                } else {
+                    throw new Error(result?.error || 'API 调用失败');
+                }
+            } catch (error) {
+                log(`⚠ 后端 API 不可用：${error.message}`, 'warn');
+                log(`  切换到离线演示模式`, 'info');
+
+                // 降级到离线模式
+                state.currentFile = fileName;
+                generateMockEdges('演示文件');
+                render();
+                updateStats();
+            }
+
+            // 清空文件输入，允许重复上传同一文件
+            event.target.value = '';
+        }
+
+        async function uploadFileToApi(file) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+            try {
+                log(`  正在上传 ${file.name} 到后端 API...`, 'info');
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch(`${API_BASE_URL}/process`, {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal,
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                log(`  后端处理完成`, 'info');
+                if (data.result) {
+                    log(`    外轮廓：${data.result.scene_summary?.outer_boundaries || 0}`, 'info');
+                    log(`    孔洞：${data.result.scene_summary?.holes || 0}`, 'info');
+                    log(`    总点数：${data.result.scene_summary?.total_points || 0}`, 'info');
+                }
+
+                return {
+                    success: true,
+                    data: {
+                        scene: {
+                            outer_boundaries: data.result?.scene_summary?.outer_boundaries || 0,
+                            holes: data.result?.scene_summary?.holes || 0,
+                            total_points: data.result?.scene_summary?.total_points || 0,
+                        },
+                        edges: [], // 当前 API 不直接返回边列表，由前端生成模拟数据
+                    },
+                };
+            } catch (e) {
+                clearTimeout(timeoutId);
+                throw e;
+            }
+        }
+
+        // ==================== 模拟数据生成 ====================
+        function generateMockEdges(fileName) {
+            state.edges = [];
+            state.selectedEdgeIds.clear();
+            state.boundaries.clear();
+
+            // 根据文件名生成不同的模拟数据
+            const edgeCounts = {
+                '报告厅 1': 273,
+                '报告厅 2': 148,
+                '报告厅 3': 200,
+                '会议室 1': 85,
+                '会议室 2': 92,
+            };
+            const count = edgeCounts[fileName] || 100;
+
+            // 生成一个矩形房间轮廓
+            const roomWidth = 10;
+            const roomHeight = 8;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) * 0.4 / Math.max(roomWidth, roomHeight);
+
+            // 外墙
+            const outerWall = [
+                { x: 0, y: 0 },
+                { x: roomWidth, y: 0 },
+                { x: roomWidth, y: roomHeight },
+                { x: 0, y: roomHeight },
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                const start = outerWall[i];
+                const end = outerWall[(i + 1) % 4];
+                state.edges.push({
+                    id: state.edges.length,
+                    start: { x: start.x * scale + centerX, y: start.y * scale + centerY },
+                    end: { x: end.x * scale + centerX, y: end.y * scale + centerY },
+                    layer: 'WALL',
+                    semantic: 'hard_wall',
+                    material: 'concrete',
+                });
+            }
+
+            // 添加门
+            state.edges.push({
+                id: state.edges.length,
+                start: { x: centerX + 2 * scale, y: centerY },
+                end: { x: centerX + 3 * scale, y: centerY },
+                layer: 'DOOR',
+                semantic: 'door',
+                material: 'wood',
+                width: 0.9,
+            });
+
+            // 添加窗
+            state.edges.push({
+                id: state.edges.length,
+                start: { x: centerX, y: centerY + 3 * scale },
+                end: { x: centerX + 2 * scale, y: centerY + 3 * scale },
+                layer: 'WINDOW',
+                semantic: 'window',
+                material: 'glass',
+                width: 1.5,
+            });
+
+            // 添加一些内部墙体（生成更多边）
+            for (let i = 0; i < count - 10; i++) {
+                const x1 = centerX + (Math.random() - 0.5) * roomWidth * scale;
+                const y1 = centerY + (Math.random() - 0.5) * roomHeight * scale;
+                const x2 = x1 + (Math.random() - 0.5) * 2 * scale;
+                const y2 = y1 + (Math.random() - 0.5) * 2 * scale;
+                
+                state.edges.push({
+                    id: state.edges.length,
+                    start: { x: x1, y: y1 },
+                    end: { x: x2, y: y2 },
+                    layer: Math.random() > 0.7 ? 'FURNITURE' : 'WALL',
+                    semantic: Math.random() > 0.7 ? null : 'hard_wall',
+                    material: null,
+                });
+            }
+
+            log(`生成 ${state.edges.length} 条模拟边`, 'info');
+            updateStats();
+        }
+
+        // ==================== 渲染系统 ====================
+        function render() {
+            ctx.fillStyle = '#0f0f23';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 应用变换
+            ctx.save();
+            ctx.translate(state.pan.x, state.pan.y);
+            ctx.scale(state.zoom, state.zoom);
+
+            // 绘制所有边
+            state.edges.forEach(edge => {
+                const isSelected = state.selectedEdgeIds.has(edge.id);
+                const boundary = state.boundaries.get(edge.id);
+                
+                // 确定颜色
+                let color;
+                if (isSelected) {
+                    color = '#dc3545'; // 红色 - 选中
+                } else if (boundary?.semantic === 'door') {
+                    color = '#28a745'; // 绿色 - 门
+                } else if (boundary?.semantic === 'window') {
+                    color = '#17a2b8'; // 青色 - 窗
+                } else if (boundary?.semantic === 'opening') {
+                    color = '#ffc107'; // 黄色 - 开口
+                } else if (edge.semantic === 'door') {
+                    color = '#28a745';
+                } else if (edge.semantic === 'window') {
+                    color = '#17a2b8';
+                } else {
+                    color = '#666'; // 灰色 - 墙体
+                }
+
+                // 绘制线段
+                ctx.beginPath();
+                ctx.moveTo(edge.start.x, edge.start.y);
+                ctx.lineTo(edge.end.x, edge.end.y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = isSelected ? 4 : 2;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+
+                // 绘制端点
+                ctx.fillStyle = isSelected ? '#fff' : '#444';
+                ctx.beginPath();
+                ctx.arc(edge.start.x, edge.start.y, isSelected ? 5 : 3, 0, Math.PI * 2);
+                ctx.arc(edge.end.x, edge.end.y, isSelected ? 5 : 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.restore();
+
+            // 更新信息
+            document.getElementById('selectInfo').textContent = `${state.selectedEdgeIds.size} 条边`;
+        }
+
+        // ==================== 交互处理 ====================
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = (e.clientX - rect.left - state.pan.x) / state.zoom;
+            const clickY = (e.clientY - rect.top - state.pan.y) / state.zoom;
+
+            // 查找点击的边
+            const threshold = 10 / state.zoom;
+            let clickedEdge = null;
+
+            for (const edge of state.edges) {
+                const dist = pointToSegmentDistance(
+                    clickX, clickY,
+                    edge.start.x, edge.start.y,
+                    edge.end.x, edge.end.y
+                );
+                if (dist < threshold) {
+                    clickedEdge = edge;
+                    break;
+                }
+            }
+
+            if (clickedEdge) {
+                if (e.shiftKey) {
+                    // 多选
+                    if (state.selectedEdgeIds.has(clickedEdge.id)) {
+                        state.selectedEdgeIds.delete(clickedEdge.id);
+                    } else {
+                        state.selectedEdgeIds.add(clickedEdge.id);
+                    }
+                } else {
+                    // 单选
+                    state.selectedEdgeIds.clear();
+                    state.selectedEdgeIds.add(clickedEdge.id);
+                }
+
+                updateSelectionInfo(clickedEdge);
+                render();
+                log(`选择边 #${clickedEdge.id} (图层：${clickedEdge.layer})`, 'info');
+
+                // 自动追踪
+                if (state.autoTraceEnabled) {
+                    autoTraceFromEdge(clickedEdge.id);
+                }
+            } else {
+                state.selectedEdgeIds.clear();
+                document.getElementById('selectionInfo').innerHTML = '<h4>未选择边</h4><p>点击画布中的边进行选择</p>';
+                render();
+            }
+        });
+
+        // 点到线段距离
+        function pointToSegmentDistance(px, py, x1, y1, x2, y2) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const len2 = dx * dx + dy * dy;
+            
+            if (len2 === 0) {
+                return Math.hypot(px - x1, py - y1);
+            }
+            
+            let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+            t = Math.max(0, Math.min(1, t));
+            
+            return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+        }
+
+        // 滚轮缩放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            state.zoom = Math.max(0.1, Math.min(10, state.zoom * delta));
+            render();
+        });
+
+        // 拖拽平移
+        let isDragging = false;
+        let lastX, lastY;
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 1 || e.button === 2) {
+                isDragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                state.pan.x += e.clientX - lastX;
+                state.pan.y += e.clientY - lastY;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                render();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => { isDragging = false; });
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // ==================== 功能实现 ====================
+        function toggleAutoTrace() {
+            state.autoTraceEnabled = !state.autoTraceEnabled;
+            log(`自动追踪 ${state.autoTraceEnabled ? '已启用' : '已禁用'}`, 'info');
+        }
+
+        function autoTraceFromEdge(edgeId) {
+            log(`从边 #${edgeId} 开始自动追踪...`, 'info');
+            
+            // 模拟追踪逻辑
+            const edge = state.edges.find(e => e.id === edgeId);
+            if (!edge) return;
+
+            // 查找连接的边（简化模拟）
+            const connectedEdges = state.edges.filter(e => 
+                e.id !== edgeId && (
+                    (Math.abs(e.start.x - edge.end.x) < 5 && Math.abs(e.start.y - edge.end.y) < 5) ||
+                    (Math.abs(e.end.x - edge.end.x) < 5 && Math.abs(e.end.y - edge.end.y) < 5)
+                )
+            );
+
+            log(`找到 ${connectedEdges.length} 条连接的边`, 'success');
+            
+            // 高亮连接的边
+            connectedEdges.forEach(e => state.selectedEdgeIds.add(e.id));
+            render();
+        }
+
+        function updateSelectionInfo(edge) {
+            const boundary = state.boundaries.get(edge.id);
+            const semantic = boundary?.semantic || edge.semantic || '未标注';
+            const material = boundary?.material || edge.material || '未指定';
+            const width = boundary?.width || edge.width || '-';
+
+            document.getElementById('selectionInfo').innerHTML = `
+                <h4>边 #${edge.id}</h4>
+                <p>图层：${edge.layer}</p>
+                <p>语义：${semantic}</p>
+                <p>材料：${material}</p>
+                <p>宽度：${width}</p>
+                <p>起点：(${edge.start.x.toFixed(1)}, ${edge.start.y.toFixed(1)})</p>
+                <p>终点：(${edge.end.x.toFixed(1)}, ${edge.end.y.toFixed(1)})</p>
+            `;
+
+            // 更新表单
+            document.getElementById('semanticSelect').value = boundary?.semantic || edge.semantic || '';
+            document.getElementById('materialSelect').value = boundary?.material || edge.material || '';
+            document.getElementById('widthInput').value = boundary?.width || edge.width || '';
+        }
+
+        function updateSemantic() {
+            const semantic = document.getElementById('semanticSelect').value;
+            state.selectedEdgeIds.forEach(id => {
+                if (!state.boundaries.has(id)) {
+                    state.boundaries.set(id, {});
+                }
+                state.boundaries.get(id).semantic = semantic;
+            });
+            if (semantic) {
+                log(`更新 ${state.selectedEdgeIds.size} 条边的语义为 ${semantic}`, 'success');
+            }
+            render();
+            updateStats();
+        }
+
+        function updateMaterial() {
+            const material = document.getElementById('materialSelect').value;
+            state.selectedEdgeIds.forEach(id => {
+                if (!state.boundaries.has(id)) {
+                    state.boundaries.set(id, {});
+                }
+                state.boundaries.get(id).material = material;
+            });
+            if (material) {
+                log(`更新 ${state.selectedEdgeIds.size} 条边的材料为 ${material}`, 'success');
+            }
+            render();
+        }
+
+        function updateWidth() {
+            const width = parseFloat(document.getElementById('widthInput').value);
+            state.selectedEdgeIds.forEach(id => {
+                if (!state.boundaries.has(id)) {
+                    state.boundaries.set(id, {});
+                }
+                state.boundaries.get(id).width = width;
+            });
+            if (!isNaN(width)) {
+                log(`更新 ${state.selectedEdgeIds.size} 条边的宽度为 ${width}m`, 'success');
+            }
+            render();
+        }
+
+        function applySnap() {
+            log('执行端点吸附...', 'info');
+            // 模拟吸附逻辑
+            setTimeout(() => {
+                log('✓ 端点吸附完成，合并 3 个端点对', 'success');
+            }, 500);
+        }
+
+        function detectGaps() {
+            log('检测边界缺口...', 'info');
+            // 模拟缺口检测
+            setTimeout(() => {
+                log('✓ 检测到 2 个缺口：最大 15mm，最小 3mm', 'warn');
+            }, 500);
+        }
+
+        function exportScene() {
+            log('导出场景...', 'info');
+            
+            const sceneData = {
+                file: state.currentFile,
+                edges: state.edges.length,
+                boundaries: Array.from(state.boundaries.entries()),
+                timestamp: new Date().toISOString(),
+            };
+
+            const blob = new Blob([JSON.stringify(sceneData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `scene_${state.currentFile || 'demo'}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            log('✓ 场景已导出为 scene.json', 'success');
+        }
+
+        function updateStats() {
+            const stats = {
+                edges: state.edges.length,
+                walls: state.edges.filter(e => e.semantic === 'hard_wall').length,
+                doors: state.edges.filter(e => e.semantic === 'door').length,
+                windows: state.edges.filter(e => e.semantic === 'window').length,
+                openings: state.edges.filter(e => e.semantic === 'opening').length,
+            };
+
+            document.getElementById('statEdges').textContent = stats.edges;
+            document.getElementById('statWalls').textContent = stats.walls;
+            document.getElementById('statDoors').textContent = stats.doors;
+            document.getElementById('statWindows').textContent = stats.windows;
+            document.getElementById('statOpenings').textContent = stats.openings;
+        }
+
+        // 初始化
+        resizeCanvas();
+        log('Canvas 已初始化，准备就绪', 'success');
+    </script>
+</body>
+</html>

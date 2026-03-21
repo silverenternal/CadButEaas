@@ -1,0 +1,23 @@
+[package]
+name = "accelerator-registry"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+description = "加速器注册表 - 运行时发现、调度和管理加速器后端"
+
+[dependencies]
+accelerator-api = { path = "../accelerator-api" }
+accelerator-cpu = { path = "../accelerator-cpu" }
+accelerator-wgpu = { path = "../accelerator-wgpu", optional = true }
+log = "0.4"
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[features]
+default = []
+# 启用 wgpu 后端支持
+wgpu = ["dep:accelerator-wgpu"]
+# 启用所有 GPU 后端
+gpu = ["wgpu"]

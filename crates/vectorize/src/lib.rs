@@ -1,0 +1,34 @@
+//! 图像矢量化服务
+//!
+//! 将光栅图像转换为结构化线段集合
+//!
+//! # 架构设计 (P11 锐评落实)
+//!
+//! 使用可拔插的 Accelerator 抽象层，支持多种后端：
+//! - CPU (纯 Rust 实现，fallback)
+//! - wgpu (GPU 计算着色器)
+//! - CUDA (NVIDIA GPU，未来实现)
+//! - OpenCL (跨平台 GPU，未来实现)
+//!
+//! # 使用示例
+//!
+//! ```rust,ignore
+//! use vectorize::{VectorizeService, VectorizeConfig};
+//! use accelerator_cpu::CpuAccelerator;
+//!
+//! // 使用 CPU 加速器
+//! let accelerator = Box::new(CpuAccelerator::new());
+//! let service = VectorizeService::new(accelerator, VectorizeConfig::default());
+//! ```
+
+pub mod service;
+pub mod algorithms;
+pub mod config;
+pub mod quality;
+
+pub use service::VectorizeService;
+pub use config::VectorizeConfig;
+pub use algorithms::*;
+
+#[cfg(feature = "registry")]
+pub use accelerator_registry;
