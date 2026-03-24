@@ -1,7 +1,7 @@
 //! 编排服务主模块
 
 use crate::pipeline::ProcessingPipeline;
-use crate::api::{create_router, ApiState};
+use crate::api::{create_router_with_cors, ApiState};
 use tokio::net::TcpListener;
 use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -128,10 +128,11 @@ impl OrchestratorService {
         // 实际使用时从解析结果中加载边数据
         let interact_service = InteractionService::new(vec![]);
 
-        let app = create_router(ApiState {
-            pipeline: ProcessingPipeline::new(),
-            interact: Arc::new(Mutex::new(interact_service)),
-        });
+        let app = create_router_with_cors()
+            .with_state(ApiState {
+                pipeline: ProcessingPipeline::new(),
+                interact: Arc::new(Mutex::new(interact_service)),
+            });
 
         let listener = TcpListener::bind(addr).await?;
         axum::serve(listener, app).await?;

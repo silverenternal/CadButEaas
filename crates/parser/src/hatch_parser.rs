@@ -264,6 +264,8 @@ impl HatchParser {
             solid_fill: is_solid,
             metadata,
             semantic: None,
+            scale: _pattern_scale,    // P0-NEW-14 修复：存储 scale
+            angle: _pattern_angle,    // P0-NEW-14 修复：存储 angle
         }))
     }
 
@@ -273,21 +275,36 @@ impl HatchParser {
         groups: &[(u16, String)],
         i: &mut usize,
     ) -> Result<Option<HatchBoundaryPath>, String> {
-        // 92 = 边界类型
-        // 查找下一个 92 组码
-        while *i < groups.len() && groups[*i].0 != 92 {
-            if groups[*i].0 == 0 {
-                return Ok(None); // 新实体开始
-            }
-            *i += 1;
-        }
-
+        // ✅ P1-NEW-15 修复：验证当前索引有效
         if *i >= groups.len() {
             return Ok(None);
         }
 
+        // ✅ P1-NEW-15 修复：查找 92 组码（边界类型），但限制搜索范围
+        let mut found = false;
+        while *i < groups.len() {
+            let (code, _) = &groups[*i];
+
+            // ✅ 遇到新实体开始，返回
+            if *code == 0 {
+                return Ok(None);
+            }
+
+            // ✅ 找到 92 组码
+            if *code == 92 {
+                found = true;
+                break;
+            }
+
+            *i += 1;
+        }
+
+        if !found || *i >= groups.len() {
+            return Ok(None);
+        }
+
         let boundary_type: i32 = groups[*i].1.parse().unwrap_or(0);
-        *i += 1;
+        *i += 1;  // ✅ 跳过 92 组码的值
 
         match boundary_type {
             1 => self.parse_polyline_boundary(groups, i),
@@ -309,18 +326,16 @@ impl HatchParser {
     ) -> Result<Option<HatchBoundaryPath>, String> {
         let mut points = Vec::new();
         let mut is_closed = false;
-        let mut vertex_count: i32 = 0;
+        let mut bulges: Vec<f64> = Vec::new();  // ✅ P0-4 新增：存储 bulge 信息
 
         // 72 = 是否有宽度（跳过）
         // 73 = 是否闭合
-        // 93 = 顶点数量
         while *i < groups.len() {
             let (code, value) = &groups[*i];
 
             match code {
                 0 => break, // 新实体
                 73 => is_closed = value.parse::<i16>().unwrap_or(0) == 1,
-                93 => vertex_count = value.parse().unwrap_or(0),
                 10 => {
                     // X 坐标
                     let x: f64 = value.parse().unwrap_or(0.0);
@@ -332,6 +347,16 @@ impl HatchParser {
                         0.0
                     };
                     points.push([x, y]);
+
+                    // ✅ P0-4 提取 bulge（组码 42）
+                    // bulge = tan(θ/4)，用于表示圆弧段
+                    if *i + 1 < groups.len() && groups[*i + 1].0 == 42 {
+                        let bulge: f64 = groups[*i + 1].1.parse().unwrap_or(0.0);
+                        bulges.push(bulge);
+                        *i += 1;
+                    } else {
+                        bulges.push(0.0);
+                    }
                 }
                 _ => {}
             }
@@ -341,9 +366,12 @@ impl HatchParser {
         if points.is_empty() {
             Ok(None)
         } else {
+            // ✅ P0-4 如果有 bulge 信息，存储到边界路径中
+            let has_bulge = bulges.iter().any(|&b| b.abs() > 1e-10);
             Ok(Some(HatchBoundaryPath::Polyline {
                 points,
                 closed: is_closed,
+                bulges: if has_bulge { Some(bulges) } else { None },
             }))
         }
     }
@@ -376,11 +404,12 @@ impl HatchParser {
             *i += 1;
         }
 
+        // ✅ P0-3 修复：保持弧度单位，前端统一使用弧度
         Ok(Some(HatchBoundaryPath::Arc {
             center,
             radius,
-            start_angle: start_angle.to_degrees(),
-            end_angle: end_angle.to_degrees(),
+            start_angle,  // 弧度
+            end_angle,    // 弧度
             ccw,
         }))
     }
@@ -416,13 +445,15 @@ impl HatchParser {
             *i += 1;
         }
 
+        // ✅ P0-3 修复：保持弧度单位，前端统一使用弧度
         Ok(Some(HatchBoundaryPath::EllipseArc {
             center,
             major_axis,
             minor_axis_ratio,
-            start_angle: start_angle.to_degrees(),
-            end_angle: end_angle.to_degrees(),
+            start_angle,  // 弧度
+            end_angle,    // 弧度
             ccw,
+            extrusion_direction: None,  // P2-NEW-29: 默认无法向量
         }))
     }
 
@@ -434,18 +465,42 @@ impl HatchParser {
     ) -> Result<Option<HatchBoundaryPath>, String> {
         let mut control_points = Vec::new();
         let mut knots = Vec::new();
+        let mut weights = Vec::new();      // P1-NEW-25 新增：权重
+        let mut fit_points = Vec::new();   // P1-NEW-25 新增：拟合点
         let mut degree: i32 = 3;
-        let mut control_point_count: i32 = 0;
-        let mut knot_count: i32 = 0;
+        let mut num_control_points: i32 = 0;
+        let mut num_fit_points: i32 = 0;
+        let mut spline_flags: i32 = 0;     // P1-NEW-25 新增：样条标志
 
+        // 先读取数量信息
         while *i < groups.len() {
             let (code, value) = &groups[*i];
 
             match code {
                 0 => break,
-                94 => control_point_count = value.parse().unwrap_or(0),
-                96 => knot_count = value.parse().unwrap_or(0),
+                94 => num_control_points = value.parse().unwrap_or(0),
+                95 => num_fit_points = value.parse().unwrap_or(0),
+                96 => { /* knots count, 不需要显式使用 */ }
                 97 => degree = value.parse().unwrap_or(3),
+                74 => spline_flags = value.parse().unwrap_or(0),
+                _ => {}
+            }
+            *i += 1;
+        }
+
+        // 预分配容量
+        control_points.reserve(num_control_points as usize);
+        weights.reserve(num_control_points as usize);
+        fit_points.reserve(num_fit_points as usize);
+
+        // 解析具体数据
+        while *i < groups.len() {
+            let (code, value) = &groups[*i];
+
+            match code {
+                0 => break,
+
+                // P1-NEW-25: 控制点 (10, 20)
                 10 => {
                     let x: f64 = value.parse().unwrap_or(0.0);
                     *i += 1;
@@ -456,11 +511,33 @@ impl HatchParser {
                     };
                     control_points.push([x, y]);
                 }
+
+                // P1-NEW-25: 权重 (41) - 紧跟控制点之后
+                41 => {
+                    if let Ok(weight) = value.parse::<f64>() {
+                        weights.push(weight);
+                    }
+                }
+
+                // P1-NEW-25: 拟合点 (11, 21)
+                11 => {
+                    let x: f64 = value.parse().unwrap_or(0.0);
+                    *i += 1;
+                    let y: f64 = if *i < groups.len() && groups[*i].0 == 21 {
+                        groups[*i].1.parse().unwrap_or(0.0)
+                    } else {
+                        0.0
+                    };
+                    fit_points.push([x, y]);
+                }
+
+                // 节点值 (40)
                 40 => {
                     if let Ok(knot) = value.parse::<f64>() {
                         knots.push(knot);
                     }
                 }
+
                 _ => {}
             }
             *i += 1;
@@ -469,10 +546,18 @@ impl HatchParser {
         if control_points.is_empty() {
             Ok(None)
         } else {
+            // P1-NEW-25: 如果没有显式权重，默认为 1.0
+            if weights.is_empty() {
+                weights.resize(control_points.len(), 1.0);
+            }
+
             Ok(Some(HatchBoundaryPath::Spline {
                 control_points,
                 knots,
                 degree: degree as u32,
+                weights: Some(weights),    // P1-NEW-25: 存储权重
+                fit_points: if fit_points.is_empty() { None } else { Some(fit_points) }, // P1-NEW-25: 存储拟合点
+                flags: Some(spline_flags as u32), // P1-NEW-25: 存储标志
             }))
         }
     }

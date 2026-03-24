@@ -63,6 +63,9 @@ pub struct InteractionState {
     pub edges: Vec<Edge>,
     /// 已桥接的缺口
     pub bridged_gaps: HashSet<GapId>,
+    /// 场景状态（用于导出）
+    #[serde(skip)]
+    pub scene_state: Option<common_types::SceneState>,
 }
 
 /// 边 - 基本几何单元
@@ -488,6 +491,39 @@ impl InteractService for InteractionService {
 
     fn get_state_mut(&mut self) -> &mut InteractionState {
         &mut self.state
+    }
+}
+
+impl InteractionService {
+    /// 获取场景状态（用于导出）
+    pub fn get_scene_state(&self) -> common_types::SceneState {
+        self.state.scene_state.clone().unwrap_or_else(|| {
+            // 如果没有 scene_state，从边数据构建一个基本的
+            common_types::SceneState {
+                outer: None,
+                holes: vec![],
+                boundaries: vec![],
+                sources: vec![],
+                edges: self.state.edges.iter().map(|e| {
+                    common_types::scene::RawEdge {
+                        id: e.id,
+                        start: e.start,
+                        end: e.end,
+                        layer: e.layer.clone(),
+                        color_index: None,
+                    }
+                }).collect(),
+                units: common_types::LengthUnit::M,
+                coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
+                seat_zones: vec![],
+                render_config: None,
+            }
+        })
+    }
+
+    /// 设置场景状态
+    pub fn set_scene_state(&mut self, scene: common_types::SceneState) {
+        self.state.scene_state = Some(scene);
     }
 }
 

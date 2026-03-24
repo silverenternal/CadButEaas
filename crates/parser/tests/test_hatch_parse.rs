@@ -163,13 +163,13 @@ EOF
                     println!("  边界路径数量：{}", boundary_paths.len());
                     for (i, path) in boundary_paths.iter().enumerate() {
                         match path {
-                            common_types::HatchBoundaryPath::Polyline { points, closed } => {
-                                println!("    边界 {}: Polyline ({} 点，closed={})", i, points.len(), closed);
+                            common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
+                                println!("    边界 {}: Polyline ({} 点，closed={}, bulges={:?})", i, points.len(), closed, bulges);
                             }
-                            common_types::HatchBoundaryPath::Arc { center, radius, .. } => {
+                            common_types::HatchBoundaryPath::Arc { radius, .. } => {
                                 println!("    边界 {}: Arc (radius={})", i, radius);
                             }
-                            common_types::HatchBoundaryPath::EllipseArc { center, major_axis, .. } => {
+                            common_types::HatchBoundaryPath::EllipseArc { major_axis, .. } => {
                                 println!("    边界 {}: EllipseArc (major_axis={:?})", i, major_axis);
                             }
                             common_types::HatchBoundaryPath::Spline { control_points, degree, .. } => {

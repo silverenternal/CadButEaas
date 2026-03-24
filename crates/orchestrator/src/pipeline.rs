@@ -171,8 +171,16 @@ impl ProcessingPipeline {
         }
     }
 
-    /// 转换拓扑配置
+    /// 转换拓扑配置（P11 修复：使用 TopoAlgorithm）
     fn convert_topo_config(topo_config: &CadConfig) -> TopoServiceConfig {
+        use topo::service::TopoAlgorithm;
+        
+        // 根据字符串配置选择算法
+        let algorithm = match topo_config.topology.algorithm.as_str() {
+            "halfedge" => TopoAlgorithm::Halfedge,
+            _ => TopoAlgorithm::Dfs,  // 默认 DFS
+        };
+        
         TopoServiceConfig {
             tolerance: common_types::geometry::ToleranceConfig {
                 snap_tolerance: topo_config.topology.snap_tolerance_mm,
@@ -181,7 +189,7 @@ impl ProcessingPipeline {
                 units: Some(common_types::LengthUnit::Mm),
             },
             layer_filter: None,
-            use_halfedge: topo_config.topology.use_halfedge,
+            algorithm,
             skip_intersection_check: topo_config.topology.skip_intersection_check,
             enable_parallel: topo_config.topology.enable_parallel,
             parallel_threshold: topo_config.topology.parallel_threshold,

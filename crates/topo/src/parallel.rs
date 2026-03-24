@@ -29,6 +29,9 @@
 //! # }
 //! ```
 
+// P2-4 新增：性能监控
+use std::time::Instant;
+
 use common_types::{Point2, Polyline, distance_2d};
 #[allow(unused_imports)] // 预留用于未来 R*-tree 分桶优化
 use rstar::{RTree, RTreeObject, AABB};
@@ -88,17 +91,30 @@ type BucketValue = Vec<usize>;
 /// - 串行：O(n²) 最坏情况
 /// - 并行：O((n/buckets) × log n)
 /// - 提升：3-5x（对于 1000+ 点）
+///
+/// ## P2-4 新增：性能监控
+/// 自动记录各阶段耗时，用于性能分析和优化
 pub fn snap_endpoints_parallel(points: &[Point2], tolerance: f64) -> Vec<Point2> {
+    let total_start = Instant::now();
+    
     if points.len() < 200 {
         // 点数较少时使用串行算法（避免并行开销）
+        let elapsed = total_start.elapsed();
+        tracing::debug!("[snap_endpoints_parallel] 跳过并行 (n={} < 200), 耗时：{:?}", points.len(), elapsed);
         return snap_endpoints_serial(points, tolerance);
     }
 
+    tracing::info!("[snap_endpoints_parallel] 开始并行端点吸附，点数：{}", points.len());
+
     // 1. 分桶
+    let bucket_start = Instant::now();
     let buckets = create_spatial_buckets(points, tolerance);
+    let bucket_elapsed = bucket_start.elapsed();
+    tracing::debug!("[snap_endpoints_parallel] 分桶完成，耗时：{:?}", bucket_elapsed);
 
     // 2. 并行收集所有需要合并的点对
     // 使用 Vec 收集，避免 Mutex 开销
+    let collect_start = Instant::now();
     let all_merges: Vec<(usize, usize)> = buckets
         .par_iter()
         .flat_map(|(bucket_key, point_indices)| {
@@ -140,23 +156,26 @@ pub fn snap_endpoints_parallel(points: &[Point2], tolerance: f64) -> Vec<Point2>
         .collect();
 
     // 3. 应用合并 - 使用 UnionFind 并查集
+    let union_start = Instant::now();
     let mut uf = UnionFind::new(points.len());
 
     // 串行执行 union 操作（保证正确性，路径压缩）
     for (i, j) in &all_merges {
         uf.union(*i, *j);
     }
+    let union_elapsed = union_start.elapsed();
+    tracing::debug!("[snap_endpoints_parallel] 合并完成，合并对数：{}, 耗时：{:?}", all_merges.len(), union_elapsed);
 
     // 4. 收集结果：为每个连通分量计算中心点
     let mut root_to_points: HashMap<usize, Vec<Point2>> = HashMap::new();
-    
+
     for (i, &point) in points.iter().enumerate() {
         let root = uf.find_readonly(i);
         root_to_points.entry(root).or_default().push(point);
     }
 
     // 5. 计算每个分量的中心点
-    root_to_points
+    let result: Vec<Point2> = root_to_points
         .into_values()
         .map(|component_points| {
             if component_points.len() == 1 {
@@ -169,7 +188,20 @@ pub fn snap_endpoints_parallel(points: &[Point2], tolerance: f64) -> Vec<Point2>
                 [sum_x / n, sum_y / n]
             }
         })
-        .collect()
+        .collect();
+    
+    let total_elapsed = total_start.elapsed();
+    tracing::info!(
+        "[snap_endpoints_parallel] 完成，输入：{} 点 -> 输出：{} 点，总耗时：{:?} (分桶：{:?}, 收集：{:?}, 合并：{:?})",
+        points.len(),
+        result.len(),
+        total_elapsed,
+        bucket_elapsed,
+        collect_start.elapsed(),
+        union_elapsed
+    );
+    
+    result
 }
 
 /// 串行端点吸附（用于点数较少的情况）

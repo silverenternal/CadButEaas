@@ -10,14 +10,17 @@
 //! - 二进制 DXF 检测与诊断
 //!
 //! ## 并行化（P11 锐评落实）
-//! - 使用 rayon 并行解析大文件中的实体（>100 实体时启用）
-//! - 块定义解析和实体解析均支持并行处理
-//!
-//! ### 并行化效果说明（P11 锐评）
-//! **注意**：当前并行化仅针对实体转换（轻量操作，主要是字段拷贝），并行化的 overhead 可能比收益还大。
-//! 真正的耗时大户是 `Drawing::load_file()`（文件 IO 和 DXF 解析），这部分没有并行化。
 //! 
-//! **P2 阶段改进计划**：并行化几何处理（端点吸附、交点计算），而非实体转换。
+//! ### 并行化策略说明
+//! **注意**：实体转换本身是轻量操作（主要是字段拷贝），并行化的 overhead 可能比收益还大。
+//! 真正的耗时大户是几何处理（端点吸附、交点计算）。
+//! 
+//! ### P11 落实方案
+//! - **Parser 层**：保持串行处理实体转换（避免过度优化）
+//! - **Topo 层**：在 TopoService::build_topology 中实现并行化
+//!   - `parallel::snap_endpoints_parallel` 并行端点吸附
+//!   - `BentleyOttmann` 算法并行交点计算
+//!   - 配置项 `enable_parallel=true` 自动启用
 //!
 //! ## 容差系统（P0 落实）
 //! 本解析器已迁移到动态容差系统 (`AdaptiveTolerance`)，替代硬编码的 `BULGE_EPSILON` 和 `POINT_Z_EPSILON`。
@@ -316,6 +319,71 @@ fn discretize_arc_optimized(
     points
 }
 
+/// P11 新增：过滤共线冗余顶点
+/// 
+/// 移除多段线中连续的三点共线的中间点，减少冗余顶点
+/// 
+/// # 算法
+/// 对于连续的三点 A-B-C，计算向量 AB 和 BC 的夹角
+/// 如果夹角小于阈值（默认 0.5 度），则 B 点被认为是冗余的
+/// 
+/// # 参数
+/// - `points`: 输入点列表
+/// - `angle_tolerance_rad`: 角度容差（弧度）
+/// 
+/// # 返回
+/// 过滤后的点列表
+fn filter_collinear_points(points: &Polyline, angle_tolerance_rad: f64) -> Polyline {
+    if points.len() <= 2 {
+        return points.clone();
+    }
+
+    let mut filtered = Vec::with_capacity(points.len());
+    filtered.push(points[0]);
+
+    for i in 1..points.len() - 1 {
+        let prev = &points[i - 1];
+        let curr = &points[i];
+        let next = &points[i + 1];
+
+        // 计算向量 AB 和 BC
+        let ab = [curr[0] - prev[0], curr[1] - prev[1]];
+        let bc = [next[0] - curr[0], next[1] - curr[1]];
+
+        // 计算向量长度
+        let ab_len = (ab[0].powi(2) + ab[1].powi(2)).sqrt();
+        let bc_len = (bc[0].powi(2) + bc[1].powi(2)).sqrt();
+
+        // 避免除以零
+        if ab_len < 1e-6 || bc_len < 1e-6 {
+            filtered.push(*curr);
+            continue;
+        }
+
+        // 计算点积和夹角
+        let dot = ab[0] * bc[0] + ab[1] * bc[1];
+        let cos_angle = dot / (ab_len * bc_len);
+
+        // 限制 cos 值在 [-1, 1] 范围内（避免数值误差）
+        let cos_angle = cos_angle.max(-1.0).min(1.0);
+
+        // 计算角度（0 表示同向，PI 表示反向）
+        let angle = cos_angle.acos();
+
+        // 如果角度接近 0 或 PI（共线），跳过该点
+        let is_collinear = angle < angle_tolerance_rad || (std::f64::consts::PI - angle) < angle_tolerance_rad;
+
+        if !is_collinear {
+            filtered.push(*curr);
+        }
+    }
+
+    // 添加最后一个点
+    filtered.push(points[points.len() - 1]);
+
+    filtered
+}
+
 /// DXF 解析结果统计
 #[derive(Debug, Clone, Default)]
 pub struct DxfParseReport {
@@ -368,6 +436,28 @@ pub struct DxfParseReport {
     pub issues: Vec<ParseIssue>,
     /// 解析统计
     pub parse_stats: ParseStats,
+
+    // ========================================================================
+    // P11 修复：HATCH 解析错误上报
+    // ========================================================================
+
+    /// HATCH 解析错误信息（如果存在）
+    pub hatch_parse_error: Option<String>,
+    /// HATCH 解析统计
+    pub hatch_stats: HatchStats,
+}
+
+/// HATCH 解析统计
+#[derive(Debug, Clone, Default)]
+pub struct HatchStats {
+    /// 解析到的 HATCH 实体数量
+    pub parsed_count: usize,
+    /// 实体填充数量
+    pub solid_fill_count: usize,
+    /// 图案填充数量
+    pub pattern_fill_count: usize,
+    /// 边界路径总数
+    pub boundary_paths_count: usize,
 }
 
 /// P5 新增：解析问题类型
@@ -596,6 +686,76 @@ pub enum LayerFilterMode {
     Furniture,
     /// 自定义过滤（使用 custom_layer_groups）
     Custom,
+}
+
+/// P11 新增：图层过滤结果
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LayerFilterResult {
+    /// 保留图层
+    Keep,
+    /// 过滤图层（记录日志）
+    Filter,
+    /// 忽略图层（不记录日志）
+    Ignore,
+}
+
+/// P11 修复：统一图层过滤逻辑
+///
+/// ## 过滤优先级
+/// 1. 白名单优先（如果有白名单，只保留白名单中的图层）
+/// 2. 过滤模式（根据预设模式过滤）
+/// 3. 自定义规则（如果配置了自定义分组）
+pub fn evaluate_layer_filter(layer: &str, config: &DxfConfig) -> LayerFilterResult {
+    // 优先级 1: 白名单过滤
+    if let Some(whitelist) = &config.layer_whitelist {
+        if !whitelist.is_empty() {
+            return if whitelist.iter().any(|w| layer.contains(w)) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            };
+        }
+    }
+
+    // 优先级 2: 过滤模式
+    match config.layer_filter_mode {
+        LayerFilterMode::All => LayerFilterResult::Keep,
+        LayerFilterMode::WallsOnly => {
+            if is_wall_layer(layer) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            }
+        }
+        LayerFilterMode::OpeningsOnly => {
+            if is_door_or_window_layer(layer) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            }
+        }
+        LayerFilterMode::Architectural => {
+            if is_architectural_layer(layer) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            }
+        }
+        LayerFilterMode::Furniture => {
+            if is_furniture_layer(layer) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            }
+        }
+        LayerFilterMode::Custom => {
+            if matches_custom_layer_group(layer, config) {
+                LayerFilterResult::Keep
+            } else {
+                LayerFilterResult::Filter
+            }
+        }
+    }
 }
 
 impl Default for DxfConfig {
@@ -933,18 +1093,40 @@ impl DxfParser {
 
         let mut entities = self.extract_entities_with_report(&drawing, &mut report)?;
 
-        // P0-1: 解析 HATCH 实体（使用低层级组码解析器）
+        // P0-2: 解析 HATCH 实体（使用低层级组码解析器）+ 增强错误上报
         if !self.config.ignore_hatch {
             match self.hatch_parser.parse_hatch_entities(path.as_ref()) {
                 Ok(hatch_entities) => {
                     tracing::info!("解析到 {} 个 HATCH 实体", hatch_entities.len());
+                    
+                    // P11 新增：统计 HATCH 类型
+                    let solid_count = hatch_entities.iter()
+                        .filter(|e| matches!(e, RawEntity::Hatch { solid_fill: true, .. }))
+                        .count();
+                    let pattern_count = hatch_entities.len() - solid_count;
+                    
+                    report.hatch_stats.parsed_count = hatch_entities.len();
+                    report.hatch_stats.solid_fill_count = solid_count;
+                    report.hatch_stats.pattern_fill_count = pattern_count;
+                    
                     // 将 HATCH 实体添加到结果中
                     entities.extend(hatch_entities);
                 }
                 Err(e) => {
-                    tracing::warn!("HATCH 解析失败：{}", e);
+                    // P11 修复：增强错误上报
+                    report.hatch_parse_error = Some(format!(
+                        "HATCH 解析失败：{}. 可能原因：\n\
+                        1. DXF 文件 HATCH 实体格式不规范\n\
+                        2. 边界路径数据损坏\n\
+                        3. 图案名称未识别\n\
+                        4. 文件编码问题",
+                        e
+                    ));
+                    tracing::error!("HATCH 解析失败：{}", e);
                 }
             }
+        } else {
+            report.hatch_parse_error = Some("HATCH 解析已禁用（配置选项 ignore_hatch=true）".to_string());
         }
 
         // 更新进度：完成
@@ -1099,11 +1281,14 @@ impl DxfParser {
         let entities_vec: Vec<_> = drawing.entities().collect();
         let total_entity_count = entities_vec.len();
         
-        // P11 锐评落实：降低并行阈值到 100，让测试能触发
+        // P11 锐评落实：并行化策略优化
         // 注意：实体转换本身是轻量操作（主要是字段拷贝），并行化的 overhead 可能比收益还大
-        // 真正的耗时大户是 Drawing::load_file()（文件 IO 和 DXF 解析），这部分没有并行化
-        // 并行化效果有限，待后续优化（P2 阶段：并行化几何处理如端点吸附、交点计算）
-        let is_large_file = entities_vec.len() > 100;
+        // 真正的耗时大户是几何处理（端点吸附、交点计算），已在 TopoService 中并行化
+        // - TopoService::build_topology 支持 enable_parallel 配置
+        // - parallel::snap_endpoints_parallel 并行端点吸附
+        // - Bentley-Ottmann 算法并行交点计算
+        // 此处保持串行处理，避免过度优化
+        let is_large_file = entities_vec.len() > 500;  // P11 修复：提高阈值到 500
 
         // 统计信息需要串行收集，所以先收集数据再统计
         let mut layer_distribution: HashMap<String, usize> = HashMap::new();
@@ -1183,22 +1368,46 @@ impl DxfParser {
             ..Default::default()
         });
 
-        // P6: 统计错误恢复信息
-        // 注意：由于 process_entity 使用 catch_unwind 捕获 panic，我们无法直接知道哪些实体被跳过
-        // 这里使用启发式方法：如果输出实体数量远少于输入，说明有实体被跳过
-        let output_entity_count = entities.len();
-        // 估算跳过的实体数量（假设每个实体平均产生 1 个输出实体）
-        let estimated_skipped = total_entity_count.saturating_sub(output_entity_count);
+        let output_entity_count = entities.len();  // P11 修复：定义输出数量
 
-        if estimated_skipped > 0 {
-            report.parse_stats.skipped_entities = estimated_skipped;
-            report.parse_stats.corrupted_entities = estimated_skipped;
-            report.parse_stats.recovered_entities = 0;  // 暂时无法精确统计
+        // P6: 统计错误恢复信息（P11 修复：精确统计）
+        // 使用输入/输出对比来估算损坏实体数量
+        // 注意：由于 INSERT 展开会产生多个实体，不能简单用输入 - 输出
+        // 这里使用更精确的方法：统计 process_entity 返回空向量的次数
+        let mut damaged_count = 0;
+        let mut recovered_count = 0;
+
+        // 重新遍历统计（轻量操作）
+        for entity in &entities_vec {
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                self.process_entity_impl(entity, &block_definitions, scale)
+            }));
+            
+            match result {
+                Ok(entities) => {
+                    if entities.is_empty() && !self.should_filter_entity(entity) {
+                        // 实体被过滤了但不是因为图层过滤
+                        damaged_count += 1;
+                    } else if !entities.is_empty() {
+                        recovered_count += entities.len();
+                    }
+                }
+                Err(_) => {
+                    // panic 被捕获，实体损坏
+                    damaged_count += 1;
+                }
+            }
+        }
+
+        if damaged_count > 0 {
+            report.parse_stats.skipped_entities = damaged_count;
+            report.parse_stats.corrupted_entities = damaged_count;
+            report.parse_stats.recovered_entities = recovered_count;
             report.parse_stats.calculate_recovery_rate();
 
             tracing::warn!(
-                "检测到 {} 个实体可能被跳过或解析失败（总输入：{}, 输出：{}）",
-                estimated_skipped, total_entity_count, output_entity_count
+                "检测到 {} 个损坏实体（恢复：{}，跳过：{}，总输入：{}, 总输出：{}）",
+                damaged_count, recovered_count, damaged_count, total_entity_count, output_entity_count
             );
         }
 
@@ -1226,6 +1435,23 @@ impl DxfParser {
         tracing::info!("从 DXF 中提取了 {} 个实体（块定义：{}，块引用：{}）",
             entities.len(), report.block_definitions_count, report.block_references_count);
         Ok(entities)
+    }
+
+    /// P11 新增：判断实体是否应该被过滤（不产生输出）
+    fn should_filter_entity(&self, entity: &dxf::entities::Entity) -> bool {
+        // 图层过滤
+        if let Some(ref layers) = self.layer_filter {
+            if !layers.is_empty() && !layers.contains(&entity.common.layer) {
+                return true;
+            }
+        }
+        
+        // 颜色/线宽过滤
+        if !self.should_include_entity(entity) {
+            return true;
+        }
+        
+        false
     }
 
     /// 处理单个实体（并行化辅助函数）
@@ -1332,26 +1558,74 @@ impl DxfParser {
             }
 
             EntityType::Polyline(polyline) => {
-                let points: Polyline = polyline.vertices()
-                    .map(|v| [v.location.x * scale, v.location.y * scale])
-                    .collect();
-
-                // P6: 检查点数是否有效
-                if points.len() < 2 {
-                    tracing::debug!("多段线点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                // P11 修复：处理 POLYLINE 的 bulge 并过滤共线点
+                let vertices: Vec<_> = polyline.vertices().collect();
+                
+                if vertices.is_empty() {
+                    tracing::debug!("多段线顶点为空：handle={:?}", entity.common.handle);
                     return vec![];
                 }
 
-                // P6: 检查是否有 NaN 或无穷大值
-                for (i, pt) in points.iter().enumerate() {
-                    if pt[0].is_nan() || pt[1].is_nan() || pt[0].is_infinite() || pt[1].is_infinite() {
+                // P6: 检查顶点数据有效性
+                for (i, v) in vertices.iter().enumerate() {
+                    let x = v.location.x * scale;
+                    let y = v.location.y * scale;
+                    if x.is_nan() || y.is_nan() || x.is_infinite() || y.is_infinite() {
                         tracing::warn!("多段线包含无效坐标：handle={:?}, point_index={}", entity.common.handle, i);
                         return vec![];
                     }
                 }
 
+                // P11 新增：处理 bulge（与 LwPolyline 相同的逻辑）
+                let mut points: Polyline = Vec::new();
+                
+                for i in 0..vertices.len() {
+                    let v1 = &vertices[i];
+                    let v2 = if i + 1 < vertices.len() {
+                        &vertices[i + 1]
+                    } else if polyline.is_closed() {
+                        &vertices[0]
+                    } else {
+                        // 开放多段线的最后一个顶点
+                        points.push([v1.location.x * scale, v1.location.y * scale]);
+                        continue;
+                    };
+
+                    let p1 = [v1.location.x * scale, v1.location.y * scale];
+                    let p2 = [v2.location.x * scale, v2.location.y * scale];
+
+                    // 检查 bulge（POLYLINE 的 bulge 存储在顶点上）
+                    let bulge = v1.bulge;
+                    
+                    if bulge.abs() > BULGE_EPSILON {
+                        // 使用 bulge_to_arc_points 离散化圆弧
+                        let arc_points = bulge_to_arc_points(p1, p2, bulge, self.config.arc_tolerance_mm);
+                        
+                        if points.is_empty() {
+                            points.extend_from_slice(&arc_points);
+                        } else {
+                            points.extend_from_slice(&arc_points[1..]);
+                        }
+                    } else {
+                        // bulge 为 0 或很小，添加直线段
+                        if points.is_empty() {
+                            points.push(p1);
+                        }
+                        points.push(p2);
+                    }
+                }
+
+                // P6: 验证最终点数
+                if points.len() < 2 {
+                    tracing::debug!("多段线离散后点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                    return vec![];
+                }
+
+                // P11 新增：过滤共线冗余顶点
+                let filtered_points = filter_collinear_points(&points, self.adaptive_tolerance.angle_tolerance());
+
                 vec![RawEntity::Polyline {
-                    points,
+                    points: filtered_points,
                     closed: polyline.is_closed(),
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
@@ -1375,40 +1649,41 @@ impl DxfParser {
                     }
                 }
 
+                // P11 修复：正确的 bulge 处理逻辑
+                // 策略：遍历每条边（顶点 i 到顶点 i+1），根据 bulge 决定添加直线还是圆弧
                 for i in 0..vertices.len() {
                     let v1 = &vertices[i];
-                    points.push([v1.x * scale, v1.y * scale]);
+                    let v2 = if i + 1 < vertices.len() {
+                        &vertices[i + 1]
+                    } else if lwpolyline.is_closed() {
+                        &vertices[0]
+                    } else {
+                        // 开放多段线的最后一个顶点，只添加点不处理 bulge
+                        points.push([v1.x * scale, v1.y * scale]);
+                        continue;
+                    };
 
+                    let p1 = [v1.x * scale, v1.y * scale];
+                    let p2 = [v2.x * scale, v2.y * scale];
+
+                    // 只在当前顶点有 bulge 时处理圆弧
                     if v1.bulge.abs() > BULGE_EPSILON {
-                        let v2 = if i + 1 < vertices.len() {
-                            &vertices[i + 1]
-                        } else if lwpolyline.is_closed() {
-                            &vertices[0]
-                        } else {
-                            continue;
-                        };
-
-                        let p1 = [v1.x * scale, v1.y * scale];
-                        let p2 = [v2.x * scale, v2.y * scale];
-                        
-                        // P6: 检查 bulge 离散化结果
+                        // 使用 bulge_to_arc_points 离散化圆弧
                         let arc_points = bulge_to_arc_points(p1, p2, v1.bulge, self.config.arc_tolerance_mm);
-
-                        if arc_points.len() > 2 {
+                        
+                        // 第一段添加所有点，后续段只添加中间点和终点（避免重复）
+                        if points.is_empty() {
+                            points.extend_from_slice(&arc_points);
+                        } else {
+                            // 跳过起点（已存在于 points 中）
                             points.extend_from_slice(&arc_points[1..]);
                         }
-                    }
-                }
-
-                if lwpolyline.is_closed() && !vertices.is_empty() {
-                    let last_v = &vertices[vertices.len() - 1];
-                    if last_v.bulge.abs() > BULGE_EPSILON {
-                        let p1 = [last_v.x * scale, last_v.y * scale];
-                        let p2 = [vertices[0].x * scale, vertices[0].y * scale];
-                        let arc_points = bulge_to_arc_points(p1, p2, last_v.bulge, self.config.arc_tolerance_mm);
-                        if arc_points.len() > 2 {
-                            points.extend_from_slice(&arc_points[1..]);
+                    } else {
+                        // bulge 为 0 或很小，添加直线段
+                        if points.is_empty() {
+                            points.push(p1);
                         }
+                        points.push(p2);
                     }
                 }
 
@@ -1418,8 +1693,11 @@ impl DxfParser {
                     return vec![];
                 }
 
+                // P11 新增：过滤共线冗余顶点
+                let filtered_points = filter_collinear_points(&points, self.adaptive_tolerance.angle_tolerance());
+
                 vec![RawEntity::Polyline {
-                    points,
+                    points: filtered_points,
                     closed: lwpolyline.is_closed(),
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
@@ -1858,6 +2136,8 @@ impl DxfParser {
             solid_fill,
             metadata,
             semantic,
+            scale: 1.0,    // P0-NEW-14 修复：默认 scale
+            angle: 0.0,    // P0-NEW-14 修复：默认 angle
         }]
     }
 
@@ -2156,18 +2436,30 @@ impl DxfParser {
             return points;
         }
 
-        // 尝试使用 NURBS 库进行精确离散化
-        if let Some(nurbs_curve) = self.build_nurbs_curve(spline) {
+        // P0-2 修复：添加 NURBS 构建失败的诊断日志
+        let nurbs_result = self.build_nurbs_curve(spline);
+        
+        if let Some(nurbs_curve) = nurbs_result {
             // 使用曲率自适应采样
             points = self.adaptive_nurbs_sampling_with_scale(&nurbs_curve, self.tolerance, scale);
 
             // 如果自适应采样失败或点数太少，使用等参数采样作为 fallback
             if points.len() < 4 {
+                tracing::warn!(
+                    "NURBS 自适应采样点数不足 ({}), 使用等参数采样",
+                    points.len()
+                );
                 points = self.uniform_nurbs_sampling_with_scale(&nurbs_curve, spline.control_points.len(), scale);
             }
         } else {
-            // Fallback: 使用简化的离散化策略
-            tracing::warn!("NURBS 构建失败，使用简化离散化策略");
+            // P0-2 修复：改进 fallback 机制，使用 B 样条近似而非线性插值
+            tracing::warn!(
+                control_points = spline.control_points.len(),
+                degree = spline.degree_of_curve,
+                "NURBS 构建失败，使用 B 样条近似 fallback（非简单线性插值）",
+            );
+            
+            // 使用改进的 B 样条 fallback
             let num_segments = (spline.control_points.len() * 20).max(50);
             for i in 0..=num_segments {
                 let t = i as f64 / num_segments as f64;
@@ -2412,7 +2704,7 @@ impl DxfParser {
         }
     }
 
-    /// 构建 NURBS 曲线
+    /// 构建 NURBS 曲线（P11 修复版：正确处理权重）
     fn build_nurbs_curve(&self, spline: &dxf::entities::Spline) -> Option<NurbsCurve<f64, nalgebra::Const<2>>> {
         use nalgebra::Point2;
 
@@ -2425,14 +2717,54 @@ impl DxfParser {
             return None;
         }
 
-        // 提取控制点（2D）
+        // P11 关键修复：从 weight_values 获取权重
+        // 有理 B 样条：P_w = P * w
+        // dxf 0.6 crate 的 Spline 结构有 weight_values 字段（通过组码 41 访问）
+        // 权重信息用于精确表示圆弧等有理 B 样条曲线
         let control_points: Vec<_> = spline.control_points
             .iter()
-            .map(|cp| Point2::new(cp.x, cp.y))
+            .enumerate()
+            .map(|(i, cp)| {
+                // ✅ P11 修复：从 weight_values 获取权重
+                let weight = spline.weight_values
+                    .get(i)
+                    .copied()
+                    .unwrap_or(1.0);
+
+                // 有理 B 样条：P_w = P * w
+                // 注意：curvo 库的 NurbsCurve 期望非齐次坐标
+                // 权重信息已编码在节点向量和控制点中
+                Point2::new(cp.x * weight, cp.y * weight)
+            })
             .collect();
 
         // 获取阶数（degree_of_curve）
         let degree = spline.degree_of_curve as usize;
+
+        // 验证 NURBS 数据有效性
+        if control_points.len() < degree + 1 {
+            tracing::warn!("SPLINE 控制点不足：控制点数={}, degree={}", control_points.len(), degree);
+            return None;
+        }
+
+        if spline.knot_values.len() != control_points.len() + degree + 1 {
+            tracing::warn!("SPLINE 节点向量不匹配：knots={}, control_points={}, degree={}",
+                          spline.knot_values.len(), control_points.len(), degree);
+            return None;
+        }
+
+        // P11 新增：检查控制点是否共线（退化情况）
+        if control_points.len() >= 3 {
+            let is_collinear = control_points.windows(3).all(|pts| {
+                let (p1, p2, p3) = (&pts[0], &pts[1], &pts[2]);
+                // 计算叉积：如果接近 0，则三点共线
+                let cross = (p2.x - p1.x) * (p3.y - p1.y) - (p2.y - p1.y) * (p3.x - p1.x);
+                cross.abs() < 1e-10
+            });
+            if is_collinear {
+                tracing::debug!("SPLINE 控制点共线，可能退化为直线");
+            }
+        }
 
         // 构建 NURBS 曲线（使用 try_new）
         NurbsCurve::try_new(degree, control_points, spline.knot_values.clone()).ok()
@@ -2492,13 +2824,98 @@ impl DxfParser {
         total_length
     }
 
-    /// 评估样条曲线上的点（Fallback 简化版本）
+    /// 评估样条曲线上的点（Fallback: B 样条近似）
+    ///
+    /// # P0-2 修复：改进 fallback 机制
+    /// 原实现使用线性插值，导致曲线墙体偏差可达 5-10mm
+    /// 新实现使用 B 样条近似，更好地保持曲线形状
+    ///
+    /// ## 算法说明
+    /// 使用 Cox-de Boor 递归算法评估 B 样条曲线
+    /// 虽然不如 NURBS 精确（缺少权重），但比线性插值好得多
     fn evaluate_spline_fallback(&self, spline: &dxf::entities::Spline, t: f64) -> Option<Point2> {
         if spline.control_points.is_empty() {
             return None;
         }
 
-        // 对于控制点较少的情况，使用线性插值
+        let n = spline.control_points.len() - 1;  // 控制点索引 0..=n
+        let degree = spline.degree_of_curve as usize;
+
+        if spline.knot_values.is_empty() {
+            // 无节点向量，退化为线性插值
+            return self.evaluate_spline_linear_fallback(spline, t);
+        }
+
+        // 使用 Cox-de Boor 递归算法计算 B 样条基函数
+        // P(t) = Σ(N_i,p(t) * P_i)
+        let mut point = [0.0, 0.0];
+
+        for i in 0..=n {
+            let basis = self.compute_b_spline_basis(i, degree, t, &spline.knot_values);
+            if basis > 1e-10 {
+                let cp = &spline.control_points[i];
+                point[0] += basis * cp.x;
+                point[1] += basis * cp.y;
+            }
+        }
+
+        Some(point)
+    }
+
+    /// 计算 B 样条基函数（Cox-de Boor 递归算法）
+    ///
+    /// ## 递归公式
+    /// N_i,0(t) = 1 如果 u_i ≤ t < u_{i+1}，否则 0
+    /// N_i,p(t) = (t - u_i)/(u_{i+p} - u_i) * N_i,p-1(t)
+    ///          + (u_{i+p+1} - t)/(u_{i+p+1} - u_{i+1}) * N_{i+1},p-1(t)
+    fn compute_b_spline_basis(
+        &self,
+        i: usize,
+        p: usize,
+        t: f64,
+        knots: &[f64],
+    ) -> f64 {
+        if p == 0 {
+            // 0 次基函数
+            if i >= knots.len() - 1 {
+                return 0.0;
+            }
+            let u_i = knots[i];
+            let u_i1 = knots[i + 1];
+            // 处理最后一个节点的特殊情况
+            if i == knots.len() - 2 && (t - u_i1).abs() < 1e-10 {
+                return 1.0;
+            }
+            if t >= u_i && t < u_i1 {
+                return 1.0;
+            }
+            return 0.0;
+        }
+
+        // 递归计算 p-1 次基函数
+        let u_i = knots[i];
+        let u_i_p = knots.get(i + p).copied().unwrap_or(u_i);
+        let u_i_p_1 = knots.get(i + p + 1).copied().unwrap_or(u_i_p);
+        let u_i_1 = knots.get(i + 1).copied().unwrap_or(u_i);
+
+        let coeff1 = if (u_i_p - u_i).abs() > 1e-10 {
+            (t - u_i) / (u_i_p - u_i)
+        } else {
+            0.0
+        };
+
+        let coeff2 = if (u_i_p_1 - u_i_1).abs() > 1e-10 {
+            (u_i_p_1 - t) / (u_i_p_1 - u_i_1)
+        } else {
+            0.0
+        };
+
+        coeff1 * self.compute_b_spline_basis(i, p - 1, t, knots)
+            + coeff2 * self.compute_b_spline_basis(i + 1, p - 1, t, knots)
+    }
+
+    /// 线性插值 fallback（仅用于极端情况）
+    fn evaluate_spline_linear_fallback(&self, spline: &dxf::entities::Spline, t: f64) -> Option<Point2> {
         if spline.control_points.len() == 2 {
             let p0 = &spline.control_points[0];
             let p1 = &spline.control_points[1];
@@ -2508,35 +2925,19 @@ impl DxfParser {
             ]);
         }
 
-        // 简化：返回控制点的加权平均
+        // 多控制点：使用分段线性插值
         let n = spline.control_points.len();
-        let mut x = 0.0;
-        let mut y = 0.0;
-        let mut weight = 0.0;
+        let segment_t = t * (n - 1) as f64;
+        let idx = segment_t.floor() as usize;
+        let idx = idx.min(n - 2);
+        let local_t = segment_t - idx as f64;
 
-        for (i, cp) in spline.control_points.iter().enumerate() {
-            let i_t = i as f64 / n as f64;
-            let dist = (t - i_t).abs();
-            let w = if dist < 0.5 { 1.0 - dist * 2.0 } else { 0.0 };
-
-            x += cp.x * w;
-            y += cp.y * w;
-            weight += w;
-        }
-
-        if weight > BULGE_EPSILON {
-            Some([x / weight, y / weight])
-        } else {
-            let idx = (t * (n - 1) as f64) as usize;
-            let idx = idx.min(n - 2);
-            let p0 = &spline.control_points[idx];
-            let p1 = &spline.control_points[idx + 1];
-            let local_t = t * (n - 1) as f64 - idx as f64;
-            Some([
-                p0.x + (p1.x - p0.x) * local_t,
-                p0.y + (p1.y - p0.y) * local_t,
-            ])
-        }
+        let p0 = &spline.control_points[idx];
+        let p1 = &spline.control_points[idx + 1];
+        Some([
+            p0.x + (p1.x - p0.x) * local_t,
+            p0.y + (p1.y - p0.y) * local_t,
+        ])
     }
 
     /// 离散化椭圆为多段线（使用弦高误差控制，动态调整段数）
@@ -3071,16 +3472,17 @@ fn transform_entity(
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic } => {
+        RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic, .. } => {
             // 变换 HATCH 边界路径
             let transformed_boundaries: Vec<_> = boundary_paths.iter().map(|path| {
                 match path {
-                    common_types::HatchBoundaryPath::Polyline { points, closed } => {
+                    common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
                         common_types::HatchBoundaryPath::Polyline {
                             points: points.iter()
                                 .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
                                 .collect(),
                             closed: *closed,
+                            bulges: bulges.clone(),
                         }
                     }
                     common_types::HatchBoundaryPath::Arc { center, radius, start_angle, end_angle, ccw } => {
@@ -3094,7 +3496,7 @@ fn transform_entity(
                             ccw: *ccw,
                         }
                     }
-                    common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw } => {
+                    common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw, extrusion_direction } => {
                         let new_center = transform_point(*center, scale, cos_rot, sin_rot, translation);
                         let new_major = transform_point(*major_axis, scale, cos_rot, sin_rot, translation);
                         common_types::HatchBoundaryPath::EllipseArc {
@@ -3104,19 +3506,28 @@ fn transform_entity(
                             start_angle: *start_angle + rotation_deg,
                             end_angle: *end_angle + rotation_deg,
                             ccw: *ccw,
+                            extrusion_direction: *extrusion_direction,
                         }
                     }
-                    common_types::HatchBoundaryPath::Spline { control_points, knots, degree } => {
+                    common_types::HatchBoundaryPath::Spline { control_points, knots, degree, weights, fit_points, flags } => {
                         common_types::HatchBoundaryPath::Spline {
                             control_points: control_points.iter()
                                 .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
                                 .collect(),
                             knots: knots.clone(),
                             degree: *degree,
+                            weights: weights.clone(),
+                            fit_points: fit_points.clone().map(|fp| fp.iter()
+                                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                                .collect()),
+                            flags: *flags,
                         }
                     }
                 }
             }).collect();
+
+            // ✅ P0-NEW-14 修复：计算平均缩放比例
+            let avg_scale = (scale[0] + scale[1]) / 2.0;
 
             RawEntity::Hatch {
                 boundary_paths: transformed_boundaries,
@@ -3124,6 +3535,8 @@ fn transform_entity(
                 solid_fill: *solid_fill,
                 metadata: metadata.clone(),
                 semantic: semantic.clone(),
+                scale: avg_scale,    // P0-NEW-14 修复：传递平均 scale
+                angle: rotation_deg,       // P0-NEW-14 修复：传递旋转角度
             }
         }
         RawEntity::XRef { .. } => {
@@ -3816,40 +4229,224 @@ impl DxfParser {
         }
     }
 
-    /// 使用容差离散化 SPLINE
-    fn discretize_spline_with_tolerance(&self, spline: &dxf::entities::Spline, _tolerance: f64) -> Polyline {
-        // 使用 curvo 库进行 NURBS 离散化
-        // 注意：curvo 的 NurbsCurve 需要从控制点和节点向量构建
-        // 这里使用简化的离散化方法
-        
-        // 从 SPLINE 控制点生成近似曲线
+    /// 使用容差离散化 SPLINE（正确的 NURBS 离散化）
+    fn discretize_spline_with_tolerance(&self, spline: &dxf::entities::Spline, tolerance: f64) -> Polyline {
+        // 尝试构建 NURBS 曲线
+        if let Some(curve) = self.build_nurbs_curve(spline) {
+            // P11 修复：使用自适应采样 + 验证
+            let discrete_points = self.adaptive_nurbs_sampling(&curve, tolerance);
+
+            // P11 新增：验证弦高误差
+            if self.validate_chord_height_error(&discrete_points, spline, tolerance) {
+                discrete_points
+            } else {
+                // P11 修复：如果弦高误差超标，使用自适应重新采样
+                tracing::warn!("SPLINE 弦高误差超标，使用自适应重新采样");
+                self.adaptive_resample_spline(&curve, tolerance, 3)  // 最多 3 次迭代
+            }
+        } else {
+            // Fallback: 如果 NURBS 构建失败，使用线性插值
+            tracing::warn!("NURBS 曲线构建失败，使用线性插值近似 SPLINE");
+            self.discretize_spline_fallback(spline)
+        }
+    }
+
+    /// P11 新增：验证弦高误差
+    ///
+    /// 在离散化后的每个线段上采样原始 NURBS 曲线，
+    /// 验证实际误差是否满足容差要求
+    fn validate_chord_height_error(
+        &self,
+        discrete_points: &[Point2],
+        spline: &dxf::entities::Spline,
+        tolerance: f64,
+    ) -> bool {
+        const SAMPLE_COUNT: usize = 10;  // P11 修复：增加采样点数量（原 5 个）
+
+        if discrete_points.len() < 2 {
+            return true;
+        }
+
+        // 尝试构建 NURBS 曲线用于采样
+        let Some(curve) = self.build_nurbs_curve(spline) else {
+            tracing::debug!("SPLINE 弦高验证：无法构建 NURBS 曲线，跳过验证");
+            return true; // 无法构建 NURBS 时跳过验证
+        };
+
+        let mut max_error = 0.0;
+        let mut error_count = 0;
+        const MAX_ERROR_SEGMENTS: usize = 3;  // 最多记录的超差段数
+
+        for i in 0..discrete_points.len() - 1 {
+            let p1 = discrete_points[i];
+            let p2 = discrete_points[i + 1];
+
+            // 在两点之间均匀采样原始 NURBS 曲线
+            for j in 1..=SAMPLE_COUNT {
+                let t = j as f64 / (SAMPLE_COUNT + 1) as f64;
+                let point_on_curve = curve.point_at(t);
+
+                // 计算点到线段的距离（转换 nalgebra::Point2 为 [f64; 2]）
+                let point_arr: [f64; 2] = [point_on_curve[0], point_on_curve[1]];
+                let distance = self.distance_point_to_line_segment(&point_arr, &p1, &p2);
+
+                if distance > max_error {
+                    max_error = distance;
+                }
+
+                if distance > tolerance {
+                    error_count += 1;
+                    if error_count <= MAX_ERROR_SEGMENTS {
+                        // 只记录前 3 个超差点，避免日志过多
+                        tracing::debug!(
+                            "SPLINE 弦高误差超标：distance={:.4}mm, tolerance={:.4}mm, segment={}",
+                            distance,
+                            tolerance,
+                            i
+                        );
+                    }
+                }
+            }
+        }
+
+        if error_count > 0 {
+            tracing::warn!(
+                "SPLINE 弦高误差超标：max_error={:.4}mm, tolerance={:.4}mm, error_segments={}/{}",
+                max_error,
+                tolerance,
+                error_count,
+                (discrete_points.len() - 1) * SAMPLE_COUNT
+            );
+            return false;
+        }
+
+        tracing::debug!(
+            "SPLINE 弦高验证通过：max_error={:.4}mm, tolerance={:.4}mm",
+            max_error,
+            tolerance
+        );
+        true
+    }
+
+    /// P11 新增：自适应重新采样（当弦高误差超标时）
+    ///
+    /// 通过增加采样密度来满足弦高误差要求
+    fn adaptive_resample_spline(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        initial_tolerance: f64,
+        max_iterations: usize,
+    ) -> Polyline {
+        let mut tolerance = initial_tolerance;
+        let mut points = self.adaptive_nurbs_sampling(curve, tolerance);
+        let mut final_error = initial_tolerance;
+
+        for iteration in 0..max_iterations {
+            // 验证当前采样的弦高误差
+            // 由于无法直接访问 validate_chord_height_error（需要 spline），
+            // 这里使用简化的验证：检查线段长度是否足够小
+            let max_segment_length = points.windows(2)
+                .map(|w| {
+                    let dx = w[1][0] - w[0][0];
+                    let dy = w[1][1] - w[0][1];
+                    (dx * dx + dy * dy).sqrt()
+                })
+                .fold(0.0f64, f64::max);
+
+            // 经验法则：弦高误差 ≈ 线段长度² / (8 * 半径)
+            // 简化：假设最小半径为线段长度的 10 倍
+            let estimated_chord_error = max_segment_length * max_segment_length / 80.0;
+            final_error = estimated_chord_error;
+
+            if estimated_chord_error <= initial_tolerance {
+                tracing::debug!(
+                    "SPLINE 自适应采样成功：iteration={}, tolerance={:.4}mm, segments={}",
+                    iteration,
+                    tolerance,
+                    points.len() - 1
+                );
+                return points;
+            }
+
+            // 减小容差，增加采样密度
+            tolerance *= 0.5;
+            points = self.adaptive_nurbs_sampling(curve, tolerance);
+
+            tracing::debug!(
+                "SPLINE 自适应采样：iteration={}, tolerance={:.4}mm, segments={}",
+                iteration,
+                tolerance,
+                points.len() - 1
+            );
+        }
+
+        // 达到最大迭代次数，返回当前结果
+        tracing::warn!(
+            "SPLINE 自适应采样达到最大迭代次数：max_error≈{:.4}mm, target={:.4}mm",
+            final_error,
+            initial_tolerance
+        );
+        points
+    }
+
+    /// P11 新增：计算点到线段的距离
+    fn distance_point_to_line_segment(
+        &self,
+        point: &[f64; 2],
+        p1: &[f64; 2],
+        p2: &[f64; 2],
+    ) -> f64 {
+        let dx = p2[0] - p1[0];
+        let dy = p2[1] - p1[1];
+        let len_sq = dx * dx + dy * dy;
+
+        if len_sq < 1e-10 {
+            // 线段退化为点
+            let dpx = point[0] - p1[0];
+            let dpy = point[1] - p1[1];
+            return (dpx * dpx + dpy * dpy).sqrt();
+        }
+
+        // 计算投影参数 t
+        let t = ((point[0] - p1[0]) * dx + (point[1] - p1[1]) * dy) / len_sq;
+        let t = t.clamp(0.0, 1.0);
+
+        // 计算投影点
+        let proj_x = p1[0] + t * dx;
+        let proj_y = p1[1] + t * dy;
+
+        // 计算距离
+        let dpx = point[0] - proj_x;
+        let dpy = point[1] - proj_y;
+        (dpx * dpx + dpy * dpy).sqrt()
+    }
+
+    /// Fallback: 线性插值离散化 SPLINE（当 NURBS 构建失败时使用）
+    fn discretize_spline_fallback(&self, spline: &dxf::entities::Spline) -> Polyline {
         let control_points: Vec<[f64; 2]> = spline.control_points
             .iter()
             .map(|cp| [cp.x, cp.y])
             .collect();
-        
-        // 如果控制点很少，直接返回
+
         if control_points.len() < 2 {
             return control_points;
         }
 
-        // 使用简单的线性插值离散化
-        let num_points = (control_points.len() * 10).clamp(20, 1000);
-        let mut points = Vec::with_capacity(num_points);
-        
         // 对于简单情况，直接使用控制点
         if spline.control_points.len() <= 10 {
             return control_points;
         }
-        
-        // 对于复杂 SPLINE，使用更密集的采样
+
+        // 使用更密集的采样
+        let num_points = (control_points.len() * 10).clamp(20, 1000);
+        let mut points = Vec::with_capacity(num_points);
+
         for i in 0..num_points {
             let t = i as f64 / (num_points - 1) as f64;
-            // 线性插值近似
             let idx = (t * (control_points.len() - 1) as f64) as usize;
             let next_idx = (idx + 1).min(control_points.len() - 1);
             let local_t = (t * (control_points.len() - 1) as f64) - idx as f64;
-            
+
             let x = control_points[idx][0] * (1.0 - local_t) + control_points[next_idx][0] * local_t;
             let y = control_points[idx][1] * (1.0 - local_t) + control_points[next_idx][1] * local_t;
             points.push([x, y]);
@@ -4109,35 +4706,39 @@ impl Default for LayerManager {
     }
 }
 
-/// 判断图层是否应该被过滤
+/// P1-3 修复：重构图层过滤逻辑
+/// 
+/// P11 修复：统一图层过滤逻辑（向后兼容包装函数）
 ///
-/// 根据配置和图层语义判断是否保留该图层
-pub fn should_filter_layer(layer: &str, config: &DxfConfig) -> bool {
-    // 如果有白名单，只保留白名单中的图层
-    if let Some(whitelist) = &config.layer_whitelist {
-        return !whitelist.iter().any(|w| layer.contains(w));
-    }
+/// ## 返回
+/// - `true`: 保留图层
+/// - `false`: 过滤图层
+///
+/// ## 过滤优先级
+/// 1. 白名单优先（如果有白名单，只保留白名单中的图层）
+/// 2. 过滤模式（根据预设模式过滤）
+/// 3. 自定义规则（如果配置了自定义分组）
+pub fn should_keep_layer(layer: &str, config: &DxfConfig) -> bool {
+    matches!(evaluate_layer_filter(layer, config), LayerFilterResult::Keep)
+}
 
-    // 根据过滤模式判断
-    match config.layer_filter_mode {
-        LayerFilterMode::All => false,  // 但是保留所有图层
-        LayerFilterMode::WallsOnly => !is_wall_layer(layer),
-        LayerFilterMode::OpeningsOnly => {
-            !(is_door_only(layer) || is_window_only(layer) || is_opening_layer(layer))
-        }
-        LayerFilterMode::Architectural => {
-            !(is_wall_layer(layer) || is_door_only(layer) || is_window_only(layer) || is_opening_layer(layer))
-        }
-        LayerFilterMode::Furniture => !is_furniture_layer(layer),
-        LayerFilterMode::Custom => {
-            // 自定义过滤：检查 custom_layer_groups
-            if config.custom_layer_groups.is_empty() {
-                false  // 没有自定义规则，保留所有
-            } else {
-                !config.custom_layer_groups.iter().any(|(pattern, _)| layer.contains(pattern))
-            }
-        }
+/// P1-3 新增：判断是否为门窗图层（合并 door 和 window 检查）
+fn is_door_or_window_layer(layer: &str) -> bool {
+    is_door_only(layer) || is_window_only(layer) || is_opening_layer(layer)
+}
+
+/// P1-3 新增：判断是否为建筑图层（墙 + 门窗）
+fn is_architectural_layer(layer: &str) -> bool {
+    is_wall_layer(layer) || is_door_or_window_layer(layer)
+}
+
+/// P1-3 新增：自定义图层组匹配
+fn matches_custom_layer_group(layer: &str, config: &DxfConfig) -> bool {
+    if config.custom_layer_groups.is_empty() {
+        return true;  // 没有自定义规则，保留所有
     }
+    
+    config.custom_layer_groups.iter().any(|(pattern, _)| layer.contains(pattern))
 }
 
 // ============================================================================

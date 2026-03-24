@@ -52,13 +52,14 @@ const SHADER_CODE: &str = r#"
 struct VertexInput {
     @location(0) position: vec2<f32>,
     @location(1) color: vec4<f32>,
+    @location(2) line_width: f32,
 }
 
 // 实例化数据（每个实例一个）
 struct InstanceInput {
-    @location(2) model_matrix: mat4x4<f32>,
-    @location(6) instance_color: vec4<f32>,
-    @location(7) instance_id: u32,
+    @location(3) model_matrix: mat4x4<f32>,
+    @location(7) instance_color: vec4<f32>,
+    @location(8) instance_id: u32,
 }
 
 struct VertexOutput {
@@ -259,13 +260,14 @@ impl RenderStats {
 // GPU 渲染器（wgpu 实现）
 // ============================================================================
 
-/// 顶点数据（GPU 渲染用）
+/// 顶点数据（GPU 渲染用）- P0-3 修复：添加 line_width 字段
 #[repr(C)]
 #[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 #[cfg(feature = "gpu")]
 struct Vertex {
     position: [f32; 2],
     color: [f32; 4],
+    line_width: f32,  // P0-3 修复：LOD 线宽
 }
 
 #[cfg(feature = "gpu")]
@@ -284,6 +286,12 @@ impl Vertex {
                     offset: std::mem::size_of::<[f32; 2]>() as wgpu::BufferAddress,
                     shader_location: 1,
                     format: wgpu::VertexFormat::Float32x4,
+                },
+                // P0-3 修复：添加 line_width 属性
+                wgpu::VertexAttribute {
+                    offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
+                    shader_location: 2,
+                    format: wgpu::VertexFormat::Float32,
                 },
             ],
         }
@@ -676,10 +684,10 @@ impl GpuRenderer {
         self.queue.clone()
     }
 
-    /// 渲染线段到 GPU
+    /// 渲染线段到 GPU - P0-3 修复：LOD 动态线宽
     ///
     /// # 参数
-    /// - `lines`: 线段列表，每条线段为 (起点，终点，颜色)
+    /// - `lines`: 线段列表，每条线段为 (起点，终点，颜色，图层名)
     /// - `zoom`: 缩放级别
     /// - `pan`: 平移偏移
     ///
@@ -687,25 +695,34 @@ impl GpuRenderer {
     /// 渲染统计信息
     pub fn render_lines(
         &mut self,
-        lines: &[(Point2, Point2, [f32; 4])],
+        lines: &[(Point2, Point2, [f32; 4], String)],  // P0-3 修复：添加图层名
         #[allow(unused_variables)] zoom: f32,
         #[allow(unused_variables)] pan: egui::Vec2,
     ) -> RenderStats {
         #[cfg(feature = "gpu")]
         {
             if let (Some(device), Some(queue)) = (&self.device, &self.queue) {
-                // 转换为顶点数据
+                // P0-3 修复：计算 LOD 基础线宽
+                let base_line_width = Self::calculate_lod_line_width(zoom);
+
+                // 转换为顶点数据 - P0-3 修复：添加 line_width
                 let vertices: Vec<Vertex> = lines
                     .iter()
-                    .flat_map(|&(start, end, color)| {
+                    .flat_map(|&(start, end, color, ref layer)| {
+                        // P0-3 修复：根据图层语义计算线宽乘数
+                        let layer_multiplier = Self::get_layer_width_multiplier(Some(layer.as_str()));
+                        let line_width = base_line_width * layer_multiplier;
+
                         [
                             Vertex {
                                 position: [start[0] as f32, start[1] as f32],
                                 color,
+                                line_width,
                             },
                             Vertex {
                                 position: [end[0] as f32, end[1] as f32],
                                 color,
+                                line_width,
                             },
                         ]
                     })
@@ -758,6 +775,59 @@ impl GpuRenderer {
             (lines.len() / self.config.max_batch_size).max(1),
             lines.len() * 2,
         )
+    }
+
+    /// P0-3 修复：根据缩放级别计算 LOD 线宽
+    ///
+    /// ## LOD 策略
+    /// - zoom < 0.2: 0.5px（概览模式，线宽最细）
+    /// - zoom 0.2-0.5: 1.0px（缩小模式）
+    /// - zoom 0.5-1.0: 2.0px（正常模式）
+    /// - zoom 1.0-2.0: 2.5px（放大模式）
+    /// - zoom > 2.0: 3.0px（细节模式，线宽最粗）
+    fn calculate_lod_line_width(zoom: f32) -> f32 {
+        const MIN_WIDTH: f32 = 0.5;
+        const MAX_WIDTH: f32 = 3.0;
+
+        // 使用对数缩放，使线宽变化更平滑
+        let log_zoom = zoom.max(0.1).ln();
+        let normalized = (log_zoom + 1.0) / 3.0; // 归一化到 0-1 范围
+        let width = MIN_WIDTH + (MAX_WIDTH - MIN_WIDTH) * normalized.clamp(0.0, 1.0);
+
+        width.clamp(MIN_WIDTH, MAX_WIDTH)
+    }
+
+    /// P0-3 修复：根据图层语义获取线宽乘数
+    ///
+    /// ## 图层线宽优先级
+    /// - 墙体：1.5x（最粗，强调结构）
+    /// - 门窗：1.2x（较粗）
+    /// - 家具：1.0x（正常）
+    /// - 标注：0.8x（较细，避免喧宾夺主）
+    /// - 其他：1.0x（默认）
+    fn get_layer_width_multiplier(layer: Option<&str>) -> f32 {
+        let layer_upper = layer.unwrap_or("").to_uppercase();
+
+        // 墙体图层 - 最粗
+        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
+            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+            return 1.5;
+        }
+
+        // 门窗图层 - 较粗
+        if layer_upper.contains("DOOR") || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+            return 1.2;
+        }
+
+        // 标注图层 - 较细
+        if layer_upper.contains("DIM") || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+            return 0.8;
+        }
+
+        // 家具和其他 - 默认
+        1.0
     }
 
     /// 执行渲染（需要在 eframe 的 render 回调中调用）
@@ -863,10 +933,10 @@ impl CpuRenderer {
         }
     }
 
-    /// 渲染线段到 egui painter
+    /// 渲染线段到 egui painter - P0-3 修复：LOD 动态线宽
     pub fn render_lines_egui(
         &mut self,
-        lines: &[(Point2, Point2, [f32; 4])],
+        lines: &[(Point2, Point2, [f32; 4], String)],  // P0-3 修复：添加图层名
         painter: &egui::Painter,
         rect: egui::Rect,
         zoom: f32,
@@ -876,15 +946,22 @@ impl CpuRenderer {
         let mut count = 0;
         let center = rect.center();
 
-        for &(start, end, color) in lines {
+        // P0-3 修复：计算 LOD 基础线宽
+        let base_line_width = Self::calculate_lod_line_width(zoom);
+
+        for &(start, end, color, ref layer) in lines {
+            // P0-3 修复：根据图层语义计算线宽
+            let layer_multiplier = Self::get_layer_width_multiplier(Some(layer.as_str()));
+            let line_width = base_line_width * layer_multiplier;
+
             // 坐标变换：world -> screen
             let start_pos = self.world_to_screen(start, center, zoom, pan, scene_origin);
             let end_pos = self.world_to_screen(end, center, zoom, pan, scene_origin);
 
-            // 使用 egui 绘制线段
+            // 使用 egui 绘制线段 - P0-3 修复：使用 LOD 线宽
             painter.line_segment(
                 [start_pos, end_pos],
-                egui::Stroke::new(1.0, Color32::from_rgba_unmultiplied(
+                egui::Stroke::new(line_width, Color32::from_rgba_unmultiplied(
                     (color[0] * 255.0) as u8,
                     (color[1] * 255.0) as u8,
                     (color[2] * 255.0) as u8,
@@ -922,6 +999,45 @@ impl CpuRenderer {
     /// 获取统计信息
     pub fn stats(&self) -> &RenderStats {
         &self.stats
+    }
+
+    /// P0-3 修复：根据缩放级别计算 LOD 线宽（CpuRenderer 版本）
+    fn calculate_lod_line_width(zoom: f32) -> f32 {
+        const MIN_WIDTH: f32 = 0.5;
+        const MAX_WIDTH: f32 = 3.0;
+
+        // 使用对数缩放，使线宽变化更平滑
+        let log_zoom = zoom.max(0.1).ln();
+        let normalized = (log_zoom + 1.0) / 3.0; // 归一化到 0-1 范围
+        let width = MIN_WIDTH + (MAX_WIDTH - MIN_WIDTH) * normalized.clamp(0.0, 1.0);
+
+        width.clamp(MIN_WIDTH, MAX_WIDTH)
+    }
+
+    /// P0-3 修复：根据图层语义获取线宽乘数（CpuRenderer 版本）
+    fn get_layer_width_multiplier(layer: Option<&str>) -> f32 {
+        let layer_upper = layer.unwrap_or("").to_uppercase();
+
+        // 墙体图层 - 最粗
+        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
+            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+            return 1.5;
+        }
+
+        // 门窗图层 - 较粗
+        if layer_upper.contains("DOOR") || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+            return 1.2;
+        }
+
+        // 标注图层 - 较细
+        if layer_upper.contains("DIM") || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+            return 0.8;
+        }
+
+        // 家具和其他 - 默认
+        1.0
     }
 }
 

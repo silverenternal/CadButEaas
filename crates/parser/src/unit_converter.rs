@@ -374,16 +374,17 @@ impl UnitConverter {
                     semantic: semantic.clone(),
                 }
             }
-            RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic } => {
+            RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic, scale, angle } => {
                 // 转换 HATCH 边界路径中的坐标
                 let converted_boundaries: Vec<common_types::HatchBoundaryPath> = boundary_paths
                     .iter()
                     .map(|boundary| {
                         match boundary {
-                            common_types::HatchBoundaryPath::Polyline { points, closed } => {
+                            common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
                                 common_types::HatchBoundaryPath::Polyline {
                                     points: points.iter().map(|p| self.convert_point(*p)).collect(),
                                     closed: *closed,
+                                    bulges: bulges.clone(),
                                 }
                             }
                             common_types::HatchBoundaryPath::Arc { center, radius, start_angle, end_angle, ccw } => {
@@ -395,7 +396,7 @@ impl UnitConverter {
                                     ccw: *ccw,
                                 }
                             }
-                            common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw } => {
+                            common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw, extrusion_direction } => {
                                 common_types::HatchBoundaryPath::EllipseArc {
                                     center: self.convert_point(*center),
                                     major_axis: self.convert_point(*major_axis),
@@ -403,13 +404,17 @@ impl UnitConverter {
                                     start_angle: *start_angle,
                                     end_angle: *end_angle,
                                     ccw: *ccw,
+                                    extrusion_direction: *extrusion_direction,
                                 }
                             }
-                            common_types::HatchBoundaryPath::Spline { control_points, knots, degree } => {
+                            common_types::HatchBoundaryPath::Spline { control_points, knots, degree, weights, fit_points, flags } => {
                                 common_types::HatchBoundaryPath::Spline {
                                     control_points: control_points.iter().map(|p| self.convert_point(*p)).collect(),
                                     knots: knots.clone(),
                                     degree: *degree,
+                                    weights: weights.clone(),
+                                    fit_points: fit_points.as_ref().map(|fp| fp.iter().map(|p| self.convert_point(*p)).collect()),
+                                    flags: *flags,
                                 }
                             }
                         }
@@ -422,6 +427,8 @@ impl UnitConverter {
                     solid_fill: *solid_fill,
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
+                    scale: *scale,    // P0-NEW-14 修复：传递 scale
+                    angle: *angle,    // P0-NEW-14 修复：传递 angle
                 }
             }
             RawEntity::XRef { .. } => {

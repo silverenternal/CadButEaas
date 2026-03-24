@@ -97,11 +97,11 @@ pub struct TopoConfig {
     pub merge_angle_tolerance_deg: f64,
     /// 最大间隙桥接长度 (mm)
     pub max_gap_bridge_length_mm: f64,
-    /// Halfedge 结构支持（P11 锐评落实）
-    /// true = 使用 Halfedge 数据结构（支持面枚举、孔洞遍历）
-    /// false = 使用邻接表遍历（默认，兼容现有流程）
-    #[serde(default)]
-    pub use_halfedge: bool,
+    /// P11 新增：拓扑构建算法
+    /// - "dfs": DFS 方案（默认，向后兼容）
+    /// - "halfedge": Halfedge 方案（推荐，支持嵌套孔洞）
+    #[serde(default = "default_algorithm")]
+    pub algorithm: String,
     /// 跳过交点检测（P11 性能优化）
     /// true = 跳过交点检测和切分，适用于已清理的 DXF 文件
     /// false = 执行完整的交点检测（默认，处理复杂图纸）
@@ -116,6 +116,10 @@ pub struct TopoConfig {
     /// 当线段数量超过此阈值时自动启用并行处理
     #[serde(default = "default_parallel_threshold")]
     pub parallel_threshold: usize,
+}
+
+fn default_algorithm() -> String {
+    "dfs".to_string()
 }
 
 fn default_parallel_threshold() -> usize {
@@ -193,7 +197,7 @@ impl Default for TopoConfig {
             min_line_length_mm: 1.0,
             merge_angle_tolerance_deg: 5.0,
             max_gap_bridge_length_mm: 2.0,
-            use_halfedge: false,
+            algorithm: "dfs".to_string(),
             skip_intersection_check: false,
             enable_parallel: false,
             parallel_threshold: 1000,
@@ -366,7 +370,7 @@ impl CadConfig {
                 min_line_length_mm: 1.0,
                 merge_angle_tolerance_deg: 5.0,
                 max_gap_bridge_length_mm: 2.0,
-                use_halfedge: false,
+                algorithm: "dfs".to_string(),
                 skip_intersection_check: false,
                 enable_parallel: false,
                 parallel_threshold: 1000,
@@ -427,7 +431,7 @@ impl CadConfig {
                 min_line_length_mm: 0.5,
                 merge_angle_tolerance_deg: 2.0,
                 max_gap_bridge_length_mm: 0.5,
-                use_halfedge: false,
+                algorithm: "dfs".to_string(),
                 skip_intersection_check: false,
                 enable_parallel: false,
                 parallel_threshold: 1000,
@@ -476,7 +480,7 @@ impl CadConfig {
                 min_line_length_mm: 3.0,
                 merge_angle_tolerance_deg: 10.0,
                 max_gap_bridge_length_mm: 5.0,
-                use_halfedge: false,
+                algorithm: "dfs".to_string(),
                 skip_intersection_check: false,
                 enable_parallel: false,
                 parallel_threshold: 1000,
@@ -520,7 +524,7 @@ impl CadConfig {
                 min_line_length_mm: 5.0,
                 merge_angle_tolerance_deg: 15.0,
                 max_gap_bridge_length_mm: 1.0,
-                use_halfedge: false,
+                algorithm: "dfs".to_string(),
                 skip_intersection_check: false,
                 enable_parallel: false,
                 parallel_threshold: 1000,

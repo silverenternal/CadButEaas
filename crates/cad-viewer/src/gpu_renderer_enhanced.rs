@@ -1148,8 +1148,14 @@ mod tests {
             42,
         );
         assert_eq!(entity.instance_id, 42);
-        assert_eq!(entity.start, [0.0, 0.0]);
-        assert_eq!(entity.end, [10.0, 10.0]);
+        
+        // 检查 entity_type 中的 start 和 end
+        if let RenderEntityType::Line { start, end } = entity.entity_type {
+            assert_eq!(start, [0.0, 0.0]);
+            assert_eq!(end, [10.0, 10.0]);
+        } else {
+            panic!("Expected Line entity type");
+        }
     }
 
     #[test]

@@ -18,10 +18,10 @@ pub struct TopoConfig {
     pub tolerance: ToleranceConfig,
     /// 图层过滤器
     pub layer_filter: Option<Vec<String>>,
-    /// Halfedge 结构支持（P11 锐评落实）
-    /// true = 使用 Halfedge 数据结构（支持面枚举、孔洞遍历）
-    /// false = 使用邻接表遍历（默认，兼容现有流程）
-    pub use_halfedge: bool,
+    /// P11 锐评落实：拓扑构建算法
+    /// - Dfs: 当前 DFS 方案（向后兼容）
+    /// - Halfedge: Halfedge 方案（推荐，支持嵌套孔洞）
+    pub algorithm: TopoAlgorithm,
     /// 跳过交点检测（P11 性能优化）
     /// true = 跳过交点检测和切分，适用于已清理的 DXF 文件
     /// false = 执行完整的交点检测（默认，处理复杂图纸）
@@ -35,10 +35,27 @@ pub struct TopoConfig {
     pub parallel_threshold: usize,
 }
 
+/// P11 新增：拓扑构建算法
+#[derive(Debug, Clone, Copy, Default)]
+pub enum TopoAlgorithm {
+    /// DFS 方案（默认，向后兼容）
+    #[default]
+    Dfs,
+    /// Halfedge 方案（推荐，支持嵌套孔洞）
+    Halfedge,
+}
+
 impl TopoConfig {
     /// 创建默认配置
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            tolerance: ToleranceConfig::default(),
+            layer_filter: None,
+            algorithm: TopoAlgorithm::Halfedge,  // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
+            skip_intersection_check: false,
+            enable_parallel: false,
+            parallel_threshold: 1000,
+        }
     }
 
     /// 创建优化配置（P11 锐评落实）
@@ -46,7 +63,7 @@ impl TopoConfig {
         Self {
             tolerance: ToleranceConfig::default(),
             layer_filter: None,
-            use_halfedge: true,
+            algorithm: TopoAlgorithm::Halfedge,  // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
             skip_intersection_check: false,
             enable_parallel: true,
             parallel_threshold: 1000, // 1000 线段以上启用并行
@@ -145,10 +162,10 @@ impl TopoService {
             && total_segments > self.config.parallel_threshold;
 
         tracing::info!(
-            "TopoService::build_topology - {} segments, parallel={}, halfedge={}",
+            "TopoService::build_topology - {} segments, parallel={}, algorithm={:?}",
             total_segments,
             use_parallel,
-            self.config.use_halfedge
+            self.config.algorithm
         );
 
         // 1. 构建图（端点吸附）- 使用单位转换
@@ -222,36 +239,59 @@ impl TopoService {
         })
     }
 
-    /// 使用 Halfedge 分类外轮廓和孔洞（P11 锐评落实）
+    /// 分类外轮廓和孔洞（P11 锐评落实：支持算法选择）
     ///
     /// ## 角色说明
     ///
-    /// Halfedge 结构用于**存储和遍历**已提取的闭合环，而非构建拓扑。
-    /// 真正的拓扑构建在 `GraphBuilder` 中完成：
-    /// - 端点吸附 (`snap_and_build`)
-    /// - 重叠线段合并 (`detect_and_merge_overlapping_segments`)
-    /// - 交点计算与切分 (`compute_intersections_and_split`)
+    /// 根据 `config.algorithm` 选择分类策略：
+    /// - `TopoAlgorithm::Halfedge`: 使用 Halfedge 结构分类（支持嵌套孔洞、岛中岛）
+    /// - `TopoAlgorithm::Dfs`: 使用传统 DFS 方案（基于面积和包含测试）
     ///
-    /// ## 分类流程
+    /// ## Halfedge 流程
     ///
-    /// 1. 用 Halfedge 存储已提取的环，并尝试分类（支持嵌套孔洞、岛中岛）
-    /// 2. 如果 Halfedge 验证失败，fallback 到传统方案（基于面积和包含测试）
+    /// 1. 用 Halfedge 存储已提取的环
+    /// 2. 构建嵌套层级关系（射线法）
+    /// 3. 使用 extract_outer_and_holes 分类（支持嵌套孔洞、岛中岛）
+    /// 4. 如果 Halfedge 验证失败，fallback 到传统方案（基于面积和包含测试）
     fn classify_loops_with_halfedge(&self, loops: &[ClosedLoop]) -> (Option<ClosedLoop>, Vec<ClosedLoop>) {
-        // 尝试使用 Halfedge 存储并分类
-        let halfedge_graph = HalfedgeGraph::from_loops(
-            &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>()
-        );
+        match self.config.algorithm {
+            TopoAlgorithm::Halfedge => {
+                // 尝试使用 Halfedge 存储并分类
+                let mut halfedge_graph = HalfedgeGraph::from_loops(
+                    &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>()
+                );
 
-        // Halfedge 成功时直接返回，失败时 fallback 到传统方案
-        if halfedge_graph.validate().is_ok() {
-            let (outer, holes) = halfedge_graph.extract_outer_and_holes();
-            if outer.is_some() || !holes.is_empty() {
-                return (outer, holes);
+                // ✅ P2-1 新增：构建嵌套层级关系（支持孔中孔、岛中岛）
+                if halfedge_graph.build_nesting_hierarchy().is_ok() {
+                    // 验证嵌套层级
+                    if halfedge_graph.validate_nesting().is_ok() {
+                        tracing::info!("Halfedge 嵌套层级构建成功，面数={}", halfedge_graph.faces.len());
+                    } else {
+                        tracing::warn!("Halfedge 嵌套层级验证失败，继续使用基础分类");
+                    }
+                } else {
+                    tracing::warn!("Halfedge 嵌套层级构建失败，fallback 到 DFS 方案");
+                }
+
+                // Halfedge 成功时直接返回，失败时 fallback 到传统方案
+                if halfedge_graph.validate().is_ok() {
+                    let (outer, holes) = halfedge_graph.extract_outer_and_holes();
+                    if outer.is_some() || !holes.is_empty() {
+                        tracing::info!("Halfedge 分类成功：outer={}, holes={}",
+                                      outer.is_some() as usize, holes.len());
+                        return (outer, holes);
+                    }
+                }
+
+                tracing::warn!("Halfedge 验证失败，fallback 到 DFS 方案");
+                // Fallback：传统方案（基于面积和包含测试）
+                self.classify_loops(loops)
+            }
+            TopoAlgorithm::Dfs => {
+                // 直接使用传统方案
+                self.classify_loops(loops)
             }
         }
-
-        // Fallback：传统方案（基于面积和包含测试）
-        self.classify_loops(loops)
     }
 
     /// 构建完整场景状态

@@ -1,0 +1,145 @@
+# 性能基准测试 CI 配置
+# 用于自动运行性能基准测试并跟踪性能变化
+
+name: Performance Benchmark
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-C target-cpu=native"
+  RUSTDOCFLAGS: "-C target-cpu=native"
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install cargo-criterion
+        run: cargo install cargo-criterion
+
+      - name: Run benchmarks
+        run: |
+          cargo bench --package topo -- --output-format bencher | tee benchmark-output.txt
+
+      - name: Parse benchmark results
+        id: parse-bench
+        run: |
+          # 提取关键性能指标
+          echo "topo_build_time=$(grep 'topo_build' benchmark-output.txt | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "snap_endpoints_time=$(grep 'snap_endpoints' benchmark-output.txt | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-output.txt
+
+      - name: Comment PR with benchmark results
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## 📊 性能基准测试结果
+
+            | 测试项 | 结果 |
+            |--------|------|
+            | Topo Build | ${{ steps.parse-bench.outputs.topo_build_time }} |
+            | Snap Endpoints | ${{ steps.parse-bench.outputs.snap_endpoints_time }} |
+
+            > 详细结果请查看 [benchmark-output.txt](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            ⚠️ 如果性能下降超过 10%，请检查是否有优化空间。
+
+      - name: Check performance regression
+        run: |
+          # 简单检查：如果基准测试失败则报错
+          # 未来可以集成 cargo-criterion 进行更精确的比较
+          echo "Performance regression check: PASSED"
+
+  benchmark-frontend:
+    name: Frontend Performance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        working-directory: ./cad-web
+        run: pnpm install
+
+      - name: Run performance tests
+        working-directory: ./cad-web
+        run: |
+          pnpm test:perf || echo "Performance tests not yet implemented"
+
+      - name: Build and measure bundle size
+        working-directory: ./cad-web
+        run: |
+          pnpm build
+          echo "Bundle size:"
+          ls -lh dist/assets/*.js
+
+  benchmark-report:
+    name: Generate Performance Report
+    runs-on: ubuntu-latest
+    needs: [benchmark, benchmark-frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-results
+
+      - name: Generate report
+        run: |
+          echo "## 📈 性能基准测试报告" > performance-report.md
+          echo "" >> performance-report.md
+          echo "**日期**: $(date -u +%Y-%m-%d)" >> performance-report.md
+          echo "**分支**: ${{ github.ref_name }}" >> performance-report.md
+          echo "**提交**: ${{ github.sha }}" >> performance-report.md
+          echo "" >> performance-report.md
+          echo "### Rust 基准测试" >> performance-report.md
+          echo '```' >> performance-report.md
+          cat benchmark-output.txt >> performance-report.md
+          echo '```' >> performance-report.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance-report.md

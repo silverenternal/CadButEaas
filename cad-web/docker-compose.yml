@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=/api
+      - VITE_WS_URL=/ws
+
+  backend:
+    image: cad-backend:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - RUST_LOG=info
+      - CAD_CONFIG_PATH=/app/config
+
+  # Optional: Development service with hot reload
+  web-dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    command: sh -c "corepack enable pnpm && pnpm install && pnpm dev --host 0.0.0.0"
+    profiles:
+      - dev

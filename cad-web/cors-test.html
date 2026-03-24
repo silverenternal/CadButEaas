@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS 测试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f5f5f5; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>CORS 测试</h1>
+    <div id="result"></div>
+    
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const resultDiv = document.getElementById('result');
+        
+        async function test() {
+            resultDiv.innerHTML = '<p>测试中...</p>';
+            
+            try {
+                // 测试 1: 健康检查
+                const health = await fetch(`${API_URL}/health`);
+                const healthData = await health.json();
+                resultDiv.innerHTML += `<p class="success">✅ 健康检查成功：${JSON.stringify(healthData)}</p>`;
+                
+                // 测试 2: 尝试上传（使用 fetch）
+                const formData = new FormData();
+                formData.append('file', new Blob(['test'], { type: 'text/plain' }), 'test.txt');
+                
+                const upload = await fetch(`${API_URL}/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (upload.ok) {
+                    const uploadData = await upload.json();
+                    resultDiv.innerHTML += `<p class="success">✅ 上传成功：${JSON.stringify(uploadData)}</p>`;
+                } else {
+                    resultDiv.innerHTML += `<p class="error">❌ 上传失败：HTTP ${upload.status}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML += `<p class="error">❌ 错误：${error.message}</p>`;
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

@@ -134,7 +134,7 @@ impl CpuRenderer {
         code
     }
 
-    /// 构建渲染队列
+    /// 构建渲染队列（P0-3 修复：LOD 动态线宽）
     fn build_render_queue(&mut self, scene: &SceneState, camera: &Camera2D, rect: Rect) {
         self.render_queue.clear();
 
@@ -147,6 +147,11 @@ impl CpuRenderer {
 
         let mut visible_count = 0;
         let mut clipped_count = 0;
+
+        // P0-3 修复：根据缩放级别动态调整基础线宽
+        // 缩放级别越低（zoom < 1），线宽越细，避免画面混乱
+        // 缩放级别越高（zoom > 1），线宽越粗，保持清晰度
+        let base_line_width = Self::calculate_lod_line_width(camera.zoom);
 
         for edge in &scene.edges {
             // 检查图层可见性
@@ -171,11 +176,17 @@ impl CpuRenderer {
             let start = camera.world_to_screen(edge.start, rect, scene.scene_origin);
             let end = camera.world_to_screen(edge.end, rect, scene.scene_origin);
 
-            // 获取材质 - P11 修复：增加线宽提升可见性
+            // 获取材质 - P0-3 修复：LOD 动态线宽 + 图层颜色
             let color = Self::get_layer_color(edge.layer.as_deref());
+            
+            // P0-3 修复：根据图层语义调整线宽
+            // 墙体图层使用更粗的线，家具图层使用较细的线
+            let layer_width_multiplier = Self::get_layer_width_multiplier(edge.layer.as_deref());
+            let line_width = base_line_width * layer_width_multiplier;
+            
             let material = crate::render::MaterialId {
                 color,
-                line_width: 3.0,  // 从 2.0 增加到 3.0
+                line_width,
             };
 
             let layer = crate::render::LayerId {
@@ -187,7 +198,70 @@ impl CpuRenderer {
         }
 
         // P11 调试：打印渲染统计
-        eprintln!("[DEBUG] render: visible={}, clipped={}, total={}", visible_count, clipped_count, scene.edges.len());
+        eprintln!("[DEBUG] render: visible={}, clipped={}, total={}, zoom={:.2}", 
+                  visible_count, clipped_count, scene.edges.len(), camera.zoom);
+    }
+
+    /// P0-3 修复：根据缩放级别计算 LOD 线宽
+    ///
+    /// ## LOD 策略（P11 修复版）
+    /// - zoom < 0.3: 0.8-1.25px（概览模式，有线宽下限）
+    /// - zoom 0.3-1.5: 1.25-2.45px（正常模式，线性过渡）
+    /// - zoom > 1.5: 2.5px（放大模式，保持恒定避免过粗）
+    fn calculate_lod_line_width(zoom: f32) -> f32 {
+        const MIN_WIDTH: f32 = 0.8;   // P11 修复：提升最小线宽（原 0.5）
+        const MAX_WIDTH: f32 = 2.5;   // P11 修复：降低最大线宽（原 3.0）
+
+        // P11 修复：使用分段函数，避免极端值
+        if zoom < 0.3 {
+            // 缩小级别：线宽随 zoom 降低而变细，但有下限
+            MIN_WIDTH + zoom * 1.5
+        } else if zoom < 1.5 {
+            // 标准级别：线性过渡
+            MIN_WIDTH + (zoom - 0.3) * 1.2
+        } else {
+            // 放大级别：保持恒定，避免过粗
+            MAX_WIDTH
+        }
+        .clamp(MIN_WIDTH, MAX_WIDTH)
+    }
+
+    /// P0-3 修复：根据图层语义获取线宽乘数
+    ///
+    /// ## 图层线宽优先级（P11 修复版）
+    /// - 墙体：1.3x（原 1.5x，降低避免过粗）
+    /// - 门窗：1.1x（原 1.2x，降低避免过粗）
+    /// - 家具：0.9x（新增，略低于默认）
+    /// - 标注：0.7x（原 0.8x，降低避免喧宾夺主）
+    /// - 其他：1.0x（默认）
+    fn get_layer_width_multiplier(layer: Option<&str>) -> f32 {
+        let layer_upper = layer.unwrap_or("").to_uppercase();
+
+        // 墙体图层 - 1.3x（P11 修复：降低 from 1.5x）
+        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
+            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+            return 1.3;
+        }
+
+        // 门窗图层 - 1.1x（P11 修复：降低 from 1.2x）
+        if layer_upper.contains("DOOR") || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+            return 1.1;
+        }
+
+        // 标注图层 - 0.7x（P11 修复：降低 from 0.8x）
+        if layer_upper.contains("DIM") || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+            return 0.7;
+        }
+
+        // 家具图层 - 0.9x（P11 新增）
+        if layer_upper.contains("FURNITURE") || layer_upper.contains("家具") {
+            return 0.9;
+        }
+
+        // 其他 - 默认
+        1.0
     }
 }
 

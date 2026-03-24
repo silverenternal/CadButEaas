@@ -1,8 +1,9 @@
 //! 光栅 PDF 矢量化集成测试
 
 use common_types::PdfRasterImage;
-use vectorize::service::{VectorizeService, VectorizeConfig, PreprocessingConfig};
+use vectorize::{VectorizeService, VectorizeConfig};
 use vectorize::algorithms::evaluate_quality;
+use accelerator_cpu::CpuAccelerator;
 
 /// 创建测试用的光栅图像
 fn create_test_raster_image(width: u32, height: u32, pattern: TestPattern) -> PdfRasterImage {
@@ -50,7 +51,7 @@ enum TestPattern {
 #[test]
 fn test_vectorize_from_pdf_horizontal_lines() {
     let raster = create_test_raster_image(50, 50, TestPattern::HorizontalLines);
-    let service = VectorizeService::with_default_config();
+    let service = VectorizeService::with_default();
 
     let polylines = service.vectorize_from_pdf(&raster, None);
 
@@ -64,7 +65,7 @@ fn test_vectorize_from_pdf_horizontal_lines() {
 #[test]
 fn test_vectorize_from_pdf_rectangle() {
     let raster = create_test_raster_image(50, 50, TestPattern::Rectangle);
-    let service = VectorizeService::with_default_config();
+    let service = VectorizeService::with_default();
 
     let polylines = service.vectorize_from_pdf(&raster, None);
 
@@ -80,7 +81,7 @@ fn test_vectorize_with_preprocessing() {
     let raster = create_test_raster_image(30, 30, TestPattern::Noise);
 
     let config = VectorizeConfig {
-        preprocessing: PreprocessingConfig {
+        preprocessing: vectorize::config::PreprocessingConfig {
             denoise: true,
             denoise_method: "median".to_string(),
             denoise_strength: 3.0,
@@ -92,7 +93,7 @@ fn test_vectorize_with_preprocessing() {
         ..Default::default()
     };
 
-    let service = VectorizeService::new(config);
+    let service = VectorizeService::new(Box::new(CpuAccelerator::new()), config);
     let polylines = service.vectorize_from_pdf(&raster, None);
 
     assert!(polylines.is_ok());
@@ -103,7 +104,7 @@ fn test_vectorize_quality_assessment() {
     // 测试矢量化质量评估
     // 使用小尺寸图像避免栈溢出
     let raster = create_test_raster_image(50, 50, TestPattern::Rectangle);
-    let service = VectorizeService::with_default_config();
+    let service = VectorizeService::with_default();
 
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
 
@@ -143,7 +144,7 @@ fn test_vectorize_with_different_dpi() {
             ..Default::default()
         };
 
-        let service = VectorizeService::new(config.clone());
+        let service = VectorizeService::new(Box::new(CpuAccelerator::new()), config.clone());
         let polylines = service.vectorize_from_pdf(&raster, Some(&config));
 
         assert!(polylines.is_ok(), "{} 矢量化失败", label);
@@ -156,7 +157,7 @@ fn test_vectorize_min_lines_assertion() {
     // 测试矢量化结果数量断言
     // 使用较小图像避免栈溢出
     let raster = create_test_raster_image(100, 100, TestPattern::HorizontalLines);
-    let service = VectorizeService::with_default_config();
+    let service = VectorizeService::with_default();
 
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
 
@@ -179,8 +180,6 @@ fn test_vectorize_min_lines_assertion() {
 
 #[test]
 fn test_vectorize_with_gap_filling() {
-    use vectorize::service::{VectorizeService, VectorizeConfig};
-
     // 使用简单的图像测试
     let raster = create_test_raster_image(50, 50, TestPattern::HorizontalLines);
 
@@ -190,7 +189,7 @@ fn test_vectorize_with_gap_filling() {
         ..Default::default()
     };
 
-    let service = VectorizeService::new(config);
+    let service = VectorizeService::new(Box::new(CpuAccelerator::new()), config);
     let polylines = service.vectorize_from_pdf(&raster, None);
 
     assert!(polylines.is_ok());

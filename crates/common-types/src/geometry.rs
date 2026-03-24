@@ -342,6 +342,8 @@ pub enum RawEntity {
         solid_fill: bool,
         metadata: EntityMetadata,
         semantic: Option<BoundarySemantic>,
+        scale: f64,      // P0-NEW-14 修复：图案比例
+        angle: f64,      // P0-NEW-14 修复：图案角度（度）
     },
     /// P1-1: 外部参照（XREF）- 指向另一个 DWG/DXF 文件的引用
     XRef {
@@ -440,6 +442,12 @@ pub enum HatchBoundaryPath {
     Polyline {
         points: Polyline,
         closed: bool,
+        /// 凸度信息（用于表示圆弧段）
+        /// bulge = tan(θ/4)，其中 θ 是圆弧的包含角
+        /// bulge > 0 表示逆时针，bulge < 0 表示顺时针
+        /// bulge = 0 表示直线段
+        #[serde(default)]
+        bulges: Option<Vec<f64>>,
     },
     /// 圆弧边界
     Arc {
@@ -457,12 +465,24 @@ pub enum HatchBoundaryPath {
         start_angle: f64,
         end_angle: f64,
         ccw: bool,
+        /// 法向量（可选，默认为 [0, 0, 1]）
+        #[serde(default)]
+        extrusion_direction: Option<[f64; 3]>,
     },
     /// 样条曲线边界
     Spline {
         control_points: Polyline,
         knots: Vec<f64>,
         degree: u32,
+        /// 权重值（可选，默认为 1.0）
+        #[serde(default)]
+        weights: Option<Vec<f64>>,
+        /// 拟合点（可选，用于插值样条）
+        #[serde(default)]
+        fit_points: Option<Polyline>,
+        /// 样条标志（有理/无理、周期性等）
+        #[serde(default)]
+        flags: Option<u32>,
     },
 }
 

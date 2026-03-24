@@ -12,8 +12,8 @@
 
 use std::path::PathBuf;
 use std::time::Instant;
-use vectorize::VectorizeService;
-use vectorize::service::VectorizeConfig;
+use vectorize::{VectorizeService, VectorizeConfig};
+use accelerator_cpu::CpuAccelerator;
 
 /// 测试所有 PDF 文件的矢量化
 #[test]
@@ -44,7 +44,7 @@ fn test_vectorize_all_pdf_files() {
     
     println!("📄 找到 {} 个 PDF 文件", pdf_files.len());
     
-    let service = VectorizeService::with_default_config();
+    let service = VectorizeService::with_default();
     let mut success_count = 0;
     let mut warning_count = 0;
     let mut fail_count = 0;
@@ -211,7 +211,7 @@ fn test_pdf_vectorize_end_to_end_performance() {
         return;
     }
 
-    let _service = VectorizeService::with_default_config();
+    let _service = VectorizeService::with_default();
 
     // 测试配置
     let _config = VectorizeConfig {

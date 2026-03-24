@@ -107,15 +107,38 @@
 
 - [ ] 真实图纸测试集（50+ 张）
 
-### P3（未来）🔮
+### P3（进行中）🔮
 
 **时间**: 验收后 2-3 个月
 
-- [ ] Web UI（SvelteKit + Canvas）
+- [x] Web UI 基础架构（React + Vite + Tailwind + shadcn/ui）
+- [x] Canvas 渲染（React Konva）
+- [x] API 客户端封装
+- [x] WebSocket 实时通信
+- [x] 状态管理（Zustand）
+- [ ] Web UI 性能优化（LOD、虚拟滚动）
 - [ ] 微服务拆分（HTTP/gRPC）
 - [ ] CI/CD 配置
 - [ ] WASM 前端嵌入
 - [ ] 数据库集成
+
+#### Web UI 迁移进度
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| 项目初始化 | ✅ 完成 | Vite + React + TypeScript + Tailwind |
+| 基础 UI 组件 | ✅ 完成 | 16 个 shadcn/ui 组件 |
+| API 集成 | ✅ 完成 | HTTP + WebSocket 客户端 |
+| 状态管理 | ✅ 完成 | 4 个 Zustand stores |
+| Canvas 渲染 | ✅ 完成 | React Konva 实现 |
+| 工具栏/面板 | ✅ 完成 | 主工具栏、Canvas 工具栏、图层/属性面板 |
+| 自定义 Hooks | ✅ 完成 | useWebSocket, useFileUpload, useAutoTrace |
+| 测试框架 | ✅ 完成 | Vitest + Playwright |
+| 部署配置 | ✅ 完成 | Docker + Nginx |
+| 性能优化 | ⏳ 待开始 | LOD、虚拟滚动、批处理渲染 |
+| 动画过渡 | ⏳ 待开始 | Framer Motion 集成 |
+
+**详情**: 见 `cad-web/IMPLEMENTATION.md`
 
 ---
 

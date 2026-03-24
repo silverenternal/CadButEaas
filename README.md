@@ -42,7 +42,7 @@
 > - ⚠️ 对于存在严重阴影/折痕/褪色的复杂图纸，建议先转换为 DXF 格式（行业通用做法）
 > - ⚠️ 虚线/中心线/剖面线混合场景的识别能力计划于 P2 阶段增强（验收后 4-6 周）
 > - ⚠️ 语义标注依赖图层命名规范（非标准命名时需手动校正，P2 阶段增加 UI 校正入口）
-> - ⚠️ 复杂拓扑（嵌套孔洞/非流形几何）处理：Halfedge 结构已在 `crates/topo/src/halfedge.rs` 实现（1076 行），集成中
+> - ⚠️ 复杂拓扑（嵌套孔洞/非流形几何）处理：Halfedge 结构已在 `crates/topo/src/halfedge.rs` 实现（1076 行），待集成到主流程
 >
 > **如何判断 PDF 类型**：
 > - 矢量 PDF：文件小（< 1MB），放大后边缘清晰，包含 LINE/PATH 等矢量图元
@@ -59,6 +59,7 @@
 | `export` | ✅ | 2 单元测试 | JSON/Binary 导出 |
 | `orchestrator` | ✅ | 22 测试 | API 网关 + E2E 测试 |
 | `config` | ✅ | 4 单元测试 | 配置管理 + 5 场景预设 |
+| `acoustic` | ✅ | 新增 | 声学分析（选区材料统计、混响时间计算） |
 
 **总计**: ✅ 220+ 测试全部通过 (100% 通过率) | Clippy: 0 警告
 
@@ -157,6 +158,16 @@ curl -X POST http://localhost:3000/process -F "file=@file.dxf"
 
 # 处理 PDF 文件
 curl -X POST http://localhost:3000/process -F "file=@file.pdf"
+
+# 声学分析（选区材料统计）
+curl -X POST http://localhost:3000/acoustic/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"type":"SELECTION_MATERIAL_STATS","boundary":{"type":"RECT","min":[0,0],"max":[10,10]}}'
+
+# 房间混响时间计算
+curl -X POST http://localhost:3000/acoustic/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"type":"ROOM_REVERBERATION","room_id":0,"formula":"SABINE","room_height":3.0}'
 ```
 
 #### 方式三：GUI 查看器（交互式界面）
@@ -264,6 +275,12 @@ auto_validate = true
                     │   场景导出       │
                     │  JSON/Binary    │
                     └─────────────────┘
+                              ↓
+                    ┌─────────────────┐
+                    │  AcousticSvc    │
+                    │   声学分析       │
+                    │  RT60/材料统计   │
+                    └─────────────────┘
 ```
 
 ### EaaS 架构实现状态
@@ -276,6 +293,7 @@ auto_validate = true
 | ValidatorSvc | ✅ | ✅ | 🔲 | 🔲 | ⚠️ | ✅ | ⚠️ |
 | ExportSvc | ✅ | ✅ | 🔲 | 🔲 | ⚠️ | ✅ | ⚠️ |
 | InteractSvc | ✅ | ✅ | ✅ | 🔲 | ⚠️ | ✅ | ⚠️ |
+| AcousticSvc | ✅ | ✅ | 🔲 | 🔲 | ⚠️ | ✅ | ⚠️ |
 
 **说明**: ✅ 已完成 | ⚠️ 已实现未集成 | 🔲 P2 计划
 
@@ -285,7 +303,7 @@ auto_validate = true
 process_with_services()
     ↓
 1. ParserService::process()    → ParseResult
-2. TopoService::process()      → SceneState  
+2. TopoService::process()      → SceneState
 3. ValidatorService::process() → ValidationReport
 4. ExportService::process()    → ExportResult
     ↓
@@ -303,19 +321,25 @@ CAD/
 ├── README.md
 ├── CONTRIBUTING.md
 ├── docs/
-│   └── archive/           # 历史文档归档
-├── dxfs/                  # DXF 测试文件 (9 个)
-├── testpdf/               # PDF 测试文件 (4 个)
+│   ├── INDEX.md                    # 文档索引
+│   ├── 功能介绍.md                  # 面向甲方的功能介绍
+│   ├── 后端 API 概览.md               # 后端 API 功能概览
+│   ├── 交付目标对照表.md             # 与交付目标的对应关系
+│   └── archive/                    # 历史文档归档
+├── dxfs/                           # DXF 测试文件 (9 个)
+├── testpdf/                        # PDF 测试文件 (4 个)
 └── crates/
-    ├── common-types/      # 公共类型定义
-    ├── parser/            # 图纸解析服务
-    ├── vectorize/         # 图像矢量化服务
-    ├── topo/              # 拓扑建模服务
-    ├── validator/         # 几何验证服务
-    ├── export/            # 场景导出服务
-    ├── interact/          # 交互协同服务
-    ├── orchestrator/      # 流程编排服务
-    └── cad-cli/           # 命令行工具
+    ├── common-types/               # 公共类型定义
+    ├── parser/                     # 图纸解析服务
+    ├── vectorize/                  # 图像矢量化服务
+    ├── topo/                       # 拓扑建模服务
+    ├── validator/                  # 几何验证服务
+    ├── export/                     # 场景导出服务
+    ├── interact/                   # 交互协同服务
+    ├── orchestrator/               # 流程编排服务
+    ├── acoustic/                   # 声学分析服务
+    ├── config/                     # 配置管理
+    └── cad-cli/                    # 命令行工具
 ```
 
 ## 🔧 核心服务
@@ -342,7 +366,7 @@ CAD/
   - 曲率自适应采样
   - 单位解析与标定
   - 颜色/线宽过滤
-- **PDF**: 
+- **PDF**:
   - 矢量 PDF：直接提取路径
   - 光栅 PDF：自动矢量化
 
@@ -434,6 +458,36 @@ CAD/
 - `GET /health` - 健康检查
 - `POST /process` - 处理文件
 
+### 9. acoustic - 声学分析服务（新增）
+
+**功能**:
+- **选区材料统计**：计算选定区域内的材料分布和等效吸声面积
+- **房间混响时间计算**：支持 SABINE/EYRING 公式，计算 T60/EDT
+- **多区域对比分析**：对比不同区域的声学特性
+
+**API 端点**:
+- `POST /acoustic/analyze` - 执行声学分析
+
+**支持的声学指标**:
+- 混响时间 T60（125Hz-4kHz 倍频程）
+- 早期衰变时间 EDT
+- 平均吸声系数
+- 等效吸声面积
+
+### 10. config - 配置管理服务
+
+**测试**: 4 单元测试
+
+**预设配置**:
+- `architectural`: 建筑图纸预设
+- `mechanical`: 机械图纸预设
+- `scanned`: 扫描图纸预设
+- `quick`: 快速原型预设
+
+**API 端点**:
+- `GET /config/profiles` - 列出预设配置
+- `GET /config/profile/:name` - 获取配置详情
+
 ## 📈 性能基准
 
 ### Parser 性能
@@ -479,11 +533,26 @@ cargo test --test benchmarks -- --nocapture
 
 # 运行 E2E 测试
 cargo test --test e2e_tests
+
+# 运行用户故事测试
+cargo test --test user_story_tests
 ```
 
 **测试文件**:
 - DXF: `dxfs/` (9 个真实建筑图纸)
 - PDF: `testpdf/` (4 个矢量 PDF)
+
+**测试覆盖**:
+- 单元测试：133 个
+- 边界测试：14 个
+- NURBS 测试：6 个
+- 真实文件测试：20 个
+- 基准测试：19 个
+- 集成测试：7 个
+- E2E 测试：6 个
+- 用户故事测试：6 个
+
+**总计**: 220+ 测试全部通过
 
 ## 🛠️ 开发指南
 
@@ -526,6 +595,7 @@ cargo clippy --workspace --lib
 - HTTP API 完整实现（`/health`, `/process`）
 - CI/CD 配置（`.github/workflows/ci.yml`）
 - 性能基线（`benches/baseline_v0.1.0.txt`）
+- **声学分析服务**（选区材料统计、混响时间计算）
 
 ### P2（规划中）📋
 - Halfedge 结构集成到主流程（1076 行代码已完成，待替换当前 DFS 方案）
@@ -551,6 +621,6 @@ MIT License
 
 ---
 
-**最后更新**: 2026 年 3 月 11 日
+**最后更新**: 2026 年 3 月 22 日
 **版本**: v0.1.0 (稳定版本)
 **测试状态**: ✅ 220+ 测试全部通过 | Clippy: 0 警告
