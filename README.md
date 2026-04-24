@@ -11,14 +11,18 @@
 >
 > **当前系统支持**：
 > - ✅ DXF 文件（AutoCAD 矢量格式，AC1015 及以上版本）
->   - ✅ 支持实体：LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE
+>   - ✅ 支持实体：LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE, HATCH
 >   - ✅ BLOCK/INSERT（块定义与引用，嵌套块支持）
 >   - ✅ 智能图层识别（AIA 标准 + 中文变体）
 >   - ✅ NURBS 精确离散化（弦高误差 < 0.1mm）
+>   - ✅ HATCH 填充边界提取
 >   - ✅ 单位解析与自动标定
 >   - ✅ 颜色/线宽过滤
 > - ✅ 矢量 PDF 文件（可直接提取路径/线段）
 > - ✅ 光栅 PDF 文件（扫描版/截图，自动矢量化 - 适用于线条清晰的图纸）
+> - ✅ DWG 文件（AutoCAD 默认格式，R13-R2018 版本）
+> - ✅ SVG 文件（Web 端 CAD 交换格式，导入/导出双向支持）
+> - ✅ STL 文件（3D 制造/打印工作流，二进制/ASCII 双格式）
 >
 > **光栅 PDF 矢量化特性**：
 > - 支持扫描版 PDF 自动矢量化（图像预处理 + 边缘检测 + 线结构提取）
@@ -42,7 +46,7 @@
 > - ⚠️ 对于存在严重阴影/折痕/褪色的复杂图纸，建议先转换为 DXF 格式（行业通用做法）
 > - ⚠️ 虚线/中心线/剖面线混合场景的识别能力计划于 P2 阶段增强（验收后 4-6 周）
 > - ⚠️ 语义标注依赖图层命名规范（非标准命名时需手动校正，P2 阶段增加 UI 校正入口）
-> - ⚠️ 复杂拓扑（嵌套孔洞/非流形几何）处理：Halfedge 结构已在 `crates/topo/src/halfedge.rs` 实现（1076 行），待集成到主流程
+> - ✅ 复杂拓扑（嵌套孔洞/非流形几何）处理：Halfedge 结构已集成到主流程，`TopoAlgorithm::Halfedge` 为默认算法
 >
 > **如何判断 PDF 类型**：
 > - 矢量 PDF：文件小（< 1MB），放大后边缘清晰，包含 LINE/PATH 等矢量图元
@@ -50,18 +54,23 @@
 
 | 服务 | 状态 | 测试覆盖 | 说明 |
 |------|------|----------|------|
-| `common-types` | ✅ | 26 单元测试 | 公共类型定义、错误处理、恢复建议 |
-| `parser` | ✅ | 57 测试 | DXF 解析 + PDF 解析 |
+| `common-types` | ✅ | 19 单元测试 | 公共类型定义、错误处理、恢复建议 |
+| `parser` | ✅ | 74 测试 | DXF/DWG/SVG/STL/PDF 解析 + 缓存/恢复 |
 | `vectorize` | ✅ | 46 测试 | 矢量化算法 + 光栅 PDF 测试 |
-| `topo` | ✅ | 28 测试 | 拓扑构建 + 基准测试 |
-| `interact` | ✅ | 9 单元测试 | 交互 API（后端完成） |
+| `topo` | ✅ | 28 测试 | 拓扑构建 + Halfedge + 基准测试 |
+| `interact` | ✅ | 10 单元测试 | 交互 API + 脏矩形追踪 |
 | `validator` | ✅ | 21 单元测试 | 几何验证 + 恢复建议 |
-| `export` | ✅ | 2 单元测试 | JSON/Binary 导出 |
-| `orchestrator` | ✅ | 22 测试 | API 网关 + E2E 测试 |
+| `export` | ✅ | 8 测试 | JSON/Binary/SVG 导出 |
+| `orchestrator` | ✅ | 22 测试 | API 网关 + E2E + WebSocket |
 | `config` | ✅ | 4 单元测试 | 配置管理 + 5 场景预设 |
-| `acoustic` | ✅ | 新增 | 声学分析（选区材料统计、混响时间计算） |
+| `acoustic` | ✅ | 48 测试 | 声学分析（选区材料统计、混响时间计算、多区域对比） |
+| `accelerator-api` | ✅ | 14 测试 | 加速器抽象接口 |
+| `accelerator-cpu` | ✅ | 10 测试 | CPU 加速器实现 |
+| `accelerator-registry` | ✅ | 7 测试 | 加速器注册中心 |
+| `accelerator-wgpu` | ⚠️ | Stub (TODO) | wgpu 加速器（CPU fallback 已工作） |
+| `raster-loader` | ✅ | 3 测试 | 光栅图片加载（PNG/JPG/BMP/TIFF/WebP） |
 
-**总计**: ✅ 220+ 测试全部通过 (100% 通过率) | Clippy: 0 警告
+**总计**: ✅ 585+ 测试（584 通过，1 已知失败） | Clippy: 0 错误（4 个良性复杂度警告）
 
 ## 🚀 快速开始
 
@@ -297,6 +306,14 @@ auto_validate = true
 
 **说明**: ✅ 已完成 | ⚠️ 已实现未集成 | 🔲 P2 计划
 
+### 架构演进记录
+
+| 阶段 | 日期 | 关键变更 |
+|------|------|---------|
+| 多格式解析增强 | 2026-04-15 | DWG/SVG/STL 解析、PDF 文字提取、RawEntity::Triangle |
+| 首轮焚诀优化 | 2026-04-14 | EzdxfParser 抽象化、错误语义修复、焚诀 API 优化 |
+| 解耦优化 | 2026-04-14 | 声学类型解耦（common-types → acoustic）、清理 4 个未使用依赖、修复 lasso_selection bug |
+
 ### 服务调用链
 
 ```
@@ -325,21 +342,28 @@ CAD/
 │   ├── 功能介绍.md                  # 面向甲方的功能介绍
 │   ├── 后端 API 概览.md               # 后端 API 功能概览
 │   ├── 交付目标对照表.md             # 与交付目标的对应关系
+│   ├── web-ui-*.md                 # Web UI 相关文档
 │   └── archive/                    # 历史文档归档
 ├── dxfs/                           # DXF 测试文件 (9 个)
 ├── testpdf/                        # PDF 测试文件 (4 个)
 └── crates/
     ├── common-types/               # 公共类型定义
-    ├── parser/                     # 图纸解析服务
+    ├── parser/                     # 图纸解析服务 (DXF/DWG/PDF/SVG/STL)
     ├── vectorize/                  # 图像矢量化服务
     ├── topo/                       # 拓扑建模服务
     ├── validator/                  # 几何验证服务
-    ├── export/                     # 场景导出服务
+    ├── export/                     # 场景导出服务 (JSON/Binary/SVG)
     ├── interact/                   # 交互协同服务
     ├── orchestrator/               # 流程编排服务
     ├── acoustic/                   # 声学分析服务
     ├── config/                     # 配置管理
-    └── cad-cli/                    # 命令行工具
+    ├── cad-cli/                    # 命令行工具
+    ├── cad-viewer/                 # GUI 查看器 (egui)
+    ├── accelerator-api/            # 加速器抽象接口
+    ├── accelerator-cpu/            # CPU 加速器实现
+    ├── accelerator-registry/       # 加速器注册中心
+    ├── accelerator-wgpu/           # wgpu 加速器 (stub)
+    └── raster-loader/              # 光栅图片加载器
 ```
 
 ## 🔧 核心服务
@@ -356,19 +380,31 @@ CAD/
 
 ### 2. parser - 图纸解析服务
 
-**测试**: 57 测试
+**测试**: 74 测试
 
 **支持格式**:
-- **DXF**: LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE
+- **DXF**: LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE, HATCH
   - 智能图层识别（AIA 标准 + 中文变体）
   - NURBS 精确离散化（弦高误差 < 0.1mm）
   - 嵌套块递归展开
   - 曲率自适应采样
+  - HATCH 填充边界提取
   - 单位解析与标定
   - 颜色/线宽过滤
+- **DWG**: AutoCAD 默认格式（R13-R2018 版本）
+  - 外部转换器集成（libredwg）
+  - 实体映射到 RawEntity 标准格式
 - **PDF**:
-  - 矢量 PDF：直接提取路径
+  - 矢量 PDF：直接提取路径 + 文字标注（Tj/TJ 操作符）
   - 光栅 PDF：自动矢量化
+  - 变换矩阵合成（BT/ET/Tm/Td）
+- **SVG**: Web 端 CAD 交换格式
+  - 导入：解析 `<line>/<path>/<circle>/<text>` 等元素 → RawEntity
+  - 导出：RawEntity → SVG XML（自动计算 viewBox，支持图层过滤）
+- **STL**: 3D 制造/打印工作流
+  - 支持二进制和 ASCII 双格式
+  - 三角面片 → `RawEntity::Triangle`
+  - 自动检测格式类型
 
 ### 3. vectorize - 图像矢量化服务
 
@@ -430,11 +466,12 @@ CAD/
 
 ### 7. export - 场景导出服务
 
-**测试**: 2 单元测试
+**测试**: 8 测试
 
 **格式**:
 - JSON：人类可读
 - Binary：bincode 高性能
+- SVG：矢量图形导出（Line→`<line>`, Circle→`<circle>`, Path→`<path>`, Triangle→`<polygon>` XY 投影）
 
 **Schema v1.2**:
 ```json
@@ -487,6 +524,21 @@ CAD/
 **API 端点**:
 - `GET /config/profiles` - 列出预设配置
 - `GET /config/profile/:name` - 获取配置详情
+
+### 11. raster-loader - 光栅图片加载服务
+
+**测试**: 3 单元测试
+
+**功能**:
+- 支持多种光栅图片格式：PNG, JPG, BMP, TIFF, WebP
+- 自动检测文件格式
+- 提取图片元数据（尺寸、色彩空间）
+- 输出 `image::DynamicImage` 直接对接 VectorizeService
+
+**使用场景**:
+- 独立图片文件矢量化
+- 扫描图纸直接处理
+- 截图/照片导入
 
 ## 📈 性能基准
 
@@ -596,10 +648,14 @@ cargo clippy --workspace --lib
 - CI/CD 配置（`.github/workflows/ci.yml`）
 - 性能基线（`benches/baseline_v0.1.0.txt`）
 - **声学分析服务**（选区材料统计、混响时间计算）
+- **多格式解析**（DWG/DXF/PDF/SVG/STL）
+- **PDF 文字提取**（Tj/TJ 操作符 + 变换矩阵合成）
+- **SVG 导入/导出**（RawEntity ↔ SVG XML 双向转换）
+- **STL 解析**（二进制/ASCII → `RawEntity::Triangle`）
 
 ### P2（规划中）📋
-- Halfedge 结构集成到主流程（1076 行代码已完成，待替换当前 DFS 方案）
-- rayon 并行化优化（依赖已引入，待集成 `par_iter()`）
+- ✅ Halfedge 结构集成到主流程（已完成，默认启用，支持嵌套孔洞）
+- rayon 并行化优化（依赖已引入，待扩展到 parser/vectorize 全流程）
 - PDF 矢量化增强（虚线/中心线/剖面线识别）
 - 配置热加载
 - 微服务拆分（HTTP/gRPC）
@@ -621,6 +677,6 @@ MIT License
 
 ---
 
-**最后更新**: 2026 年 3 月 22 日
+**最后更新**: 2026 年 4 月 15 日
 **版本**: v0.1.0 (稳定版本)
-**测试状态**: ✅ 220+ 测试全部通过 | Clippy: 0 警告
+**测试状态**: ✅ 585+ 测试（584 通过，1 已知失败）| Clippy: 0 警告

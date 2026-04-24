@@ -3,7 +3,6 @@
 /// 验证 broadcast 通道的快速失败机制：
 /// - 100 个接收者应在 10ms 内收到取消信号
 /// - 验证"先订阅后执行"模式的正确性
-
 use std::time::{Duration, Instant};
 use tokio::sync::broadcast;
 
@@ -93,12 +92,12 @@ async fn test_subscribe_before_execute() {
 
     // 验证所有接收者都能收到信号
     for mut rx in rxs {
-        let result = tokio::time::timeout(Duration::from_millis(100), rx.recv())
+        tokio::time::timeout(Duration::from_millis(100), rx.recv())
             .await
             .expect("接收超时")
             .expect("通道关闭");
         // recv() 返回 Result<T, RecvError>，成功时直接是 T（这里是 ()）
-        let _ = result; // 收到 () 单元类型
+        (); // 收到 () 单元类型
     }
 }
 
@@ -135,11 +134,11 @@ async fn test_channel_capacity() {
 
     // 验证所有接收者都能收到信号
     for mut rx in rxs {
-        let result = tokio::time::timeout(Duration::from_millis(100), rx.recv())
+        tokio::time::timeout(Duration::from_millis(100), rx.recv())
             .await
             .expect("接收超时")
             .expect("通道关闭");
         // recv() 返回 Result<T, RecvError>，成功时直接是 T（这里是 ()）
-        let _ = result; // 收到 () 单元类型
+        (); // 收到 () 单元类型
     }
 }

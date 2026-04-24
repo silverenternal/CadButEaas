@@ -5,7 +5,7 @@
 //! 2. 能够处理悬挂边（不构成环的边会被跳过）
 //! 3. 使用 Hierholzer 算法的变体来提取所有环
 
-use common_types::{Point2, ClosedLoop};
+use common_types::{ClosedLoop, Point2};
 use std::collections::{HashMap, HashSet};
 
 /// 环提取器 - 从平面图中提取闭合环
@@ -40,6 +40,31 @@ impl LoopExtractor {
             return Vec::new();
         }
 
+        // 超大规模图（>5M 边）：稀疏数据通常无有效环，跳过循环提取
+        // 采样检测：取前 1000 条边，如果闭合环比例极低则跳过
+        if edges.len() > 5_000_000 {
+            let sample_size = 1000.min(edges.len());
+            let step = edges.len() / sample_size;
+            // 快速构建部分邻接表
+            let mut degree: std::collections::HashMap<usize, usize> =
+                std::collections::HashMap::with_capacity(sample_size * 4);
+            for &(a, b) in edges.iter().step_by(step).take(sample_size) {
+                *degree.entry(a).or_insert(0) += 1;
+                *degree.entry(b).or_insert(0) += 1;
+            }
+            // 如果平均度数 < 2.1（接近树结构），跳过环提取
+            let avg_degree =
+                degree.values().map(|&d| d as f64).sum::<f64>() / degree.len().max(1) as f64;
+            if avg_degree < 2.1 {
+                tracing::info!(
+                    "超大规模稀疏图（{} 边，平均度数 {:.2}），跳过环提取",
+                    edges.len(),
+                    avg_degree
+                );
+                return Vec::new();
+            }
+        }
+
         // 构建邻接表（使用多重边支持）
         let mut adjacency: HashMap<usize, Vec<usize>> = HashMap::new();
         for &(a, b) in edges {
@@ -60,7 +85,9 @@ impl LoopExtractor {
         // 遍历所有边，处理非连通图
         for &start_edge in edges {
             // 检查边是否已被使用（双向检查）
-            if used_edges.contains(&start_edge) || used_edges.contains(&(start_edge.1, start_edge.0)) {
+            if used_edges.contains(&start_edge)
+                || used_edges.contains(&(start_edge.1, start_edge.0))
+            {
                 continue;
             }
 
@@ -78,7 +105,7 @@ impl LoopExtractor {
                         .iter()
                         .filter_map(|&idx| points.get(idx).copied())
                         .collect();
-                    
+
                     if loop_points.len() >= 3 {
                         let signed_area = calculate_signed_area(&loop_points);
                         if signed_area.abs() > self.min_area {
@@ -93,7 +120,12 @@ impl LoopExtractor {
         }
 
         // 按面积排序（最大的通常是外轮廓）
-        loops.sort_by(|a, b| b.signed_area.abs().partial_cmp(&a.signed_area.abs()).unwrap());
+        loops.sort_by(|a, b| {
+            b.signed_area
+                .abs()
+                .partial_cmp(&a.signed_area.abs())
+                .unwrap()
+        });
 
         loops
     }
@@ -138,16 +170,10 @@ impl LoopExtractor {
 
             // 找到下一个点
             let neighbors = adjacency.get(&current)?;
-            
+
             // 选择下一个点（基于角度和可用性）
             let next = self.select_next_point_with_backtrack(
-                points,
-                current,
-                prev,
-                neighbors,
-                used_edges,
-                edge_usage,
-                &mut path,
+                points, current, prev, neighbors, used_edges, edge_usage, &mut path,
             );
 
             match next {
@@ -161,7 +187,7 @@ impl LoopExtractor {
                     if path.len() <= 1 {
                         return None; // 完全无法形成环
                     }
-                    
+
                     // 回溯到上一个点
                     used_edges.remove(&(prev, current));
                     path.pop();
@@ -300,12 +326,7 @@ mod tests {
 
     #[test]
     fn test_extract_rectangle() {
-        let points = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
+        let points = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
         let edges = vec![(0, 1), (1, 2), (2, 3), (3, 0)];
 
         let extractor = LoopExtractor::new(0.5);
@@ -331,8 +352,14 @@ mod tests {
             [20.0, 10.0],
         ];
         let edges = vec![
-            (0, 1), (1, 2), (2, 3), (3, 0), // 矩形 1
-            (4, 5), (5, 6), (6, 7), (7, 4), // 矩形 2
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0), // 矩形 1
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4), // 矩形 2
         ];
 
         let extractor = LoopExtractor::new(0.5);
@@ -352,7 +379,10 @@ mod tests {
             [15.0, 15.0], // 悬挂点
         ];
         let edges = vec![
-            (0, 1), (1, 2), (2, 3), (3, 0), // 矩形
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0), // 矩形
             (1, 4), // 悬挂边
         ];
 
@@ -390,8 +420,14 @@ mod tests {
             [5.0, 15.0],
         ];
         let edges = vec![
-            (0, 1), (1, 2), (2, 3), (3, 0), // 外矩形
-            (4, 5), (5, 6), (6, 7), (7, 4), // 内矩形
+            (0, 1),
+            (1, 2),
+            (2, 3),
+            (3, 0), // 外矩形
+            (4, 5),
+            (5, 6),
+            (6, 7),
+            (7, 4), // 内矩形
         ];
 
         let extractor = LoopExtractor::new(0.5);

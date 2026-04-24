@@ -1,19 +1,19 @@
 //! CPU 圆弧拟合实现
 
+use accelerator_api::{AcceleratorError, AcceleratorResult};
 use accelerator_api::{Arc as AcceleratorArc, ArcFitConfig, Point2};
-use accelerator_api::{AcceleratorResult, AcceleratorError};
 
 /// CPU 圆弧拟合（Kåsa 方法）
 pub fn fit_arc_cpu(points: &[Point2], _config: &ArcFitConfig) -> AcceleratorResult<AcceleratorArc> {
     if points.len() < 3 {
         return Err(AcceleratorError::InvalidDataFormat(
-            "圆弧拟合至少需要 3 个点".to_string()
+            "圆弧拟合至少需要 3 个点".to_string(),
         ));
     }
 
     // Kåsa 圆弧拟合算法
     let n = points.len() as f64;
-    
+
     // 计算质心
     let centroid = [
         points.iter().map(|p| p[0]).sum::<f64>() / n,
@@ -59,16 +59,18 @@ pub fn fit_arc_cpu(points: &[Point2], _config: &ArcFitConfig) -> AcceleratorResu
     let det = a * c - b * b;
     if det.abs() < 1e-10 {
         // 退化为直线，返回一个"无限大"的圆弧
-        return Ok(AcceleratorArc::new(centroid, 1e10, 0.0, std::f64::consts::PI * 2.0));
+        return Ok(AcceleratorArc::new(
+            centroid,
+            1e10,
+            0.0,
+            std::f64::consts::PI * 2.0,
+        ));
     }
 
     let center_x = (c * d - b * e) / (2.0 * det);
     let center_y = (a * e - b * d) / (2.0 * det);
 
-    let center = [
-        center_x + centroid[0],
-        center_y + centroid[1],
-    ];
+    let center = [center_x + centroid[0], center_y + centroid[1]];
 
     // 计算半径（平均距离）
     let radius = points
@@ -117,7 +119,7 @@ mod tests {
     fn test_arc_fit_insufficient_points() {
         let points: Vec<Point2> = vec![[0.0, 0.0], [1.0, 1.0]];
         let config = ArcFitConfig::default();
-        
+
         let result = fit_arc_cpu(&points, &config);
         assert!(result.is_err());
     }

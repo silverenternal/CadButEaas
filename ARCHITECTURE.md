@@ -1,7 +1,7 @@
 # CAD 几何智能处理系统 - 架构文档
 
 **版本**: v0.1.0
-**最后更新**: 2026 年 3 月 11 日
+**最后更新**: 2026 年 4 月 15 日
 
 ---
 
@@ -80,7 +80,7 @@ ProcessResult {
 
 ### 2.1 Parser Service
 
-**职责**: 解析 DXF/PDF 文件，输出标准化几何原语
+**职责**: 解析 DXF/DWG/PDF/SVG/STL 文件，输出标准化几何原语
 
 **输入**:
 ```rust
@@ -101,14 +101,19 @@ pub struct ParseResult {
 ```
 
 **核心功能**:
-- DXF 实体解析（LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE）
+- DXF 实体解析（LINE, LWPOLYLINE, ARC, CIRCLE, SPLINE, ELLIPSE, HATCH）
+- DWG 文件解析（R13-R2018，通过 libredwg 转换器）
+- SVG 导入/导出（RawEntity ↔ SVG XML）
+- STL 解析（二进制/ASCII → `RawEntity::Triangle`）
+- PDF 矢量/光栅判定 + 文字提取
 - 嵌套块递归展开
 - NURBS 曲率自适应采样
+- HATCH 填充边界提取
 - 智能图层识别
 - 单位解析与标定
-- PDF 矢量/光栅判定
+- 文件缓存（Content-Hash 去重）
 
-**依赖**: `dxf` crate, `lopdf` crate, `curvo` crate
+**依赖**: `dxf` crate, `lopdf` crate, `curvo` crate, `usvg` crate, `stl_io` crate
 
 ---
 
@@ -192,19 +197,19 @@ pub struct TopologyResult {
   - 支持非流形几何处理
   - 面枚举算法优化
   - 孔洞遍历优化
-  - **状态**: 1076 行代码已在 `crates/topo/src/halfedge.rs` 完成，待集成到主流程
+  - **状态**: ✅ 已完成集成，`TopoAlgorithm::Halfedge` 为默认算法
 - [ ] **并发处理优化** (P1 优先级)
   - rayon 并行化实际使用
   - 大文件并行解析
   - 多线程几何处理
-  - **状态**: rayon 依赖已引入，待集成 `par_iter()`
+  - **状态**: rayon 依赖已引入，待扩展到 parser/vectorize 全流程
 
 ---
 
-### 2.4.1 Halfedge 结构（实现完成，待集成）
+### 2.4.1 Halfedge 结构（已集成到主流程）
 
-**状态**: ✅ 已完成（1076 行代码在 `crates/topo/src/halfedge.rs`）
-**集成计划**: P2 阶段替换当前 DFS 方案或提供 config 开关
+**状态**: ✅ 已完成集成（1076 行代码在 `crates/topo/src/halfedge.rs`）
+**当前默认**: `TopoAlgorithm::Halfedge` 是默认算法，支持嵌套孔洞和非流形几何
 
 **设计目标**:
 - 处理复杂拓扑关系（多重孔洞、嵌套边界、非流形几何）
@@ -329,6 +334,7 @@ pub struct ExportResult {
 **支持格式**:
 - JSON: 人类可读，带美化输出
 - Binary: bincode 高性能二进制
+- SVG: 矢量图形导出（Line→`<line>`, Polyline→`<polyline>/<polygon>`, Circle→`<circle>`, Arc→`<path>`, Text→`<text>`, Triangle→`<polygon>` XY 投影）
 
 **Schema v1.2**:
 ```json
@@ -425,16 +431,14 @@ pub type Polyline = Vec<Point2>;
 
 // 标准化实体
 pub enum RawEntity {
-    Line {
-        start: Point2,
-        end: Point2,
-        metadata: EntityMetadata,
-    },
-    Path {
-        commands: Vec<PathCommand>,
-        metadata: EntityMetadata,
-    },
-    // ...
+    Line { start: Point2, end: Point2, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Polyline { points: Vec<Point2>, closed: bool, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Circle { center: Point2, radius: f64, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Arc { center: Point2, radius: f64, start_angle: f64, end_angle: f64, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Text { position: Point2, content: String, height: f64, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Path { commands: Vec<PathCommand>, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    Triangle { vertices: [Point3; 3], normal: Point3, metadata: EntityMetadata, semantic: Option<SemanticLabel> },
+    // BlockReference, Dimension, Hatch, Image, etc.
 }
 
 // 场景状态
@@ -641,7 +645,7 @@ pub fn snap_endpoints_parallel(points: &[Point2], tolerance: f64) -> Vec<Point2>
 | E2E 测试 | 6 | 完整流程 |
 | 用户故事测试 | 6 | 实际工作流 |
 
-**总计**: 220+ 测试
+**总计**: 585+ 测试（584 通过，1 已知失败）
 
 ### 6.3 性能回归
 
@@ -703,11 +707,14 @@ CI/CD 集成性能回归检测：
 | **图像** | image 0.25 | 图像处理 |
 | **OpenCV** | opencv 0.92 | 可选加速 |
 | **CAD** | dxf 0.6 | DXF 解析 |
+| **CAD** | acadrust | DWG 解析 |
 | **PDF** | lopdf 0.34 | PDF 解析 |
+| **SVG** | usvg 0.44 | SVG 导入 |
+| **STL** | stl_io 0.9 | STL 解析 |
 | **序列化** | serde + json | JSON |
 | **二进制** | bincode | 高性能二进制 |
 
 ---
 
-**最后更新**: 2026 年 3 月 11 日
+**最后更新**: 2026 年 4 月 15 日
 **版本**: v0.1.0

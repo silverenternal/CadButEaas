@@ -6,7 +6,7 @@
 //! 3. 只依赖 AppState，实现组件独立性
 //! 4. 应用 macOS 主题样式
 
-use crate::components::{Component, UiEvent, EventResponse, ComponentContext};
+use crate::components::{Component, ComponentContext, EventResponse, UiEvent};
 use crate::state::AppState;
 use eframe::egui;
 use egui::{Frame, Margin, Rounding};
@@ -54,16 +54,25 @@ impl Component for LeftPanel {
             })
             .show(ctx, |ui| {
                 // 标题使用强调色
-                ui.heading(egui::RichText::new("📋 文件列表").strong().color(theme.accent));
+                ui.heading(
+                    egui::RichText::new("📋 文件列表")
+                        .strong()
+                        .color(theme.accent),
+                );
                 ui.separator();
 
                 // P11 增强：按钮悬停效果
                 ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.1);
-                ui.style_mut().visuals.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, theme.accent);
+                ui.style_mut().visuals.widgets.hovered.fg_stroke =
+                    egui::Stroke::new(1.0, theme.accent);
 
                 // 文件列表（简化实现，显示最近文件）
                 ui.vertical(|ui| {
-                    ui.label(egui::RichText::new("最近打开的文件:").color(theme.text_secondary).size(12.0));
+                    ui.label(
+                        egui::RichText::new("最近打开的文件:")
+                            .color(theme.text_secondary)
+                            .size(12.0),
+                    );
 
                     // 这里可以扩展为实际的文件列表
                     if let Some(path) = &comp_ctx.state.scene.file_path {
@@ -76,7 +85,11 @@ impl Component for LeftPanel {
                 ui.separator();
 
                 // 预设配置快速选择
-                ui.heading(egui::RichText::new("⚙️ 预设配置").strong().color(theme.accent));
+                ui.heading(
+                    egui::RichText::new("⚙️ 预设配置")
+                        .strong()
+                        .color(theme.accent),
+                );
                 ui.separator();
 
                 ui.vertical(|ui| {
@@ -100,7 +113,11 @@ impl Component for LeftPanel {
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                     ui.separator();
-                    ui.label(egui::RichText::new("提示：右键开始/结束圈选").color(theme.text_secondary).size(11.0));
+                    ui.label(
+                        egui::RichText::new("提示：右键开始/结束圈选")
+                            .color(theme.text_secondary)
+                            .size(11.0),
+                    );
                 });
             });
     }

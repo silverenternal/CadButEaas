@@ -131,7 +131,12 @@ impl Camera2D {
     }
 
     /// 将世界坐标转换为屏幕坐标
-    pub fn world_to_screen(&self, world: [f64; 2], rect: egui::Rect, scene_origin: [f64; 2]) -> egui::Pos2 {
+    pub fn world_to_screen(
+        &self,
+        world: [f64; 2],
+        rect: egui::Rect,
+        scene_origin: [f64; 2],
+    ) -> egui::Pos2 {
         // 使用相对坐标渲染，提升大坐标场景精度
         let relative_world = [world[0] - scene_origin[0], world[1] - scene_origin[1]];
         let zoom = self.zoom as f64;
@@ -164,7 +169,13 @@ impl Camera2D {
     }
 
     /// 自动适配场景边界
-    pub fn fit_to_scene(&mut self, min: [f64; 2], max: [f64; 2], view_width: f32, view_height: f32) {
+    pub fn fit_to_scene(
+        &mut self,
+        min: [f64; 2],
+        max: [f64; 2],
+        view_width: f32,
+        view_height: f32,
+    ) {
         let scene_width = max[0] - min[0];
         let scene_height = max[1] - min[1];
 
@@ -174,8 +185,10 @@ impl Camera2D {
         let zoom = zoom_x.min(zoom_y);
 
         // P11 调试：打印计算过程
-        eprintln!("[DEBUG] fit_to_scene: scene_width={}, scene_height={}, zoom_x={}, zoom_y={}, zoom={}",
-            scene_width, scene_height, zoom_x, zoom_y, zoom);
+        eprintln!(
+            "[DEBUG] fit_to_scene: scene_width={}, scene_height={}, zoom_x={}, zoom_y={}, zoom={}",
+            scene_width, scene_height, zoom_x, zoom_y, zoom
+        );
 
         // P11 修复：移除过小的 clamp 下限，支持大坐标场景（如 UTM 建筑坐标）
         // 原 clamp(0.1, 10.0) 会导致大坐标场景无法正确适配

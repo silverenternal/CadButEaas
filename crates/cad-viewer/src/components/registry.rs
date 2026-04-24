@@ -2,7 +2,7 @@
 //!
 //! P11 锐评落实：让 CadApp 成为真正的协调器，而不是「什么都做」
 
-use crate::components::{Component, UiEvent, ComponentContext};
+use crate::components::{Component, ComponentContext, UiEvent};
 use crate::state::AppState;
 use crate::theme::MacOsTheme;
 use eframe::egui;
@@ -92,7 +92,7 @@ impl ComponentRegistry {
 
         all_commands
     }
-    
+
     /// P11 新增：渲染所有组件（GPU 特性版本，传递 glass_renderer 引用）
     #[cfg(feature = "gpu")]
     pub fn render(
@@ -109,7 +109,8 @@ impl ComponentRegistry {
             if let Some(component) = self.components.get_mut(name) {
                 // 使用 take() 来移动 glass_renderer，然后在下次迭代前恢复
                 let glass_ref = glass_renderer.take();
-                let mut comp_ctx = ComponentContext::new(state, command_manager, theme.clone(), glass_ref);
+                let mut comp_ctx =
+                    ComponentContext::new(state, command_manager, theme.clone(), glass_ref);
                 component.render(ctx, &mut comp_ctx);
                 all_commands.extend(comp_ctx.commands);
                 // 恢复 glass_renderer 引用

@@ -5,13 +5,13 @@
 //! - 频率相关的吸声系数
 //! - 材料密度、厚度等可选参数
 
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
-use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
-use common_types::acoustic::Frequency;
+use crate::acoustic_types::Frequency;
 
 /// 材料吸声系数数据库
 #[derive(Debug, Clone)]
@@ -66,7 +66,7 @@ impl MaterialPropsToml {
     /// 转换为 MaterialProps
     fn into_props(self) -> Result<MaterialProps, String> {
         let mut coeffs = BTreeMap::new();
-        
+
         for (key, value) in self.absorption_coeffs {
             let freq = match key.to_lowercase().as_str() {
                 "125_hz" | "hz125" | "125" => Frequency::Hz125,
@@ -102,36 +102,40 @@ impl MaterialDatabase {
     pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let path = path.as_ref();
         info!("从文件加载材料数据库：{:?}", path);
-        
-        let content = fs::read_to_string(path)
-            .map_err(|e| format!("读取文件失败：{}", e))?;
-        
+
+        let content = fs::read_to_string(path).map_err(|e| format!("读取文件失败：{}", e))?;
+
         Self::load_from_toml(&content)
     }
 
     /// 从 TOML 字符串加载材料数据库
     pub fn load_from_toml(content: &str) -> Result<Self, String> {
-        let toml_db: MaterialDatabaseToml = toml::from_str(content)
-            .map_err(|e| format!("解析 TOML 失败：{}", e))?;
-        
+        let toml_db: MaterialDatabaseToml =
+            toml::from_str(content).map_err(|e| format!("解析 TOML 失败：{}", e))?;
+
         let mut materials = BTreeMap::new();
-        
+
         for material_toml in toml_db.materials {
             let props = material_toml.into_props()?;
             // 存储多个键名以便查找
             let name_lower = props.name.to_lowercase();
             materials.insert(name_lower.clone(), props.clone());
-            
+
             // 如果有中文名，也添加中文键
             if props.name.contains('(') {
-                if let Some(cn_name) = props.name.split('(').nth(1).and_then(|s| s.split(')').next()) {
+                if let Some(cn_name) = props
+                    .name
+                    .split('(')
+                    .nth(1)
+                    .and_then(|s| s.split(')').next())
+                {
                     materials.insert(cn_name.to_lowercase(), props);
                 }
             }
         }
-        
+
         info!("加载了 {} 种材料", materials.len());
-        
+
         Ok(Self { materials })
     }
 
@@ -209,7 +213,7 @@ description = "混凝土"
 
         let db = MaterialDatabase::load_from_toml(toml_content).unwrap();
         assert!(db.contains("concrete"));
-        
+
         let coeffs = db.get_absorption_coeffs("concrete").unwrap();
         assert!((coeffs.get(&Frequency::Hz125).unwrap() - 0.01).abs() < 1e-10);
         assert!((coeffs.get(&Frequency::Hz500).unwrap() - 0.02).abs() < 1e-10);
@@ -233,7 +237,9 @@ description = "混凝土"
                 ("1000".to_string(), 0.4),
                 ("2000".to_string(), 0.5),
                 ("4000".to_string(), 0.6),
-            ].into_iter().collect(),
+            ]
+            .into_iter()
+            .collect(),
             density: Some(1000.0),
             thickness: Some(10.0),
             description: Some("测试材料".to_string()),

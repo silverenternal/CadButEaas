@@ -5,10 +5,10 @@
 //! - PDF → JSON
 
 use common_types::{CadError, LengthUnit};
-use orchestrator::pipeline::ProcessingPipeline;
 use export::ExportService;
-use std::path::PathBuf;
+use orchestrator::pipeline::ProcessingPipeline;
 use std::fs;
+use std::path::PathBuf;
 use tempfile::TempDir;
 
 /// 获取项目根目录路径
@@ -34,7 +34,7 @@ fn get_project_root() -> PathBuf {
 #[tokio::test]
 async fn test_e2e_dxf_to_json() -> Result<(), CadError> {
     let project_root = get_project_root();
-    
+
     // 使用项目中的真实 DXF 测试文件
     // 注意：使用不带空格的简单文件名，避免编码问题
     let dxf_files = vec![
@@ -63,27 +63,35 @@ async fn test_e2e_dxf_to_json() -> Result<(), CadError> {
 
         // 创建处理管道
         let pipeline = ProcessingPipeline::new();
-        
+
         // 执行完整处理流程
         let result = pipeline.process_file(&dxf_path).await;
-        
+
         match result {
             Ok(process_result) => {
                 let scene = process_result.scene;
                 // 验证场景不为空
-                assert!(scene.outer.is_some() || !scene.holes.is_empty(), 
-                    "场景应该包含外边界或孔洞");
-                
+                assert!(
+                    scene.outer.is_some() || !scene.holes.is_empty(),
+                    "场景应该包含外边界或孔洞"
+                );
+
                 // 验证单位已标定
-                assert!(!matches!(scene.units, LengthUnit::Unspecified),
-                    "场景单位应该已标定");
-                
-                println!("  ✓ 解析成功：{:?} -> {} 个边界段", dxf_path, scene.boundaries.len());
+                assert!(
+                    !matches!(scene.units, LengthUnit::Unspecified),
+                    "场景单位应该已标定"
+                );
+
+                println!(
+                    "  ✓ 解析成功：{:?} -> {} 个边界段",
+                    dxf_path,
+                    scene.boundaries.len()
+                );
             }
             Err(e) => {
                 // 某些文件可能因为几何问题无法处理，这是预期的
                 println!("  ⚠ 处理失败（预期）: {:?}", e);
-                
+
                 // 验证错误有恢复建议
                 if let Some(suggestion) = e.recovery_suggestion() {
                     println!("  建议：{}", suggestion.action);
@@ -99,11 +107,15 @@ async fn test_e2e_dxf_to_json() -> Result<(), CadError> {
 #[tokio::test]
 async fn test_e2e_pdf_to_json() -> Result<(), CadError> {
     let project_root = get_project_root();
-    
+
     // 使用项目中的真实 PDF 测试文件
     let pdf_files = vec![
-        project_root.join("testpdf").join("20x40-house-with-4-bedrooms.pdf"),
-        project_root.join("testpdf").join("36x32-house-with-4-bedroom.pdf"),
+        project_root
+            .join("testpdf")
+            .join("20x40-house-with-4-bedrooms.pdf"),
+        project_root
+            .join("testpdf")
+            .join("36x32-house-with-4-bedroom.pdf"),
     ];
 
     for pdf_path in pdf_files {
@@ -125,27 +137,35 @@ async fn test_e2e_pdf_to_json() -> Result<(), CadError> {
 
         // 创建处理管道
         let pipeline = ProcessingPipeline::new();
-        
+
         // 执行完整处理流程
         let result = pipeline.process_file(&pdf_path).await;
-        
+
         match result {
             Ok(process_result) => {
                 let scene = process_result.scene;
                 // 验证场景不为空
-                assert!(scene.outer.is_some() || !scene.holes.is_empty(), 
-                    "场景应该包含外边界或孔洞");
-                
+                assert!(
+                    scene.outer.is_some() || !scene.holes.is_empty(),
+                    "场景应该包含外边界或孔洞"
+                );
+
                 // 验证单位已标定
-                assert!(!matches!(scene.units, LengthUnit::Unspecified),
-                    "场景单位应该已标定");
-                
-                println!("  ✓ 解析成功：{:?} -> {} 个边界段", pdf_path, scene.boundaries.len());
+                assert!(
+                    !matches!(scene.units, LengthUnit::Unspecified),
+                    "场景单位应该已标定"
+                );
+
+                println!(
+                    "  ✓ 解析成功：{:?} -> {} 个边界段",
+                    pdf_path,
+                    scene.boundaries.len()
+                );
             }
             Err(e) => {
                 // PDF 矢量化可能因为图像质量问题失败
                 println!("  ⚠ 处理失败（可能因为图像质量）: {:?}", e);
-                
+
                 // 验证错误有恢复建议
                 if let Some(suggestion) = e.recovery_suggestion() {
                     println!("  建议：{}", suggestion.action);
@@ -165,7 +185,7 @@ async fn test_e2e_process_and_export() -> Result<(), CadError> {
     let output_path = temp_dir.path().join("scene.json");
 
     let project_root = get_project_root();
-    
+
     // 使用简单的 DXF 文件
     let test_dxf = project_root.join("dxfs").join("报告厅 1.dxf");
 
@@ -185,37 +205,49 @@ async fn test_e2e_process_and_export() -> Result<(), CadError> {
 
     // 创建处理管道
     let pipeline = ProcessingPipeline::new();
-    
+
     // 执行处理
     let process_result = pipeline.process_file(&test_dxf).await?;
     let scene = process_result.scene;
-    
+
     // 导出 JSON
     let export_service = ExportService::with_default_config();
     let json_bytes = export_service.export_to_json_string(&scene)?;
-    
+
     // 写入文件
     fs::write(&output_path, json_bytes)?;
-    
+
     // 验证文件存在且不为空
     assert!(output_path.exists(), "输出文件应该存在");
     let content = fs::read_to_string(&output_path)?;
     assert!(!content.is_empty(), "输出文件不应该为空");
-    
+
     // 验证 JSON 格式正确
     let json_value: serde_json::Value = match serde_json::from_str(&content) {
         Ok(val) => val,
         Err(e) => {
             println!("JSON 解析失败：{:?}", e);
-            return Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                message: format!("JSON 解析失败：{}", e)
-            }));
+            return Err(CadError::internal(
+                common_types::InternalErrorReason::Panic {
+                    message: format!("JSON 解析失败：{}", e),
+                },
+            ));
         }
     };
-    assert!(json_value.get("schema_version").is_some(), "JSON 应该包含 schema_version");
-    assert!(json_value.get("geometry").is_some(), "JSON 应该包含 geometry");
-    
-    println!("✓ E2E 导出测试通过：{:?} ({} 字节)", output_path, content.len());
+    assert!(
+        json_value.get("schema_version").is_some(),
+        "JSON 应该包含 schema_version"
+    );
+    assert!(
+        json_value.get("geometry").is_some(),
+        "JSON 应该包含 geometry"
+    );
+
+    println!(
+        "✓ E2E 导出测试通过：{:?} ({} 字节)",
+        output_path,
+        content.len()
+    );
 
     Ok(())
 }
@@ -224,11 +256,15 @@ async fn test_e2e_process_and_export() -> Result<(), CadError> {
 #[tokio::test]
 async fn test_e2e_error_recovery_suggestion() -> Result<(), CadError> {
     let project_root = get_project_root();
-    
+
     // 使用问题文件测试错误恢复建议
     let problem_files = vec![
-        project_root.join("dxfs").join("问题文件 - 端点错位 0.3mm.dxf"),
-        project_root.join("dxfs").join("问题文件 - 自相交多边形.dxf"),
+        project_root
+            .join("dxfs")
+            .join("问题文件 - 端点错位 0.3mm.dxf"),
+        project_root
+            .join("dxfs")
+            .join("问题文件 - 自相交多边形.dxf"),
     ];
 
     for file_path in problem_files {
@@ -252,13 +288,18 @@ async fn test_e2e_error_recovery_suggestion() -> Result<(), CadError> {
             }
             Err(e) => {
                 println!("  ⚠ 问题文件处理失败");
-                
+
                 // 验证错误有恢复建议
                 let suggestions = e.all_suggestions();
                 if !suggestions.is_empty() {
                     println!("  恢复建议（{} 条）:", suggestions.len());
                     for (i, suggestion) in suggestions.iter().take(3).enumerate() {
-                        println!("    {}. [优先级 {}] {}", i + 1, suggestion.priority, suggestion.action);
+                        println!(
+                            "    {}. [优先级 {}] {}",
+                            i + 1,
+                            suggestion.priority,
+                            suggestion.action
+                        );
                     }
                 } else {
                     println!("  ⚠ 警告：没有恢复建议");
@@ -274,7 +315,7 @@ async fn test_e2e_error_recovery_suggestion() -> Result<(), CadError> {
 #[tokio::test]
 async fn test_e2e_large_scale_performance() -> Result<(), CadError> {
     let project_root = get_project_root();
-    
+
     // 大规模测试文件
     let large_file = project_root.join("dxfs").join("报告厅 3.dxf");
 
@@ -307,7 +348,7 @@ async fn test_e2e_large_scale_performance() -> Result<(), CadError> {
 #[tokio::test]
 async fn test_e2e_with_custom_config() -> Result<(), CadError> {
     let project_root = get_project_root();
-    
+
     let test_dxf = project_root.join("dxfs").join("报告厅 1.dxf");
 
     // P11 锐评落实：测试文件不存在应该 panic，而不是跳过
@@ -326,17 +367,19 @@ async fn test_e2e_with_custom_config() -> Result<(), CadError> {
 
     // 使用自定义配置
     let pipeline = ProcessingPipeline::new();
-    
+
     // 这里可以测试配置对处理结果的影响
     // 注意：当前 ProcessingPipeline 可能不支持直接配置
     // 这是 P2 阶段配置热加载的任务
-    
+
     let process_result = pipeline.process_file(&test_dxf).await?;
     let scene = process_result.scene;
-    
+
     // 验证基本属性
-    assert!(!matches!(scene.units, LengthUnit::Unspecified),
-        "场景单位应该已标定");
+    assert!(
+        !matches!(scene.units, LengthUnit::Unspecified),
+        "场景单位应该已标定"
+    );
 
     Ok(())
 }

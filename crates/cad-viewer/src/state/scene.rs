@@ -2,8 +2,8 @@
 //!
 //! 包含所有场景相关的业务数据：边、座椅区域、图层等
 
+use common_types::{RenderConfig, SeatZone};
 use interact::Edge;
-use common_types::{SeatZone, RenderConfig};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -41,6 +41,7 @@ impl LayerCollection {
 }
 
 /// 场景统计信息
+#[derive(Default)]
 pub struct SceneStats {
     /// 总边数
     pub total_edges: usize,
@@ -71,15 +72,6 @@ impl Default for LayerCollection {
     }
 }
 
-impl Default for SceneStats {
-    fn default() -> Self {
-        Self {
-            total_edges: 0,
-            visible_edges: 0,
-        }
-    }
-}
-
 impl SceneState {
     /// 创建新的场景状态
     pub fn new() -> Self {
@@ -89,15 +81,19 @@ impl SceneState {
     /// 更新图层可见性统计
     pub fn update_visibility_stats(&mut self) {
         self.stats.total_edges = self.edges.len();
-        self.stats.visible_edges = self.edges.iter().filter(|e| {
-            if let Some(visible) = e.visible {
-                visible
-            } else if let Some(layer) = &e.layer {
-                *self.layers.visibility.get(layer).unwrap_or(&true)
-            } else {
-                true
-            }
-        }).count();
+        self.stats.visible_edges = self
+            .edges
+            .iter()
+            .filter(|e| {
+                if let Some(visible) = e.visible {
+                    visible
+                } else if let Some(layer) = &e.layer {
+                    *self.layers.visibility.get(layer).unwrap_or(&true)
+                } else {
+                    true
+                }
+            })
+            .count();
     }
 
     /// 切换图层可见性（用于图层面板交互）
@@ -153,8 +149,10 @@ impl SceneState {
                 for edge in &mut self.edges {
                     let layer = edge.layer.as_deref().unwrap_or("");
                     let upper = layer.to_uppercase();
-                    let is_opening = upper.contains("DOOR") || upper.contains("门")
-                        || upper.contains("WINDOW") || upper.contains("窗")
+                    let is_opening = upper.contains("DOOR")
+                        || upper.contains("门")
+                        || upper.contains("WINDOW")
+                        || upper.contains("窗")
                         || upper.contains("OPEN");
                     if !is_opening {
                         edge.visible = Some(false);
@@ -168,9 +166,12 @@ impl SceneState {
                 for edge in &mut self.edges {
                     let layer = edge.layer.as_deref().unwrap_or("");
                     let upper = layer.to_uppercase();
-                    let is_arch = upper.contains("WALL") || upper.contains("墙")
-                        || upper.contains("DOOR") || upper.contains("门")
-                        || upper.contains("WINDOW") || upper.contains("窗")
+                    let is_arch = upper.contains("WALL")
+                        || upper.contains("墙")
+                        || upper.contains("DOOR")
+                        || upper.contains("门")
+                        || upper.contains("WINDOW")
+                        || upper.contains("窗")
                         || upper.contains("STRUCT");
                     if !is_arch {
                         edge.visible = Some(false);
@@ -201,9 +202,7 @@ impl SceneState {
 
     /// 获取所有唯一图层名称
     pub fn get_unique_layers(&self) -> Vec<String> {
-        let mut layers: Vec<String> = self.edges.iter()
-            .filter_map(|e| e.layer.clone())
-            .collect();
+        let mut layers: Vec<String> = self.edges.iter().filter_map(|e| e.layer.clone()).collect();
         layers.sort();
         layers.dedup();
         layers

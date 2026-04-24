@@ -5,10 +5,10 @@
 //! 2. 让 RenderQueue 在 CpuRenderer 中实际工作
 //! 3. 统一 CPU/GPU 渲染接口
 
-use crate::state::{SceneState, UIState, Camera2D};
 use crate::render::RenderQueue;
+use crate::state::{Camera2D, SceneState, UIState};
 use eframe::egui;
-use egui::{Color32, Pos2, Rect, Stroke, Painter};
+use egui::{Color32, Painter, Pos2, Rect, Stroke};
 
 /// 渲染上下文
 pub struct RenderContext<'a> {
@@ -29,7 +29,13 @@ pub trait Renderer: Send + Sync {
     fn render_scene(&mut self, ctx: &mut RenderContext, scene: &SceneState, camera: &Camera2D);
 
     /// 渲染 UI 叠加层
-    fn render_ui(&mut self, ctx: &mut RenderContext, ui: &UIState, scene: &SceneState, camera: &Camera2D);
+    fn render_ui(
+        &mut self,
+        ctx: &mut RenderContext,
+        ui: &UIState,
+        scene: &SceneState,
+        camera: &Camera2D,
+    );
 
     /// 结束帧
     fn end_frame(&mut self);
@@ -63,35 +69,58 @@ impl CpuRenderer {
         let layer_upper = layer.unwrap_or("").to_uppercase();
 
         // 墙体图层 - 使用更亮的红色
-        if layer_upper == "WALL" || layer_upper == "墙体" || layer_upper == "A-WALL"
-            || layer_upper.starts_with("A-WALL-") || layer_upper.starts_with("WALL-")
-            || layer_upper.contains("WALL") || layer_upper.contains("墙体") {
+        if layer_upper == "WALL"
+            || layer_upper == "墙体"
+            || layer_upper == "A-WALL"
+            || layer_upper.starts_with("A-WALL-")
+            || layer_upper.starts_with("WALL-")
+            || layer_upper.contains("WALL")
+            || layer_upper.contains("墙体")
+        {
             return Color32::from_rgb(255, 100, 100);
         }
 
         // 门窗图层 - 使用更亮的黄色
-        if layer_upper == "DOOR" || layer_upper == "门" || layer_upper == "A-DOOR"
-            || layer_upper.starts_with("DOOR-") || layer_upper.starts_with("A-DOOR-")
-            || layer_upper.contains("门") {
+        if layer_upper == "DOOR"
+            || layer_upper == "门"
+            || layer_upper == "A-DOOR"
+            || layer_upper.starts_with("DOOR-")
+            || layer_upper.starts_with("A-DOOR-")
+            || layer_upper.contains("门")
+        {
             return Color32::from_rgb(255, 255, 50);
         }
-        if layer_upper == "WINDOW" || layer_upper == "窗" || layer_upper == "A-WINDOW"
-            || layer_upper.starts_with("WINDOW-") || layer_upper.starts_with("A-WINDOW-")
-            || layer_upper.contains("窗") {
+        if layer_upper == "WINDOW"
+            || layer_upper == "窗"
+            || layer_upper == "A-WINDOW"
+            || layer_upper.starts_with("WINDOW-")
+            || layer_upper.starts_with("A-WINDOW-")
+            || layer_upper.contains("窗")
+        {
             return Color32::from_rgb(50, 255, 150);
         }
 
         // 家具图层 - 使用更亮的蓝色
-        if layer_upper == "FURNITURE" || layer_upper == "家具" || layer_upper == "A-FURN"
-            || layer_upper.starts_with("FURN-") || layer_upper.starts_with("A-FURN-")
-            || layer_upper == "A-FURNITURE" || layer_upper.contains("家具") {
+        if layer_upper == "FURNITURE"
+            || layer_upper == "家具"
+            || layer_upper == "A-FURN"
+            || layer_upper.starts_with("FURN-")
+            || layer_upper.starts_with("A-FURN-")
+            || layer_upper == "A-FURNITURE"
+            || layer_upper.contains("家具")
+        {
             return Color32::from_rgb(150, 200, 255);
         }
 
         // 标注图层 - 使用更亮的黄色
-        if layer_upper == "DIMENSION" || layer_upper == "标注" || layer_upper == "A-DIMS"
-            || layer_upper.starts_with("DIMS-") || layer_upper == "A-ANNO-DIMS"
-            || layer_upper.contains("标注") || layer_upper.contains("DIM") {
+        if layer_upper == "DIMENSION"
+            || layer_upper == "标注"
+            || layer_upper == "A-DIMS"
+            || layer_upper.starts_with("DIMS-")
+            || layer_upper == "A-ANNO-DIMS"
+            || layer_upper.contains("标注")
+            || layer_upper.contains("DIM")
+        {
             return Color32::from_rgb(255, 255, 100);
         }
 
@@ -178,16 +207,13 @@ impl CpuRenderer {
 
             // 获取材质 - P0-3 修复：LOD 动态线宽 + 图层颜色
             let color = Self::get_layer_color(edge.layer.as_deref());
-            
+
             // P0-3 修复：根据图层语义调整线宽
             // 墙体图层使用更粗的线，家具图层使用较细的线
             let layer_width_multiplier = Self::get_layer_width_multiplier(edge.layer.as_deref());
             let line_width = base_line_width * layer_width_multiplier;
-            
-            let material = crate::render::MaterialId {
-                color,
-                line_width,
-            };
+
+            let material = crate::render::MaterialId { color, line_width };
 
             let layer = crate::render::LayerId {
                 name: edge.layer.clone().unwrap_or_default(),
@@ -198,8 +224,13 @@ impl CpuRenderer {
         }
 
         // P11 调试：打印渲染统计
-        eprintln!("[DEBUG] render: visible={}, clipped={}, total={}, zoom={:.2}", 
-                  visible_count, clipped_count, scene.edges.len(), camera.zoom);
+        eprintln!(
+            "[DEBUG] render: visible={}, clipped={}, total={}, zoom={:.2}",
+            visible_count,
+            clipped_count,
+            scene.edges.len(),
+            camera.zoom
+        );
     }
 
     /// P0-3 修复：根据缩放级别计算 LOD 线宽
@@ -209,8 +240,8 @@ impl CpuRenderer {
     /// - zoom 0.3-1.5: 1.25-2.45px（正常模式，线性过渡）
     /// - zoom > 1.5: 2.5px（放大模式，保持恒定避免过粗）
     fn calculate_lod_line_width(zoom: f32) -> f32 {
-        const MIN_WIDTH: f32 = 0.8;   // P11 修复：提升最小线宽（原 0.5）
-        const MAX_WIDTH: f32 = 2.5;   // P11 修复：降低最大线宽（原 3.0）
+        const MIN_WIDTH: f32 = 0.8; // P11 修复：提升最小线宽（原 0.5）
+        const MAX_WIDTH: f32 = 2.5; // P11 修复：降低最大线宽（原 3.0）
 
         // P11 修复：使用分段函数，避免极端值
         if zoom < 0.3 {
@@ -238,20 +269,29 @@ impl CpuRenderer {
         let layer_upper = layer.unwrap_or("").to_uppercase();
 
         // 墙体图层 - 1.3x（P11 修复：降低 from 1.5x）
-        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
-            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+        if layer_upper.contains("WALL")
+            || layer_upper.contains("墙体")
+            || layer_upper.contains("结构")
+            || layer_upper.contains("STRUCT")
+        {
             return 1.3;
         }
 
         // 门窗图层 - 1.1x（P11 修复：降低 from 1.2x）
-        if layer_upper.contains("DOOR") || layer_upper.contains("门")
-            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+        if layer_upper.contains("DOOR")
+            || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW")
+            || layer_upper.contains("窗")
+        {
             return 1.1;
         }
 
         // 标注图层 - 0.7x（P11 修复：降低 from 0.8x）
-        if layer_upper.contains("DIM") || layer_upper.contains("标注")
-            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+        if layer_upper.contains("DIM")
+            || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT")
+            || layer_upper.contains("注释")
+        {
             return 0.7;
         }
 
@@ -282,11 +322,18 @@ impl Renderer for CpuRenderer {
         self.render_queue.render(ctx.painter);
     }
 
-    fn render_ui(&mut self, ctx: &mut RenderContext, ui: &UIState, scene: &SceneState, camera: &Camera2D) {
+    fn render_ui(
+        &mut self,
+        ctx: &mut RenderContext,
+        ui: &UIState,
+        scene: &SceneState,
+        camera: &Camera2D,
+    ) {
         // P0 改进：渲染悬停高亮（Hover Highlight）
         if let Some(hovered_id) = ui.hovered_edge {
             if let Some(hovered_edge) = scene.edges.iter().find(|e| e.id == hovered_id) {
-                let start = camera.world_to_screen(hovered_edge.start, ctx.rect, scene.scene_origin);
+                let start =
+                    camera.world_to_screen(hovered_edge.start, ctx.rect, scene.scene_origin);
                 let end = camera.world_to_screen(hovered_edge.end, ctx.rect, scene.scene_origin);
                 // 黄色高亮（比选中稍弱，使用半透明效果）
                 ctx.painter.line_segment(
@@ -302,24 +349,22 @@ impl Renderer for CpuRenderer {
             if let Some(edge) = scene.edges.iter().find(|e| e.id == *edge_id) {
                 let start = camera.world_to_screen(edge.start, ctx.rect, scene.scene_origin);
                 let end = camera.world_to_screen(edge.end, ctx.rect, scene.scene_origin);
-                ctx.painter.line_segment([start, end], Stroke::new(4.0, Color32::YELLOW));
+                ctx.painter
+                    .line_segment([start, end], Stroke::new(4.0, Color32::YELLOW));
             }
         }
 
         // 渲染圈选多边形
         if ui.lasso_points.len() > 1 {
-            let points: Vec<Pos2> = ui.lasso_points.iter()
-                .map(|p| {
-                    let screen = camera.world_to_screen(*p, ctx.rect, scene.scene_origin);
-                    screen
-                })
+            let points: Vec<Pos2> = ui
+                .lasso_points
+                .iter()
+                .map(|p| camera.world_to_screen(*p, ctx.rect, scene.scene_origin))
                 .collect();
 
             for i in 0..points.len() - 1 {
-                ctx.painter.line_segment(
-                    [points[i], points[i + 1]],
-                    Stroke::new(2.0, Color32::GREEN),
-                );
+                ctx.painter
+                    .line_segment([points[i], points[i + 1]], Stroke::new(2.0, Color32::GREEN));
             }
 
             // 闭合

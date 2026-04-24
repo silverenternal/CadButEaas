@@ -4,20 +4,15 @@ use accelerator_api::Accelerator;
 use std::cmp::Ordering;
 
 /// 调度策略
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub enum SchedulingStrategy {
     /// 性能优先：选择性能评分最高的加速器
+    #[default]
     PerformanceFirst,
     /// 节能优先：选择功耗最低的加速器
     PowerSaving,
     /// 自定义策略
     Custom(SelectionCriteria),
-}
-
-impl Default for SchedulingStrategy {
-    fn default() -> Self {
-        Self::PerformanceFirst
-    }
 }
 
 /// 自定义选择条件
@@ -58,7 +53,8 @@ impl SelectionCriteria {
     /// 创建内存优先条件（选择可用内存最多的）
     pub fn memory_priority() -> Self {
         Self::new(|a, b| {
-            a.capabilities().max_memory_mb
+            a.capabilities()
+                .max_memory_mb
                 .cmp(&b.capabilities().max_memory_mb)
         })
     }
@@ -78,10 +74,10 @@ impl SelectionCriteria {
                 accelerator_api::AcceleratorOp::Threshold,
                 accelerator_api::AcceleratorOp::Skeletonize,
             ];
-            
+
             let a_count = ops.iter().filter(|op| a.supports_op(**op)).count();
             let b_count = ops.iter().filter(|op| b.supports_op(**op)).count();
-            
+
             a_count.cmp(&b_count)
         })
     }

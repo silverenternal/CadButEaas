@@ -1,18 +1,20 @@
 //! CPU 边缘检测实现
 
+use accelerator_api::{AcceleratorError, AcceleratorResult};
 use accelerator_api::{EdgeDetectConfig, EdgeMap, Image};
-use accelerator_api::{AcceleratorResult, AcceleratorError};
 use rayon::prelude::*;
 
 /// CPU 边缘检测（Sobel 算子）
 pub fn detect_edges_cpu(image: &Image, config: &EdgeDetectConfig) -> AcceleratorResult<EdgeMap> {
     let width = image.width as usize;
     let height = image.height as usize;
-    
+
     if image.data.len() != width * height {
-        return Err(AcceleratorError::InvalidDataFormat(
-            format!("图像数据大小不匹配：期望 {}，实际 {}", width * height, image.data.len())
-        ));
+        return Err(AcceleratorError::InvalidDataFormat(format!(
+            "图像数据大小不匹配：期望 {}，实际 {}",
+            width * height,
+            image.data.len()
+        )));
     }
 
     let mut edge_data = vec![255u8; width * height];
@@ -43,7 +45,7 @@ pub fn detect_edges_cpu(image: &Image, config: &EdgeDetectConfig) -> Accelerator
                 }
 
                 let magnitude = ((gx * gx + gy * gy) as f32).sqrt() as u8;
-                
+
                 // 应用阈值
                 let threshold = config.low_threshold as u8;
                 *pixel = if magnitude > threshold { 0 } else { 255 };
@@ -68,10 +70,10 @@ mod tests {
             height: 10,
             data: vec![128u8; 100],
         };
-        
+
         let config = EdgeDetectConfig::default();
         let result = detect_edges_cpu(&image, &config).unwrap();
-        
+
         assert_eq!(result.width, 10);
         assert_eq!(result.height, 10);
     }

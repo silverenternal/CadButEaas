@@ -21,16 +21,16 @@ pub mod dirty_rect;
 // 核心交互模块
 // ============================================================================
 
-use serde::{Deserialize, Serialize};
+use common_types::error::{CadError, InternalErrorReason};
+use common_types::geometry::{LineStyle, LineWidth};
+use common_types::scene::{BoundarySemantic, ClosedLoop};
+use common_types::service::ServiceMetrics;
+use geo::{Contains, Coord, Intersects, LineString, Polygon};
+use nalgebra::Vector2;
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
-use geo::{LineString, Coord, Contains, Intersects};
-use nalgebra::Vector2;
-use common_types::scene::{ClosedLoop, BoundarySemantic};
-use common_types::geometry::{LineStyle, LineWidth};
-use common_types::error::{CadError, InternalErrorReason};
-use common_types::service::ServiceMetrics;
 
 /// 边 ID 类型
 pub type EdgeId = usize;
@@ -66,6 +66,9 @@ pub struct InteractionState {
     /// 场景状态（用于导出）
     #[serde(skip)]
     pub scene_state: Option<common_types::SceneState>,
+    /// 拓扑构建是否已完成（用于 WebSocket 推送通知）
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub topology_ready: bool,
 }
 
 /// 边 - 基本几何单元
@@ -101,16 +104,22 @@ impl Edge {
             layer: None,
             is_wall: true,
             visible: None,
-            line_style: None,  // 默认实线
-            line_width: None,  // 默认 ByLayer
+            line_style: None, // 默认实线
+            line_width: None, // 默认 ByLayer
         }
     }
 
     /// 转换为 geo::LineString
     pub fn to_line_string(&self) -> LineString<f64> {
         LineString::from(vec![
-            Coord { x: self.start[0], y: self.start[1] },
-            Coord { x: self.end[0], y: self.end[1] },
+            Coord {
+                x: self.start[0],
+                y: self.start[1],
+            },
+            Coord {
+                x: self.end[0],
+                y: self.end[1],
+            },
         ])
     }
 
@@ -162,7 +171,8 @@ impl GapInfo {
         let dy = endpoint_b[1] - endpoint_a[1];
         let length = (dx * dx + dy * dy).sqrt();
 
-        let confidence = Self::calculate_confidence(length, direction_a.as_ref(), direction_b.as_ref());
+        let confidence =
+            Self::calculate_confidence(length, direction_a.as_ref(), direction_b.as_ref());
 
         Self {
             id,
@@ -176,11 +186,7 @@ impl GapInfo {
         }
     }
 
-    fn calculate_confidence(
-        length: f64,
-        dir_a: Option<&Point2>,
-        dir_b: Option<&Point2>,
-    ) -> f32 {
+    fn calculate_confidence(length: f64, dir_a: Option<&Point2>, dir_b: Option<&Point2>) -> f32 {
         let length_score = if length < 1.0 {
             1.0
         } else if length < 5.0 {
@@ -300,7 +306,11 @@ pub trait InteractService: Send + Sync {
     fn apply_snap_bridge(&mut self, gap_id: GapId) -> Result<(), CadError>;
 
     /// 设置边界语义
-    fn set_boundary_semantic(&mut self, segment_id: SegmentId, semantic: BoundarySemantic) -> Result<(), CadError>;
+    fn set_boundary_semantic(
+        &mut self,
+        segment_id: SegmentId,
+        semantic: BoundarySemantic,
+    ) -> Result<(), CadError>;
 
     /// 获取当前交互状态
     fn get_state(&self) -> &InteractionState;
@@ -334,7 +344,11 @@ impl InteractionService {
         }
     }
 
-    pub fn with_tolerance(edges: Vec<Edge>, snap_tolerance: f64, max_gap_bridge_length: f64) -> Self {
+    pub fn with_tolerance(
+        edges: Vec<Edge>,
+        snap_tolerance: f64,
+        max_gap_bridge_length: f64,
+    ) -> Self {
         Self {
             state: InteractionState {
                 edges,
@@ -358,9 +372,21 @@ impl InteractionService {
         (dx * dx + dy * dy).sqrt()
     }
 
+    /// 将点量化到网格桶（用于端点匹配）
+    fn quantize_point(point: &Point2, tolerance: f64) -> (usize, usize) {
+        let x = (point[0] / tolerance).floor() as usize;
+        let y = (point[1] / tolerance).floor() as usize;
+        (x, y)
+    }
+
     /// 查找从某个端点出发的所有边
     #[allow(dead_code)] // 预留用于未来端点查询功能
-    fn find_edges_from_point(&self, point: Point2, exclude: &HashSet<EdgeId>, tolerance: f64) -> Vec<EdgeId> {
+    fn find_edges_from_point(
+        &self,
+        point: Point2,
+        exclude: &HashSet<EdgeId>,
+        tolerance: f64,
+    ) -> Vec<EdgeId> {
         let mut edges = Vec::new();
 
         for edge in &self.state.edges {
@@ -383,43 +409,177 @@ impl InteractionService {
 impl InteractService for InteractionService {
     fn auto_trace_from_edge(&mut self, edge_id: EdgeId) -> Result<AutoTraceResult, CadError> {
         // 验证边是否存在
-        if !self.state.edges.iter().any(|e| e.id == edge_id) {
-            return Err(CadError::InternalError {
-                reason: InternalErrorReason::InvariantViolated { invariant: format!("边{} 不存在", edge_id) },
+        let selected_edge = self
+            .state
+            .edges
+            .iter()
+            .find(|e| e.id == edge_id)
+            .ok_or_else(|| CadError::InternalError {
+                reason: InternalErrorReason::InvariantViolated {
+                    invariant: format!("边{} 不存在", edge_id),
+                },
                 location: None,
-            });
+            })?
+            .clone();
+
+        // 构建端点到边的映射（用于快速查找相邻边）
+        let snap_tolerance = self.snap_tolerance;
+        let mut endpoint_map: HashMap<(usize, usize), Vec<EdgeId>> = HashMap::new();
+        for edge in &self.state.edges {
+            if edge.id == edge_id {
+                continue; // 排除选中边本身
+            }
+            let bucket_start = Self::quantize_point(&edge.start, snap_tolerance);
+            let bucket_end = Self::quantize_point(&edge.end, snap_tolerance);
+            endpoint_map.entry(bucket_start).or_default().push(edge.id);
+            endpoint_map.entry(bucket_end).or_default().push(edge.id);
         }
 
-        // 简化版：返回选中边本身
+        // 追踪路径
+        let mut path = vec![edge_id];
+        let mut visited: HashSet<EdgeId> = HashSet::new();
+        visited.insert(edge_id);
+
+        let start_point = selected_edge.start;
+        let mut current_point = selected_edge.end;
+        let mut loop_closed = false;
+        let mut encountered_branch = false;
+        let mut branch_point = None;
+        let mut branch_options = Vec::new();
+
+        // 从选中边的终点开始追踪
+        loop {
+            let current_bucket = Self::quantize_point(&current_point, snap_tolerance);
+            let candidates = endpoint_map
+                .get(&current_bucket)
+                .cloned()
+                .unwrap_or_default();
+
+            // 过滤掉已访问的边
+            let unvisited: Vec<EdgeId> = candidates
+                .into_iter()
+                .filter(|id| !visited.contains(id))
+                .collect();
+
+            if unvisited.is_empty() {
+                break; // 无路可走
+            }
+
+            if unvisited.len() > 1 {
+                // 遇到分叉
+                encountered_branch = true;
+                branch_point = Some(current_point);
+                branch_options = unvisited.clone();
+                // 选择第一条未访问的边继续
+                let next_id = unvisited[0];
+                let next_edge = self.state.edges.iter().find(|e| e.id == next_id).unwrap();
+                // 确定新端点（远离当前点的另一端）
+                let dist_start = Self::distance_2d(current_point, next_edge.start);
+                current_point = if dist_start < snap_tolerance {
+                    next_edge.end
+                } else {
+                    next_edge.start
+                };
+                path.push(next_id);
+                visited.insert(next_id);
+                continue;
+            }
+
+            let next_id = unvisited[0];
+            let next_edge = self.state.edges.iter().find(|e| e.id == next_id).unwrap();
+
+            // 确定新端点
+            let dist_start = Self::distance_2d(current_point, next_edge.start);
+            let new_point = if dist_start < snap_tolerance {
+                next_edge.end
+            } else {
+                next_edge.start
+            };
+
+            // 检查是否回到起点
+            if Self::distance_2d(new_point, start_point) < snap_tolerance {
+                path.push(next_id);
+                loop_closed = true;
+                break;
+            }
+
+            path.push(next_id);
+            visited.insert(next_id);
+            current_point = new_point;
+
+            // 安全限制：防止无限循环
+            if path.len() > self.state.edges.len() {
+                break;
+            }
+        }
+
+        // 如果闭环，构建 ClosedLoop
+        let loop_ = if loop_closed {
+            // 收集路径上所有边的端点（按顺序）
+            let mut points = Vec::new();
+            let mut cursor = start_point;
+            points.push(cursor);
+
+            for &eid in &path {
+                let edge = self.state.edges.iter().find(|e| e.id == eid).unwrap();
+                let dist_start = Self::distance_2d(cursor, edge.start);
+                let next = if dist_start < snap_tolerance {
+                    edge.end
+                } else {
+                    edge.start
+                };
+                points.push(next);
+                cursor = next;
+            }
+
+            Some(common_types::scene::ClosedLoop::new(points))
+        } else {
+            None
+        };
+
+        // 更新状态
+        self.state.selected_edges.insert(edge_id);
+        self.state.auto_trace_candidates = path.clone();
+
         Ok(AutoTraceResult {
-            loop_: None,
-            path: vec![edge_id],
-            encountered_branch: false,
-            branch_point: None,
-            branch_options: Vec::new(),
+            loop_,
+            path,
+            encountered_branch,
+            branch_point,
+            branch_options,
         })
     }
 
     fn extract_from_lasso(&mut self, polygon: &[Point2]) -> Result<LassoResult, CadError> {
         if polygon.len() < 3 {
             return Err(CadError::InternalError {
-                reason: InternalErrorReason::InvariantViolated { invariant: "多边形至少需要 3 个点".to_string() },
+                reason: InternalErrorReason::InvariantViolated {
+                    invariant: "多边形至少需要 3 个点".to_string(),
+                },
                 location: None,
             });
         }
 
-        let lasso_line_string = LineString::from_iter(polygon.iter().map(|p| Coord { x: p[0], y: p[1] }));
+        // 将多边形闭合（如果首尾点不重合）
+        let mut closed_polygon: Vec<_> = polygon.to_vec();
+        if closed_polygon.first() != closed_polygon.last() {
+            closed_polygon.push(*closed_polygon.first().unwrap());
+        }
+        let lasso_polygon = Polygon::new(
+            LineString::from_iter(closed_polygon.iter().map(|p| Coord { x: p[0], y: p[1] })),
+            vec![],
+        );
 
         let mut selected_edges = Vec::new();
         for edge in &self.state.edges {
             let edge_line_string = edge.to_line_string();
-            // 简化检查：检查边的中点是否在多边形内
+            // 检查边的中点是否在多边形内
             let mid_point = Coord {
                 x: (edge.start[0] + edge.end[0]) / 2.0,
                 y: (edge.start[1] + edge.end[1]) / 2.0,
             };
-            
-            if lasso_line_string.contains(&mid_point) || lasso_line_string.intersects(&edge_line_string) {
+
+            if lasso_polygon.contains(&mid_point) || lasso_polygon.intersects(&edge_line_string) {
                 selected_edges.push(edge.id);
             }
         }
@@ -461,7 +621,11 @@ impl InteractService for InteractionService {
             if !start_connected || !end_connected {
                 gaps.push(GapInfo::new(
                     gap_id,
-                    if !start_connected { edge.start } else { edge.end },
+                    if !start_connected {
+                        edge.start
+                    } else {
+                        edge.end
+                    },
                     if !end_connected { edge.end } else { edge.start },
                     None,
                     None,
@@ -480,7 +644,11 @@ impl InteractService for InteractionService {
         Ok(())
     }
 
-    fn set_boundary_semantic(&mut self, segment_id: SegmentId, semantic: BoundarySemantic) -> Result<(), CadError> {
+    fn set_boundary_semantic(
+        &mut self,
+        segment_id: SegmentId,
+        semantic: BoundarySemantic,
+    ) -> Result<(), CadError> {
         self.state.boundary_semantics.insert(segment_id, semantic);
         Ok(())
     }
@@ -504,15 +672,18 @@ impl InteractionService {
                 holes: vec![],
                 boundaries: vec![],
                 sources: vec![],
-                edges: self.state.edges.iter().map(|e| {
-                    common_types::scene::RawEdge {
+                edges: self
+                    .state
+                    .edges
+                    .iter()
+                    .map(|e| common_types::scene::RawEdge {
                         id: e.id,
                         start: e.start,
                         end: e.end,
                         layer: e.layer.clone(),
                         color_index: None,
-                    }
-                }).collect(),
+                    })
+                    .collect(),
                 units: common_types::LengthUnit::M,
                 coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
                 seat_zones: vec![],
@@ -564,6 +735,58 @@ mod tests {
     }
 
     #[test]
+    fn test_auto_trace_closed_loop() {
+        // 正方形四条边形成闭环
+        let edges = vec![
+            Edge::new(0, [0.0, 0.0], [10.0, 0.0]),
+            Edge::new(1, [10.0, 0.0], [10.0, 10.0]),
+            Edge::new(2, [10.0, 10.0], [0.0, 10.0]),
+            Edge::new(3, [0.0, 10.0], [0.0, 0.0]),
+        ];
+        let mut service = InteractionService::new(edges);
+        let result = service.auto_trace_from_edge(0).unwrap();
+        assert!(result.loop_.is_some());
+        assert!(result.path.len() >= 4);
+        assert!(!result.encountered_branch);
+    }
+
+    #[test]
+    fn test_auto_trace_branch() {
+        // T 形连接：边0的终点连接两条边（分叉）
+        let edges = vec![
+            Edge::new(0, [0.0, 0.0], [10.0, 0.0]),
+            Edge::new(1, [10.0, 0.0], [10.0, 10.0]), // 分叉选项1
+            Edge::new(2, [10.0, 0.0], [20.0, 0.0]),  // 分叉选项2
+        ];
+        let mut service = InteractionService::new(edges);
+        let result = service.auto_trace_from_edge(0).unwrap();
+        assert!(result.encountered_branch);
+        assert!(result.branch_point.is_some());
+        assert!(result.branch_options.len() >= 2);
+    }
+
+    #[test]
+    fn test_auto_trace_dead_end() {
+        // 死胡同：边0的终点只连一条边，该边终点没有后续
+        let edges = vec![
+            Edge::new(0, [0.0, 0.0], [10.0, 0.0]),
+            Edge::new(1, [10.0, 0.0], [10.0, 10.0]),
+        ];
+        let mut service = InteractionService::new(edges);
+        let result = service.auto_trace_from_edge(1).unwrap();
+        assert!(result.loop_.is_none());
+        assert!(!result.encountered_branch);
+    }
+
+    #[test]
+    fn test_auto_trace_nonexistent_edge() {
+        let edges = vec![Edge::new(0, [0.0, 0.0], [10.0, 0.0])];
+        let mut service = InteractionService::new(edges);
+        let result = service.auto_trace_from_edge(999);
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_lasso_selection() {
         let edges = vec![
             Edge::new(0, [0.0, 0.0], [10.0, 0.0]),
@@ -573,6 +796,6 @@ mod tests {
         let polygon = vec![[-1.0, -1.0], [11.0, -1.0], [11.0, 11.0], [-1.0, 11.0]];
         let result = service.extract_from_lasso(&polygon).unwrap();
         // 简化测试：只检查返回结果不为空
-        assert!(result.selected_edges.len() >= 0);
+        assert!(!result.selected_edges.is_empty());
     }
 }

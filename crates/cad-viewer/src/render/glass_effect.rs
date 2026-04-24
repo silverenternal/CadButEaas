@@ -13,7 +13,10 @@
 
 #![cfg(feature = "gpu")]
 
-use wgpu::{self, Device, Queue, Texture, TextureView, RenderPipeline, BindGroup, BindGroupLayout, Sampler, ShaderModule};
+use wgpu::{
+    self, BindGroup, BindGroupLayout, Device, Queue, RenderPipeline, Sampler, ShaderModule,
+    Texture, TextureView,
+};
 
 /// 毛玻璃效果渲染器
 pub struct GlassEffectRenderer {
@@ -55,7 +58,9 @@ impl GlassEffectRenderer {
         // 1. 加载着色器
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Glass Effect Shader"),
-            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!("shaders/glass.wgsl"))),
+            source: wgpu::ShaderSource::Wgsl(std::borrow::Cow::Borrowed(include_str!(
+                "shaders/glass.wgsl"
+            ))),
         });
 
         // 2. 创建采样器（线性滤波）
@@ -87,70 +92,72 @@ impl GlassEffectRenderer {
         });
 
         // 5. 创建绑定组布局（模糊）
-        let blur_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Blur Bind Group Layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
+        let blur_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("Blur Bind Group Layout"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: Some(std::num::NonZeroU64::new(8).unwrap()),
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
                     },
-                    count: None,
-                },
-            ],
-        });
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: Some(std::num::NonZeroU64::new(8).unwrap()),
+                        },
+                        count: None,
+                    },
+                ],
+            });
 
         // 6. 创建绑定组布局（毛玻璃）
-        let glass_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
-            label: Some("Glass Bind Group Layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Texture {
-                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
-                        view_dimension: wgpu::TextureViewDimension::D2,
-                        multisampled: false,
+        let glass_bind_group_layout =
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                label: Some("Glass Bind Group Layout"),
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Texture {
+                            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                            view_dimension: wgpu::TextureViewDimension::D2,
+                            multisampled: false,
+                        },
+                        count: None,
                     },
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 1,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
-                    count: None,
-                },
-                wgpu::BindGroupLayoutEntry {
-                    binding: 2,
-                    visibility: wgpu::ShaderStages::FRAGMENT,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: Some(std::num::NonZeroU64::new(16).unwrap()),
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                        count: None,
                     },
-                    count: None,
-                },
-            ],
-        });
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 2,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: Some(std::num::NonZeroU64::new(16).unwrap()),
+                        },
+                        count: None,
+                    },
+                ],
+            });
 
         // 7. 创建模糊渲染管线布局
         let blur_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -198,11 +205,12 @@ impl GlassEffectRenderer {
         });
 
         // 9. 创建毛玻璃渲染管线布局
-        let glass_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Glass Pipeline Layout"),
-            bind_group_layouts: &[&glass_bind_group_layout],
-            push_constant_ranges: &[],
-        });
+        let glass_pipeline_layout =
+            device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+                label: Some("Glass Pipeline Layout"),
+                bind_group_layouts: &[&glass_bind_group_layout],
+                push_constant_ranges: &[],
+            });
 
         // 10. 创建毛玻璃渲染管线
         let glass_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -267,7 +275,7 @@ impl GlassEffectRenderer {
     /// 更新绑定组（当纹理或参数变化时）
     fn update_bind_groups(&mut self, device: &Device, queue: &Queue, source_texture: &TextureView) {
         let blur_texture = self.blur_texture_view.as_ref().unwrap();
-        
+
         // 更新模糊参数
         let blur_params_data = [1.0f32, self.blur_radius]; // 水平方向 + 半径
         queue.write_buffer(
@@ -325,7 +333,13 @@ impl GlassEffectRenderer {
     }
 
     /// 创建或调整模糊纹理
-    fn create_blur_texture(&mut self, device: &Device, width: u32, height: u32, format: wgpu::TextureFormat) {
+    fn create_blur_texture(
+        &mut self,
+        device: &Device,
+        width: u32,
+        height: u32,
+        format: wgpu::TextureFormat,
+    ) {
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("Glass Blur Texture"),
             size: wgpu::Extent3d {
@@ -351,7 +365,7 @@ impl GlassEffectRenderer {
     }
 
     /// 渲染毛玻璃效果
-    /// 
+    ///
     /// # Arguments
     /// * `encoder` - 命令编码器
     /// * `source` - 源纹理（当前帧背景）

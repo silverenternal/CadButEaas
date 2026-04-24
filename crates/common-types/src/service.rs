@@ -7,16 +7,16 @@
 //! - 生产级指标收集（基于 HDR Histogram）
 //! - 深度健康检查
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::{Mutex, RwLock};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::time::Instant;
+use std::sync::{Mutex, RwLock};
 use std::thread;
-use std::cell::RefCell;
+use std::time::Instant;
 
-use serde::{Deserialize, Serialize};
 use hdrhistogram::Histogram;
+use serde::{Deserialize, Serialize};
 
 use crate::error::CadError;
 use crate::request::Request;
@@ -86,10 +86,7 @@ impl ServiceHealth {
     }
 
     /// 创建降级状态
-    pub fn degraded(
-        version: impl Into<String>,
-        dependencies: Vec<DependencyHealth>,
-    ) -> Self {
+    pub fn degraded(version: impl Into<String>, dependencies: Vec<DependencyHealth>) -> Self {
         Self {
             status: HealthStatus::Degraded,
             version: version.into(),
@@ -158,8 +155,16 @@ impl HistogramSnapshot {
     /// 从 HDR Histogram 创建快照
     pub fn from_histogram(hist: &Histogram<u64>) -> Self {
         Self {
-            min_ms: if !hist.is_empty() { hist.min() as f64 } else { 0.0 },
-            max_ms: if !hist.is_empty() { hist.max() as f64 } else { 0.0 },
+            min_ms: if !hist.is_empty() {
+                hist.min() as f64
+            } else {
+                0.0
+            },
+            max_ms: if !hist.is_empty() {
+                hist.max() as f64
+            } else {
+                0.0
+            },
             mean_ms: hist.mean(),
             stddev_ms: hist.stdev(),
             p50_ms: hist.value_at_percentile(50.0) as f64,
@@ -208,7 +213,11 @@ impl ShardedHistogram {
     /// // 创建 8 个分片的直方图，最大追踪 1 小时延迟，3 位有效数字
     /// let hist = ShardedHistogram::new(8, 3_600_000, 3);
     /// ```
-    pub fn new(num_shards: usize, highest_trackable_value_ms: u64, significant_figures: u8) -> Self {
+    pub fn new(
+        num_shards: usize,
+        highest_trackable_value_ms: u64,
+        significant_figures: u8,
+    ) -> Self {
         // 确保分片数是 2 的幂，以便使用位掩码优化
         let num_shards = num_shards.next_power_of_two();
         let shards = (0..num_shards)
@@ -239,7 +248,7 @@ impl ShardedHistogram {
         // 使用线程 ID 哈希选择分片
         let shard_idx = self.shard_index();
         let mut shard = self.shards[shard_idx as usize].lock().unwrap();
-        
+
         // 如果值超出范围，记录最大值而不是失败
         let max_value = self.highest_trackable_value_ms;
         let record_value = value_ns.min(max_value);
@@ -251,9 +260,9 @@ impl ShardedHistogram {
         CACHED_SHARD_INDEX.with(|cached| {
             *cached.borrow_mut().get_or_insert_with(|| {
                 // 使用 ThreadId 的 Hash 实现（比 format!("{:?}", thread) 更高效）
-                use std::hash::{Hash, Hasher};
                 use std::collections::hash_map::DefaultHasher;
-                
+                use std::hash::{Hash, Hasher};
+
                 let thread_id = thread::current().id();
                 let mut hasher = DefaultHasher::new();
                 thread_id.hash(&mut hasher);
@@ -448,7 +457,11 @@ impl ServiceMetrics {
             request_count: total,
             success_count: success,
             error_count: self.error_count.load(Ordering::Relaxed),
-            success_rate: if total == 0 { 0.0 } else { success as f64 / total as f64 },
+            success_rate: if total == 0 {
+                0.0
+            } else {
+                success as f64 / total as f64
+            },
             latency,
             uptime_secs: self.start_time.elapsed().as_secs(),
         }
@@ -786,16 +799,21 @@ impl HealthCheckUtils {
         let dependencies = vec![fs_health, mem_health, cpu_health];
 
         // 综合判定
-        let overall_status = if dependencies.iter().all(|d| d.status == HealthStatus::Healthy) {
+        let overall_status = if dependencies
+            .iter()
+            .all(|d| d.status == HealthStatus::Healthy)
+        {
             HealthStatus::Healthy
-        } else if dependencies.iter().any(|d| d.status == HealthStatus::Unhealthy) {
+        } else if dependencies
+            .iter()
+            .any(|d| d.status == HealthStatus::Unhealthy)
+        {
             HealthStatus::Unhealthy
         } else {
             HealthStatus::Degraded
         };
 
-        let mut health = ServiceHealth::healthy(env!("CARGO_PKG_VERSION"))
-            .with_uptime(0);
+        let mut health = ServiceHealth::healthy(env!("CARGO_PKG_VERSION")).with_uptime(0);
 
         for dep in dependencies {
             health = health.with_dependency(dep);
@@ -804,8 +822,12 @@ impl HealthCheckUtils {
         // 根据整体状态重新构建
         match overall_status {
             HealthStatus::Healthy => health,
-            HealthStatus::Degraded => ServiceHealth::degraded(env!("CARGO_PKG_VERSION"), health.dependencies),
-            HealthStatus::Unhealthy => ServiceHealth::unhealthy(env!("CARGO_PKG_VERSION"), "系统资源不足"),
+            HealthStatus::Degraded => {
+                ServiceHealth::degraded(env!("CARGO_PKG_VERSION"), health.dependencies)
+            }
+            HealthStatus::Unhealthy => {
+                ServiceHealth::unhealthy(env!("CARGO_PKG_VERSION"), "系统资源不足")
+            }
         }
     }
 }
@@ -866,13 +888,14 @@ impl HealthMonitor {
     pub fn with_interval(interval: std::time::Duration) -> Self {
         use std::sync::atomic::{AtomicBool, Ordering};
 
-        let state = std::sync::Arc::new(RwLock::new(
-            ServiceHealth::healthy(env!("CARGO_PKG_VERSION"))
-        ));
+        let state = std::sync::Arc::new(RwLock::new(ServiceHealth::healthy(env!(
+            "CARGO_PKG_VERSION"
+        ))));
         let stop_flag = std::sync::Arc::new(AtomicBool::new(false));
 
         // 创建 watch 通道（最新值语义，不会丢失）
-        let (tx, _rx) = tokio::sync::watch::channel(ServiceHealth::healthy(env!("CARGO_PKG_VERSION")));
+        let (tx, _rx) =
+            tokio::sync::watch::channel(ServiceHealth::healthy(env!("CARGO_PKG_VERSION")));
 
         let state_clone = std::sync::Arc::clone(&state);
         let stop_clone = std::sync::Arc::clone(&stop_flag);

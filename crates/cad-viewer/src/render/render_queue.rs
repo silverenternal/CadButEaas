@@ -13,6 +13,7 @@ pub struct RenderQueue {
 }
 
 /// 渲染批次（按材质/图层分组）
+#[allow(dead_code)]
 pub struct RenderBatch {
     pub material: MaterialId,
     pub layer: LayerId,
@@ -37,7 +38,7 @@ pub struct LayerId {
 #[derive(Debug, Clone)]
 struct BatchKey {
     color: Color32,
-    line_width_quantized: u8,  // P11 修复：量化后的线宽（0.1px 精度）
+    line_width_quantized: u8, // P11 修复：量化后的线宽（0.1px 精度）
     layer_name: String,
 }
 
@@ -52,7 +53,7 @@ impl BatchKey {
     fn new(color: Color32, line_width: f32, layer_name: String) -> Self {
         Self {
             color,
-            line_width_quantized: quantize_line_width(line_width),  // P11 修复：量化线宽
+            line_width_quantized: quantize_line_width(line_width), // P11 修复：量化线宽
             layer_name,
         }
     }
@@ -154,7 +155,7 @@ impl RenderQueue {
             return 0.0;
         }
         // 合并率 = 平均每个批次的线段数 / 总线段数
-        let avg_segments_per_batch = total_segments as f64 / self.batch_count() as f64;
-        avg_segments_per_batch
+
+        total_segments as f64 / self.batch_count() as f64
     }
 }

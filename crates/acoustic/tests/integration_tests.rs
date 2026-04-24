@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 //! 声学分析集成测试
 //!
 //! 测试场景：
@@ -5,12 +7,12 @@
 //! 2. 大场景性能基准测试
 //! 3. 真实 DXF 文件测试
 
-use acoustic::{AcousticService, AcousticServiceConfig, AcousticResult, AcousticError};
-use common_types::acoustic::{
-    AcousticInput, AcousticRequest, SelectionBoundary, SelectionMode,
-    ReverberationFormula, NamedSelection, ComparisonMetric,
+use acoustic::{
+    AcousticError, AcousticInput, AcousticRequest, AcousticResult, AcousticService,
+    AcousticServiceConfig, ComparisonMetric, Frequency, NamedSelection, ReverberationFormula,
+    SelectionBoundary, SelectionMode,
 };
-use common_types::scene::{SceneState, RawEdge, ClosedLoop, BoundarySegment, BoundarySemantic};
+use common_types::scene::{BoundarySegment, BoundarySemantic, ClosedLoop, RawEdge, SceneState};
 
 /// 创建测试场景（简单房间）
 fn create_test_room_scene() -> SceneState {
@@ -18,10 +20,34 @@ fn create_test_room_scene() -> SceneState {
 
     // 添加墙边（10m x 8m 房间）
     let walls = vec![
-        RawEdge { id: 0, start: [0.0, 0.0], end: [10000.0, 0.0], layer: Some("WALL".to_string()), color_index: None },
-        RawEdge { id: 1, start: [10000.0, 0.0], end: [10000.0, 8000.0], layer: Some("WALL".to_string()), color_index: None },
-        RawEdge { id: 2, start: [10000.0, 8000.0], end: [0.0, 8000.0], layer: Some("WALL".to_string()), color_index: None },
-        RawEdge { id: 3, start: [0.0, 8000.0], end: [0.0, 0.0], layer: Some("WALL".to_string()), color_index: None },
+        RawEdge {
+            id: 0,
+            start: [0.0, 0.0],
+            end: [10000.0, 0.0],
+            layer: Some("WALL".to_string()),
+            color_index: None,
+        },
+        RawEdge {
+            id: 1,
+            start: [10000.0, 0.0],
+            end: [10000.0, 8000.0],
+            layer: Some("WALL".to_string()),
+            color_index: None,
+        },
+        RawEdge {
+            id: 2,
+            start: [10000.0, 8000.0],
+            end: [0.0, 8000.0],
+            layer: Some("WALL".to_string()),
+            color_index: None,
+        },
+        RawEdge {
+            id: 3,
+            start: [0.0, 8000.0],
+            end: [0.0, 0.0],
+            layer: Some("WALL".to_string()),
+            color_index: None,
+        },
     ];
     scene.edges.extend(walls);
 
@@ -91,7 +117,10 @@ fn test_e2e_selection_material_stats() {
         _ => panic!("期望 SelectionMaterialStats 结果"),
     }
 
-    println!("E2E 选区材料统计测试通过，耗时：{:.2}ms", result.metrics.computation_time_ms);
+    println!(
+        "E2E 选区材料统计测试通过，耗时：{:.2}ms",
+        result.metrics.computation_time_ms
+    );
 }
 
 #[test]
@@ -115,12 +144,17 @@ fn test_e2e_room_reverberation() {
             // 房间体积：10m × 8m × 3m = 240 m³
             assert!((rev.volume - 240.0).abs() < 10.0);
             assert!(rev.total_surface_area > 0.0);
-            
+
             // T60 应该在合理范围内
             for (freq, t60) in &rev.t60 {
-                assert!(*t60 > 0.1 && *t60 < 10.0, "T60 at {:?} = {:.2}s out of range", freq, t60);
+                assert!(
+                    *t60 > 0.1 && *t60 < 10.0,
+                    "T60 at {:?} = {:.2}s out of range",
+                    freq,
+                    t60
+                );
             }
-            
+
             // EDT 应该约等于 T60 × 0.85
             for (freq, t60) in &rev.t60 {
                 let edt = rev.edt.get(freq).unwrap();
@@ -130,7 +164,10 @@ fn test_e2e_room_reverberation() {
         _ => panic!("期望 RoomReverberation 结果"),
     }
 
-    println!("E2E 房间混响时间测试通过，耗时：{:.2}ms", result.metrics.computation_time_ms);
+    println!(
+        "E2E 房间混响时间测试通过，耗时：{:.2}ms",
+        result.metrics.computation_time_ms
+    );
 }
 
 #[test]
@@ -151,10 +188,7 @@ fn test_e2e_comparative_analysis() {
                     boundary: SelectionBoundary::rect([5000.0, 4000.0], [10000.0, 8000.0]),
                 },
             ],
-            metrics: vec![
-                ComparisonMetric::Area,
-                ComparisonMetric::AverageAbsorption,
-            ],
+            metrics: vec![ComparisonMetric::Area, ComparisonMetric::AverageAbsorption],
         },
     };
 
@@ -163,7 +197,7 @@ fn test_e2e_comparative_analysis() {
     match result.result {
         AcousticResult::ComparativeAnalysis(comp) => {
             assert_eq!(comp.regions.len(), 2);
-            
+
             // 验证区域名称
             assert!(comp.regions.iter().any(|r| r.name == "区域 A"));
             assert!(comp.regions.iter().any(|r| r.name == "区域 B"));
@@ -171,7 +205,10 @@ fn test_e2e_comparative_analysis() {
         _ => panic!("期望 ComparativeAnalysis 结果"),
     }
 
-    println!("E2E 多区域对比测试通过，耗时：{:.2}ms", result.metrics.computation_time_ms);
+    println!(
+        "E2E 多区域对比测试通过，耗时：{:.2}ms",
+        result.metrics.computation_time_ms
+    );
 }
 
 // ============================================================================
@@ -196,9 +233,16 @@ fn test_performance_large_scene() {
     let elapsed = start.elapsed();
 
     // 10000 条边的场景应该在 100ms 内完成
-    assert!(elapsed.as_millis() < 100, "性能不达标：{:?} > 100ms", elapsed);
+    assert!(
+        elapsed.as_millis() < 100,
+        "性能不达标：{:?} > 100ms",
+        elapsed
+    );
 
-    println!("性能测试通过：10000 条边，耗时：{:.2}ms", result.metrics.computation_time_ms);
+    println!(
+        "性能测试通过：10000 条边，耗时：{:.2}ms",
+        result.metrics.computation_time_ms
+    );
 }
 
 // ============================================================================
@@ -220,7 +264,7 @@ fn test_boundary_empty_selection() {
 
     let result = service.process_sync(input);
     assert!(result.is_err());
-    
+
     // 验证错误类型和恢复建议
     match result.unwrap_err() {
         AcousticError::EmptySelection { suggestion } => {
@@ -248,7 +292,10 @@ fn test_boundary_invalid_room_id() {
     assert!(result.is_err());
 
     match result.unwrap_err() {
-        AcousticError::InvalidRoomId { room_id, suggestion } => {
+        AcousticError::InvalidRoomId {
+            room_id,
+            suggestion,
+        } => {
             assert_eq!(room_id, 999);
             assert!(suggestion.is_some(), "InvalidRoomId 应该包含恢复建议");
         }
@@ -287,11 +334,14 @@ fn test_boundary_sabine_vs_eyring() {
     match (&result_sabine.result, &result_eyring.result) {
         (AcousticResult::RoomReverberation(sabine), AcousticResult::RoomReverberation(eyring)) => {
             // 两种公式应该给出不同的结果
-            let sabine_t60 = sabine.t60.get(&common_types::acoustic::Frequency::Hz500).unwrap();
-            let eyring_t60 = eyring.t60.get(&common_types::acoustic::Frequency::Hz500).unwrap();
+            let sabine_t60 = sabine.t60.get(&Frequency::Hz500).unwrap();
+            let eyring_t60 = eyring.t60.get(&Frequency::Hz500).unwrap();
 
             // 在低吸声系数下，Eyring 通常给出更短的 T60
-            assert!((sabine_t60 - eyring_t60).abs() > 0.01, "Sabine 和 Eyring 应该给出不同的结果");
+            assert!(
+                (sabine_t60 - eyring_t60).abs() > 0.01,
+                "Sabine 和 Eyring 应该给出不同的结果"
+            );
         }
         _ => panic!("期望 RoomReverberation 结果"),
     }

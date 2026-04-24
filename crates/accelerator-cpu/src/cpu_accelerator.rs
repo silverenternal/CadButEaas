@@ -1,10 +1,9 @@
 //! CPU 加速器实现
 
 use accelerator_api::{
-    Accelerator, AcceleratorAvailability, AcceleratorCapabilities,
-    Arc as AcceleratorArc, ArcFitConfig, Contours, ContourExtractConfig, EdgeMap, Image,
-    Point2, Precision, SnapConfig, EdgeDetectConfig,
-    AcceleratorResult,
+    Accelerator, AcceleratorAvailability, AcceleratorCapabilities, AcceleratorResult,
+    Arc as AcceleratorArc, ArcFitConfig, ContourExtractConfig, Contours, EdgeDetectConfig, EdgeMap,
+    Image, Point2, Precision, SnapConfig,
 };
 use async_trait::async_trait;
 use log::debug;
@@ -90,14 +89,22 @@ impl Accelerator for CpuAccelerator {
         result
     }
 
-    async fn arc_fit(&self, points: &[Point2], config: &ArcFitConfig) -> AcceleratorResult<AcceleratorArc> {
+    async fn arc_fit(
+        &self,
+        points: &[Point2],
+        config: &ArcFitConfig,
+    ) -> AcceleratorResult<AcceleratorArc> {
         debug!("CPU 圆弧拟合：{} 个点", points.len());
         let result = fit_arc_cpu(points, config);
         debug!("CPU 圆弧拟合完成");
         result
     }
 
-    async fn snap_endpoints(&self, points: &[Point2], config: &SnapConfig) -> AcceleratorResult<Vec<Point2>> {
+    async fn snap_endpoints(
+        &self,
+        points: &[Point2],
+        config: &SnapConfig,
+    ) -> AcceleratorResult<Vec<Point2>> {
         debug!("CPU 端点吸附：{} 个点", points.len());
         let result = snap_endpoints_cpu(points, config);
         debug!("CPU 端点吸附完成");

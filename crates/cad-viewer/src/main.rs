@@ -9,19 +9,19 @@
 //! - 缺口可视化
 //! - 圈选工具
 
+mod api;
 mod app;
 mod canvas;
-mod api;
-mod panels;
-mod state;
 mod components;
+pub mod coordinate_compensator; // P0-3 新增：坐标精度补偿器
+pub mod gpu_renderer; // P0-6 新增：GPU 渲染器（核显优化）
+pub mod gpu_renderer_enhanced;
+pub mod lod_selector; // P2-1 新增：LOD 动态选择器
+mod panels;
 mod render;
-mod theme;  // P11 新增：macOS 风格主题系统
-pub mod coordinate_compensator;  // P0-3 新增：坐标精度补偿器
-pub mod viewport_culler;  // P1-3 新增：视口裁剪器
-pub mod lod_selector;  // P2-1 新增：LOD 动态选择器
-pub mod gpu_renderer;  // P0-6 新增：GPU 渲染器（核显优化）
-pub mod gpu_renderer_enhanced;  // P1-1 新增：GPU 渲染器增强版（实例化/选择缓冲/MSAA）
+mod state;
+mod theme; // P11 新增：macOS 风格主题系统
+pub mod viewport_culler; // P1-3 新增：视口裁剪器 // P1-1 新增：GPU 渲染器增强版（实例化/选择缓冲/MSAA）
 
 use app::CadApp;
 
@@ -49,16 +49,15 @@ async fn main() -> eframe::Result<()> {
 }
 
 fn setup_custom_fonts(ctx: &egui::Context) {
-    let mut fonts = egui::FontDefinitions::default();
-    
+    let fonts = egui::FontDefinitions::default();
+
     // 注册中文字体（如果系统有）
     #[cfg(target_os = "windows")]
     {
         if let Ok(font_data) = std::fs::read("C:/Windows/Fonts/simsun.ttc") {
-            fonts.font_data.insert(
-                "SimSun".to_owned(),
-                egui::FontData::from_owned(font_data),
-            );
+            fonts
+                .font_data
+                .insert("SimSun".to_owned(), egui::FontData::from_owned(font_data));
             fonts
                 .families
                 .entry(egui::FontFamily::Proportional)

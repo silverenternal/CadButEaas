@@ -151,19 +151,19 @@ impl CoordinateCompensator {
 
     /// 从边列表计算坐标范围
     fn compute_bounds(edges: &[Edge]) -> BoundingBox {
-        let mut bounds = BoundingBox::default();
-        let mut has_data = false;
+        let mut min_x = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
 
         for edge in edges {
-            has_data = true;
-            bounds.min_x = bounds.min_x.min(edge.start[0]).min(edge.end[0]);
-            bounds.max_x = bounds.max_x.max(edge.start[0]).max(edge.end[0]);
-            bounds.min_y = bounds.min_y.min(edge.start[1]).min(edge.end[1]);
-            bounds.max_y = bounds.max_y.max(edge.start[1]).max(edge.end[1]);
+            min_x = min_x.min(edge.start[0]).min(edge.end[0]);
+            max_x = max_x.max(edge.start[0]).max(edge.end[0]);
+            min_y = min_y.min(edge.start[1]).min(edge.end[1]);
+            max_y = max_y.max(edge.start[1]).max(edge.end[1]);
         }
 
-        if !has_data {
-            // 默认范围：1000 x 1000
+        if min_x == f64::INFINITY {
             BoundingBox {
                 min_x: 0.0,
                 max_x: 1000.0,
@@ -171,24 +171,30 @@ impl CoordinateCompensator {
                 max_y: 1000.0,
             }
         } else {
-            bounds
+            BoundingBox {
+                min_x,
+                max_x,
+                min_y,
+                max_y,
+            }
         }
     }
 
     /// 从点列表计算坐标范围
     fn compute_bounds_from_points(points: &[Point2]) -> BoundingBox {
-        let mut bounds = BoundingBox::default();
-        let mut has_data = false;
+        let mut min_x = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
 
         for pt in points {
-            has_data = true;
-            bounds.min_x = bounds.min_x.min(pt[0]);
-            bounds.max_x = bounds.max_x.max(pt[0]);
-            bounds.min_y = bounds.min_y.min(pt[1]);
-            bounds.max_y = bounds.max_y.max(pt[1]);
+            min_x = min_x.min(pt[0]);
+            max_x = max_x.max(pt[0]);
+            min_y = min_y.min(pt[1]);
+            max_y = max_y.max(pt[1]);
         }
 
-        if !has_data {
+        if min_x == f64::INFINITY {
             BoundingBox {
                 min_x: 0.0,
                 max_x: 1000.0,
@@ -196,7 +202,12 @@ impl CoordinateCompensator {
                 max_y: 1000.0,
             }
         } else {
-            bounds
+            BoundingBox {
+                min_x,
+                max_x,
+                min_y,
+                max_y,
+            }
         }
     }
 
@@ -223,7 +234,7 @@ impl CoordinateCompensator {
             ];
             Pos2::new(
                 ((relative[0] * zoom) as f32 + pan.x) + center.x,
-                ((-relative[1] * zoom) as f32 + pan.y) + center.y,  // Y 轴翻转
+                ((-relative[1] * zoom) as f32 + pan.y) + center.y, // Y 轴翻转
             )
         } else {
             // 小坐标场景：直接转换
@@ -252,7 +263,7 @@ impl CoordinateCompensator {
 
         let world = [
             ((screen.x - center.x - pan.x) as f64 / zoom),
-            ((center.y - screen.y + pan.y) as f64 / zoom),  // Y 轴翻转
+            ((center.y - screen.y + pan.y) as f64 / zoom), // Y 轴翻转
         ];
 
         if self.use_relative {
@@ -329,9 +340,10 @@ mod tests {
     #[test]
     fn test_small_coordinates_no_compensation() {
         // 小坐标场景：不启用相对坐标
-        let edges = vec![
-            Edge { start: [0.0, 0.0], end: [100.0, 0.0] },
-        ];
+        let edges = vec![Edge {
+            start: [0.0, 0.0],
+            end: [100.0, 0.0],
+        }];
         let compensator = CoordinateCompensator::new(&edges);
 
         assert!(!compensator.use_relative);
@@ -341,28 +353,26 @@ mod tests {
     #[test]
     fn test_large_coordinates_compensation() {
         // 大坐标场景：启用相对坐标
-        let edges = vec![
-            Edge { start: [100000.0, 100000.0], end: [200000.0, 100000.0] },
-        ];
+        let edges = vec![Edge {
+            start: [100000.0, 100000.0],
+            end: [200000.0, 100000.0],
+        }];
         let compensator = CoordinateCompensator::new(&edges);
 
         assert!(compensator.use_relative);
-        assert_eq!(compensator.scene_origin, [150000.0, 100000.0]);  // 场景中心
+        assert_eq!(compensator.scene_origin, [150000.0, 100000.0]); // 场景中心
     }
 
     #[test]
     fn test_world_to_screen_small_coords() {
-        let edges = vec![
-            Edge { start: [0.0, 0.0], end: [100.0, 0.0] },
-        ];
+        let edges = vec![Edge {
+            start: [0.0, 0.0],
+            end: [100.0, 0.0],
+        }];
         let compensator = CoordinateCompensator::new(&edges);
 
-        let screen = compensator.world_to_screen(
-            [50.0, 0.0],
-            1.0,
-            Vec2::ZERO,
-            Pos2::new(400.0, 300.0),
-        );
+        let screen =
+            compensator.world_to_screen([50.0, 0.0], 1.0, Vec2::ZERO, Pos2::new(400.0, 300.0));
 
         assert!((screen.x - 450.0).abs() < 0.01);
         assert!((screen.y - 300.0).abs() < 0.01);
@@ -370,9 +380,10 @@ mod tests {
 
     #[test]
     fn test_world_to_screen_large_coords() {
-        let edges = vec![
-            Edge { start: [100000.0, 100000.0], end: [200000.0, 100000.0] },
-        ];
+        let edges = vec![Edge {
+            start: [100000.0, 100000.0],
+            end: [200000.0, 100000.0],
+        }];
         let compensator = CoordinateCompensator::new(&edges);
 
         // 世界坐标 (150000, 100000) 相对于原点 (150000, 100000) 是 (0, 0)
@@ -389,9 +400,10 @@ mod tests {
 
     #[test]
     fn test_round_trip() {
-        let edges = vec![
-            Edge { start: [100000.0, 100000.0], end: [200000.0, 100000.0] },
-        ];
+        let edges = vec![Edge {
+            start: [100000.0, 100000.0],
+            end: [200000.0, 100000.0],
+        }];
         let compensator = CoordinateCompensator::new(&edges);
 
         let world = [150000.0, 100000.0];

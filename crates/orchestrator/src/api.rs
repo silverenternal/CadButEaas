@@ -8,22 +8,26 @@
 //! 5. 添加超时控制
 //! 6. 集成 InteractSvc 交互服务
 
-use axum::{
-    extract::{DefaultBodyLimit, Multipart, State, WebSocketUpgrade, ws::{Message, WebSocket}},
-    http::{StatusCode},
-    routing::{self, get, post, options},
-    Json, Router, response::IntoResponse,
-};
-use tower_http::cors::{CorsLayer, Any};
-use http::Method;
-use serde::{Deserialize, Serialize};
 use crate::pipeline::ProcessingPipeline;
-use common_types::{Point2, SceneState, HatchBoundaryPath, HatchPattern};
-use interact::{InteractService, InteractionService, Edge, GapInfo};
+use axum::{
+    extract::{
+        ws::{Message, WebSocket},
+        DefaultBodyLimit, Multipart, State, WebSocketUpgrade,
+    },
+    http::StatusCode,
+    response::IntoResponse,
+    routing::{get, options, post},
+    Json, Router,
+};
+use common_types::{Point2, SceneState};
+use futures::{sink::SinkExt, stream::StreamExt};
+use http::Method;
+use interact::{Edge, GapInfo, InteractService, InteractionService};
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
-use futures::{sink::SinkExt, stream::StreamExt};
+use tower_http::cors::{Any, CorsLayer};
 
 // ============================================================================
 // P0-4 新增：HATCH 实体定义
@@ -37,8 +41,8 @@ pub struct HatchEntity {
     pub pattern: HatchPatternResponse,
     pub solid_fill: bool,
     pub layer: Option<String>,
-    pub scale: f64,      // P0-NEW-14 修复：图案比例
-    pub angle: f64,      // P0-NEW-14 修复：图案角度（度）
+    pub scale: f64, // P0-NEW-14 修复：图案比例
+    pub angle: f64, // P0-NEW-14 修复：图案角度（度）
 }
 
 /// HATCH 边界路径响应
@@ -48,7 +52,7 @@ pub enum HatchBoundaryPathResponse {
     Polyline {
         points: Vec<[f64; 2]>,
         closed: bool,
-        bulges: Option<Vec<f64>>,  // P0-NEW-5 修复：添加 bulges 字段
+        bulges: Option<Vec<f64>>, // P0-NEW-5 修复：添加 bulges 字段
     },
     Arc {
         center: [f64; 2],
@@ -78,16 +82,16 @@ pub enum HatchBoundaryPathResponse {
 pub enum HatchPatternResponse {
     Predefined {
         name: String,
-        scale: f64,      // P0-NEW-14 修复：图案比例
-        angle: f64,      // P0-NEW-14 修复：图案角度（度）
+        scale: f64, // P0-NEW-14 修复：图案比例
+        angle: f64, // P0-NEW-14 修复：图案角度（度）
     },
     Custom {
         pattern_def: HatchPatternDefinitionResponse,
-        scale: f64,      // P0-NEW-14 修复：图案比例
-        angle: f64,      // P0-NEW-14 修复：图案角度（度）
+        scale: f64, // P0-NEW-14 修复：图案比例
+        angle: f64, // P0-NEW-14 修复：图案角度（度）
     },
     Solid {
-        color: [u8; 4],  // RGBA
+        color: [u8; 4], // RGBA
     },
 }
 
@@ -114,7 +118,10 @@ async fn options_handler() -> impl IntoResponse {
         StatusCode::NO_CONTENT,
         [
             ("Access-Control-Allow-Origin", "*"),
-            ("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS"),
+            (
+                "Access-Control-Allow-Methods",
+                "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            ),
             ("Access-Control-Allow-Headers", "*"),
             ("Access-Control-Expose-Headers", "*"),
             ("Access-Control-Max-Age", "86400"),
@@ -127,7 +134,10 @@ fn with_cors<T: IntoResponse>(response: T) -> impl IntoResponse {
     (
         [
             ("Access-Control-Allow-Origin", "*"),
-            ("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS"),
+            (
+                "Access-Control-Allow-Methods",
+                "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+            ),
             ("Access-Control-Allow-Headers", "*"),
             ("Access-Control-Expose-Headers", "*"),
         ],
@@ -412,7 +422,10 @@ pub fn create_router() -> Router<ApiState> {
         .route("/interact/snap_bridge", post(interact_snap_bridge_handler))
         .route("/interact/snap_bridge", options(options_handler))
         // 交互 API - 边界语义
-        .route("/interact/set_boundary_semantic", post(interact_set_boundary_semantic_handler))
+        .route(
+            "/interact/set_boundary_semantic",
+            post(interact_set_boundary_semantic_handler),
+        )
         .route("/interact/set_boundary_semantic", options(options_handler))
         // 交互 API - 状态查询
         .route("/interact/state", get(interact_state_handler))
@@ -430,7 +443,14 @@ pub fn create_router_with_cors() -> Router<ApiState> {
     // 创建 CORS 层
     let cors = CorsLayer::new()
         .allow_origin(Any)
-        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::PATCH, Method::OPTIONS])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::DELETE,
+            Method::PATCH,
+            Method::OPTIONS,
+        ])
         .allow_headers(Any)
         .expose_headers(Any)
         .max_age(Duration::from_secs(86400));
@@ -457,9 +477,7 @@ async fn health_handler(State(_state): State<ApiState>) -> impl IntoResponse {
 }
 
 /// 列出所有预设配置处理器
-async fn list_profiles_handler(
-    State(_state): State<ApiState>,
-) -> Json<ProfileListResponse> {
+async fn list_profiles_handler(State(_state): State<ApiState>) -> Json<ProfileListResponse> {
     // 内置预设配置
     let profiles = vec![
         ProfileInfo {
@@ -477,6 +495,10 @@ async fn list_profiles_handler(
         ProfileInfo {
             name: "quick".to_string(),
             description: "快速原型预设 - 低精度要求，快速处理".to_string(),
+        },
+        ProfileInfo {
+            name: "photo_sketch".to_string(),
+            description: "照片/手绘预设 - 适用于光栅图片矢量化，强预处理".to_string(),
         },
     ];
 
@@ -590,6 +612,31 @@ async fn get_profile_handler(
                 auto_validate: false,
             },
         })),
+        "photo_sketch" => Ok(Json(ProfileDetailResponse {
+            name: "photo_sketch".to_string(),
+            description: "照片/手绘预设 - 适用于光栅图片矢量化，强预处理".to_string(),
+            topology: TopologyConfig {
+                snap_tolerance_mm: 2.0,
+                min_line_length_mm: 3.0,
+                merge_angle_tolerance_deg: 10.0,
+                max_gap_bridge_length_mm: 5.0,
+                algorithm: "halfedge".to_string(),
+                skip_intersection_check: false,
+                enable_parallel: true,
+                parallel_threshold: 2000,
+            },
+            validator: ValidatorConfig {
+                closure_tolerance_mm: 2.0,
+                min_area_m2: 2.0,
+                min_edge_length_mm: 20.0,
+                min_angle_deg: 30.0,
+            },
+            export: ExportConfig {
+                format: "json".to_string(),
+                json_indent: 2,
+                auto_validate: true,
+            },
+        })),
         _ => Err(StatusCode::NOT_FOUND),
     }
 }
@@ -604,8 +651,8 @@ async fn process_handler_v1(
     State(state): State<ApiState>,
     mut multipart: Multipart,
 ) -> Result<Json<ProcessResponse>, StatusCode> {
-    use std::io::Write;
     use std::fs::File;
+    use std::io::Write;
     use std::path::PathBuf;
 
     tracing::info!("=== 收到文件上传请求（渐进式渲染） ===");
@@ -627,27 +674,37 @@ async fn process_handler_v1(
                 tracing::error!("❌ 读取文件数据失败：{}", e);
                 StatusCode::INTERNAL_SERVER_ERROR
             })?;
-            
+
             // 记录文件大小
             let file_size = bytes.len();
-            tracing::info!("📄 收到文件：{:?}, 大小：{:.2} KB", file_name, file_size as f64 / 1024.0);
-            
+            tracing::info!(
+                "📄 收到文件：{:?}, 大小：{:.2} KB",
+                file_name,
+                file_size as f64 / 1024.0
+            );
+
             // 检查文件大小（最大 50MB）
             if file_size > MAX_UPLOAD_SIZE_MB * 1024 * 1024 {
-                tracing::error!("❌ 文件过大：{:.2} MB > {} MB",
-                    file_size as f64 / (1024.0 * 1024.0), MAX_UPLOAD_SIZE_MB);
+                tracing::error!(
+                    "❌ 文件过大：{:.2} MB > {} MB",
+                    file_size as f64 / (1024.0 * 1024.0),
+                    MAX_UPLOAD_SIZE_MB
+                );
                 return Ok(Json(ProcessResponse {
                     job_id: uuid_simple(),
                     status: ProcessStatus::Failed,
                     message: format!("文件过大，最大支持 {} MB", MAX_UPLOAD_SIZE_MB),
                     result: None,
-                    errors: vec![format!("文件大小 {:.2} MB 超过限制 {} MB",
-                        file_size as f64 / (1024.0 * 1024.0), MAX_UPLOAD_SIZE_MB)],
+                    errors: vec![format!(
+                        "文件大小 {:.2} MB 超过限制 {} MB",
+                        file_size as f64 / (1024.0 * 1024.0),
+                        MAX_UPLOAD_SIZE_MB
+                    )],
                     edges: None,
-                    hatches: None,  // P0-4 修复：添加 hatches 字段
+                    hatches: None, // P0-4 修复：添加 hatches 字段
                 }));
             }
-            
+
             file_data = Some(bytes.to_vec());
         }
     }
@@ -669,17 +726,19 @@ async fn process_handler_v1(
             status: ProcessStatus::Failed,
             message: "不支持的文件格式".to_string(),
             result: None,
-            errors: vec![
-                format!("无法识别文件类型，请上传 DXF 或 PDF 文件（文件名：{:?}）", file_name)
-            ],
+            errors: vec![format!(
+                "无法识别文件类型，请上传 DXF 或 PDF 文件（文件名：{:?}）",
+                file_name
+            )],
             edges: None,
-            hatches: None,  // P0-4 修复：添加 hatches 字段
+            hatches: None, // P0-4 修复：添加 hatches 字段
         }));
     }
 
     // 创建临时文件（保留扩展名以便 Parser 识别）
     let temp_dir = std::env::temp_dir();
-    let temp_file_name = format!("cad_process_{}_{}.{}",
+    let temp_file_name = format!(
+        "cad_process_{}_{}.{}",
         std::process::id(),
         uuid_simple(),
         file_type_extension(&detected_type)
@@ -688,17 +747,15 @@ async fn process_handler_v1(
     tracing::info!("📁 创建临时文件：{:?}", temp_path);
 
     // 写入临时文件
-    let mut temp_file = File::create(&temp_path)
-        .map_err(|e| {
-            tracing::error!("❌ 创建临时文件失败：{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    let mut temp_file = File::create(&temp_path).map_err(|e| {
+        tracing::error!("❌ 创建临时文件失败：{}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
 
-    temp_file.write_all(&file_data)
-        .map_err(|e| {
-            tracing::error!("❌ 写入临时文件失败：{}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+    temp_file.write_all(&file_data).map_err(|e| {
+        tracing::error!("❌ 写入临时文件失败：{}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
     drop(temp_file);
 
     tracing::info!("✅ 临时文件已写入，开始解析...");
@@ -711,18 +768,85 @@ async fn process_handler_v1(
     let parse_result = match detected_type {
         FileType::Dxf => {
             tracing::info!("  开始 DXF 解析...");
-            state.pipeline.parser().parse_file(&temp_path).map_err(|e| {
-                tracing::error!("❌ DXF 解析失败：{}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?
+            state
+                .pipeline
+                .parser()
+                .parse_file(&temp_path)
+                .map_err(|e| {
+                    tracing::error!("❌ DXF 解析失败：{}", e);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?
         }
         FileType::Pdf => {
             // PDF 需要矢量化
             tracing::warn!("  PDF 文件需要矢量化处理，可能需要较长时间");
-            state.pipeline.parser().parse_file(&temp_path).map_err(|e| {
-                tracing::error!("❌ PDF 解析失败：{}", e);
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?
+            state
+                .pipeline
+                .parser()
+                .parse_file(&temp_path)
+                .map_err(|e| {
+                    tracing::error!("❌ PDF 解析失败：{}", e);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?
+        }
+        FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff => {
+            // 光栅图片直接走矢量化管线，不走 Parser
+            tracing::info!("  光栅图片矢量化处理...");
+            return match state.pipeline.process_raster_file(&temp_path).await {
+                Ok(process_result) => {
+                    let topo_edges = scene_to_edges(&process_result.scene);
+                    let new_interact = InteractionService::new(topo_edges.clone());
+                    *state.interact.lock().await = new_interact;
+
+                    Ok(Json(ProcessResponse {
+                        job_id: uuid_simple(),
+                        status: ProcessStatus::Completed,
+                        message: format!("光栅矢量化完成，提取 {} 条边", topo_edges.len()),
+                        result: Some(ProcessResult {
+                            scene_summary: SceneSummary {
+                                outer_boundaries: process_result
+                                    .scene
+                                    .outer
+                                    .as_ref()
+                                    .map_or(0, |_| 1),
+                                holes: process_result.scene.holes.len(),
+                                total_points: process_result
+                                    .scene
+                                    .outer
+                                    .as_ref()
+                                    .map_or(0, |o| o.points.len())
+                                    + process_result
+                                        .scene
+                                        .holes
+                                        .iter()
+                                        .map(|h| h.points.len())
+                                        .sum::<usize>(),
+                            },
+                            validation_summary: ValidationSummary {
+                                error_count: process_result.validation.summary.error_count,
+                                warning_count: process_result.validation.summary.warning_count,
+                                passed: process_result.validation.passed,
+                            },
+                            output_size: process_result.output_bytes.len(),
+                        }),
+                        errors: vec![],
+                        edges: Some(topo_edges),
+                        hatches: None,
+                    }))
+                }
+                Err(e) => {
+                    tracing::error!("❌ 光栅矢量化失败：{}", e);
+                    Ok(Json(ProcessResponse {
+                        job_id: uuid_simple(),
+                        status: ProcessStatus::Failed,
+                        message: format!("矢量化失败：{}", e),
+                        result: None,
+                        errors: vec![e.to_string()],
+                        edges: None,
+                        hatches: None,
+                    }))
+                }
+            };
         }
         FileType::Unknown => {
             // 已经在上面处理过，这里不会到达
@@ -733,8 +857,12 @@ async fn process_handler_v1(
     // 从解析结果提取原始边和 HATCH
     let entities = parse_result.into_entities();
     let edges = entities_to_edges(&entities);
-    let hatches = entities_to_hatches(&entities);  // P0-4 新增：提取 HATCH 数据
-    tracing::info!("  ✅ 提取 {} 条原始边，{} 个 HATCH", edges.len(), hatches.len());
+    let hatches = entities_to_hatches(&entities); // P0-4 新增：提取 HATCH 数据
+    tracing::info!(
+        "  ✅ 提取 {} 条原始边，{} 个 HATCH",
+        edges.len(),
+        hatches.len()
+    );
 
     // 立即返回原始边用于快速渲染
     let job_id = uuid_simple();
@@ -765,9 +893,10 @@ async fn process_handler_v1(
                 let topo_edges = scene_to_edges(&process_result.scene);
                 tracing::info!("  📊 后台任务：得到 {} 条拓扑边", topo_edges.len());
 
-                // 更新交互服务，同时设置 scene_state
+                // 更新交互服务，同时设置 scene_state 和 topology_ready
                 let mut new_interact = InteractionService::new(topo_edges.clone());
                 new_interact.set_scene_state(process_result.scene.clone());
+                new_interact.get_state_mut().topology_ready = true;
                 *interact.lock().await = new_interact;
 
                 tracing::info!("  ✅ 后台任务：拓扑数据已更新");
@@ -786,7 +915,10 @@ async fn process_handler_v1(
     Ok(Json(ProcessResponse {
         job_id: job_id.clone(),
         status: ProcessStatus::Completed,
-        message: format!("快速渲染完成，{} 条边已加载，拓扑构建在后台进行", edges.len()),
+        message: format!(
+            "快速渲染完成，{} 条边已加载，拓扑构建在后台进行",
+            edges.len()
+        ),
         result: Some(ProcessResult {
             scene_summary: SceneSummary {
                 outer_boundaries: 0, // 待拓扑完成后更新
@@ -802,7 +934,7 @@ async fn process_handler_v1(
         }),
         errors: vec![],
         edges: Some(edges),
-        hatches: Some(hatches),  // P0-4 新增：返回 HATCH 数据
+        hatches: Some(hatches), // P0-4 新增：返回 HATCH 数据
     }))
 }
 
@@ -811,7 +943,22 @@ async fn process_handler_v1(
 enum FileType {
     Dxf,
     Pdf,
+    Png,
+    Jpeg,
+    Bmp,
+    Tiff,
     Unknown,
+}
+
+impl FileType {
+    /// 是否为光栅图片格式
+    #[allow(dead_code)]
+    fn is_raster(self) -> bool {
+        matches!(
+            self,
+            FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff
+        )
+    }
 }
 
 /// 检测文件类型
@@ -823,31 +970,58 @@ fn detect_file_type(data: &[u8], file_name: Option<&str>) -> FileType {
             .and_then(|e| e.to_str())
             .unwrap_or("")
             .to_lowercase();
-        
+
         match ext.as_str() {
             "dxf" => return FileType::Dxf,
             "pdf" => return FileType::Pdf,
+            "png" => return FileType::Png,
+            "jpg" | "jpeg" => return FileType::Jpeg,
+            "bmp" => return FileType::Bmp,
+            "tif" | "tiff" => return FileType::Tiff,
             _ => {}
         }
     }
 
-    // 通过魔数检测
+    // 通过魔数检测光栅格式（优先于矢量格式检测，避免误判）
+    if data.len() >= 4 {
+        // PNG: 89 50 4E 47
+        if data.starts_with(&[0x89, 0x50, 0x4E, 0x47]) {
+            return FileType::Png;
+        }
+        // JPEG: FF D8 FF
+        if data.starts_with(&[0xFF, 0xD8, 0xFF]) {
+            return FileType::Jpeg;
+        }
+        // BMP: 42 4D
+        if data.starts_with(&[0x42, 0x4D]) {
+            return FileType::Bmp;
+        }
+        // TIFF LE: 49 49 2A 00
+        if data.starts_with(&[0x49, 0x49, 0x2A, 0x00]) {
+            return FileType::Tiff;
+        }
+        // TIFF BE: 4D 4D 00 2A
+        if data.starts_with(&[0x4D, 0x4D, 0x00, 0x2A]) {
+            return FileType::Tiff;
+        }
+    }
+
+    // 通过魔数检测矢量格式
     if data.starts_with(b"%PDF") {
         return FileType::Pdf;
     }
 
     // DXF 文件通常以 "AutoCAD" 或 section 标记开始
-    if data.starts_with(b"AutoCAD") 
+    if data.starts_with(b"AutoCAD")
         || data.starts_with(b"SECTION")
-        || data.starts_with(&[0x41, 0x43, 0x31, 0x30]) // "AC10"
+        || data.starts_with(&[0x41, 0x43, 0x31, 0x30])
+    // "AC10"
     {
         return FileType::Dxf;
     }
 
     // 尝试解析为 ASCII DXF
-    if std::str::from_utf8(data).is_ok_and(|s| {
-        s.contains("SECTION") && s.contains("ENTITIES")
-    }) {
+    if std::str::from_utf8(data).is_ok_and(|s| s.contains("SECTION") && s.contains("ENTITIES")) {
         return FileType::Dxf;
     }
 
@@ -865,12 +1039,16 @@ fn file_type_extension(file_type: &FileType) -> &'static str {
     match file_type {
         FileType::Dxf => "dxf",
         FileType::Pdf => "pdf",
+        FileType::Png => "png",
+        FileType::Jpeg => "jpg",
+        FileType::Bmp => "bmp",
+        FileType::Tiff => "tiff",
         FileType::Unknown => "unknown",
     }
 }
 
 /// 从实体列表提取边（用于快速渲染）
-/// 
+///
 /// # 支持的实体类型
 /// - Line, Polyline, Arc, Circle（基础类型）
 /// - Text（渲染为方框）
@@ -883,14 +1061,24 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
 
     for entity in entities {
         match entity {
-            common_types::RawEntity::Line { start, end, metadata, .. } => {
+            common_types::RawEntity::Line {
+                start,
+                end,
+                metadata,
+                ..
+            } => {
                 let mut edge = interact::Edge::new(edge_id, *start, *end);
                 edge.layer = metadata.layer.clone();
                 edges.push(edge);
                 edge_id += 1;
             }
             // Polyline 分解为多条线段
-            common_types::RawEntity::Polyline { points, closed, metadata, .. } => {
+            common_types::RawEntity::Polyline {
+                points,
+                closed,
+                metadata,
+                ..
+            } => {
                 if points.len() >= 2 {
                     for i in 0..points.len() - 1 {
                         let mut edge = interact::Edge::new(edge_id, points[i], points[i + 1]);
@@ -900,7 +1088,8 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                     }
                     // 如果闭合，添加最后一条边
                     if *closed {
-                        let mut edge = interact::Edge::new(edge_id, points[points.len() - 1], points[0]);
+                        let mut edge =
+                            interact::Edge::new(edge_id, points[points.len() - 1], points[0]);
                         edge.layer = metadata.layer.clone();
                         edges.push(edge);
                         edge_id += 1;
@@ -908,15 +1097,28 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // Arc 离散化为线段
-            common_types::RawEntity::Arc { center, radius, start_angle, end_angle, metadata, .. } => {
+            common_types::RawEntity::Arc {
+                center,
+                radius,
+                start_angle,
+                end_angle,
+                metadata,
+                ..
+            } => {
                 let segments = 16; // 增加分段数提高精度
                 let angle_range = end_angle - start_angle;
                 for i in 0..segments {
                     let a1 = start_angle + (angle_range * (i as f64) / segments as f64);
                     let a2 = start_angle + (angle_range * ((i + 1) as f64) / segments as f64);
                     // ✅ 修复：将度数转换为弧度
-                    let p1 = [center[0] + radius * a1.to_radians().cos(), center[1] + radius * a1.to_radians().sin()];
-                    let p2 = [center[0] + radius * a2.to_radians().cos(), center[1] + radius * a2.to_radians().sin()];
+                    let p1 = [
+                        center[0] + radius * a1.to_radians().cos(),
+                        center[1] + radius * a1.to_radians().sin(),
+                    ];
+                    let p2 = [
+                        center[0] + radius * a2.to_radians().cos(),
+                        center[1] + radius * a2.to_radians().sin(),
+                    ];
                     let mut edge = interact::Edge::new(edge_id, p1, p2);
                     edge.layer = metadata.layer.clone();
                     edges.push(edge);
@@ -924,7 +1126,12 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // Circle 离散化为 16 段线段
-            common_types::RawEntity::Circle { center, radius, metadata, .. } => {
+            common_types::RawEntity::Circle {
+                center,
+                radius,
+                metadata,
+                ..
+            } => {
                 let segments = 32; // 增加分段数提高精度
                 for i in 0..segments {
                     let a1 = 2.0 * std::f64::consts::PI * (i as f64) / segments as f64;
@@ -938,15 +1145,21 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // Text 渲染为矩形框（避免完全跳过）
-            common_types::RawEntity::Text { position, height, content, metadata, .. } => {
+            common_types::RawEntity::Text {
+                position,
+                height,
+                content,
+                metadata,
+                ..
+            } => {
                 // 计算文本边界框（假设宽高比约 0.6）
                 let char_count = content.chars().count() as f64;
                 let width = height * char_count * 0.6;
                 let text_height = height * 1.2;
-                
+
                 let x = position[0];
                 let y = position[1];
-                
+
                 // 绘制文本边界框（4 条边）
                 let corners = [
                     [x, y],
@@ -954,7 +1167,7 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                     [x + width, y + text_height],
                     [x, y + text_height],
                 ];
-                
+
                 for i in 0..4 {
                     let mut edge = interact::Edge::new(edge_id, corners[i], corners[(i + 1) % 4]);
                     edge.layer = metadata.layer.clone();
@@ -963,18 +1176,24 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // BlockReference 展开为边（需要块定义）
-            common_types::RawEntity::BlockReference { 
-                block_name, .. 
-            } => {
+            common_types::RawEntity::BlockReference { block_name, .. } => {
                 // 注意：阶段 1 没有块定义数据，这里只能跳过
                 // TODO: 在阶段 1 也传递块定义数据
                 tracing::debug!("阶段 1 跳过块引用：{} (需要块定义数据)", block_name);
             }
             // Dimension 渲染为尺寸线（简化处理：连接定义点）
-            common_types::RawEntity::Dimension { definition_points, metadata, .. } => {
+            common_types::RawEntity::Dimension {
+                definition_points,
+                metadata,
+                ..
+            } => {
                 if definition_points.len() >= 2 {
                     for i in 0..definition_points.len() - 1 {
-                        let mut edge = interact::Edge::new(edge_id, definition_points[i], definition_points[i + 1]);
+                        let mut edge = interact::Edge::new(
+                            edge_id,
+                            definition_points[i],
+                            definition_points[i + 1],
+                        );
                         edge.layer = metadata.layer.clone();
                         edges.push(edge);
                         edge_id += 1;
@@ -982,7 +1201,9 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // Path 展开为线段
-            common_types::RawEntity::Path { commands, metadata, .. } => {
+            common_types::RawEntity::Path {
+                commands, metadata, ..
+            } => {
                 let mut current_point: Option<[f64; 2]> = None;
 
                 for cmd in commands {
@@ -1016,58 +1237,102 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 }
             }
             // P0-1: HATCH 填充图案（简化处理：渲染边界）
-            common_types::RawEntity::Hatch { boundary_paths, metadata, .. } => {
+            common_types::RawEntity::Hatch {
+                boundary_paths,
+                metadata,
+                ..
+            } => {
                 // 将 HATCH 边界转换为边
                 for boundary in boundary_paths {
                     match boundary {
                         common_types::HatchBoundaryPath::Polyline { points, closed, .. } => {
                             if points.len() >= 2 {
                                 for i in 0..points.len() - 1 {
-                                    let mut edge = interact::Edge::new(edge_id, points[i], points[i + 1]);
+                                    let mut edge =
+                                        interact::Edge::new(edge_id, points[i], points[i + 1]);
                                     edge.layer = metadata.layer.clone();
                                     edges.push(edge);
                                     edge_id += 1;
                                 }
                                 if *closed {
-                                    let mut edge = interact::Edge::new(edge_id, points[points.len() - 1], points[0]);
+                                    let mut edge = interact::Edge::new(
+                                        edge_id,
+                                        points[points.len() - 1],
+                                        points[0],
+                                    );
                                     edge.layer = metadata.layer.clone();
                                     edges.push(edge);
                                     edge_id += 1;
                                 }
                             }
                         }
-                        common_types::HatchBoundaryPath::Arc { center, radius, start_angle, end_angle, ccw, .. } => {
+                        common_types::HatchBoundaryPath::Arc {
+                            center,
+                            radius,
+                            start_angle,
+                            end_angle,
+                            ccw,
+                            ..
+                        } => {
                             // 离散化圆弧边界
                             let segments = 16;
-                            let angle_range = if *ccw { end_angle - start_angle } else { start_angle - end_angle };
+                            let angle_range = if *ccw {
+                                end_angle - start_angle
+                            } else {
+                                start_angle - end_angle
+                            };
                             for i in 0..segments {
                                 let a1 = start_angle + (angle_range * (i as f64) / segments as f64);
-                                let a2 = start_angle + (angle_range * ((i + 1) as f64) / segments as f64);
+                                let a2 = start_angle
+                                    + (angle_range * ((i + 1) as f64) / segments as f64);
                                 // ✅ 修复：将度数转换为弧度
-                                let p1 = [center[0] + radius * a1.to_radians().cos(), center[1] + radius * a1.to_radians().sin()];
-                                let p2 = [center[0] + radius * a2.to_radians().cos(), center[1] + radius * a2.to_radians().sin()];
+                                let p1 = [
+                                    center[0] + radius * a1.to_radians().cos(),
+                                    center[1] + radius * a1.to_radians().sin(),
+                                ];
+                                let p2 = [
+                                    center[0] + radius * a2.to_radians().cos(),
+                                    center[1] + radius * a2.to_radians().sin(),
+                                ];
                                 let mut edge = interact::Edge::new(edge_id, p1, p2);
                                 edge.layer = metadata.layer.clone();
                                 edges.push(edge);
                                 edge_id += 1;
                             }
                         }
-                        common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw, .. } => {
+                        common_types::HatchBoundaryPath::EllipseArc {
+                            center,
+                            major_axis,
+                            minor_axis_ratio,
+                            start_angle,
+                            end_angle,
+                            ccw,
+                            ..
+                        } => {
                             // 简化处理：离散化为线段
                             let segments = 32;
-                            let angle_range = if *ccw { end_angle - start_angle } else { start_angle - end_angle };
+                            let angle_range = if *ccw {
+                                end_angle - start_angle
+                            } else {
+                                start_angle - end_angle
+                            };
                             for i in 0..segments {
                                 let t = (i as f64) / segments as f64;
                                 let angle = start_angle + angle_range * t;
                                 // ✅ 修复：将度数转换为弧度
                                 let angle_rad = angle.to_radians();
-                                let prev_angle_rad = (start_angle + angle_range * ((i - 1) as f64) / segments as f64).to_radians();
+                                let prev_angle_rad = (start_angle
+                                    + angle_range * ((i - 1) as f64) / segments as f64)
+                                    .to_radians();
                                 let x = center[0] + major_axis[0] * angle_rad.cos();
-                                let y = center[1] + major_axis[1] * minor_axis_ratio * angle_rad.sin();
+                                let y =
+                                    center[1] + major_axis[1] * minor_axis_ratio * angle_rad.sin();
                                 if i > 0 {
                                     let prev_x = center[0] + major_axis[0] * prev_angle_rad.cos();
-                                    let prev_y = center[1] + major_axis[1] * minor_axis_ratio * prev_angle_rad.sin();
-                                    let mut edge = interact::Edge::new(edge_id, [prev_x, prev_y], [x, y]);
+                                    let prev_y = center[1]
+                                        + major_axis[1] * minor_axis_ratio * prev_angle_rad.sin();
+                                    let mut edge =
+                                        interact::Edge::new(edge_id, [prev_x, prev_y], [x, y]);
                                     edge.layer = metadata.layer.clone();
                                     edges.push(edge);
                                     edge_id += 1;
@@ -1078,7 +1343,11 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                             // 简化处理：连接控制点
                             if control_points.len() >= 2 {
                                 for i in 0..control_points.len() - 1 {
-                                    let mut edge = interact::Edge::new(edge_id, control_points[i], control_points[i + 1]);
+                                    let mut edge = interact::Edge::new(
+                                        edge_id,
+                                        control_points[i],
+                                        control_points[i + 1],
+                                    );
                                     edge.layer = metadata.layer.clone();
                                     edges.push(edge);
                                     edge_id += 1;
@@ -1094,10 +1363,64 @@ fn entities_to_edges(entities: &[common_types::RawEntity]) -> Vec<interact::Edge
                 tracing::warn!("XREF 外部参照支持 - 待完整实现，跳过处理");
                 // TODO: P1-1 完整实现 XREF 加载和解析
             }
+            // POINT 实体 - 不参与边提取，跳过
+            common_types::RawEntity::Point { .. } => {}
+            // IMAGE 实体 - 不参与边提取，跳过
+            common_types::RawEntity::Image { .. } => {}
+            // ATTRIB 实体 - 不参与边提取，跳过
+            common_types::RawEntity::Attribute { .. } => {}
+            // ATTDEF 实体 - 不参与边提取，跳过
+            common_types::RawEntity::AttributeDefinition { .. } => {}
+            // LEADER 实体 - 分解为线段序列
+            common_types::RawEntity::Leader {
+                points, metadata, ..
+            } => {
+                for i in 0..points.len().saturating_sub(1) {
+                    let mut edge = interact::Edge::new(edge_id, points[i], points[i + 1]);
+                    edge.layer = metadata.layer.clone();
+                    edges.push(edge);
+                    edge_id += 1;
+                }
+            }
+            // RAY 实体 - 用长线段表示（start → start + direction * 10000）
+            common_types::RawEntity::Ray {
+                start,
+                direction,
+                metadata,
+                ..
+            } => {
+                let ray_end = [
+                    start[0] + direction[0] * 10000.0,
+                    start[1] + direction[1] * 10000.0,
+                ];
+                let mut edge = interact::Edge::new(edge_id, *start, ray_end);
+                edge.layer = metadata.layer.clone();
+                edges.push(edge);
+                edge_id += 1;
+            }
+            // MLINE 实体 - 分解中心线为线段序列
+            common_types::RawEntity::MLine {
+                center_line,
+                metadata,
+                ..
+            } => {
+                for i in 0..center_line.len().saturating_sub(1) {
+                    let mut edge = interact::Edge::new(edge_id, center_line[i], center_line[i + 1]);
+                    edge.layer = metadata.layer.clone();
+                    edges.push(edge);
+                    edge_id += 1;
+                }
+            }
+            // Triangle 是 3D 实体，不适合转换为 2D Edge，跳过
+            common_types::RawEntity::Triangle { .. } => {}
         }
     }
 
-    tracing::info!("entities_to_edges: 从 {} 个实体提取 {} 条边", entities.len(), edges.len());
+    tracing::info!(
+        "entities_to_edges: 从 {} 个实体提取 {} 条边",
+        entities.len(),
+        edges.len()
+    );
     edges
 }
 
@@ -1116,8 +1439,8 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
             pattern,
             solid_fill,
             metadata,
-            scale,    // P0-NEW-14 修复：提取 scale
-            angle,    // P0-NEW-14 修复：提取 angle
+            scale, // P0-NEW-14 修复：提取 scale
+            angle, // P0-NEW-14 修复：提取 angle
             ..
         } = entity
         {
@@ -1125,11 +1448,15 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
             let boundary_paths_response: Vec<HatchBoundaryPathResponse> = boundary_paths
                 .iter()
                 .map(|boundary| match boundary {
-                    common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
+                    common_types::HatchBoundaryPath::Polyline {
+                        points,
+                        closed,
+                        bulges,
+                    } => {
                         HatchBoundaryPathResponse::Polyline {
                             points: points.iter().map(|p| [p[0], p[1]]).collect(),
                             closed: *closed,
-                            bulges: bulges.clone(),  // P0-NEW-5 修复：保留 bulges 字段
+                            bulges: bulges.clone(), // P0-NEW-5 修复：保留 bulges 字段
                         }
                     }
                     common_types::HatchBoundaryPath::Arc {
@@ -1181,8 +1508,8 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
                 common_types::HatchPattern::Predefined { name } => {
                     HatchPatternResponse::Predefined {
                         name: name.clone(),
-                        scale: *scale,    // P0-NEW-14 修复：传递 scale
-                        angle: *angle,    // P0-NEW-14 修复：传递 angle
+                        scale: *scale, // P0-NEW-14 修复：传递 scale
+                        angle: *angle, // P0-NEW-14 修复：传递 angle
                     }
                 }
                 common_types::HatchPattern::Custom { pattern_def } => {
@@ -1194,23 +1521,20 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
                                 .lines
                                 .iter()
                                 .map(|line| HatchPatternLineResponse {
-                                    start_point: [
-                                        line.start_point[0],
-                                        line.start_point[1],
-                                    ],
+                                    start_point: [line.start_point[0], line.start_point[1]],
                                     angle: line.angle,
                                     offset: [line.offset[0], line.offset[1]],
                                     dash_pattern: line.dash_pattern.clone(),
                                 })
                                 .collect(),
                         },
-                        scale: *scale,    // P0-NEW-14 修复：传递 scale
-                        angle: *angle,    // P0-NEW-14 修复：传递 angle
+                        scale: *scale, // P0-NEW-14 修复：传递 scale
+                        angle: *angle, // P0-NEW-14 修复：传递 angle
                     }
                 }
                 common_types::HatchPattern::Solid { color } => {
                     HatchPatternResponse::Solid {
-                        color: [color.r, color.g, color.b, color.a],  // P0-4 修复：Color32 字段访问
+                        color: [color.r, color.g, color.b, color.a], // P0-4 修复：Color32 字段访问
                     }
                 }
             };
@@ -1221,8 +1545,8 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
                 pattern: pattern_response,
                 solid_fill: *solid_fill,
                 layer: metadata.layer.clone(),
-                scale: *scale,    // P0-NEW-14 修复：传递 scale
-                angle: *angle,    // P0-NEW-14 修复：传递 angle
+                scale: *scale, // P0-NEW-14 修复：传递 scale
+                angle: *angle, // P0-NEW-14 修复：传递 angle
             });
 
             hatch_id += 1;
@@ -1247,9 +1571,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_endpoint() {
+        use interact::InteractionService;
         use std::sync::Arc;
         use tokio::sync::Mutex;
-        use interact::InteractionService;
 
         let state = ApiState {
             pipeline: ProcessingPipeline::new(),
@@ -1294,7 +1618,7 @@ mod tests {
     fn test_detect_file_type_dxf_content() {
         let data = b"AutoCAD Binary DXF";
         assert_eq!(detect_file_type(data, None), FileType::Dxf);
-        
+
         let data = b"SECTION\nENTITIES\nENDSEC";
         assert_eq!(detect_file_type(data, None), FileType::Dxf);
     }
@@ -1303,6 +1627,41 @@ mod tests {
     fn test_detect_file_type_unknown() {
         let data = b"unknown format";
         assert_eq!(detect_file_type(data, None), FileType::Unknown);
+    }
+
+    #[test]
+    fn test_detect_file_type_png_magic() {
+        let data = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A];
+        assert_eq!(detect_file_type(&data, None), FileType::Png);
+    }
+
+    #[test]
+    fn test_detect_file_type_jpeg_magic() {
+        let data = [0xFF, 0xD8, 0xFF, 0xE0];
+        assert_eq!(detect_file_type(&data, None), FileType::Jpeg);
+    }
+
+    #[test]
+    fn test_detect_file_type_bmp_magic() {
+        let data = [0x42, 0x4D, 0x00, 0x00];
+        assert_eq!(detect_file_type(&data, None), FileType::Bmp);
+    }
+
+    #[test]
+    fn test_detect_file_type_tiff_magic() {
+        let data_le = [0x49, 0x49, 0x2A, 0x00];
+        let data_be = [0x4D, 0x4D, 0x00, 0x2A];
+        assert_eq!(detect_file_type(&data_le, None), FileType::Tiff);
+        assert_eq!(detect_file_type(&data_be, None), FileType::Tiff);
+    }
+
+    #[test]
+    fn test_detect_file_type_raster_extension() {
+        let data = b"not_an_image_header";
+        assert_eq!(detect_file_type(data, Some("test.png")), FileType::Png);
+        assert_eq!(detect_file_type(data, Some("photo.jpg")), FileType::Jpeg);
+        assert_eq!(detect_file_type(data, Some("scan.bmp")), FileType::Bmp);
+        assert_eq!(detect_file_type(data, Some("image.tiff")), FileType::Tiff);
     }
 }
 
@@ -1379,15 +1738,18 @@ async fn interact_auto_trace_handler(
 
     match interact.auto_trace_from_edge(request.edge_id) {
         Ok(result) => {
-            let loop_points = result.loop_.as_ref().map(|l| {
-                l.points.iter().map(|p| [p[0], p[1]]).collect()
-            });
+            let loop_points = result
+                .loop_
+                .as_ref()
+                .map(|l| l.points.iter().map(|p| [p[0], p[1]]).collect());
 
             Ok(Json(AutoTraceResponse {
                 success: true,
                 loop_points,
-                message: format!("成功追踪到 {} 个点",
-                    result.loop_.as_ref().map(|l| l.points.len()).unwrap_or(0)),
+                message: format!(
+                    "成功追踪到 {} 个点",
+                    result.loop_.as_ref().map(|l| l.points.len()).unwrap_or(0)
+                ),
             }))
         }
         Err(e) => {
@@ -1413,7 +1775,9 @@ async fn interact_lasso_handler(
 
     match interact.extract_from_lasso(&polygon) {
         Ok(result) => {
-            let loops = result.loops.iter()
+            let loops = result
+                .loops
+                .iter()
                 .map(|l| l.points.iter().map(|p| [p[0], p[1]]).collect())
                 .collect();
 
@@ -1441,10 +1805,8 @@ async fn interact_detect_gaps_handler(
 
     match interact.detect_gaps(request.tolerance) {
         Ok(gaps) => {
-            let gap_responses: Vec<GapInfoResponse> = gaps
-                .iter()
-                .map(gap_info_to_response)
-                .collect();
+            let gap_responses: Vec<GapInfoResponse> =
+                gaps.iter().map(gap_info_to_response).collect();
 
             Ok(Json(GapDetectionResponse {
                 gaps: gap_responses,
@@ -1481,8 +1843,11 @@ async fn interact_set_boundary_semantic_handler(
     State(state): State<ApiState>,
     Json(request): Json<BoundarySemanticRequest>,
 ) -> Result<StatusCode, StatusCode> {
-    tracing::info!("收到边界语义设置请求：segment_id={}, semantic={}",
-        request.segment_id, request.semantic);
+    tracing::info!(
+        "收到边界语义设置请求：segment_id={}, semantic={}",
+        request.segment_id,
+        request.semantic
+    );
 
     // 解析语义字符串为 BoundarySemantic 枚举
     use common_types::scene::BoundarySemantic;
@@ -1515,7 +1880,8 @@ async fn interact_state_handler(
     // 获取当前状态
     let state_ref = interact.get_state();
     let selected_edges: Vec<usize> = state_ref.selected_edges.iter().copied().collect();
-    let detected_gaps: Vec<GapInfoResponse> = state_ref.detected_gaps
+    let detected_gaps: Vec<GapInfoResponse> = state_ref
+        .detected_gaps
         .iter()
         .map(gap_info_to_response)
         .collect();
@@ -1543,10 +1909,16 @@ pub enum WsMessage {
     EdgeSelected { edge_id: usize },
     /// 追踪结果
     #[serde(rename = "trace_result")]
-    TraceResult { edges: Vec<usize>, loop_closed: bool },
+    TraceResult {
+        edges: Vec<usize>,
+        loop_closed: bool,
+    },
     /// 缺口检测结果
     #[serde(rename = "gaps_detected")]
     GapsDetected { gaps: Vec<GapInfoResponse> },
+    /// 拓扑构建完成通知
+    #[serde(rename = "topology_ready")]
+    TopologyReady { edge_count: usize },
     /// 错误消息
     #[serde(rename = "error")]
     Error { message: String },
@@ -1565,22 +1937,44 @@ async fn websocket_handler(
 ) -> impl axum::response::IntoResponse {
     let session_id = uuid::Uuid::new_v4().to_string();
     tracing::info!("WebSocket 连接：session_id={}", session_id);
-    
+
     ws.on_upgrade(move |socket| handle_websocket(socket, state, session_id))
 }
 
 /// 处理 WebSocket 连接
 async fn handle_websocket(socket: WebSocket, state: ApiState, session_id: String) {
     let (mut sender, mut receiver) = socket.split();
-    
+
     // 发送连接确认消息
-    let connected_msg = WsMessage::Connected { session_id: session_id.clone() };
+    let connected_msg = WsMessage::Connected {
+        session_id: session_id.clone(),
+    };
     if let Ok(json) = serde_json::to_string(&connected_msg) {
         let _ = sender.send(Message::Text(json)).await;
     }
-    
+
+    // 追踪是否已推送过拓扑就绪通知
+    let mut topology_pushed = false;
+
     // 处理接收的消息
     while let Some(msg) = receiver.next().await {
+        // 在处理每条消息前，检查拓扑是否就绪（仅推送一次）
+        if !topology_pushed {
+            let interact = state.interact.lock().await;
+            if interact.get_state().topology_ready {
+                let edge_count = interact.get_state().edges.len();
+                drop(interact);
+
+                let ready_msg = WsMessage::TopologyReady { edge_count };
+                if let Ok(json) = serde_json::to_string(&ready_msg) {
+                    if sender.send(Message::Text(json)).await.is_err() {
+                        break;
+                    }
+                }
+                topology_pushed = true;
+            }
+        }
+
         match msg {
             Ok(Message::Text(text)) => {
                 // 解析客户端消息
@@ -1589,7 +1983,9 @@ async fn handle_websocket(socket: WebSocket, state: ApiState, session_id: String
                         match msg_type {
                             "select_edge" => {
                                 // 处理边选择
-                                if let Some(edge_id) = client_msg.get("edge_id").and_then(|id| id.as_u64()) {
+                                if let Some(edge_id) =
+                                    client_msg.get("edge_id").and_then(|id| id.as_u64())
+                                {
                                     let edge_id = edge_id as usize;
 
                                     // 调用自动追踪
@@ -1600,13 +1996,16 @@ async fn handle_websocket(socket: WebSocket, state: ApiState, session_id: String
                                             let loop_closed = trace_result.loop_.is_some();
 
                                             // 发送追踪结果
-                                            let result_msg = WsMessage::TraceResult { edges, loop_closed };
+                                            let result_msg =
+                                                WsMessage::TraceResult { edges, loop_closed };
                                             if let Ok(json) = serde_json::to_string(&result_msg) {
                                                 let _ = sender.send(Message::Text(json)).await;
                                             }
                                         }
                                         Err(e) => {
-                                            let error_msg = WsMessage::Error { message: e.to_string() };
+                                            let error_msg = WsMessage::Error {
+                                                message: e.to_string(),
+                                            };
                                             if let Ok(json) = serde_json::to_string(&error_msg) {
                                                 let _ = sender.send(Message::Text(json)).await;
                                             }
@@ -1616,25 +2015,28 @@ async fn handle_websocket(socket: WebSocket, state: ApiState, session_id: String
                             }
                             "detect_gaps" => {
                                 // 处理缺口检测
-                                let tolerance = client_msg.get("tolerance")
+                                let tolerance = client_msg
+                                    .get("tolerance")
                                     .and_then(|t| t.as_f64())
                                     .unwrap_or(0.5);
 
                                 let interact = state.interact.lock().await;
                                 match interact.detect_gaps(tolerance) {
                                     Ok(gaps) => {
-                                        let gap_responses: Vec<GapInfoResponse> = gaps
-                                            .iter()
-                                            .map(gap_info_to_response)
-                                            .collect();
+                                        let gap_responses: Vec<GapInfoResponse> =
+                                            gaps.iter().map(gap_info_to_response).collect();
 
-                                        let gaps_msg = WsMessage::GapsDetected { gaps: gap_responses };
+                                        let gaps_msg = WsMessage::GapsDetected {
+                                            gaps: gap_responses,
+                                        };
                                         if let Ok(json) = serde_json::to_string(&gaps_msg) {
                                             let _ = sender.send(Message::Text(json)).await;
                                         }
                                     }
                                     Err(e) => {
-                                        let error_msg = WsMessage::Error { message: e.to_string() };
+                                        let error_msg = WsMessage::Error {
+                                            message: e.to_string(),
+                                        };
                                         if let Ok(json) = serde_json::to_string(&error_msg) {
                                             let _ = sender.send(Message::Text(json)).await;
                                         }
@@ -1712,7 +2114,8 @@ async fn export_handler(
     // 执行导出
     match export_service.export(&scene_state) {
         Ok(export_result) => {
-            let file_name = format!("cad_export_{}.{}", 
+            let file_name = format!(
+                "cad_export_{}.{}",
                 uuid_simple(),
                 match format {
                     ExportFormat::Json => "json",
@@ -1729,7 +2132,11 @@ async fn export_handler(
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
 
-            tracing::info!("导出成功：file_name={}, size={} bytes", file_name, export_result.bytes.len());
+            tracing::info!(
+                "导出成功：file_name={}, size={} bytes",
+                file_name,
+                export_result.bytes.len()
+            );
 
             Ok(Json(ExportResponse {
                 success: true,
@@ -1786,21 +2193,20 @@ async fn download_handler(
     // 确定 Content-Type
     let content_type = if filename.ends_with(".json") {
         "application/json"
-    } else if filename.ends_with(".bin") {
-        "application/octet-stream"
     } else {
         "application/octet-stream"
     };
 
     // 构建响应
     let mut response = axum::response::Response::new(file_content.into());
-    response.headers_mut().insert(
-        header::CONTENT_TYPE,
-        content_type.parse().unwrap(),
-    );
+    response
+        .headers_mut()
+        .insert(header::CONTENT_TYPE, content_type.parse().unwrap());
     response.headers_mut().insert(
         header::CONTENT_DISPOSITION,
-        format!("attachment; filename=\"{}\"", filename).parse().unwrap(),
+        format!("attachment; filename=\"{}\"", filename)
+            .parse()
+            .unwrap(),
     );
 
     Ok(response)

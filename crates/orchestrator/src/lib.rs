@@ -7,7 +7,7 @@
 //! ```rust,no_run
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! use orchestrator::OrchestratorService;
-//! use common_types::acoustic::{AcousticInput, AcousticRequest, SelectionBoundary, SelectionMode};
+//! use acoustic::{AcousticInput, AcousticRequest, SelectionBoundary, SelectionMode};
 //! use common_types::scene::SceneState;
 //!
 //! let orchestrator = OrchestratorService::default();
@@ -27,27 +27,19 @@
 //! # }
 //! ```
 
-pub mod service;
 pub mod api;
-pub mod pipeline;
 pub mod configurable;
+pub mod pipeline;
+pub mod service;
 
-pub use service::OrchestratorService;
-pub use pipeline::ProcessingPipeline;
 pub use configurable::{ConfigurablePipeline, PipelineConfig, PipelineStage, StageConfig};
+pub use pipeline::ProcessingPipeline;
+pub use service::OrchestratorService;
 
-// 重新导出声学分析相关类型
+// 重新导出声学分析相关类型 (deprecated - 声学功能已停止开发)
+#[allow(deprecated)]
 pub use acoustic::{
-    AcousticService,
-    AcousticServiceConfig,
-    AcousticInput,
-    AcousticOutput,
-    AcousticRequest,
-    AcousticResult,
-    AcousticError,
-    AcousticMetrics,
-    SelectionBoundary,
+    AcousticError, AcousticInput, AcousticMetrics, AcousticOutput, AcousticRequest, AcousticResult,
+    AcousticService, AcousticServiceConfig, Frequency, ReverberationFormula, SelectionBoundary,
     SelectionMode,
-    ReverberationFormula,
-    Frequency,
 };

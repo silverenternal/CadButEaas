@@ -38,14 +38,14 @@
 //! }
 //! ```
 
-use crate::{DxfConfig, DxfParseReport, DxfParser};
 use crate::parser_trait::{DxfParserTrait, ParserType};
-use common_types::{RawEntity, CadError, DxfParseReason};
-use std::path::{Path, PathBuf};
-use tokio::io::AsyncReadExt;
-use tokio::fs::File;
-use tokio::sync::mpsc;
+use crate::{DxfConfig, DxfParseReport, DxfParser};
+use common_types::{CadError, DxfParseReason, InternalErrorReason, RawEntity};
 use futures_core::Stream;
+use std::path::{Path, PathBuf};
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
+use tokio::sync::mpsc;
 
 /// 异步 DXF 解析器
 ///
@@ -91,16 +91,30 @@ impl AsyncDxfParser {
         self
     }
 
+    /// 设置是否忽略文本实体
+    pub fn with_ignore_text(mut self, ignore: bool) -> Self {
+        self.config.ignore_text = ignore;
+        self
+    }
+
+    /// 设置是否忽略标注实体
+    pub fn with_ignore_dimensions(mut self, ignore: bool) -> Self {
+        self.config.ignore_dimensions = ignore;
+        self
+    }
+
+    /// 设置是否忽略填充图案实体
+    pub fn with_ignore_hatch(mut self, ignore: bool) -> Self {
+        self.config.ignore_hatch = ignore;
+        self
+    }
+
     /// 检测是否为二进制 DXF 文件
     async fn is_binary_dxf(path: &Path) -> Result<bool, CadError> {
         let mut file = File::open(path)
             .await
-            .map_err(|e| CadError::dxf_parse_with_source(
-                path,
-                DxfParseReason::FileNotFound,
-                e,
-            ))?;
-        
+            .map_err(|e| CadError::dxf_parse_with_source(path, DxfParseReason::FileNotFound, e))?;
+
         let mut buffer = [0u8; 6];
         file.read_exact(&mut buffer).await.map_err(|e| {
             CadError::dxf_parse_with_source(
@@ -123,7 +137,7 @@ impl AsyncDxfParser {
         path: impl AsRef<Path>,
     ) -> Result<impl Stream<Item = Result<RawEntity, CadError>>, CadError> {
         let path = path.as_ref().to_path_buf();
-        
+
         // 检测二进制 DXF
         if Self::is_binary_dxf(&path).await? {
             return Err(CadError::dxf_parse_with_source(
@@ -162,13 +176,14 @@ impl AsyncDxfParser {
             .with_config(config)
             .with_tolerance(tolerance);
 
-        let (entities, _report) = tokio::task::spawn_blocking(move || {
-            parser.parse_file_with_report(&path)
-        })
-        .await
-        .unwrap_or_else(|e| Err(CadError::VectorizeFailed {
-            message: format!("tokio join error: {}", e),
-        }))?;
+        let (entities, _report) =
+            tokio::task::spawn_blocking(move || parser.parse_file_with_report(&path))
+                .await
+                .unwrap_or_else(|e| {
+                    Err(CadError::internal(InternalErrorReason::Panic {
+                        message: format!("tokio join error: {}", e),
+                    }))
+                })?;
 
         // 将实体发送到通道
         for entity in entities {
@@ -186,11 +201,7 @@ impl AsyncDxfParser {
         let path = path.as_ref();
         let metadata = tokio::fs::metadata(path)
             .await
-            .map_err(|e| CadError::dxf_parse_with_source(
-                path,
-                DxfParseReason::FileNotFound,
-                e,
-            ))?;
+            .map_err(|e| CadError::dxf_parse_with_source(path, DxfParseReason::FileNotFound, e))?;
 
         Ok(FileMetadata {
             size: metadata.len(),
@@ -208,23 +219,30 @@ impl Default for AsyncDxfParser {
 
 #[async_trait::async_trait]
 impl DxfParserTrait for AsyncDxfParser {
-    fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         // 同步回退：使用 spawn_blocking 在 tokio 环境中执行
         let path = path.as_ref().to_path_buf();
         let parser = self.clone();
-        
+
         tokio::runtime::Handle::current()
-            .block_on(async move {
-                parser.parse_file_with_report_async(path).await
-            })
+            .block_on(async move { parser.parse_file_with_report_async(path).await })
     }
 
-    async fn parse_file_async(&self, path: impl AsRef<Path> + Send) -> Result<Vec<RawEntity>, CadError> {
+    async fn parse_file_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<Vec<RawEntity>, CadError> {
         let (entities, _report) = self.parse_file_with_report_async(path).await?;
         Ok(entities)
     }
 
-    async fn parse_file_with_report_async(&self, path: impl AsRef<Path> + Send) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    async fn parse_file_with_report_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let path = path.as_ref().to_path_buf();
 
         // 检测二进制 DXF
@@ -247,17 +265,22 @@ impl DxfParserTrait for AsyncDxfParser {
             parser.parse_file_with_report(&path)
         })
         .await
-        .unwrap_or_else(|e| Err(CadError::VectorizeFailed {
-            message: format!("tokio join error: {}", e),
-        }))
+        .unwrap_or_else(|e| {
+            Err(CadError::internal(InternalErrorReason::Panic {
+                message: format!("tokio join error: {}", e),
+            }))
+        })
     }
 
-    fn parse_bytes_with_report(&self, bytes: &[u8]) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_bytes_with_report(
+        &self,
+        bytes: &[u8],
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         // 字节解析不支持异步，直接使用同步版本
         let parser = DxfParser::new()
             .with_config(self.config.clone())
             .with_tolerance(self.tolerance);
-        
+
         let entities = parser.parse_bytes(bytes)?;
         let report = DxfParseReport::default();
         Ok((entities, report))

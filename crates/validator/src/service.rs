@@ -2,10 +2,17 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use common_types::{SceneState, CadError, LengthUnit, Point2, Service, ServiceHealth, ServiceVersion, ServiceMetrics, GeometryConstructionReason, RecoverySuggestion};
+use crate::checks::{
+    check_closure, check_convexity, check_hole_containment, check_micro_features,
+    check_self_intersection, Severity, ValidationIssue, ValidationLocation, ValidationReport,
+    ValidationSummary,
+};
 use common_types::request::Request;
 use common_types::response::Response;
-use crate::checks::{ValidationReport, ValidationIssue, ValidationSummary, Severity, ValidationLocation, check_closure, check_self_intersection, check_micro_features, check_hole_containment, check_convexity};
+use common_types::{
+    CadError, GeometryConstructionReason, LengthUnit, Point2, RecoverySuggestion, SceneState,
+    Service, ServiceHealth, ServiceMetrics, ServiceVersion,
+};
 
 /// 单位标定结果
 #[derive(Debug, Clone)]
@@ -183,35 +190,15 @@ impl ValidatorService {
         new_scene
     }
 
-    /// 验证场景状态
+    /// 验证场景状态（并行化版本）
     pub fn validate(&self, scene: &SceneState) -> Result<ValidationReport, CadError> {
         let mut issues = Vec::new();
         let mut summary = ValidationSummary::new();
         let mut recovery_suggestions = Vec::new();
 
+        // 轻量检查：先执行 closure
         if let Some(outer) = &scene.outer {
             if let Some(issue) = check_closure(outer, self.config.closure_tolerance) {
-                self.categorize_issue(&issue, &mut summary);
-                if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
-                    recovery_suggestions.push(suggestion);
-                }
-                issues.push(issue);
-            }
-
-            if let Some(issue) = check_self_intersection(outer) {
-                self.categorize_issue(&issue, &mut summary);
-                if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
-                    recovery_suggestions.push(suggestion);
-                }
-                issues.push(issue);
-            }
-
-            let micro_issues = check_micro_features(
-                outer,
-                self.config.min_edge_length,
-                self.config.min_angle_degrees,
-            );
-            for issue in micro_issues {
                 self.categorize_issue(&issue, &mut summary);
                 if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
                     recovery_suggestions.push(suggestion);
@@ -229,17 +216,54 @@ impl ValidatorService {
             summary.error_count += 1;
         }
 
-        if let Some(outer) = &scene.outer {
-            let hole_issues = check_hole_containment(outer, &scene.holes);
-            for issue in hole_issues {
-                self.categorize_issue(&issue, &mut summary);
-                if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
-                    recovery_suggestions.push(suggestion);
-                }
-                issues.push(issue);
+        // 并行执行 4 个独立重检查（self_intersection, micro, hole, convexity）
+        let outer_ref = scene.outer.clone();
+        let holes_ref = scene.holes.clone();
+        let min_edge_length = self.config.min_edge_length;
+        let min_angle = self.config.min_angle_degrees;
+
+        let (si_issues, (mf_issues, (hc_issues, cx_issues))) = rayon::join(
+            || {
+                outer_ref
+                    .as_ref()
+                    .and_then(check_self_intersection)
+                    .map(|i| vec![i])
+                    .unwrap_or_default()
+            },
+            || {
+                rayon::join(
+                    || {
+                        outer_ref
+                            .as_ref()
+                            .map(|outer| check_micro_features(outer, min_edge_length, min_angle))
+                            .unwrap_or_default()
+                    },
+                    || {
+                        rayon::join(
+                            || {
+                                outer_ref
+                                    .as_ref()
+                                    .map(|outer| check_hole_containment(outer, &holes_ref))
+                                    .unwrap_or_default()
+                            },
+                            || outer_ref.as_ref().map(check_convexity).unwrap_or_default(),
+                        )
+                    },
+                )
+            },
+        );
+
+        // 合并并行检查结果
+        let all_parallel_issues = [si_issues, mf_issues, hc_issues, cx_issues];
+        for issue in all_parallel_issues.into_iter().flatten() {
+            self.categorize_issue(&issue, &mut summary);
+            if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
+                recovery_suggestions.push(suggestion);
             }
+            issues.push(issue);
         }
 
+        // 孔洞闭合和自相交检查（依赖 scene.holes 枚举，串行）
         for (i, hole) in scene.holes.iter().enumerate() {
             if let Some(issue) = check_closure(hole, self.config.closure_tolerance) {
                 let mut issue = issue.clone();
@@ -264,14 +288,6 @@ impl ValidatorService {
                 if let Some(suggestion) = self.generate_recovery_suggestion(&issue) {
                     recovery_suggestions.push(suggestion);
                 }
-                issues.push(issue);
-            }
-        }
-
-        if let Some(outer) = &scene.outer {
-            let convexity_issues = check_convexity(outer);
-            for issue in convexity_issues {
-                self.categorize_issue(&issue, &mut summary);
                 issues.push(issue);
             }
         }
@@ -381,12 +397,15 @@ impl Service for ValidatorService {
     type Data = ValidationReport;
     type Error = CadError;
 
-    async fn process(&self, request: Request<Self::Payload>) -> std::result::Result<Response<Self::Data>, Self::Error> {
+    async fn process(
+        &self,
+        request: Request<Self::Payload>,
+    ) -> std::result::Result<Response<Self::Data>, Self::Error> {
         let start = Instant::now();
 
         // 真正的处理入口：解析场景数据并执行验证
-        let scene: SceneState = serde_json::from_str(&request.payload.scene_json)
-            .map_err(|e| CadError::GeometryConstructionError {
+        let scene: SceneState = serde_json::from_str(&request.payload.scene_json).map_err(|e| {
+            CadError::GeometryConstructionError {
                 reason: GeometryConstructionReason::InvalidPoint {
                     x: 0.0,
                     y: 0.0,
@@ -394,7 +413,8 @@ impl Service for ValidatorService {
                 },
                 operation: "deserialize_scene".to_string(),
                 details: None,
-            })?;
+            }
+        })?;
 
         let result = self.validate(&scene);
         let latency = start.elapsed().as_secs_f64() * 1000.0;
@@ -403,11 +423,7 @@ impl Service for ValidatorService {
         self.metrics.record_request(result.is_ok(), latency);
 
         let data = result?;
-        Ok(Response::success(
-            request.id,
-            data,
-            latency as u64,
-        ))
+        Ok(Response::success(request.id, data, latency as u64))
     }
 
     fn health_check(&self) -> ServiceHealth {
@@ -435,6 +451,8 @@ pub struct ValidateRequest {
 
 impl ValidateRequest {
     pub fn new(scene_json: impl Into<String>) -> Self {
-        Self { scene_json: scene_json.into() }
+        Self {
+            scene_json: scene_json.into(),
+        }
     }
 }

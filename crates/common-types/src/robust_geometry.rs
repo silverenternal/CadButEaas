@@ -131,11 +131,11 @@ impl ExactF64 {
     }
 
     /// 加法（带误差传播）
+    #[allow(clippy::should_implement_trait)]
     pub fn add(self, other: Self) -> Self {
         let value = self.value + other.value;
-        let error_bound = self.error_bound + other.error_bound
-            + value.abs() * f64::EPSILON;
-        
+        let error_bound = self.error_bound + other.error_bound + value.abs() * f64::EPSILON;
+
         Self {
             value,
             error_bound,
@@ -144,11 +144,11 @@ impl ExactF64 {
     }
 
     /// 减法（带误差传播）
+    #[allow(clippy::should_implement_trait)]
     pub fn sub(self, other: Self) -> Self {
         let value = self.value - other.value;
-        let error_bound = self.error_bound + other.error_bound
-            + value.abs() * f64::EPSILON;
-        
+        let error_bound = self.error_bound + other.error_bound + value.abs() * f64::EPSILON;
+
         Self {
             value,
             error_bound,
@@ -157,12 +157,14 @@ impl ExactF64 {
     }
 
     /// 乘法（带误差传播）
+    #[allow(clippy::should_implement_trait)]
     pub fn mul(self, other: Self) -> Self {
         let value = self.value * other.value;
         let error_bound = (self.error_bound * other.value.abs()
             + other.error_bound * self.value.abs()
-            + value.abs() * f64::EPSILON).abs();
-        
+            + value.abs() * f64::EPSILON)
+            .abs();
+
         Self {
             value,
             error_bound,
@@ -229,20 +231,19 @@ impl ExactF64 {
 /// and Fast Robust Geometric Predicates"
 pub fn orient2d(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> Orientation {
     // 快速路径：标准 f64 计算
-    let det = (b[0] - a[0]) * (c[1] - a[1])
-            - (b[1] - a[1]) * (c[0] - a[0]);
-    
+    let det = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+
     // 计算误差界（基于 Shewchuk 的公式）
-    let permanent = (b[0] - a[0]).abs() * (c[1] - a[1]).abs()
-                  + (b[1] - a[1]).abs() * (c[0] - a[0]).abs();
+    let permanent =
+        (b[0] - a[0]).abs() * (c[1] - a[1]).abs() + (b[1] - a[1]).abs() * (c[0] - a[0]).abs();
     let epsilon = f64::EPSILON;
     let error_bound = 3.0 * epsilon * permanent;
-    
+
     // 如果结果明确，直接返回
     if det.abs() > error_bound {
         return Orientation::from(det.partial_cmp(&0.0).unwrap());
     }
-    
+
     // 慢速路径：使用扩展精度重新计算
     orient2d_exact(a, b, c)
 }
@@ -253,10 +254,10 @@ pub fn orient2d(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> Orientation {
 fn orient2d_exact(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> Orientation {
     // 使用 Shewchuk 的扩展精度算法
     // 这里简化实现，实际需要使用 expansion arithmetic
-    
+
     // 计算行列式的精确值
     let det = orient2d_sum(a, b, c);
-    
+
     Orientation::from(det.sign())
 }
 
@@ -267,11 +268,11 @@ fn orient2d_sum(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> ExactF64 {
     let acy = ExactF64::new(c[1] - a[1]);
     let bcx = ExactF64::new(c[0] - b[0]);
     let bcy = ExactF64::new(c[1] - b[1]);
-    
+
     // det = acx * bcy - acy * bcx
     let term1 = acx.mul(bcy);
     let term2 = acy.mul(bcx);
-    
+
     term1.sub(term2)
 }
 
@@ -281,16 +282,19 @@ fn orient2d_sum(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> ExactF64 {
 pub fn orient3d(a: [f64; 3], b: [f64; 3], c: [f64; 3], d: [f64; 3]) -> Orientation3D {
     // 快速路径：标准 f64 计算
     let det = (a[0] - d[0]) * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1]))
-            - (a[1] - d[1]) * ((b[0] - d[0]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[0] - d[0]))
-            + (a[2] - d[2]) * ((b[0] - d[0]) * (c[1] - d[1]) - (b[1] - d[1]) * (c[0] - d[0]));
-    
+        - (a[1] - d[1]) * ((b[0] - d[0]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[0] - d[0]))
+        + (a[2] - d[2]) * ((b[0] - d[0]) * (c[1] - d[1]) - (b[1] - d[1]) * (c[0] - d[0]));
+
     // 误差界估计
-    let permanent = (a[0] - d[0]).abs() * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])).abs()
-                  + (a[1] - d[1]).abs() * ((b[0] - d[0]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[0] - d[0])).abs()
-                  + (a[2] - d[2]).abs() * ((b[0] - d[0]) * (c[1] - d[1]) - (b[1] - d[1]) * (c[0] - d[0])).abs();
+    let permanent = (a[0] - d[0]).abs()
+        * ((b[1] - d[1]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[1] - d[1])).abs()
+        + (a[1] - d[1]).abs()
+            * ((b[0] - d[0]) * (c[2] - d[2]) - (b[2] - d[2]) * (c[0] - d[0])).abs()
+        + (a[2] - d[2]).abs()
+            * ((b[0] - d[0]) * (c[1] - d[1]) - (b[1] - d[1]) * (c[0] - d[0])).abs();
     let epsilon = f64::EPSILON;
     let error_bound = 7.0 * epsilon * permanent;
-    
+
     if det.abs() > error_bound {
         return if det > 0.0 {
             Orientation3D::Positive
@@ -298,14 +302,12 @@ pub fn orient3d(a: [f64; 3], b: [f64; 3], c: [f64; 3], d: [f64; 3]) -> Orientati
             Orientation3D::Negative
         };
     }
-    
+
     // 慢速路径：扩展精度
     orient3d_exact(a, b, c, d)
 }
 
-fn orient3d_exact(
-    a: [f64; 3], b: [f64; 3], c: [f64; 3], d: [f64; 3]
-) -> Orientation3D {
+fn orient3d_exact(a: [f64; 3], b: [f64; 3], c: [f64; 3], d: [f64; 3]) -> Orientation3D {
     // 简化实现：使用 ExactF64
     let ax = ExactF64::new(a[0]);
     let ay = ExactF64::new(a[1]);
@@ -319,20 +321,29 @@ fn orient3d_exact(
     let dx = ExactF64::new(d[0]);
     let dy = ExactF64::new(d[1]);
     let dz = ExactF64::new(d[2]);
-    
+
     // 计算行列式
-    let det = (ax.sub(dx)).mul(
-        (by.sub(dy)).mul(cz.sub(dz)).sub((bz.sub(dz)).mul(cy.sub(dy)))
-    ).sub(
-        (ay.sub(dy)).mul(
-            (bx.sub(dx)).mul(cz.sub(dz)).sub((bz.sub(dz)).mul(cx.sub(dx)))
+    let det = (ax.sub(dx))
+        .mul(
+            (by.sub(dy))
+                .mul(cz.sub(dz))
+                .sub((bz.sub(dz)).mul(cy.sub(dy))),
         )
-    ).add(
-        (az.sub(dz)).mul(
-            (bx.sub(dx)).mul(cy.sub(dy)).sub((by.sub(dy)).mul(cx.sub(dx)))
+        .sub(
+            (ay.sub(dy)).mul(
+                (bx.sub(dx))
+                    .mul(cz.sub(dz))
+                    .sub((bz.sub(dz)).mul(cx.sub(dx))),
+            ),
         )
-    );
-    
+        .add(
+            (az.sub(dz)).mul(
+                (bx.sub(dx))
+                    .mul(cy.sub(dy))
+                    .sub((by.sub(dy)).mul(cx.sub(dx))),
+            ),
+        );
+
     match det.sign() {
         Ordering::Less => Orientation3D::Negative,
         Ordering::Greater => Orientation3D::Positive,
@@ -348,50 +359,50 @@ fn orient3d_exact(
 /// - 如果 d 在圆上，返回 Zero
 ///
 /// 用于 Delaunay 三角剖分等算法
-pub fn incircle(
-    a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]
-) -> Ordering {
+pub fn incircle(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> Ordering {
     // 快速路径
     let det = incircle_fast(a, b, c, d);
-    
-    let permanent = (a[0] - d[0]).abs() * (b[1] - d[1]).abs() * ((c[0] - d[0]).powi(2) + (c[1] - d[1]).powi(2)).abs()
-                  + (b[0] - d[0]).abs() * (c[1] - d[1]).abs() * ((a[0] - d[0]).powi(2) + (a[1] - d[1]).powi(2)).abs()
-                  + (c[0] - d[0]).abs() * (a[1] - d[1]).abs() * ((b[0] - d[0]).powi(2) + (b[1] - d[1]).powi(2)).abs();
+
+    let permanent = (a[0] - d[0]).abs()
+        * (b[1] - d[1]).abs()
+        * ((c[0] - d[0]).powi(2) + (c[1] - d[1]).powi(2)).abs()
+        + (b[0] - d[0]).abs()
+            * (c[1] - d[1]).abs()
+            * ((a[0] - d[0]).powi(2) + (a[1] - d[1]).powi(2)).abs()
+        + (c[0] - d[0]).abs()
+            * (a[1] - d[1]).abs()
+            * ((b[0] - d[0]).powi(2) + (b[1] - d[1]).powi(2)).abs();
     let epsilon = f64::EPSILON;
     let error_bound = 10.0 * epsilon * permanent;
-    
+
     if det.abs() > error_bound {
         return det.partial_cmp(&0.0).unwrap();
     }
-    
+
     // 慢速路径
     incircle_exact(a, b, c, d)
 }
 
-fn incircle_fast(
-    a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]
-) -> f64 {
+fn incircle_fast(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> f64 {
     let adx = a[0] - d[0];
     let ady = a[1] - d[1];
     let bdx = b[0] - d[0];
     let bdy = b[1] - d[1];
     let cdx = c[0] - d[0];
     let cdy = c[1] - d[1];
-    
+
     let abdet = adx * bdy - bdx * ady;
     let bcdet = bdx * cdy - cdx * bdy;
     let cadet = cdx * ady - adx * cdy;
-    
+
     let alift = adx * adx + ady * ady;
     let blift = bdx * bdx + bdy * bdy;
     let clift = cdx * cdx + cdy * cdy;
-    
+
     alift * bcdet + blift * cadet + clift * abdet
 }
 
-fn incircle_exact(
-    a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]
-) -> Ordering {
+fn incircle_exact(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> Ordering {
     // 简化实现
     let det = incircle_fast(a, b, c, d);
     det.partial_cmp(&0.0).unwrap_or(Ordering::Equal)
@@ -406,47 +417,50 @@ fn incircle_exact(
 /// 返回交点坐标（如果存在）
 /// 使用参数形式避免除零问题
 pub fn segment_intersection(
-    p1: [f64; 2], p2: [f64; 2],
-    p3: [f64; 2], p4: [f64; 2],
+    p1: [f64; 2],
+    p2: [f64; 2],
+    p3: [f64; 2],
+    p4: [f64; 2],
 ) -> Option<[f64; 2]> {
     // 使用方向测试检查是否相交
     let d1 = orient2d(p3, p4, p1);
     let d2 = orient2d(p3, p4, p2);
     let d3 = orient2d(p1, p2, p3);
     let d4 = orient2d(p1, p2, p4);
-    
+
     // 快速排斥：检查是否跨越
     if !intersects_strict(d1, d2) || !intersects_strict(d3, d4) {
         return None;
     }
-    
+
     // 计算交点（使用参数形式）
-    let x1 = p1[0]; let y1 = p1[1];
-    let x2 = p2[0]; let y2 = p2[1];
-    let x3 = p3[0]; let y3 = p3[1];
-    let x4 = p4[0]; let y4 = p4[1];
-    
+    let x1 = p1[0];
+    let y1 = p1[1];
+    let x2 = p2[0];
+    let y2 = p2[1];
+    let x3 = p3[0];
+    let y3 = p3[1];
+    let x4 = p4[0];
+    let y4 = p4[1];
+
     let denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
-    
+
     if denom.abs() < f64::EPSILON {
-        return None;  // 平行或共线
+        return None; // 平行或共线
     }
-    
+
     let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
-    
-    Some([
-        x1 + ua * (x2 - x1),
-        y1 + ua * (y2 - y1),
-    ])
+
+    Some([x1 + ua * (x2 - x1), y1 + ua * (y2 - y1)])
 }
 
 /// 检查两个方向是否表示跨越
 fn intersects_strict(d1: Orientation, d2: Orientation) -> bool {
-    match (d1, d2) {
-        (Orientation::Clockwise, Orientation::CounterClockwise) |
-        (Orientation::CounterClockwise, Orientation::Clockwise) => true,
-        _ => false,
-    }
+    matches!(
+        (d1, d2),
+        (Orientation::Clockwise, Orientation::CounterClockwise)
+            | (Orientation::CounterClockwise, Orientation::Clockwise)
+    )
 }
 
 /// 点到线段的最近点（稳健版本）
@@ -457,33 +471,25 @@ pub fn closest_point_on_segment(
 ) -> [f64; 2] {
     let dx = seg_end[0] - seg_start[0];
     let dy = seg_end[1] - seg_start[1];
-    
+
     let len_sq = dx * dx + dy * dy;
-    
+
     if len_sq < f64::EPSILON {
         // 线段退化为点
         return seg_start;
     }
-    
+
     // 计算投影参数 t
-    let t = ((point[0] - seg_start[0]) * dx
-           + (point[1] - seg_start[1]) * dy) / len_sq;
-    
+    let t = ((point[0] - seg_start[0]) * dx + (point[1] - seg_start[1]) * dy) / len_sq;
+
     // 限制 t 在 [0, 1] 范围内
-    let t = t.max(0.0).min(1.0);
-    
-    [
-        seg_start[0] + t * dx,
-        seg_start[1] + t * dy,
-    ]
+    let t = t.clamp(0.0, 1.0);
+
+    [seg_start[0] + t * dx, seg_start[1] + t * dy]
 }
 
 /// 点到线段的距离（稳健版本）
-pub fn distance_to_segment(
-    point: [f64; 2],
-    seg_start: [f64; 2],
-    seg_end: [f64; 2],
-) -> f64 {
+pub fn distance_to_segment(point: [f64; 2], seg_start: [f64; 2], seg_end: [f64; 2]) -> f64 {
     let closest = closest_point_on_segment(point, seg_start, seg_end);
     ((point[0] - closest[0]).powi(2) + (point[1] - closest[1]).powi(2)).sqrt()
 }
@@ -494,26 +500,26 @@ pub fn distance_to_segment(
 pub fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
     let mut inside = false;
     let n = polygon.len();
-    
+
     if n < 3 {
         return false;
     }
-    
+
     let mut j = n - 1;
     for i in 0..n {
         let vi = polygon[i];
         let vj = polygon[j];
-        
+
         // 检查射线是否与边相交
         if ((vi[1] > point[1]) != (vj[1] > point[1]))
             && (point[0] < (vj[0] - vi[0]) * (point[1] - vi[1]) / (vj[1] - vi[1]) + vi[0])
         {
             inside = !inside;
         }
-        
+
         j = i;
     }
-    
+
     inside
 }
 
@@ -524,8 +530,7 @@ pub fn point_in_polygon(point: [f64; 2], polygon: &[[f64; 2]]) -> bool {
 /// 计算三角形面积（精确版本）
 pub fn triangle_area(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
     // 使用行列式公式，面积 = 0.5 * |det|
-    let det = (b[0] - a[0]) * (c[1] - a[1])
-            - (b[1] - a[1]) * (c[0] - a[0]);
+    let det = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
     det.abs() / 2.0
 }
 
@@ -535,14 +540,14 @@ pub fn polygon_area(vertices: &[[f64; 2]]) -> f64 {
     if n < 3 {
         return 0.0;
     }
-    
+
     let mut area = 0.0;
     for i in 0..n {
         let j = (i + 1) % n;
         area += vertices[i][0] * vertices[j][1];
         area -= vertices[j][0] * vertices[i][1];
     }
-    
+
     area.abs() / 2.0
 }
 
@@ -569,7 +574,7 @@ mod tests {
         assert_eq!(orient2d(a, b, c), Orientation::CounterClockwise);
         assert_eq!(orient2d(b, c, a), Orientation::CounterClockwise);
         assert_eq!(orient2d(c, a, b), Orientation::CounterClockwise);
-        
+
         // 顺时针三角形
         assert_eq!(orient2d(a, c, b), Orientation::Clockwise);
         assert_eq!(orient2d(c, b, a), Orientation::Clockwise);
@@ -592,12 +597,12 @@ mod tests {
         let b = [1.0, 1.0];
         // 使用一个明显不共线的点
         let c = [0.5, 0.5 + 1e-10];
-        
+
         // 应该能正确判断方向（可能由于精度问题返回 Collinear，但不会崩溃）
-        let orientation = orient2d(a, b, c);
+        let _orientation = orient2d(a, b, c);
         // 不强制要求非共线，因为这是一个边缘情况
         // 关键是算法不会崩溃或返回错误结果
-        assert!(true);  // 测试通过，不崩溃即可
+        assert!(true); // 测试通过，不崩溃即可
     }
 
     #[test]
@@ -607,12 +612,12 @@ mod tests {
         let b = [1.0, 0.0, 0.0];
         let c = [0.0, 1.0, 0.0];
         let d = [0.0, 0.0, 1.0];
-        
+
         // 注意：orient3d 的符号约定可能与预期不同
         // 这里只测试不崩溃且能区分不同情况
         let _orientation = orient3d(a, b, c, d);
         assert!(_orientation == Orientation3D::Positive || _orientation == Orientation3D::Negative);
-        
+
         // 共面测试
         let e = [0.5, 0.5, 0.0];
         assert_eq!(orient3d(a, b, c, e), Orientation3D::Coplanar);
@@ -624,10 +629,10 @@ mod tests {
         let a = [1.0, 0.0];
         let b = [0.0, 1.0];
         let c = [-1.0, 0.0];
-        let d = [0.0, 0.0];  // 圆心，应该在圆内
-        
+        let d = [0.0, 0.0]; // 圆心，应该在圆内
+
         assert_eq!(incircle(a, b, c, d), Ordering::Greater);
-        
+
         // 圆外点
         let e = [0.0, 2.0];
         assert_eq!(incircle(a, b, c, e), Ordering::Less);
@@ -640,19 +645,19 @@ mod tests {
         let p2 = [10.0, 10.0];
         let p3 = [0.0, 10.0];
         let p4 = [10.0, 0.0];
-        
+
         let intersection = segment_intersection(p1, p2, p3, p4);
         assert!(intersection.is_some());
         let ip = intersection.unwrap();
         assert!((ip[0] - 5.0).abs() < 1e-10);
         assert!((ip[1] - 5.0).abs() < 1e-10);
-        
+
         // 不相交线段
         let p5 = [0.0, 0.0];
         let p6 = [5.0, 5.0];
         let p7 = [10.0, 0.0];
         let p8 = [15.0, 5.0];
-        
+
         assert!(segment_intersection(p5, p6, p7, p8).is_none());
     }
 
@@ -660,18 +665,18 @@ mod tests {
     fn test_closest_point_on_segment() {
         let seg_start = [0.0, 0.0];
         let seg_end = [10.0, 0.0];
-        
+
         // 投影在线段内
         let point = [5.0, 5.0];
         let closest = closest_point_on_segment(point, seg_start, seg_end);
         assert!((closest[0] - 5.0).abs() < 1e-10);
         assert!((closest[1] - 0.0).abs() < 1e-10);
-        
+
         // 投影在线段外（靠近起点）
         let point = [-5.0, 0.0];
         let closest = closest_point_on_segment(point, seg_start, seg_end);
         assert!((closest[0] - 0.0).abs() < 1e-10);
-        
+
         // 投影在线段外（靠近终点）
         let point = [15.0, 0.0];
         let closest = closest_point_on_segment(point, seg_start, seg_end);
@@ -680,20 +685,15 @@ mod tests {
 
     #[test]
     fn test_point_in_polygon() {
-        let square = [
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
-        
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
         // 内部点
         assert!(point_in_polygon([5.0, 5.0], &square));
-        
+
         // 外部点
         assert!(!point_in_polygon([15.0, 5.0], &square));
         assert!(!point_in_polygon([-5.0, 5.0], &square));
-        
+
         // 边界点（算法可能返回 true 或 false，取决于实现）
         let _boundary = point_in_polygon([0.0, 5.0], &square);
         // 边界情况不强制要求
@@ -704,27 +704,18 @@ mod tests {
         let a = [0.0, 0.0];
         let b = [10.0, 0.0];
         let c = [0.0, 10.0];
-        
+
         assert!((triangle_area(a, b, c) - 50.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_polygon_area() {
-        let square = [
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
-        
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
         assert!((polygon_area(&square) - 100.0).abs() < 1e-10);
-        
-        let triangle = [
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [0.0, 10.0],
-        ];
-        
+
+        let triangle = [[0.0, 0.0], [10.0, 0.0], [0.0, 10.0]];
+
         assert!((polygon_area(&triangle) - 50.0).abs() < 1e-10);
     }
 
@@ -732,16 +723,16 @@ mod tests {
     fn test_exact_f64() {
         let a = ExactF64::new(1.0);
         let b = ExactF64::new(2.0);
-        
+
         let sum = a.add(b);
         assert!((sum.value() - 3.0).abs() < 1e-10);
-        
+
         let diff = b.sub(a);
         assert!((diff.value() - 1.0).abs() < 1e-10);
-        
+
         let prod = a.mul(b);
         assert!((prod.value() - 2.0).abs() < 1e-10);
-        
+
         // 测试接近零检测（使用更宽松的条件）
         let near_zero = ExactF64::new(f64::EPSILON);
         // 误差界计算可能影响结果，这里只验证 API 不崩溃
@@ -754,7 +745,7 @@ mod tests {
         let b = [5.0, 5.0];
         let c = [10.0, 10.0];
         assert!(are_collinear(a, b, c));
-        
+
         let d = [0.0, 1.0];
         assert!(!are_collinear(a, b, d));
     }

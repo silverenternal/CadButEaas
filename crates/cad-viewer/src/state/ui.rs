@@ -2,11 +2,11 @@
 //!
 //! 包含所有 UI 相关的状态：选择、工具模式、圈选等
 
+#[cfg(feature = "gpu")]
+use crate::render::{GpuInfo, GpuTier, GpuTierConfig};
 use interact::EdgeId;
 use std::collections::HashSet;
 use std::time::Instant;
-#[cfg(feature = "gpu")]
-use crate::render::{GpuTier, GpuTierConfig, GpuInfo};
 
 /// UI 状态（交互状态）
 #[derive(Clone)]
@@ -96,17 +96,33 @@ impl VisualSettings {
         if self.use_custom_config {
             format!(
                 "自定义配置：毛玻璃{} | MSAA {}x | 阴影{}",
-                if self.custom_config.glass_effect { "开" } else { "关" },
+                if self.custom_config.glass_effect {
+                    "开"
+                } else {
+                    "关"
+                },
                 self.custom_config.msaa_samples,
-                if self.custom_config.high_quality_shadows { "高" } else { "标" }
+                if self.custom_config.high_quality_shadows {
+                    "高"
+                } else {
+                    "标"
+                }
             )
         } else {
             format!(
                 "自动检测 ({})：毛玻璃{} | MSAA {}x | 阴影{}",
                 self.gpu_tier,
-                if self.gpu_tier.enable_glass_effect() { "开" } else { "关" },
+                if self.gpu_tier.enable_glass_effect() {
+                    "开"
+                } else {
+                    "关"
+                },
                 self.gpu_tier.msaa_samples(),
-                if self.gpu_tier.high_quality_shadows() { "高" } else { "标" }
+                if self.gpu_tier.high_quality_shadows() {
+                    "高"
+                } else {
+                    "标"
+                }
             )
         }
     }
@@ -167,12 +183,12 @@ impl Default for UIState {
             auto_trace_result: None,
             lasso_result: None,
             hovered_edge: None,
-            hovered_tooltip: None,  // P11 改进：悬停 Tooltip 初始化为 None
+            hovered_tooltip: None, // P11 改进：悬停 Tooltip 初始化为 None
             toasts: Vec::new(),
             pending_action: None,
             #[cfg(feature = "gpu")]
             visual_settings: VisualSettings::default(),
-            websocket_connected: false,  // P11 新增：WebSocket 连接状态
+            websocket_connected: false, // P11 新增：WebSocket 连接状态
         }
     }
 }
@@ -208,8 +224,8 @@ impl UIState {
         self.lasso_points.clear();
         self.lasso_result = None;
         self.pending_action = None;
-        self.hovered_edge = None;  // P0 改进：清除悬停状态
-        self.hovered_tooltip = None;  // P11 改进：清除悬停 Tooltip
+        self.hovered_edge = None; // P0 改进：清除悬停状态
+        self.hovered_tooltip = None; // P11 改进：清除悬停 Tooltip
     }
 
     /// 获取当前选择的边（单选兼容）
@@ -251,7 +267,7 @@ pub enum ToastType {
     Info,
     Success,
     Warning,
-    #[allow(dead_code)]  // 保留用于未来错误处理
+    #[allow(dead_code)] // 保留用于未来错误处理
     Error,
 }
 
@@ -273,7 +289,7 @@ impl ToastNotification {
             toast_type: ToastType::Info,
             created_at: Instant::now(),
             duration_secs: 3.0,
-            dismissible: true,  // P11 改进：支持手动关闭
+            dismissible: true, // P11 改进：支持手动关闭
         }
     }
 
@@ -283,7 +299,7 @@ impl ToastNotification {
             toast_type: ToastType::Success,
             created_at: Instant::now(),
             duration_secs: 2.0,
-            dismissible: true,  // P11 改进：支持手动关闭
+            dismissible: true, // P11 改进：支持手动关闭
         }
     }
 
@@ -293,7 +309,7 @@ impl ToastNotification {
             toast_type: ToastType::Warning,
             created_at: Instant::now(),
             duration_secs: 3.0,
-            dismissible: true,  // P11 改进：支持手动关闭
+            dismissible: true, // P11 改进：支持手动关闭
         }
     }
 
@@ -304,8 +320,8 @@ impl ToastNotification {
             message: message.into(),
             toast_type: ToastType::Error,
             created_at: Instant::now(),
-            duration_secs: 0.0,  // P11 改进：0 表示不自动消失
-            dismissible: true,    // P11 改进：需要手动关闭
+            duration_secs: 0.0, // P11 改进：0 表示不自动消失
+            dismissible: true,  // P11 改进：需要手动关闭
         }
     }
 
@@ -316,7 +332,7 @@ impl ToastNotification {
             message: message.into(),
             toast_type,
             created_at: Instant::now(),
-            duration_secs: 0.0,  // 0 表示不自动消失
+            duration_secs: 0.0, // 0 表示不自动消失
             dismissible: true,
         }
     }

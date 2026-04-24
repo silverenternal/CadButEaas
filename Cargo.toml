@@ -17,6 +17,7 @@ members = [
     "crates/accelerator-registry",
     "crates/accelerator-cpu",
     "crates/accelerator-wgpu",
+    "crates/raster-loader",
 ]
 
 [workspace.package]
@@ -60,7 +61,6 @@ tower = { version = "0.4", features = ["util"] }
 geo = "0.28"
 rstar = "0.12"
 approx = "0.5"
-euclid = "0.22"
 nalgebra = "0.34"
 
 # 图像处理
@@ -71,10 +71,11 @@ opencv = "0.92"
 dxf = "0.6"
 lopdf = "0.34"
 curvo = "0.1"
+usvg = "0.44"
+stl_io = "0.9"
 
 # 错误处理
 thiserror = "1.0"
-anyhow = "1.0"
 
 # 日志与追踪
 tracing = "0.1"
@@ -86,10 +87,6 @@ tokio-tungstenite = "0.23"
 
 # UUID
 uuid = { version = "1.8", features = ["v4"] }
-
-# 测试
-insta = "1.36"
-proptest = "1.4"
 
 # 监控指标
 prometheus = "0.13"

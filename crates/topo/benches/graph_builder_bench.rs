@@ -2,9 +2,9 @@
 //!
 //! 测试 R*-tree 空间索引的性能改进（O(n²) → O(n log n)）
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId};
-use topo::graph_builder::GraphBuilder;
 use common_types::LengthUnit;
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use topo::graph_builder::GraphBuilder;
 
 /// 生成测试用的多段线数据
 fn generate_polylines(num_segments: usize, spacing: f64) -> Vec<Vec<[f64; 2]>> {
@@ -17,7 +17,11 @@ fn generate_polylines(num_segments: usize, spacing: f64) -> Vec<Vec<[f64; 2]>> {
 }
 
 /// 生成需要端点吸附的多段线（端点接近但不完全重合）
-fn generate_snapping_polylines(num_segments: usize, spacing: f64, tolerance: f64) -> Vec<Vec<[f64; 2]>> {
+fn generate_snapping_polylines(
+    num_segments: usize,
+    spacing: f64,
+    tolerance: f64,
+) -> Vec<Vec<[f64; 2]>> {
     let mut polylines = Vec::new();
     for i in 0..num_segments {
         let x = i as f64 * spacing;
@@ -35,13 +39,17 @@ fn bench_graph_builder_basic(c: &mut Criterion) {
     for &size in &[100, 500, 1000, 5000, 10000] {
         let polylines = generate_polylines(size, 1.0);
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &polylines, |b, polylines| {
-            b.iter(|| {
-                let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
-                builder.snap_and_build(black_box(polylines));
-                builder.num_points()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &polylines,
+            |b, polylines| {
+                b.iter(|| {
+                    let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
+                    builder.snap_and_build(black_box(polylines));
+                    builder.num_points()
+                })
+            },
+        );
     }
 
     group.finish();
@@ -54,13 +62,17 @@ fn bench_graph_builder_snapping(c: &mut Criterion) {
     for &size in &[100, 500, 1000, 5000, 10000] {
         let polylines = generate_snapping_polylines(size, 1.0, 0.1);
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &polylines, |b, polylines| {
-            b.iter(|| {
-                let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
-                builder.snap_and_build(black_box(polylines));
-                builder.num_points()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &polylines,
+            |b, polylines| {
+                b.iter(|| {
+                    let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
+                    builder.snap_and_build(black_box(polylines));
+                    builder.num_points()
+                })
+            },
+        );
     }
 
     group.finish();
@@ -73,13 +85,17 @@ fn bench_graph_builder_large_scale(c: &mut Criterion) {
     for &size in &[1000, 5000, 10000, 50000, 100000] {
         let polylines = generate_polylines(size, 0.1);
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &polylines, |b, polylines| {
-            b.iter(|| {
-                let mut builder = GraphBuilder::new(0.05, LengthUnit::Mm);
-                builder.snap_and_build(black_box(polylines));
-                builder.num_points()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &polylines,
+            |b, polylines| {
+                b.iter(|| {
+                    let mut builder = GraphBuilder::new(0.05, LengthUnit::Mm);
+                    builder.snap_and_build(black_box(polylines));
+                    builder.num_points()
+                })
+            },
+        );
     }
 
     group.finish();
@@ -99,13 +115,17 @@ fn bench_graph_builder_dense(c: &mut Criterion) {
             })
             .collect();
 
-        group.bench_with_input(BenchmarkId::from_parameter(size), &polylines, |b, polylines| {
-            b.iter(|| {
-                let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
-                builder.snap_and_build(black_box(polylines));
-                builder.num_points()
-            })
-        });
+        group.bench_with_input(
+            BenchmarkId::from_parameter(size),
+            &polylines,
+            |b, polylines| {
+                b.iter(|| {
+                    let mut builder = GraphBuilder::new(0.5, LengthUnit::Mm);
+                    builder.snap_and_build(black_box(polylines));
+                    builder.num_points()
+                })
+            },
+        );
     }
 
     group.finish();

@@ -1,9 +1,9 @@
 //! 加速器注册表实现
 
-use accelerator_api::{Accelerator, AcceleratorOp};
-use crate::strategy::SchedulingStrategy;
 use crate::preferences::AcceleratorPreferences;
-use log::{info, debug};
+use crate::strategy::SchedulingStrategy;
+use accelerator_api::{Accelerator, AcceleratorOp};
+use log::{debug, info};
 
 /// 加速器注册表
 ///
@@ -40,39 +40,42 @@ impl AcceleratorRegistry {
     /// 4. CPU (纯 Rust，总是可用)
     pub fn discover_all() -> Self {
         info!("开始发现可用加速器...");
-        
+
         let mut registry = Self::new();
-        
+
         // 注意：CUDA 和 OpenCL 后端暂未实现，预留接口
         // 未来实现时按以下顺序添加：
-        
+
         // 1. 尝试 CUDA
         // if let Ok(cuda) = accelerator_cuda::CudaAccelerator::new() {
         //     registry.register(Box::new(cuda));
         //     info!("发现 CUDA 加速器");
         // }
-        
+
         // 2. 尝试 OpenCL
         // if let Ok(opencl) = accelerator_opencl::OpenClAccelerator::new() {
         //     registry.register(Box::new(opencl));
         //     info!("发现 OpenCL 加速器");
         // }
-        
+
         // 3. 尝试 wgpu（如果启用）
         #[cfg(feature = "wgpu")]
         if let Ok(wgpu) = accelerator_wgpu::WgpuAccelerator::new_sync() {
             registry.register(Box::new(wgpu));
             info!("发现 wgpu 加速器");
         }
-        
+
         // 4. CPU fallback（总是可用）
         let cpu = accelerator_cpu::CpuAccelerator::new();
         registry.register(Box::new(cpu));
         info!("发现 CPU 加速器（fallback）");
-        
+
         registry.initialized = true;
-        info!("加速器发现完成，共发现 {} 个加速器", registry.accelerators.len());
-        
+        info!(
+            "加速器发现完成，共发现 {} 个加速器",
+            registry.accelerators.len()
+        );
+
         registry
     }
 
@@ -123,16 +126,14 @@ impl AcceleratorRegistry {
                 self.accelerators
                     .iter()
                     .filter(|a| a.supports_op(op))
-                    .max_by(|a, b| {
-                        criteria.compare(a.as_ref(), b.as_ref())
-                    })
+                    .max_by(|a, b| criteria.compare(a.as_ref(), b.as_ref()))
                     .map(|a| a.as_ref())
             }
         }
     }
 
     /// 选择最佳加速器（返回引用计数，便于共享）
-    /// 
+    ///
     /// 注意：此函数目前返回 CPU 加速器的 Arc
     /// TODO: 改进为持有 Arc<dyn Accelerator> 而不是 Box
     #[allow(dead_code)]
@@ -141,7 +142,8 @@ impl AcceleratorRegistry {
         // 未来改进时可以返回真正的共享 Arc
         self.fallback().map(|_acc| {
             // 临时实现：总是返回 CPU
-            std::sync::Arc::new(accelerator_cpu::CpuAccelerator::new()) as std::sync::Arc<dyn Accelerator>
+            std::sync::Arc::new(accelerator_cpu::CpuAccelerator::new())
+                as std::sync::Arc<dyn Accelerator>
         })
     }
 
@@ -190,7 +192,8 @@ impl AcceleratorRegistry {
 
     /// 获取默认加速器（CPU fallback）
     pub fn fallback(&self) -> Option<&dyn Accelerator> {
-        self.accelerators.iter()
+        self.accelerators
+            .iter()
             .find(|a| a.name() == "CPU")
             .map(|a| a.as_ref())
     }
@@ -223,7 +226,7 @@ mod tests {
         let registry = AcceleratorRegistry::discover_all();
         assert!(!registry.is_empty());
         assert!(registry.is_initialized());
-        assert!(registry.len() >= 1); // 至少有 CPU
+        assert!(!registry.is_empty()); // 至少有 CPU
     }
 
     #[test]

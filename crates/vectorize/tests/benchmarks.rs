@@ -9,8 +9,8 @@
 //! - 质量评分与性能权衡
 
 use common_types::PdfRasterImage;
-use vectorize::{VectorizeService, VectorizeConfig};
 use std::time::Instant;
+use vectorize::{VectorizeConfig, VectorizeService};
 
 /// 生成测试图像（带噪声的网格线，模拟建筑图纸）
 fn generate_test_raster(width: u32, height: u32, noise_ratio: f64) -> PdfRasterImage {
@@ -25,7 +25,7 @@ fn generate_test_raster(width: u32, height: u32, noise_ratio: f64) -> PdfRasterI
             // 绘制网格线（模拟墙体）
             let grid_spacing = 20u32;
             let is_grid = (y % grid_spacing == 0) || (x % grid_spacing == 0);
-            
+
             if is_grid {
                 pixels.push(255u8);
             } else {
@@ -55,12 +55,16 @@ fn generate_test_raster(width: u32, height: u32, noise_ratio: f64) -> PdfRasterI
 fn benchmark_vectorize_100x100() {
     let raster = generate_test_raster(100, 100, 0.01);
     let service = VectorizeService::with_default();
-    
+
     let start = Instant::now();
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
     let duration = start.elapsed();
-    
-    println!("100x100 矢量化耗时：{:?}，输出 {} 条多段线", duration, polylines.len());
+
+    println!(
+        "100x100 矢量化耗时：{:?}，输出 {} 条多段线",
+        duration,
+        polylines.len()
+    );
     assert!(duration.as_millis() < 100, "100x100 图像应 < 100ms");
 }
 
@@ -69,12 +73,16 @@ fn benchmark_vectorize_100x100() {
 fn benchmark_vectorize_500x500() {
     let raster = generate_test_raster(500, 500, 0.01);
     let service = VectorizeService::with_default();
-    
+
     let start = Instant::now();
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
     let duration = start.elapsed();
-    
-    println!("500x500 矢量化耗时：{:?}，输出 {} 条多段线", duration, polylines.len());
+
+    println!(
+        "500x500 矢量化耗时：{:?}，输出 {} 条多段线",
+        duration,
+        polylines.len()
+    );
     assert!(duration.as_millis() < 300, "500x500 图像应 < 300ms");
 }
 
@@ -83,12 +91,16 @@ fn benchmark_vectorize_500x500() {
 fn benchmark_vectorize_1000x1000() {
     let raster = generate_test_raster(1000, 1000, 0.01);
     let service = VectorizeService::with_default();
-    
+
     let start = Instant::now();
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
     let duration = start.elapsed();
-    
-    println!("1000x1000 矢量化耗时：{:?}，输出 {} 条多段线", duration, polylines.len());
+
+    println!(
+        "1000x1000 矢量化耗时：{:?}，输出 {} 条多段线",
+        duration,
+        polylines.len()
+    );
     assert!(duration.as_millis() < 1000, "1000x1000 图像应 < 1s");
 }
 
@@ -97,12 +109,16 @@ fn benchmark_vectorize_1000x1000() {
 fn benchmark_vectorize_2000x2000() {
     let raster = generate_test_raster(2000, 2000, 0.01);
     let service = VectorizeService::with_default();
-    
+
     let start = Instant::now();
     let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
     let duration = start.elapsed();
-    
-    println!("2000x2000 矢量化耗时：{:?}，输出 {} 条多段线", duration, polylines.len());
+
+    println!(
+        "2000x2000 矢量化耗时：{:?}，输出 {} 条多段线",
+        duration,
+        polylines.len()
+    );
     assert!(duration.as_millis() < 5000, "2000x2000 图像应 < 5s");
 }
 
@@ -111,7 +127,10 @@ fn benchmark_vectorize_2000x2000() {
 #[ignore] // 需要较长时间运行，默认忽略
 fn benchmark_vectorize_performance_curve() {
     println!("\n=== 矢量化性能曲线测试 ===\n");
-    println!("{:<15} {:<15} {:<15} {:<15}", "尺寸", "耗时 (ms)", "输出线段", "像素/秒");
+    println!(
+        "{:<15} {:<15} {:<15} {:<15}",
+        "尺寸", "耗时 (ms)", "输出线段", "像素/秒"
+    );
     println!("{:-<65}", "");
 
     let sizes = [100, 200, 500, 1000, 2000];
@@ -147,14 +166,17 @@ fn benchmark_quality_assessment() {
 
     for &size in &sizes {
         let raster = generate_test_raster(size, size, 0.01);
-        
+
         let start = Instant::now();
         let polylines = service.vectorize_from_pdf(&raster, None).unwrap();
         let duration = start.elapsed();
 
         println!(
             "{}x{} 矢量化 + 质量评估：{:?}，输出 {} 条多段线",
-            size, size, duration, polylines.len()
+            size,
+            size,
+            duration,
+            polylines.len()
         );
     }
 }
@@ -179,10 +201,17 @@ fn benchmark_preprocessing_configs() {
         },
         ..Default::default()
     };
-    let service = VectorizeService::new(Box::new(accelerator_cpu::CpuAccelerator::new()), config_no_preprocess);
+    let service = VectorizeService::new(
+        Box::new(accelerator_cpu::CpuAccelerator::new()),
+        config_no_preprocess,
+    );
     let start = Instant::now();
     let _ = service.vectorize_from_pdf(&raster, None).unwrap();
-    println!("{:<25} {:<15.2}", "无预处理", start.elapsed().as_secs_f64() * 1000.0);
+    println!(
+        "{:<25} {:<15.2}",
+        "无预处理",
+        start.elapsed().as_secs_f64() * 1000.0
+    );
 
     // 中值滤波
     let config_median = VectorizeConfig {
@@ -194,10 +223,17 @@ fn benchmark_preprocessing_configs() {
         },
         ..Default::default()
     };
-    let service = VectorizeService::new(Box::new(accelerator_cpu::CpuAccelerator::new()), config_median);
+    let service = VectorizeService::new(
+        Box::new(accelerator_cpu::CpuAccelerator::new()),
+        config_median,
+    );
     let start = Instant::now();
     let _ = service.vectorize_from_pdf(&raster, None).unwrap();
-    println!("{:<25} {:<15.2}", "中值滤波 (3x3)", start.elapsed().as_secs_f64() * 1000.0);
+    println!(
+        "{:<25} {:<15.2}",
+        "中值滤波 (3x3)",
+        start.elapsed().as_secs_f64() * 1000.0
+    );
 
     // 高斯模糊
     let config_gaussian = VectorizeConfig {
@@ -209,10 +245,17 @@ fn benchmark_preprocessing_configs() {
         },
         ..Default::default()
     };
-    let service = VectorizeService::new(Box::new(accelerator_cpu::CpuAccelerator::new()), config_gaussian);
+    let service = VectorizeService::new(
+        Box::new(accelerator_cpu::CpuAccelerator::new()),
+        config_gaussian,
+    );
     let start = Instant::now();
     let _ = service.vectorize_from_pdf(&raster, None).unwrap();
-    println!("{:<25} {:<15.2}", "高斯模糊 (σ=1.0)", start.elapsed().as_secs_f64() * 1000.0);
+    println!(
+        "{:<25} {:<15.2}",
+        "高斯模糊 (σ=1.0)",
+        start.elapsed().as_secs_f64() * 1000.0
+    );
 
     // CLAHE
     let config_clahe = VectorizeConfig {
@@ -225,8 +268,15 @@ fn benchmark_preprocessing_configs() {
         },
         ..Default::default()
     };
-    let service = VectorizeService::new(Box::new(accelerator_cpu::CpuAccelerator::new()), config_clahe);
+    let service = VectorizeService::new(
+        Box::new(accelerator_cpu::CpuAccelerator::new()),
+        config_clahe,
+    );
     let start = Instant::now();
     let _ = service.vectorize_from_pdf(&raster, None).unwrap();
-    println!("{:<25} {:<15.2}", "CLAHE (8x8)", start.elapsed().as_secs_f64() * 1000.0);
+    println!(
+        "{:<25} {:<15.2}",
+        "CLAHE (8x8)",
+        start.elapsed().as_secs_f64() * 1000.0
+    );
 }

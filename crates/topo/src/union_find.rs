@@ -39,8 +39,8 @@
 //! let components = uf.components();
 //! ```
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use rayon::prelude::*;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 // ============================================================================
 // 并查集数据结构
@@ -90,7 +90,7 @@ impl UnionFind {
     pub fn new(n: usize) -> Self {
         let parent: Vec<usize> = (0..n).collect();
         let rank = vec![0; n];
-        
+
         Self {
             parent,
             rank,
@@ -149,7 +149,7 @@ impl UnionFind {
         if x >= self.parent.len() {
             return x;
         }
-        
+
         // 路径压缩
         if self.parent[x] != x {
             self.parent[x] = self.find(self.parent[x]);
@@ -172,7 +172,7 @@ impl UnionFind {
         if x >= self.parent.len() {
             return x;
         }
-        
+
         let mut current = x;
         while self.parent[current] != current {
             current = self.parent[current];
@@ -207,11 +207,11 @@ impl UnionFind {
     pub fn union(&mut self, x: usize, y: usize) -> bool {
         let root_x = self.find(x);
         let root_y = self.find(y);
-        
+
         if root_x == root_y {
             return false;
         }
-        
+
         // 按秩合并
         if self.rank[root_x] < self.rank[root_y] {
             self.parent[root_x] = root_y;
@@ -221,7 +221,7 @@ impl UnionFind {
             self.parent[root_y] = root_x;
             self.rank[root_x] += 1;
         }
-        
+
         // 更新连通分量计数
         self.component_count.fetch_sub(1, Ordering::Relaxed);
         true
@@ -295,14 +295,14 @@ impl UnionFind {
     /// ```
     pub fn components(&mut self) -> Vec<Vec<usize>> {
         use std::collections::HashMap;
-        
+
         let mut map: HashMap<usize, Vec<usize>> = HashMap::new();
-        
+
         for i in 0..self.parent.len() {
             let root = self.find(i);
             map.entry(root).or_default().push(i);
         }
-        
+
         map.into_values().collect()
     }
 
@@ -325,9 +325,7 @@ impl UnionFind {
     /// assert_eq!(roots[2], roots[3]);
     /// ```
     pub fn all_roots(&mut self) -> Vec<usize> {
-        (0..self.parent.len())
-            .map(|i| self.find(i))
-            .collect()
+        (0..self.parent.len()).map(|i| self.find(i)).collect()
     }
 
     /// 获取并查集的大小（元素总数）
@@ -366,7 +364,8 @@ impl UnionFind {
             self.parent[i] = i;
             self.rank[i] = 0;
         }
-        self.component_count.store(self.parent.len(), Ordering::Relaxed);
+        self.component_count
+            .store(self.parent.len(), Ordering::Relaxed);
     }
 }
 
@@ -414,12 +413,12 @@ impl UnionFind {
                 root_x != root_y
             })
             .count();
-        
+
         // 串行执行实际的 union 操作（保证正确性）
         for &(x, y) in unions {
             self.union(x, y);
         }
-        
+
         count
     }
 }
@@ -435,17 +434,17 @@ mod tests {
     #[test]
     fn test_union_find_basic() {
         let mut uf = UnionFind::new(5);
-        
+
         // 初始状态：每个元素独立
         assert_eq!(uf.component_count(), 5);
         assert_eq!(uf.find(0), 0);
         assert_eq!(uf.find(4), 4);
-        
+
         // 合并操作
         assert!(uf.union(0, 1));
         assert_eq!(uf.component_count(), 4);
         assert!(uf.connected(0, 1));
-        
+
         // 重复合并不会改变状态
         assert!(!uf.union(0, 1));
         assert_eq!(uf.component_count(), 4);
@@ -454,11 +453,11 @@ mod tests {
     #[test]
     fn test_union_find_transitivity() {
         let mut uf = UnionFind::new(5);
-        
+
         // 传递性：0-1, 1-2 => 0-2
         uf.union(0, 1);
         uf.union(1, 2);
-        
+
         assert!(uf.connected(0, 2));
         assert_eq!(uf.find(0), uf.find(2));
     }
@@ -466,16 +465,16 @@ mod tests {
     #[test]
     fn test_union_find_multiple_components() {
         let mut uf = UnionFind::new(10);
-        
+
         // 创建多个连通分量：{0,1,2}, {3,4}, {5,6,7}, {8}, {9}
         uf.union(0, 1);
         uf.union(1, 2);
         uf.union(3, 4);
         uf.union(5, 6);
         uf.union(6, 7);
-        
+
         assert_eq!(uf.component_count(), 5);
-        
+
         // 验证连通性
         assert!(uf.connected(0, 2));
         assert!(uf.connected(3, 4));
@@ -487,10 +486,10 @@ mod tests {
     #[test]
     fn test_union_find_components() {
         let mut uf = UnionFind::with_initial_unions(5, &[(0, 1), (2, 3)]);
-        
+
         let components = uf.components();
         assert_eq!(components.len(), 3);
-        
+
         // 验证分量内容（顺序可能不同）
         let mut sorted_components: Vec<Vec<usize>> = components
             .into_iter()
@@ -500,7 +499,7 @@ mod tests {
             })
             .collect();
         sorted_components.sort();
-        
+
         assert!(sorted_components.contains(&vec![0, 1]));
         assert!(sorted_components.contains(&vec![2, 3]));
         assert!(sorted_components.contains(&vec![4]));
@@ -509,12 +508,12 @@ mod tests {
     #[test]
     fn test_union_find_path_compression() {
         let mut uf = UnionFind::new(10);
-        
+
         // 创建一条长链：0-1-2-3-4-5-6-7-8-9
         for i in 0..9 {
             uf.union(i, i + 1);
         }
-        
+
         // 路径压缩后，所有节点应该直接连接到根节点
         let root = uf.find(9);
         for i in 0..9 {
@@ -525,12 +524,12 @@ mod tests {
     #[test]
     fn test_union_find_rank_optimization() {
         let mut uf = UnionFind::new(4);
-        
+
         // 按秩合并应该保持树平衡
         uf.union(0, 1);
         uf.union(2, 3);
         uf.union(0, 2);
-        
+
         // 所有节点应该在同一集合
         assert_eq!(uf.component_count(), 1);
         assert!(uf.connected(0, 3));
@@ -539,11 +538,11 @@ mod tests {
     #[test]
     fn test_union_find_reset() {
         let mut uf = UnionFind::new(5);
-        
+
         uf.union(0, 1);
         uf.union(2, 3);
         assert_eq!(uf.component_count(), 3);
-        
+
         uf.reset();
         assert_eq!(uf.component_count(), 5);
         assert!(!uf.connected(0, 1));
@@ -553,11 +552,11 @@ mod tests {
     fn test_union_find_parallel() {
         let mut uf = UnionFind::new(1000);
         let unions: Vec<(usize, usize)> = (0..500).map(|i| (i * 2, i * 2 + 1)).collect();
-        
+
         let merged = uf.union_parallel(&unions);
         assert_eq!(merged, 500);
         assert_eq!(uf.component_count(), 500);
-        
+
         // 验证所有配对都已连接
         for i in 0..500 {
             assert!(uf.connected(i * 2, i * 2 + 1));
@@ -568,12 +567,12 @@ mod tests {
     fn test_union_find_large_scale() {
         let n = 10000;
         let mut uf = UnionFind::new(n);
-        
+
         // 随机合并
         for i in 0..n - 1 {
             uf.union(i, i + 1);
         }
-        
+
         // 所有节点应该在同一集合
         assert_eq!(uf.component_count(), 1);
         assert!(uf.connected(0, n - 1));
@@ -585,12 +584,12 @@ mod tests {
         let uf = UnionFind::new(0);
         assert_eq!(uf.component_count(), 0);
         assert!(uf.is_empty());
-        
+
         // 单元素并查集
         let mut uf = UnionFind::new(1);
         assert_eq!(uf.component_count(), 1);
         assert_eq!(uf.find(0), 0);
-        
+
         // 越界处理
         let mut uf = UnionFind::new(5);
         assert_eq!(uf.find(10), 10); // 越界返回自身

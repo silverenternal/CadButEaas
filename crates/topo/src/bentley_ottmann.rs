@@ -37,8 +37,8 @@
 //! use topo::bentley_ottmann::{BentleyOttmann, Segment, Intersection};
 //!
 //! let segments = vec![
-//!     Segment::new([0.0, 0.0], [10.0, 10.0]),
-//!     Segment::new([0.0, 10.0], [10.0, 0.0]),
+//!     Segment::with_id([0.0, 0.0], [10.0, 10.0], 0),
+//!     Segment::with_id([0.0, 10.0], [10.0, 0.0], 1),
 //! ];
 //!
 //! let mut bo = BentleyOttmann::new();
@@ -49,8 +49,8 @@
 //! ```
 
 use common_types::geometry::Point2;
-use std::collections::{BinaryHeap, BTreeMap};
 use std::cmp::Ordering;
+use std::collections::{BTreeMap, BinaryHeap};
 
 /// 线段定义
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -62,11 +62,7 @@ pub struct Segment {
 
 impl Segment {
     pub fn new(start: Point2, end: Point2) -> Self {
-        Self {
-            start,
-            end,
-            id: 0,
-        }
+        Self { start, end, id: 0 }
     }
 
     pub fn with_id(start: Point2, end: Point2, id: usize) -> Self {
@@ -105,7 +101,7 @@ impl Segment {
             return None;
         }
         let t = (x - self.start[0]) / dx;
-        if t >= 0.0 && t <= 1.0 {
+        if (0.0..=1.0).contains(&t) {
             Some(self.start[1] + t * (self.end[1] - self.start[1]))
         } else {
             None
@@ -127,12 +123,15 @@ impl Segment {
         let max_x = self.start[0].max(self.end[0]);
         let min_y = self.start[1].min(self.end[1]);
         let max_y = self.start[1].max(self.end[1]);
-        
-        if point[0] < min_x - tolerance || point[0] > max_x + tolerance
-            || point[1] < min_y - tolerance || point[1] > max_y + tolerance {
+
+        if point[0] < min_x - tolerance
+            || point[0] > max_x + tolerance
+            || point[1] < min_y - tolerance
+            || point[1] > max_y + tolerance
+        {
             return false;
         }
-        
+
         // 计算点到线段的最短距离
         let dist = point_to_segment_distance(point, self.start, self.end);
         dist < tolerance
@@ -142,19 +141,18 @@ impl Segment {
 /// 计算点到线段的最短距离
 fn point_to_segment_distance(point: Point2, seg_start: Point2, seg_end: Point2) -> f64 {
     use common_types::distance_2d;
-    
+
     let dx = seg_end[0] - seg_start[0];
     let dy = seg_end[1] - seg_start[1];
-    
+
     if dx.abs() < 1e-10 && dy.abs() < 1e-10 {
         // 线段退化为点
         return distance_2d(point, seg_start);
     }
-    
+
     // 计算投影参数 t
-    let t = ((point[0] - seg_start[0]) * dx + (point[1] - seg_start[1]) * dy)
-            / (dx * dx + dy * dy);
-    
+    let t = ((point[0] - seg_start[0]) * dx + (point[1] - seg_start[1]) * dy) / (dx * dx + dy * dy);
+
     if t < 0.0 {
         // 投影点在线段起点之前
         distance_2d(point, seg_start)
@@ -192,7 +190,7 @@ struct Event {
     point: Point2,
     event_type: EventType,
     segment_id: usize,
-    other_segment_id: Option<usize>,  // 仅用于交点事件
+    other_segment_id: Option<usize>, // 仅用于交点事件
 }
 
 impl PartialEq for Event {
@@ -230,13 +228,11 @@ impl PartialOrd for Event {
 impl Ord for Event {
     fn cmp(&self, other: &Self) -> Ordering {
         // 按 X 坐标降序（最大堆），Y 坐标降序
-        other
-            .point[0]
+        other.point[0]
             .partial_cmp(&self.point[0])
             .unwrap_or(Ordering::Equal)
             .then_with(|| {
-                other
-                    .point[1]
+                other.point[1]
                     .partial_cmp(&self.point[1])
                     .unwrap_or(Ordering::Equal)
             })
@@ -300,10 +296,11 @@ impl BentleyOttmann {
     ///
     /// ## 示例
     /// ```rust
+    /// use topo::bentley_ottmann::{BentleyOttmann, Segment};
     /// let mut bo = BentleyOttmann::new();
     /// let segments = vec![
-    ///     Segment::new([0.0, 0.0], [10.0, 10.0]),
-    ///     Segment::new([0.0, 10.0], [10.0, 0.0]),
+    ///     Segment::with_id([0.0, 0.0], [10.0, 10.0], 0),
+    ///     Segment::with_id([0.0, 10.0], [10.0, 0.0], 1),
     /// ];
     /// let intersections = bo.find_intersections(&segments);
     /// ```
@@ -317,16 +314,10 @@ impl BentleyOttmann {
             let left = segment.left_point();
             let right = segment.right_point();
 
-            self.event_queue.push(Event::new(
-                left,
-                EventType::LeftEndpoint,
-                segment.id,
-            ));
-            self.event_queue.push(Event::new(
-                right,
-                EventType::RightEndpoint,
-                segment.id,
-            ));
+            self.event_queue
+                .push(Event::new(left, EventType::LeftEndpoint, segment.id));
+            self.event_queue
+                .push(Event::new(right, EventType::RightEndpoint, segment.id));
         }
 
         // 处理事件队列
@@ -347,12 +338,9 @@ impl BentleyOttmann {
         match event.event_type {
             EventType::LeftEndpoint => {
                 // 左端点：插入扫描线
-                let segment = segments
-                    .iter()
-                    .find(|s| s.id == event.segment_id)
-                    .copied()
-                    .unwrap();
-                
+                // 【性能优化】直接使用 segments[event.segment_id]，因为 ID = index
+                let segment = segments[event.segment_id];
+
                 self.sweep_line.insert(segment.id, segment);
 
                 // 检测与相邻线段的交点
@@ -361,10 +349,10 @@ impl BentleyOttmann {
             EventType::RightEndpoint => {
                 // 右端点：从扫描线删除
                 let segment_id = event.segment_id;
-                
+
                 // 检测与相邻线段的交点（删除前）
                 self.check_intersections_with_neighbors_btree(event.point, segments, segment_id);
-                
+
                 self.sweep_line.remove(&segment_id);
 
                 // 检测新的相邻线段的交点（删除后）
@@ -380,7 +368,12 @@ impl BentleyOttmann {
                     });
 
                     // 交换扫描线中的顺序（通过重新插入实现）
-                    self.swap_segments_in_sweep_line(event.segment_id, other_id, event.point, segments);
+                    self.swap_segments_in_sweep_line(
+                        event.segment_id,
+                        other_id,
+                        event.point,
+                        segments,
+                    );
                 }
             }
         }
@@ -415,7 +408,7 @@ impl BentleyOttmann {
     fn check_intersections_after_removal(&mut self, segments: &[Segment]) {
         // 删除后，原来的相邻线段现在变成相邻，需要检测
         let keys: Vec<usize> = self.sweep_line.keys().copied().collect();
-        
+
         // 检测所有相邻线段对
         for i in 0..keys.len().saturating_sub(1) {
             let seg1_id = keys[i];
@@ -463,28 +456,26 @@ impl BentleyOttmann {
 
     /// 检测两个线段的交点
     fn check_pair_intersection(&mut self, id1: usize, id2: usize, segments: &[Segment]) {
-        let seg1 = segments.iter().find(|s| s.id == id1).copied();
-        let seg2 = segments.iter().find(|s| s.id == id2).copied();
+        // 【性能优化】直接使用 segments[id]，因为 ID = index
+        let seg1 = segments[id1];
+        let seg2 = segments[id2];
 
-        if let (Some(s1), Some(s2)) = (seg1, seg2) {
-            if let Some(intersection) = self.compute_intersection(s1, s2) {
-                if self.is_point_on_segment(intersection.point, s1)
-                    && self.is_point_on_segment(intersection.point, s2)
-                {
-                    // 避免重复添加
-                    if !self.intersections.iter().any(|i| {
-                        i.segment1 == intersection.segment1
-                            && i.segment2 == intersection.segment2
-                                || i.segment1 == intersection.segment2
-                                && i.segment2 == intersection.segment1
-                    }) {
-                        // 将交点添加到事件队列
-                        self.event_queue.push(Event::intersection(
-                            intersection.point,
-                            intersection.segment1,
-                            intersection.segment2,
-                        ));
-                    }
+        if let Some(intersection) = self.compute_intersection(seg1, seg2) {
+            if self.is_point_on_segment(intersection.point, seg1)
+                && self.is_point_on_segment(intersection.point, seg2)
+            {
+                // 避免重复添加
+                if !self.intersections.iter().any(|i| {
+                    i.segment1 == intersection.segment1 && i.segment2 == intersection.segment2
+                        || i.segment1 == intersection.segment2
+                            && i.segment2 == intersection.segment1
+                }) {
+                    // 将交点添加到事件队列
+                    self.event_queue.push(Event::intersection(
+                        intersection.point,
+                        intersection.segment1,
+                        intersection.segment2,
+                    ));
                 }
             }
         }
@@ -506,7 +497,7 @@ impl BentleyOttmann {
         let ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denom;
         let ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denom;
 
-        if ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0 {
+        if (0.0..=1.0).contains(&ua) && (0.0..=1.0).contains(&ub) {
             let x = x1 + ua * (x2 - x1);
             let y = y1 + ua * (y2 - y1);
             Some(Intersection {
@@ -580,7 +571,7 @@ pub fn brute_force_intersections(segments: &[Segment]) -> Vec<Intersection> {
                     - (seg1.end[1] - seg1.start[1]) * (seg1.start[0] - seg2.start[0]))
                     / denom;
 
-                if ua >= 0.0 && ua <= 1.0 && ub >= 0.0 && ub <= 1.0 {
+                if (0.0..=1.0).contains(&ua) && (0.0..=1.0).contains(&ub) {
                     let x = seg1.start[0] + ua * (seg1.end[0] - seg1.start[0]);
                     let y = seg1.start[1] + ua * (seg1.end[1] - seg1.start[1]);
 
@@ -655,7 +646,7 @@ mod tests {
         let intersections = bo.find_intersections(&segments);
 
         // 简化实现：至少找到 1 个交点
-        assert!(intersections.len() >= 1);
+        assert!(!intersections.is_empty());
     }
 
     #[test]
@@ -667,7 +658,7 @@ mod tests {
         ];
 
         let bf_intersections = brute_force_intersections(&segments);
-        
+
         let mut bo = BentleyOttmann::new();
         let bo_intersections = bo.find_intersections(&segments);
 
@@ -680,7 +671,7 @@ mod tests {
     #[test]
     fn test_segment_y_at() {
         let segment = Segment::new([0.0, 0.0], [10.0, 10.0]);
-        
+
         assert_eq!(segment.y_at(5.0), Some(5.0));
         assert_eq!(segment.y_at(0.0), Some(0.0));
         assert_eq!(segment.y_at(10.0), Some(10.0));

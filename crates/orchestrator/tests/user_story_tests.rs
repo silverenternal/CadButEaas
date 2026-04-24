@@ -44,7 +44,7 @@
 //! 2. 应用 snap_bridge → 缺口闭合
 //! 3. 标注为 Door → 语义补全
 
-use common_types::{CadError, BoundarySemantic};
+use common_types::{BoundarySemantic, CadError};
 use config::CadConfig;
 use orchestrator::pipeline::ProcessingPipeline;
 use std::path::PathBuf;
@@ -56,43 +56,43 @@ use std::path::PathBuf;
 #[tokio::test]
 async fn test_user_story_endpoint_mismatch() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 1: 处理端点错位图纸 ==========");
-    
+
     let problem_file = PathBuf::from("dxfs/问题文件 - 端点错位 0.3mm.dxf");
-    
+
     // 跳过不存在的文件
     if !problem_file.exists() {
         println!("跳过不存在的文件：{:?}", problem_file);
         return Ok(());
     }
-    
+
     // 步骤 1: 使用默认容差（0.5mm）处理
     println!("步骤 1: 使用默认容差处理...");
     let pipeline = ProcessingPipeline::new();
     let result = pipeline.process_file(&problem_file).await;
-    
+
     match result {
         Ok(_) => {
             println!("  ✓ 默认容差处理成功（端点错位 < 0.5mm）");
         }
         Err(e) => {
             println!("  ⚠ 默认容差处理失败：{}", e);
-            
+
             // 步骤 2: 查看恢复建议
             if let Some(suggestion) = e.recovery_suggestion() {
                 println!("  恢复建议：{}", suggestion.action);
             }
-            
+
             // 步骤 3: 调整容差到 1.0mm
             println!("步骤 2: 调整 snap_tolerance 到 1.0mm...");
             let mut config = CadConfig::default();
             config.topology.snap_tolerance_mm = 1.0;
-            
+
             // 重新处理（注意：当前 Pipeline 不支持配置，这里仅演示工作流）
             // 实际使用时需要通过 OrchestratorService 传入配置
             println!("  ✓ 工作流演示完成（实际配置调整需通过 CLI 参数）");
         }
     }
-    
+
     println!("========== 用户故事 1 完成 ==========\n");
     Ok(())
 }
@@ -104,18 +104,18 @@ async fn test_user_story_endpoint_mismatch() -> Result<(), Box<dyn std::error::E
 #[tokio::test]
 async fn test_user_story_self_intersecting() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 2: 处理自相交多边形 ==========");
-    
+
     let problem_file = PathBuf::from("dxfs/问题文件 - 自相交多边形.dxf");
-    
+
     if !problem_file.exists() {
         println!("跳过不存在的文件：{:?}", problem_file);
         return Ok(());
     }
-    
+
     println!("步骤 1: 处理文件...");
     let pipeline = ProcessingPipeline::new();
     let result = pipeline.process_file(&problem_file).await;
-    
+
     match result {
         Ok(process_result) => {
             let scene = process_result.scene;
@@ -123,7 +123,7 @@ async fn test_user_story_self_intersecting() -> Result<(), Box<dyn std::error::E
         }
         Err(e) => {
             println!("  ⚠ 处理失败：{}", e);
-            
+
             // 验证错误类型
             if let CadError::ValidationFailed { issues, .. } = &e {
                 println!("  验证问题：");
@@ -131,7 +131,7 @@ async fn test_user_story_self_intersecting() -> Result<(), Box<dyn std::error::E
                     println!("    - [{}] {}", issue.code, issue.message);
                 }
             }
-            
+
             // 验证有恢复建议
             if let Some(suggestion) = e.recovery_suggestion() {
                 println!("  恢复建议：{}", suggestion.action);
@@ -139,7 +139,7 @@ async fn test_user_story_self_intersecting() -> Result<(), Box<dyn std::error::E
             }
         }
     }
-    
+
     println!("========== 用户故事 2 完成 ==========\n");
     Ok(())
 }
@@ -151,19 +151,22 @@ async fn test_user_story_self_intersecting() -> Result<(), Box<dyn std::error::E
 #[tokio::test]
 async fn test_user_story_scanned_document() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 3: 扫描图纸矢量化 ==========");
-    
+
     // 使用 scanned 预设配置
     println!("步骤 1: 加载 scanned 预设配置...");
     let config = CadConfig::from_profile("scanned")?;
     assert_eq!(config.profile_name, Some("scanned".to_string()));
     assert_eq!(config.topology.snap_tolerance_mm, 2.0);
-    println!("  ✓ 配置加载成功，snap_tolerance = {}mm", config.topology.snap_tolerance_mm);
-    
+    println!(
+        "  ✓ 配置加载成功，snap_tolerance = {}mm",
+        config.topology.snap_tolerance_mm
+    );
+
     // 注意：当前 scanned 预设主要用于光栅 PDF 矢量化
     // 实际测试需要使用真实扫描文件，这里仅演示配置加载工作流
     println!("步骤 2: 使用配置处理文件（演示工作流）...");
     println!("  ✓ 工作流演示完成（实际处理需要扫描版 PDF 文件）");
-    
+
     println!("========== 用户故事 3 完成 ==========\n");
     Ok(())
 }
@@ -175,26 +178,26 @@ async fn test_user_story_scanned_document() -> Result<(), Box<dyn std::error::Er
 #[tokio::test]
 async fn test_user_story_quick_prototype() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 4: 快速原型验证 ==========");
-    
+
     // 使用 quick 预设配置
     println!("步骤 1: 加载 quick 预设配置...");
     let config = CadConfig::from_profile("quick")?;
     assert_eq!(config.profile_name, Some("quick".to_string()));
-    assert_eq!(config.export.auto_validate, false);
+    assert!(!config.export.auto_validate);
     println!("  ✓ 配置加载成功，auto_validate = false（跳过验证以加速）");
-    
+
     // 使用真实文件测试快速处理
     let test_file = PathBuf::from("dxfs/报告厅 1.dxf");
-    
+
     if test_file.exists() {
         println!("步骤 2: 处理文件...");
         let start = std::time::Instant::now();
-        
+
         let pipeline = ProcessingPipeline::new();
         let result = pipeline.process_file(&test_file).await;
-        
+
         let elapsed = start.elapsed();
-        
+
         match result {
             Ok(_) => {
                 println!("  ✓ 处理成功，耗时：{:?}", elapsed);
@@ -208,7 +211,7 @@ async fn test_user_story_quick_prototype() -> Result<(), Box<dyn std::error::Err
     } else {
         println!("跳过不存在的文件：{:?}", test_file);
     }
-    
+
     println!("========== 用户故事 4 完成 ==========\n");
     Ok(())
 }
@@ -220,20 +223,22 @@ async fn test_user_story_quick_prototype() -> Result<(), Box<dyn std::error::Err
 #[tokio::test]
 async fn test_user_story_mechanical_drawing() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 5: 机械图纸高精度处理 ==========");
-    
+
     // 使用 mechanical 预设配置
     println!("步骤 1: 加载 mechanical 预设配置...");
     let config = CadConfig::from_profile("mechanical")?;
     assert_eq!(config.profile_name, Some("mechanical".to_string()));
     assert_eq!(config.parser.dxf.arc_tolerance_mm, 0.01);
     assert_eq!(config.export.format, "bincode");
-    println!("  ✓ 配置加载成功，arc_tolerance = {}mm，导出格式 = {}", 
-        config.parser.dxf.arc_tolerance_mm, config.export.format);
-    
+    println!(
+        "  ✓ 配置加载成功，arc_tolerance = {}mm，导出格式 = {}",
+        config.parser.dxf.arc_tolerance_mm, config.export.format
+    );
+
     println!("步骤 2: 验证配置合理性...");
     config.validate()?;
     println!("  ✓ 配置验证通过");
-    
+
     println!("========== 用户故事 5 完成 ==========\n");
     Ok(())
 }
@@ -245,43 +250,46 @@ async fn test_user_story_mechanical_drawing() -> Result<(), Box<dyn std::error::
 #[tokio::test]
 async fn test_user_story_gap_detection_and_bridge() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n========== 用户故事 6: 缺口检测与补全 ==========");
-    
+
     // 使用问题文件演示缺口检测
     let problem_file = PathBuf::from("dxfs/问题文件 - 端点错位 0.3mm.dxf");
-    
+
     if !problem_file.exists() {
         println!("跳过不存在的文件：{:?}", problem_file);
         return Ok(());
     }
-    
+
     println!("步骤 1: 处理文件并检测缺口...");
     let pipeline = ProcessingPipeline::new();
     let result = pipeline.process_file(&problem_file).await;
-    
+
     match result {
         Ok(process_result) => {
             let scene = process_result.scene;
             println!("  ✓ 处理成功，检测到 {} 个边界段", scene.boundaries.len());
-            
+
             // 验证边界段语义
-            let door_count = scene.boundaries.iter()
+            let door_count = scene
+                .boundaries
+                .iter()
                 .filter(|b| b.semantic == BoundarySemantic::Door)
                 .count();
             println!("  检测到 {} 个门洞边界", door_count);
         }
         Err(e) => {
             println!("  ⚠ 处理失败：{}", e);
-            
+
             // 验证是否有缺口相关的恢复建议
             if let Some(suggestion) = e.recovery_suggestion() {
                 let action = &suggestion.action;
-                if action.contains("缺口") || action.contains("snap") || action.contains("桥接") {
+                if action.contains("缺口") || action.contains("snap") || action.contains("桥接")
+                {
                     println!("  ✓ 检测到缺口相关的恢复建议：{}", action);
                 }
             }
         }
     }
-    
+
     println!("========== 用户故事 6 完成 ==========\n");
     Ok(())
 }

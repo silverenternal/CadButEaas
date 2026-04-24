@@ -1,0 +1,36 @@
+#!/bin/zsh
+# CadButEaas 开发工作流启动器
+# 用法:
+#   cadeaas              # 普通会话（默认加载 burn 插件）
+#   cadeaas burn         # 直接触发焚诀循环
+#   cadeaas dev          # 以 slave agent 启动（开发端）
+#   cadeaas review       # 以 reviewer agent 启动（审查端）
+#   cadeaas bare         # 裸模式，不加载任何插件
+
+set -e
+
+PLUGIN_DIR="/home/hugo/codes/CadButEaas/.claude/plugins/burn-workflow"
+AGENTS_FILE="/home/hugo/codes/CadButEaas/.claude/agents.json"
+
+case "$1" in
+  burn)
+    echo "→ 启动焚诀工作流..."
+    claude --plugin-dir "$PLUGIN_DIR" -p "/burn"
+    ;;
+  dev|slave)
+    echo "→ 启动开发端 (slave)..."
+    claude --agent slave --agents "$(cat "$AGENTS_FILE")"
+    ;;
+  review|reviewer)
+    echo "→ 启动审查端 (reviewer)..."
+    claude --agent reviewer --agents "$(cat "$AGENTS_FILE")"
+    ;;
+  bare)
+    echo "→ 裸模式启动..."
+    claude --bare
+    ;;
+  *)
+    # 默认：普通会话，加载 burn 插件
+    claude --plugin-dir "$PLUGIN_DIR"
+    ;;
+esac

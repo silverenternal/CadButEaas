@@ -21,16 +21,16 @@
 use clap::{Parser, Subcommand};
 use common_types::{CadError, LengthUnit};
 use config::CadConfig;
-use orchestrator::service::{OrchestratorService, OrchestratorConfig};
-use std::path::PathBuf;
+use orchestrator::service::{OrchestratorConfig, OrchestratorService};
 use std::fs;
+use std::path::PathBuf;
 
 /// CAD 几何处理系统命令行工具
 #[derive(Parser)]
 #[command(name = "cad")]
 #[command(author = "CAD Team")]
 #[command(version = env!("CARGO_PKG_VERSION"))]
-#[command(about = "CAD/PDF 图纸识别与边界生成系统", long_about = None)]
+#[command(about = "CAD/PDF/光栅图片 图纸识别与边界生成系统", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -246,14 +246,16 @@ fn export_scene(
     match export_config.format.as_str() {
         "json" => {
             let json = if export_config.json_indent > 0 {
-                serde_json::to_string_pretty(scene).map_err(|e| format!("JSON 序列化失败：{}", e))?
+                serde_json::to_string_pretty(scene)
+                    .map_err(|e| format!("JSON 序列化失败：{}", e))?
             } else {
                 serde_json::to_string(scene).map_err(|e| format!("JSON 序列化失败：{}", e))?
             };
             Ok(json.into_bytes())
         }
         "bincode" => {
-            let bytes = bincode::serialize(scene).map_err(|e| format!("Bincode 序列化失败：{}", e))?;
+            let bytes =
+                bincode::serialize(scene).map_err(|e| format!("Bincode 序列化失败：{}", e))?;
             Ok(bytes)
         }
         _ => Err(format!("不支持的导出格式：{}", export_config.format).into()),
@@ -341,25 +343,52 @@ fn show_profile(name: &str) -> Result<(), Box<dyn std::error::Error>> {
 
     // 显示拓扑配置
     println!("[topology]");
-    println!("  snap_tolerance_mm       = {}", config.topology.snap_tolerance_mm);
-    println!("  min_line_length_mm      = {}", config.topology.min_line_length_mm);
-    println!("  merge_angle_tolerance_deg = {}", config.topology.merge_angle_tolerance_deg);
-    println!("  max_gap_bridge_length_mm = {}", config.topology.max_gap_bridge_length_mm);
+    println!(
+        "  snap_tolerance_mm       = {}",
+        config.topology.snap_tolerance_mm
+    );
+    println!(
+        "  min_line_length_mm      = {}",
+        config.topology.min_line_length_mm
+    );
+    println!(
+        "  merge_angle_tolerance_deg = {}",
+        config.topology.merge_angle_tolerance_deg
+    );
+    println!(
+        "  max_gap_bridge_length_mm = {}",
+        config.topology.max_gap_bridge_length_mm
+    );
     println!();
 
     // 显示验证器配置
     println!("[validator]");
-    println!("  closure_tolerance_mm    = {}", config.validator.closure_tolerance_mm);
-    println!("  min_area_m2             = {}", config.validator.min_area_m2);
-    println!("  min_edge_length_mm      = {}", config.validator.min_edge_length_mm);
-    println!("  min_angle_deg           = {}", config.validator.min_angle_deg);
+    println!(
+        "  closure_tolerance_mm    = {}",
+        config.validator.closure_tolerance_mm
+    );
+    println!(
+        "  min_area_m2             = {}",
+        config.validator.min_area_m2
+    );
+    println!(
+        "  min_edge_length_mm      = {}",
+        config.validator.min_edge_length_mm
+    );
+    println!(
+        "  min_angle_deg           = {}",
+        config.validator.min_angle_deg
+    );
     println!();
 
     // 显示导出配置
     println!("[export]");
     println!("  format                  = {}", config.export.format);
     println!("  json_indent             = {}", config.export.json_indent);
-    println!("  auto_validate           = {}", config.export.auto_validate);
+    println!(
+        "  auto_validate           = {}",
+        config.export.auto_validate
+    );
 
     Ok(())
 }
@@ -369,18 +398,20 @@ async fn serve(port: u16, profile: Option<String>) -> Result<(), Box<dyn std::er
     println!("CAD 几何处理系统 v{}", env!("CARGO_PKG_VERSION"));
     println!("==============================");
 
+    // 加载 profile 配置
+    let cad_config = load_config(profile.clone(), None)?;
+
     // 创建编排服务
     let config = OrchestratorConfig {
         listen_addr: format!("0.0.0.0:{}", port),
         enable_api: true,
     };
 
-    if let Some(profile_name) = profile {
+    if let Some(profile_name) = &profile {
         println!("使用预设配置：{}", profile_name);
-        // TODO: 将预设配置传递给服务
     }
 
-    let service = OrchestratorService::new(config);
+    let service = OrchestratorService::with_config(config, Some(cad_config));
 
     println!("服务已初始化");
     println!("API 端点：http://localhost:{}/process", port);
@@ -442,7 +473,10 @@ fn validate_config(path: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     println!("配置摘要：");
     println!("  端点吸附容差：{} mm", config.topology.snap_tolerance_mm);
     println!("  最小线段长度：{} mm", config.topology.min_line_length_mm);
-    println!("  闭合性检查容差：{} mm", config.validator.closure_tolerance_mm);
+    println!(
+        "  闭合性检查容差：{} mm",
+        config.validator.closure_tolerance_mm
+    );
     println!("  最小面积：{} m²", config.validator.min_area_m2);
 
     Ok(())
@@ -454,9 +488,11 @@ fn print_scene_stats(scene: &common_types::SceneState) {
 
     // 外边界
     if let Some(outer) = &scene.outer {
-        println!("  外边界：{} 个点，面积 {:.2} m²",
+        println!(
+            "  外边界：{} 个点，面积 {:.2} m²",
             outer.points.len(),
-            outer.signed_area.abs());
+            outer.signed_area.abs()
+        );
     } else {
         println!("  外边界：无");
     }
@@ -464,10 +500,12 @@ fn print_scene_stats(scene: &common_types::SceneState) {
     // 孔洞
     println!("  孔洞：{} 个", scene.holes.len());
     for (i, hole) in scene.holes.iter().enumerate() {
-        println!("    孔洞 #{}: {} 个点，面积 {:.2} m²",
+        println!(
+            "    孔洞 #{}: {} 个点，面积 {:.2} m²",
             i + 1,
             hole.points.len(),
-            hole.signed_area.abs());
+            hole.signed_area.abs()
+        );
     }
 
     // 边界段
@@ -477,18 +515,21 @@ fn print_scene_stats(scene: &common_types::SceneState) {
     println!("  声源：{} 个", scene.sources.len());
 
     // 单位
-    println!("  单位：{}", match scene.units {
-        LengthUnit::Mm => "毫米 (mm)",
-        LengthUnit::Cm => "厘米 (cm)",
-        LengthUnit::M => "米 (m)",
-        LengthUnit::Inch => "英寸 (inch)",
-        LengthUnit::Foot => "英尺 (foot)",
-        LengthUnit::Yard => "码 (yard)",
-        LengthUnit::Mile => "英里 (mile)",
-        LengthUnit::Micron => "微米 (μm)",
-        LengthUnit::Kilometer => "千米 (km)",
-        LengthUnit::Point => "点 (pt)",
-        LengthUnit::Pica => "派卡 (pc)",
-        LengthUnit::Unspecified => "未指定",
-    });
+    println!(
+        "  单位：{}",
+        match scene.units {
+            LengthUnit::Mm => "毫米 (mm)",
+            LengthUnit::Cm => "厘米 (cm)",
+            LengthUnit::M => "米 (m)",
+            LengthUnit::Inch => "英寸 (inch)",
+            LengthUnit::Foot => "英尺 (foot)",
+            LengthUnit::Yard => "码 (yard)",
+            LengthUnit::Mile => "英里 (mile)",
+            LengthUnit::Micron => "微米 (μm)",
+            LengthUnit::Kilometer => "千米 (km)",
+            LengthUnit::Point => "点 (pt)",
+            LengthUnit::Pica => "派卡 (pc)",
+            LengthUnit::Unspecified => "未指定",
+        }
+    );
 }

@@ -40,9 +40,9 @@
 //! assert!((back_to_world[0] - world_point[0]).abs() < 0.001);
 //! ```
 
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
 use crate::geometry::Point2;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// 场景原点（世界坐标系）
 ///
@@ -62,7 +62,7 @@ impl Default for SceneOrigin {
     fn default() -> Self {
         Self {
             world_origin: [0.0, 0.0],
-            scene_scale: 1000.0,  // 默认 1 公里
+            scene_scale: 1000.0, // 默认 1 公里
         }
     }
 }
@@ -121,15 +121,15 @@ impl SceneOrigin {
 
         let (min, max) = Self::compute_bbox(entities);
         let center = [(min[0] + max[0]) / 2.0, (min[1] + max[1]) / 2.0];
-        
+
         // 向下取整到百米，避免浮点误差
         let origin = [
             (center[0] / 100.0).floor() * 100.0,
             (center[1] / 100.0).floor() * 100.0,
         ];
-        
+
         let scale = ((max[0] - min[0]).powi(2) + (max[1] - min[1]).powi(2)).sqrt();
-        
+
         Self::with_scale(origin, scale.max(1.0))
     }
 
@@ -144,8 +144,14 @@ impl SceneOrigin {
             points.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min),
         ];
         let max = [
-            points.iter().map(|p| p[0]).fold(f64::NEG_INFINITY, f64::max),
-            points.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max),
+            points
+                .iter()
+                .map(|p| p[0])
+                .fold(f64::NEG_INFINITY, f64::max),
+            points
+                .iter()
+                .map(|p| p[1])
+                .fold(f64::NEG_INFINITY, f64::max),
         ];
 
         let center = [(min[0] + max[0]) / 2.0, (min[1] + max[1]) / 2.0];
@@ -154,7 +160,7 @@ impl SceneOrigin {
             (center[1] / 100.0).floor() * 100.0,
         ];
         let scale = ((max[0] - min[0]).powi(2) + (max[1] - min[1]).powi(2)).sqrt();
-        
+
         Self::with_scale(origin, scale.max(1.0))
     }
 
@@ -194,7 +200,9 @@ impl SceneOrigin {
                     min_y = min_y.min(position[1]);
                     max_y = max_y.max(position[1]);
                 }
-                crate::geometry::RawEntity::BlockReference { insertion_point, .. } => {
+                crate::geometry::RawEntity::BlockReference {
+                    insertion_point, ..
+                } => {
                     min_x = min_x.min(insertion_point[0]);
                     max_x = max_x.max(insertion_point[0]);
                     min_y = min_y.min(insertion_point[1]);
@@ -319,8 +327,14 @@ impl SceneOrigin {
     pub fn scene_bbox(&self) -> (Point2, Point2) {
         let half_scale = self.scene_scale / 2.0;
         (
-            [self.world_origin[0] - half_scale, self.world_origin[1] - half_scale],
-            [self.world_origin[0] + half_scale, self.world_origin[1] + half_scale],
+            [
+                self.world_origin[0] - half_scale,
+                self.world_origin[1] - half_scale,
+            ],
+            [
+                self.world_origin[0] + half_scale,
+                self.world_origin[1] + half_scale,
+            ],
         )
     }
 
@@ -366,7 +380,10 @@ impl RelativePoint {
     /// 从世界坐标创建
     pub fn from_world(world: Point2, origin: &SceneOrigin) -> Self {
         let rel = origin.world_to_relative(world);
-        Self { x: rel[0], y: rel[1] }
+        Self {
+            x: rel[0],
+            y: rel[1],
+        }
     }
 
     /// 转换为世界坐标
@@ -381,7 +398,10 @@ impl RelativePoint {
 
     /// 从数组创建
     pub fn from_array(arr: [f32; 2]) -> Self {
-        Self { x: arr[0], y: arr[1] }
+        Self {
+            x: arr[0],
+            y: arr[1],
+        }
     }
 
     /// 计算到另一点的距离（毫米）
@@ -465,7 +485,7 @@ impl RelativeSceneState {
     pub fn from_absolute(scene: &crate::scene::SceneState) -> Self {
         // 收集所有点来计算场景原点
         let mut all_points = Vec::new();
-        
+
         if let Some(outer) = &scene.outer {
             all_points.extend(&outer.points);
         }
@@ -478,16 +498,21 @@ impl RelativeSceneState {
         }
 
         let origin = SceneOrigin::from_points(&all_points);
-        
-        let outer = scene.outer.as_ref().map(|loop_| {
-            RelativeClosedLoop::from_absolute(loop_, &origin)
-        });
-        
-        let holes = scene.holes.iter()
+
+        let outer = scene
+            .outer
+            .as_ref()
+            .map(|loop_| RelativeClosedLoop::from_absolute(loop_, &origin));
+
+        let holes = scene
+            .holes
+            .iter()
             .map(|loop_| RelativeClosedLoop::from_absolute(loop_, &origin))
             .collect();
-        
-        let edges = scene.edges.iter()
+
+        let edges = scene
+            .edges
+            .iter()
             .map(|edge| RelativeRawEdge::from_absolute(edge, &origin))
             .collect();
 
@@ -502,20 +527,27 @@ impl RelativeSceneState {
 
     /// 转换为绝对坐标 SceneState
     pub fn to_absolute(&self) -> crate::scene::SceneState {
-        use crate::scene::{SceneState, LengthUnit, CoordinateSystem};
+        use crate::scene::{CoordinateSystem, LengthUnit, SceneState};
 
-        let outer = self.outer.as_ref().map(|loop_| loop_.to_absolute(&self.origin));
-        let holes = self.holes.iter()
+        let outer = self
+            .outer
+            .as_ref()
+            .map(|loop_| loop_.to_absolute(&self.origin));
+        let holes = self
+            .holes
+            .iter()
             .map(|loop_| loop_.to_absolute(&self.origin))
             .collect();
-        let edges = self.edges.iter()
+        let edges = self
+            .edges
+            .iter()
             .map(|edge| edge.to_absolute(&self.origin))
             .collect();
 
         SceneState {
             outer,
             holes,
-            boundaries: Vec::new(),  // 需要时从 edges 重建
+            boundaries: Vec::new(), // 需要时从 edges 重建
             sources: Vec::new(),
             edges,
             units: LengthUnit::Mm,
@@ -549,26 +581,39 @@ impl RelativeClosedLoop {
     /// 创建新的相对坐标闭合环
     pub fn new(points: Vec<[f32; 2]>) -> Self {
         let signed_area = Self::calculate_signed_area(&points);
-        Self { points, signed_area }
+        Self {
+            points,
+            signed_area,
+        }
     }
 
     /// 从绝对坐标 ClosedLoop 转换
     pub fn from_absolute(loop_: &crate::scene::ClosedLoop, origin: &SceneOrigin) -> Self {
-        let points: Vec<[f32; 2]> = loop_.points.iter()
+        let points: Vec<[f32; 2]> = loop_
+            .points
+            .iter()
             .map(|&p| origin.world_to_relative(p))
             .collect();
         let signed_area = Self::calculate_signed_area(&points);
-        Self { points, signed_area }
+        Self {
+            points,
+            signed_area,
+        }
     }
 
     /// 转换为绝对坐标 ClosedLoop
     pub fn to_absolute(&self, origin: &SceneOrigin) -> crate::scene::ClosedLoop {
-        let points: Vec<Point2> = self.points.iter()
+        let points: Vec<Point2> = self
+            .points
+            .iter()
             .map(|&p| origin.relative_to_world(p))
             .collect();
         // 重新计算 f64 精度的有符号面积
         let signed_area = crate::scene::ClosedLoop::new(points.clone()).signed_area;
-        crate::scene::ClosedLoop { points, signed_area }
+        crate::scene::ClosedLoop {
+            points,
+            signed_area,
+        }
     }
 
     /// 计算有符号面积（平方毫米）
@@ -687,24 +732,24 @@ mod tests {
     #[test]
     fn test_world_to_relative_conversion() {
         let origin = SceneOrigin::new([1_000_000.0, 1_000_000.0]);
-        
+
         // 世界坐标：100.5 米偏移
         let world = [1_000_100.5, 1_000_200.75];
         let relative = origin.world_to_relative(world);
-        
+
         // 相对坐标应该是 100500mm 和 200750mm
-        assert!((relative[0] as f64 - 100500.0).abs() < 1.0);  // f32 精度允许 1mm 误差
+        assert!((relative[0] as f64 - 100500.0).abs() < 1.0); // f32 精度允许 1mm 误差
         assert!((relative[1] as f64 - 200750.0).abs() < 1.0);
     }
 
     #[test]
     fn test_relative_to_world_conversion() {
         let origin = SceneOrigin::new([1_000_000.0, 1_000_000.0]);
-        
+
         // 相对坐标：100500mm, 200750mm
         let relative = [100500.0f32, 200750.0f32];
         let world = origin.relative_to_world(relative);
-        
+
         // 应该恢复为世界坐标
         assert!((world[0] - 1_000_100.5).abs() < 0.001);
         assert!((world[1] - 1_000_200.75).abs() < 0.001);
@@ -714,12 +759,12 @@ mod tests {
     fn test_roundtrip_precision() {
         let origin = SceneOrigin::new([1_000_000.0, 1_000_000.0]);
         let world = [1_000_123.456, 1_000_789.012];
-        
+
         let relative = origin.world_to_relative(world);
         let back = origin.relative_to_world(relative);
-        
+
         // 往返精度应该在毫米级
-        assert!((back[0] - world[0]).abs() < 0.001);  // 1mm 精度
+        assert!((back[0] - world[0]).abs() < 0.001); // 1mm 精度
         assert!((back[1] - world[1]).abs() < 0.001);
     }
 
@@ -728,12 +773,12 @@ mod tests {
         // 城市 GIS 场景（坐标 1e8）
         let origin = SceneOrigin::new([100_000_000.0, 100_000_000.0]);
         let world = [100_000_100.5, 100_000_200.75];
-        
+
         let relative = origin.world_to_relative(world);
         let back = origin.relative_to_world(relative);
-        
+
         // 即使在大坐标下，精度也应该可接受
-        assert!((back[0] - world[0]).abs() < 0.1);  // 10cm 精度（对于 GIS 可接受）
+        assert!((back[0] - world[0]).abs() < 0.1); // 10cm 精度（对于 GIS 可接受）
         assert!((back[1] - world[1]).abs() < 0.1);
     }
 
@@ -742,10 +787,10 @@ mod tests {
         // 零件图场景（坐标 0-100）
         let origin = SceneOrigin::new([50.0, 50.0]);
         let world = [50.123, 50.456];
-        
+
         let relative = origin.world_to_relative(world);
         let back = origin.relative_to_world(relative);
-        
+
         // 小坐标下应该有极高精度
         assert!((back[0] - world[0]).abs() < 1e-6);
         assert!((back[1] - world[1]).abs() < 1e-6);
@@ -754,17 +799,17 @@ mod tests {
     #[test]
     fn test_relative_closed_loop() {
         let _origin = SceneOrigin::new([0.0, 0.0]);
-        
+
         // 创建一个 100mm x 100mm 的正方形（相对坐标）
         let points: Vec<[f32; 2]> = vec![
             [0.0, 0.0],
-            [100.0, 0.0],  // 100mm
+            [100.0, 0.0], // 100mm
             [100.0, 100.0],
             [0.0, 100.0],
         ];
-        
+
         let loop_ = RelativeClosedLoop::new(points.clone());
-        
+
         assert!(loop_.is_outer());
         // 面积 = 100mm * 100mm = 10000 mm²（有符号面积公式：sum(x_i * y_{i+1} - x_{i+1} * y_i) / 2）
         assert!((loop_.signed_area - 10000.0).abs() < 1.0);
@@ -775,20 +820,20 @@ mod tests {
     #[test]
     fn test_relative_raw_edge() {
         let _origin = SceneOrigin::new([1000.0, 1000.0]);
-        
+
         let edge = RelativeRawEdge::new(
             1,
             [0.0, 0.0],
-            [3000.0, 4000.0],  // 3 米 x 4 米 = 5 米对角线
+            [3000.0, 4000.0], // 3 米 x 4 米 = 5 米对角线
         );
-        
-        assert!((edge.length() - 5000.0).abs() < 1.0);  // 5 米 = 5000mm
+
+        assert!((edge.length() - 5000.0).abs() < 1.0); // 5 米 = 5000mm
     }
 
     #[test]
     fn test_relative_scene_state() {
-        use crate::scene::{SceneState, ClosedLoop, RawEdge};
-        
+        use crate::scene::{ClosedLoop, RawEdge, SceneState};
+
         // 创建绝对坐标场景
         let abs_scene = SceneState {
             outer: Some(ClosedLoop::new(vec![
@@ -800,15 +845,13 @@ mod tests {
             holes: Vec::new(),
             boundaries: Vec::new(),
             sources: Vec::new(),
-            edges: vec![
-                RawEdge {
-                    id: 1,
-                    start: [1000.0, 1000.0],
-                    end: [1010.0, 1000.0],
-                    layer: Some("WALL".into()),
-                    color_index: None,
-                }
-            ],
+            edges: vec![RawEdge {
+                id: 1,
+                start: [1000.0, 1000.0],
+                end: [1010.0, 1000.0],
+                layer: Some("WALL".into()),
+                color_index: None,
+            }],
             units: crate::scene::LengthUnit::M,
             coordinate_system: crate::scene::CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(),
@@ -817,13 +860,13 @@ mod tests {
 
         // 转换为相对坐标
         let rel_scene = RelativeSceneState::from_absolute(&abs_scene);
-        
+
         // 验证原点设置正确
         assert!(rel_scene.origin.scene_scale > 0.0);
-        
+
         // 转换回绝对坐标
         let back = rel_scene.to_absolute();
-        
+
         // 验证坐标基本一致
         if let (Some(orig), Some(back)) = (abs_scene.outer.as_ref(), back.outer.as_ref()) {
             for (o, b) in orig.points.iter().zip(back.points.iter()) {

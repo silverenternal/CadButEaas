@@ -208,15 +208,16 @@ EOF
 
 /// 写入临时文件
 fn write_temp_file(content: &str, prefix: &str) -> PathBuf {
-    use std::io::Write;
     use std::fs::File;
+    use std::io::Write;
 
     let temp_dir = std::env::temp_dir();
     let file_name = format!("{}_{}.dxf", prefix, std::process::id());
     let temp_path = temp_dir.join(&file_name);
 
     let mut file = File::create(&temp_path).expect("创建临时文件失败");
-    file.write_all(content.as_bytes()).expect("写入临时文件失败");
+    file.write_all(content.as_bytes())
+        .expect("写入临时文件失败");
 
     temp_path
 }
@@ -245,10 +246,10 @@ async fn test_end_to_end_closed_square() {
             // 预期结果：验证失败，可能是环未闭合或无法形成有效轮廓
             // 接受多种合理的错误消息
             let has_expected_error = issues.iter().any(|i| {
-                i.message.contains("闭合") || 
-                i.message.contains("环") || 
-                i.message.contains("轮廓") ||
-                i.message.contains("外轮廓")
+                i.message.contains("闭合")
+                    || i.message.contains("环")
+                    || i.message.contains("轮廓")
+                    || i.message.contains("外轮廓")
             });
             assert!(
                 has_expected_error,
@@ -278,7 +279,10 @@ async fn test_end_to_end_open_contour() {
     // 开放轮廓应该无法形成闭合环
     // 根据实现，可能会成功（如果端点吸附）或失败
     // 这里只验证不 panic
-    assert!(result.is_ok() || result.is_err(), "处理应该完成（成功或失败）");
+    assert!(
+        result.is_ok() || result.is_err(),
+        "处理应该完成（成功或失败）"
+    );
 }
 
 /// 端到端测试：处理自相交图形（应该验证失败）
@@ -390,11 +394,21 @@ fn test_scene_state_validation() {
     use common_types::{ClosedLoop, SceneState};
 
     // 创建有效的闭合场景（正方形，面积为正）
-    let points = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]];
+    let points = vec![
+        [0.0, 0.0],
+        [10.0, 0.0],
+        [10.0, 10.0],
+        [0.0, 10.0],
+        [0.0, 0.0],
+    ];
     let loop_data = ClosedLoop::new(points);
-    
+
     // 验证面积计算正确（应该是正面积）
-    assert!(loop_data.signed_area > 0.0, "外轮廓面积应为正：{}", loop_data.signed_area);
+    assert!(
+        loop_data.signed_area > 0.0,
+        "外轮廓面积应为正：{}",
+        loop_data.signed_area
+    );
 
     let valid_scene = SceneState {
         outer: Some(loop_data),

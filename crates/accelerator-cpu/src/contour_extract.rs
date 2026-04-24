@@ -1,17 +1,22 @@
 //! CPU 轮廓提取实现
 
+use accelerator_api::{AcceleratorError, AcceleratorResult};
 use accelerator_api::{ContourExtractConfig, Contours, EdgeMap};
-use accelerator_api::{AcceleratorResult, AcceleratorError};
 
 /// CPU 轮廓提取（迭代 DFS）
-pub fn extract_contours_cpu(edges: &EdgeMap, config: &ContourExtractConfig) -> AcceleratorResult<Contours> {
+pub fn extract_contours_cpu(
+    edges: &EdgeMap,
+    config: &ContourExtractConfig,
+) -> AcceleratorResult<Contours> {
     let width = edges.width as usize;
     let height = edges.height as usize;
-    
+
     if edges.data.len() != width * height {
-        return Err(AcceleratorError::InvalidDataFormat(
-            format!("边缘图数据大小不匹配：期望 {}，实际 {}", width * height, edges.data.len())
-        ));
+        return Err(AcceleratorError::InvalidDataFormat(format!(
+            "边缘图数据大小不匹配：期望 {}，实际 {}",
+            width * height,
+            edges.data.len()
+        )));
     }
 
     let mut visited = vec![vec![false; height]; width];
@@ -19,50 +24,58 @@ pub fn extract_contours_cpu(edges: &EdgeMap, config: &ContourExtractConfig) -> A
 
     // 8 邻域方向
     let directions: [(isize, isize); 8] = [
-        (-1, -1), (0, -1), (1, -1),
-        (-1,  0),          (1,  0),
-        (-1,  1), (0,  1), (1,  1),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (-1, 0),
+        (1, 0),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
     ];
 
     for y in 0..height {
         for x in 0..width {
             if !visited[x][y] && edges.data[y * width + x] == 0 {
                 let mut contour = Vec::new();
-                
+
                 // 迭代 DFS
                 let mut stack = vec![(x, y)];
-                
+
                 while let Some((cx, cy)) = stack.pop() {
                     if cx >= width || cy >= height || visited[cx][cy] {
                         continue;
                     }
-                    
+
                     if edges.data[cy * width + cx] != 0 {
                         continue;
                     }
-                    
+
                     visited[cx][cy] = true;
                     contour.push([cx as f64, cy as f64]);
-                    
+
                     // 添加邻域点
                     for (dx, dy) in &directions {
                         let nx = cx as isize + dx;
                         let ny = cy as isize + dy;
-                        
-                        if nx >= 0 && ny >= 0 && (nx as usize) < width && (ny as usize) < height {
-                            if !visited[nx as usize][ny as usize] {
-                                stack.push((nx as usize, ny as usize));
-                            }
+
+                        if nx >= 0
+                            && ny >= 0
+                            && (nx as usize) < width
+                            && (ny as usize) < height
+                            && !visited[nx as usize][ny as usize]
+                        {
+                            stack.push((nx as usize, ny as usize));
                         }
                     }
                 }
-                
+
                 // 简化轮廓
                 if contour.len() >= config.min_contour_length {
                     if config.simplify {
                         contour = simplify_douglas_peucker(&contour, config.simplify_epsilon);
                     }
-                    
+
                     if contour.len() >= config.min_contour_length {
                         contours.push(contour);
                     }
@@ -75,7 +88,10 @@ pub fn extract_contours_cpu(edges: &EdgeMap, config: &ContourExtractConfig) -> A
 }
 
 /// Douglas-Peucker 多边形简化算法（迭代实现）
-fn simplify_douglas_peucker(points: &[common_types::Point2], epsilon: f64) -> Vec<common_types::Point2> {
+fn simplify_douglas_peucker(
+    points: &[common_types::Point2],
+    epsilon: f64,
+) -> Vec<common_types::Point2> {
     if points.len() <= 2 {
         return points.to_vec();
     }
@@ -95,12 +111,8 @@ fn simplify_douglas_peucker(points: &[common_types::Point2], epsilon: f64) -> Ve
         let end_point = points[end];
 
         // 找到最远点
-        let (max_dist, max_idx) = find_farthest_point(
-            &points[start + 1..end],
-            start_point,
-            end_point,
-            start + 1,
-        );
+        let (max_dist, max_idx) =
+            find_farthest_point(&points[start + 1..end], start_point, end_point, start + 1);
 
         if max_dist > epsilon {
             keep[max_idx] = true;

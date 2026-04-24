@@ -1,0 +1,8 @@
+{
+  "name": "burn-workflow",
+  "description": "焚诀工作流 — 自动执行审查→开发循环，按 todo.md 驱动",
+  "version": "1.0.0",
+  "author": {
+    "name": "Hugo Lee"
+  }
+}

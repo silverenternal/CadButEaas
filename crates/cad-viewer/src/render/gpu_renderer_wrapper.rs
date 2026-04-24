@@ -3,9 +3,9 @@
 //! P11 锐评落实：统一 CPU/GPU 渲染接口，让 GPU 渲染也通过 Renderer trait
 
 #[cfg(feature = "gpu")]
-use crate::gpu_renderer_enhanced::{GpuRendererEnhanced, RendererConfig, RenderEntity};
-use crate::render::{Renderer, RenderContext};
-use crate::state::{SceneState, UIState, Camera2D};
+use crate::gpu_renderer_enhanced::{GpuRendererEnhanced, RenderEntity, RendererConfig};
+use crate::render::{RenderContext, Renderer};
+use crate::state::{Camera2D, SceneState, UIState};
 
 /// GPU 渲染器包装器
 ///
@@ -59,18 +59,12 @@ impl GpuRendererWrapper {
         surface_view: &wgpu::TextureView,
         zoom: f32,
     ) -> Result<(), String> {
-        let mut encoder = device.create_command_encoder(
-            &wgpu::CommandEncoderDescriptor {
-                label: Some("CAD GPU Render Encoder"),
-            }
-        );
+        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("CAD GPU Render Encoder"),
+        });
 
-        self.inner.render(
-            zoom,
-            &mut encoder,
-            surface_view,
-            wgpu::Color::TRANSPARENT,
-        )?;
+        self.inner
+            .render(zoom, &mut encoder, surface_view, wgpu::Color::TRANSPARENT)?;
 
         queue.submit(Some(encoder.finish()));
         Ok(())
@@ -94,7 +88,8 @@ impl Renderer for GpuRendererWrapper {
 
     fn render_scene(&mut self, _ctx: &mut RenderContext, scene: &SceneState, _camera: &Camera2D) {
         // 准备 GPU 实体
-        self.entities = scene.edges
+        self.entities = scene
+            .edges
             .iter()
             .enumerate()
             .filter(|(_, edge)| {
@@ -120,7 +115,13 @@ impl Renderer for GpuRendererWrapper {
         self.inner.set_entities(self.entities.clone());
     }
 
-    fn render_ui(&mut self, _ctx: &mut RenderContext, _ui: &UIState, _scene: &SceneState, _camera: &Camera2D) {
+    fn render_ui(
+        &mut self,
+        _ctx: &mut RenderContext,
+        _ui: &UIState,
+        _scene: &SceneState,
+        _camera: &Camera2D,
+    ) {
         // UI 叠加层用 CPU 渲染（egui）
         // 未来可以用 GPU 渲染
     }
@@ -155,7 +156,14 @@ impl Renderer for GpuRendererWrapper {
 
     fn begin_frame(&mut self) {}
     fn render_scene(&mut self, _ctx: &mut RenderContext, _scene: &SceneState, _camera: &Camera2D) {}
-    fn render_ui(&mut self, _ctx: &mut RenderContext, _ui: &UIState, _scene: &SceneState, _camera: &Camera2D) {}
+    fn render_ui(
+        &mut self,
+        _ctx: &mut RenderContext,
+        _ui: &UIState,
+        _scene: &SceneState,
+        _camera: &Camera2D,
+    ) {
+    }
     fn end_frame(&mut self) {}
     fn resize(&mut self, _width: u32, _height: u32) {}
 }

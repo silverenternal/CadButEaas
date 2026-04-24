@@ -82,8 +82,8 @@
 //! - **自相交**: 建议重新数字化或简化几何
 //! - **短边/尖角**: 自动合并或提示用户确认
 
-pub mod service;
 pub mod checks;
+pub mod service;
 
-pub use service::{ValidatorService, ValidatorConfig};
 pub use checks::*;
+pub use service::{ValidatorConfig, ValidatorService};

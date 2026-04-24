@@ -11,6 +11,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 dxf = { workspace = true }
 lopdf = { workspace = true }
+usvg = { workspace = true }
+stl_io = { workspace = true }
 image = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
@@ -31,3 +33,11 @@ futures-util = "0.3"
 
 # 线程安全缓存
 dashmap = "5.5"
+
+# CCITT Group 3/4 传真解码（PDF CCITTFaxDecode 支持）
+fax = "0.2"
+
+[features]
+default = ["ezdxf-bridge"]
+# Python ezdxf 解析器桥接（通过 subprocess 调用 Python）
+ezdxf-bridge = []

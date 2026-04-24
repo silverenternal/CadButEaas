@@ -162,7 +162,17 @@ impl DxfVersion {
 
     /// 是否支持 3D 实体
     pub fn supports_3d_entities(&self) -> bool {
-        matches!(self, Self::R13 | Self::R14 | Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018)
+        matches!(
+            self,
+            Self::R13
+                | Self::R14
+                | Self::V2000
+                | Self::V2004
+                | Self::V2007
+                | Self::V2010
+                | Self::V2013
+                | Self::V2018
+        )
     }
 
     /// 是否支持 NURBS 曲线（SPLINE 实体）
@@ -172,22 +182,40 @@ impl DxfVersion {
 
     /// 是否支持动态块
     pub fn supports_dynamic_blocks(&self) -> bool {
-        matches!(self, Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018)
+        matches!(
+            self,
+            Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018
+        )
     }
 
     /// 是否支持外部参照（XREF）
     pub fn supports_xref(&self) -> bool {
-        matches!(self, Self::R14 | Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018)
+        matches!(
+            self,
+            Self::R14
+                | Self::V2000
+                | Self::V2004
+                | Self::V2007
+                | Self::V2010
+                | Self::V2013
+                | Self::V2018
+        )
     }
 
     /// 是否支持多行文字（MTEXT）
     pub fn supports_mtext(&self) -> bool {
-        matches!(self, Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018)
+        matches!(
+            self,
+            Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018
+        )
     }
 
     /// 是否支持椭圆（ELLIPSE）
     pub fn supports_ellipse(&self) -> bool {
-        matches!(self, Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018)
+        matches!(
+            self,
+            Self::V2000 | Self::V2004 | Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018
+        )
     }
 
     /// 获取版本兼容性评分（0-100）
@@ -214,7 +242,9 @@ impl DxfVersion {
             Self::R12 => DxfVersionStrategy::LegacyR12,
             Self::R13 | Self::R14 => DxfVersionStrategy::LegacyR13R14,
             Self::V2000 | Self::V2004 => DxfVersionStrategy::ModernV2000,
-            Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018 => DxfVersionStrategy::ModernV2007Plus,
+            Self::V2007 | Self::V2010 | Self::V2013 | Self::V2018 => {
+                DxfVersionStrategy::ModernV2007Plus
+            }
             Self::Unknown => DxfVersionStrategy::Fallback,
         }
     }
@@ -351,70 +381,102 @@ impl VersionToleranceConfig {
 
 impl DxfVersionFeatures {
     /// 根据版本创建特性配置
+    #[allow(clippy::field_reassign_with_default)]
     pub fn for_version(version: DxfVersion) -> Self {
-        let mut features = Self::default();
-        features.tolerance_config = VersionToleranceConfig::for_version(version);
+        let mut features = Self {
+            tolerance_config: VersionToleranceConfig::for_version(version),
+            ..Default::default()
+        };
 
         // R12 基础实体
         let base_entities = [
-            "LINE", "CIRCLE", "ARC", "POLYLINE", "LWPOLYLINE", "TEXT",
-            "DIMENSION", "HATCH", "SOLID", "TRACE", "POINT",
+            "LINE",
+            "CIRCLE",
+            "ARC",
+            "POLYLINE",
+            "LWPOLYLINE",
+            "TEXT",
+            "DIMENSION",
+            "HATCH",
+            "SOLID",
+            "TRACE",
+            "POINT",
         ];
 
         // R13/R14 新增
-        let r13_entities = [
-            "3DFACE", "BODY", "REGION", "MESH",
-        ];
+        let r13_entities = ["3DFACE", "BODY", "REGION", "MESH"];
 
         // 2000+ 新增
         let v2000_entities = [
-            "SPLINE", "ELLIPSE", "MTEXT", "LEADER", "TOLERANCE",
-            "VPOR T", "XLINE", "RAY", "MLINE",
+            "SPLINE",
+            "ELLIPSE",
+            "MTEXT",
+            "LEADER",
+            "TOLERANCE",
+            "VPOR T",
+            "XLINE",
+            "RAY",
+            "MLINE",
         ];
 
         // 2007+ 新增
         let v2007_entities = [
-            "CONE", "CYLINDER", "SPHERE", "TORUS", "BOX", "WEDGE", "PYRAMID",
-            "SURFACE", "LOFT", "SWEEP",
+            "CONE", "CYLINDER", "SPHERE", "TORUS", "BOX", "WEDGE", "PYRAMID", "SURFACE", "LOFT",
+            "SWEEP",
         ];
 
         match version {
             DxfVersion::R12 => {
                 features.supported_entities = base_entities.iter().map(|s| s.to_string()).collect();
-                features.unsupported_entities = [
-                    "SPLINE", "ELLIPSE", "MTEXT", "3DFACE", "BODY",
-                ].iter().map(|s| s.to_string()).collect();
+                features.unsupported_entities = ["SPLINE", "ELLIPSE", "MTEXT", "3DFACE", "BODY"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect();
                 // R12 POLYLINE 需要特殊处理（旧格式）
-                features.special_handling.insert("POLYLINE".to_string(), "r12_polyline_format".to_string());
+                features
+                    .special_handling
+                    .insert("POLYLINE".to_string(), "r12_polyline_format".to_string());
             }
             DxfVersion::R13 | DxfVersion::R14 => {
-                let mut entities: HashSet<String> = base_entities.iter().map(|s| s.to_string()).collect();
+                let mut entities: HashSet<String> =
+                    base_entities.iter().map(|s| s.to_string()).collect();
                 entities.extend(r13_entities.iter().map(|s| s.to_string()));
                 features.supported_entities = entities;
-                features.unsupported_entities = [
-                    "SPLINE", "ELLIPSE", "MTEXT",
-                ].iter().map(|s| s.to_string()).collect();
+                features.unsupported_entities = ["SPLINE", "ELLIPSE", "MTEXT"]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect();
             }
             DxfVersion::V2000 | DxfVersion::V2004 => {
-                let mut entities: HashSet<String> = base_entities.iter().map(|s| s.to_string()).collect();
+                let mut entities: HashSet<String> =
+                    base_entities.iter().map(|s| s.to_string()).collect();
                 entities.extend(r13_entities.iter().map(|s| s.to_string()));
                 entities.extend(v2000_entities.iter().map(|s| s.to_string()));
                 features.supported_entities = entities;
             }
             DxfVersion::V2007 | DxfVersion::V2010 | DxfVersion::V2013 | DxfVersion::V2018 => {
-                let mut entities: HashSet<String> = base_entities.iter().map(|s| s.to_string()).collect();
+                let mut entities: HashSet<String> =
+                    base_entities.iter().map(|s| s.to_string()).collect();
                 entities.extend(r13_entities.iter().map(|s| s.to_string()));
                 entities.extend(v2000_entities.iter().map(|s| s.to_string()));
                 entities.extend(v2007_entities.iter().map(|s| s.to_string()));
                 features.supported_entities = entities;
                 // NURBS 曲线需要特殊处理
-                features.special_handling.insert("SPLINE".to_string(), "nurbs_discretization".to_string());
+                features
+                    .special_handling
+                    .insert("SPLINE".to_string(), "nurbs_discretization".to_string());
             }
             DxfVersion::Unknown => {
                 // 未知版本：尝试支持所有常见实体
-                features.supported_entities.extend(base_entities.iter().map(|s| s.to_string()));
-                features.supported_entities.extend(r13_entities.iter().map(|s| s.to_string()));
-                features.supported_entities.extend(v2000_entities.iter().map(|s| s.to_string()));
+                features
+                    .supported_entities
+                    .extend(base_entities.iter().map(|s| s.to_string()));
+                features
+                    .supported_entities
+                    .extend(r13_entities.iter().map(|s| s.to_string()));
+                features
+                    .supported_entities
+                    .extend(v2000_entities.iter().map(|s| s.to_string()));
             }
         }
 
@@ -423,12 +485,15 @@ impl DxfVersionFeatures {
 
     /// 检查实体类型是否支持
     pub fn is_entity_supported(&self, entity_type: &str) -> bool {
-        self.supported_entities.contains(entity_type.to_uppercase().as_str())
+        self.supported_entities
+            .contains(entity_type.to_uppercase().as_str())
     }
 
     /// 获取特殊处理方式
     pub fn get_special_handling(&self, entity_type: &str) -> Option<&str> {
-        self.special_handling.get(entity_type.to_uppercase().as_str()).map(|s| s.as_str())
+        self.special_handling
+            .get(entity_type.to_uppercase().as_str())
+            .map(|s| s.as_str())
     }
 }
 

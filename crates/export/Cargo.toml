@@ -13,6 +13,3 @@ bincode = { workspace = true }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
 dxf = { workspace = true }
-
-[dev-dependencies]
-insta = { workspace = true }

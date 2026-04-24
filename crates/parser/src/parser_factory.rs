@@ -29,9 +29,12 @@
 //! let parser = ParserFactory::create_high_performance()?;
 //! ```
 
-use crate::parser_trait::{DxfParserTrait, ParserType, SyncDxfParser};
 use crate::async_parser::AsyncDxfParser;
-use crate::cache::{DxfCache, CacheConfig};
+use crate::cache::{CacheConfig, DxfCache};
+#[cfg(feature = "ezdxf-bridge")]
+use crate::ezdxf_parser::EzdxfParser;
+use crate::parser_trait::{DxfParserTrait, ParserType, SyncDxfParser};
+use crate::DxfParser;
 use crate::{DxfConfig, DxfParseReport};
 use common_types::{CadError, RawEntity};
 use std::path::Path;
@@ -49,6 +52,9 @@ pub enum DxfParserEnum {
     CachedSync(DxfCache<SyncDxfParser>),
     /// 缓存解析器（异步）
     CachedAsync(DxfCache<AsyncDxfParser>),
+    /// ezdxf Python 解析器（含 Rust fallback）
+    #[cfg(feature = "ezdxf-bridge")]
+    Ezdxf(EzdxfParser),
 }
 
 impl DxfParserEnum {
@@ -59,36 +65,53 @@ impl DxfParserEnum {
             DxfParserEnum::Async(p) => p.parse_file(path),
             DxfParserEnum::CachedSync(p) => p.parse_file(path),
             DxfParserEnum::CachedAsync(p) => p.parse_file(path),
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_file(path),
         }
     }
 
     /// 同步解析文件并返回报告
-    pub fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    pub fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         match self {
             DxfParserEnum::Sync(p) => p.parse_file_with_report(path),
             DxfParserEnum::Async(p) => p.parse_file_with_report(path),
             DxfParserEnum::CachedSync(p) => p.parse_file_with_report(path),
             DxfParserEnum::CachedAsync(p) => p.parse_file_with_report(path),
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_file_with_report(path),
         }
     }
 
     /// 异步解析文件
-    pub async fn parse_file_async(&self, path: impl AsRef<Path> + Send) -> Result<Vec<RawEntity>, CadError> {
+    pub async fn parse_file_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<Vec<RawEntity>, CadError> {
         match self {
             DxfParserEnum::Sync(p) => p.parse_file_async(path).await,
             DxfParserEnum::Async(p) => p.parse_file_async(path).await,
             DxfParserEnum::CachedSync(p) => p.parse_file_async(path).await,
             DxfParserEnum::CachedAsync(p) => p.parse_file_async(path).await,
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_file_async(path).await,
         }
     }
 
     /// 异步解析文件并返回报告
-    pub async fn parse_file_with_report_async(&self, path: impl AsRef<Path> + Send) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    pub async fn parse_file_with_report_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         match self {
             DxfParserEnum::Sync(p) => p.parse_file_with_report_async(path).await,
             DxfParserEnum::Async(p) => p.parse_file_with_report_async(path).await,
             DxfParserEnum::CachedSync(p) => p.parse_file_with_report_async(path).await,
             DxfParserEnum::CachedAsync(p) => p.parse_file_with_report_async(path).await,
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_file_with_report_async(path).await,
         }
     }
 
@@ -99,6 +122,204 @@ impl DxfParserEnum {
             DxfParserEnum::Async(p) => p.name(),
             DxfParserEnum::CachedSync(p) => p.name(),
             DxfParserEnum::CachedAsync(p) => p.name(),
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.name(),
+        }
+    }
+
+    /// 解析 DXF 字节（ASCII 格式）
+    pub fn parse_bytes(&self, bytes: &[u8]) -> Result<Vec<RawEntity>, CadError> {
+        match self {
+            DxfParserEnum::Sync(p) => p.inner().parse_bytes(bytes),
+            DxfParserEnum::Async(p) => p.parse_bytes(bytes),
+            DxfParserEnum::CachedSync(p) => p.inner().parse_bytes(bytes),
+            DxfParserEnum::CachedAsync(p) => p.inner().parse_bytes(bytes),
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_bytes(bytes),
+        }
+    }
+
+    /// 解析 DXF 字节并返回报告
+    pub fn parse_bytes_with_report(
+        &self,
+        bytes: &[u8],
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+        match self {
+            DxfParserEnum::Sync(p) => {
+                let entities = p.inner().parse_bytes(bytes)?;
+                Ok((entities, DxfParseReport::default()))
+            }
+            DxfParserEnum::Async(p) => p.parse_bytes_with_report(bytes),
+            DxfParserEnum::CachedSync(p) => {
+                let entities = p.inner().parse_bytes(bytes)?;
+                Ok((entities, DxfParseReport::default()))
+            }
+            DxfParserEnum::CachedAsync(p) => {
+                let entities = p.inner().parse_bytes(bytes)?;
+                Ok((entities, DxfParseReport::default()))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => p.parse_bytes_with_report(bytes),
+        }
+    }
+
+    /// 设置图层过滤器
+    pub fn with_layer_filter(self, layers: Vec<String>) -> Self {
+        match self {
+            DxfParserEnum::Sync(p) => DxfParserEnum::Sync(p.with_layer_filter(layers)),
+            DxfParserEnum::Async(p) => {
+                let mut config = p.config().clone();
+                config.layer_whitelist = Some(layers);
+                DxfParserEnum::Async(AsyncDxfParser::with_config(config))
+            }
+            DxfParserEnum::CachedSync(p) => {
+                let sync_parser = p.inner();
+                let new_inner = DxfParser::new()
+                    .with_config(sync_parser.inner().config.clone())
+                    .with_tolerance(sync_parser.inner().tolerance)
+                    .with_layer_filter(layers);
+                DxfParserEnum::CachedSync(DxfCache::new(SyncDxfParser::from_inner(new_inner)))
+            }
+            DxfParserEnum::CachedAsync(p) => {
+                let mut config = p.inner().config().clone();
+                config.layer_whitelist = Some(layers);
+                let inner = AsyncDxfParser::with_config(config);
+                DxfParserEnum::CachedAsync(DxfCache::new(inner))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => DxfParserEnum::Ezdxf(p.with_layer_filter(layers)),
+        }
+    }
+
+    /// 设置是否忽略文本实体
+    pub fn with_ignore_text(self, ignore: bool) -> Self {
+        match self {
+            DxfParserEnum::Sync(p) => {
+                let cfg = p.inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_text: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().tolerance;
+                DxfParserEnum::Sync(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                ))
+            }
+            DxfParserEnum::Async(p) => {
+                let mut config = p.config().clone();
+                config.ignore_text = ignore;
+                DxfParserEnum::Async(AsyncDxfParser::with_config(config))
+            }
+            DxfParserEnum::CachedSync(p) => {
+                let cfg = p.inner().inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_text: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().inner().tolerance;
+                DxfParserEnum::CachedSync(DxfCache::new(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                )))
+            }
+            DxfParserEnum::CachedAsync(p) => {
+                let mut config = p.inner().config().clone();
+                config.ignore_text = ignore;
+                DxfParserEnum::CachedAsync(DxfCache::new(AsyncDxfParser::with_config(config)))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => DxfParserEnum::Ezdxf(p),
+        }
+    }
+
+    /// 设置是否忽略标注实体
+    pub fn with_ignore_dimensions(self, ignore: bool) -> Self {
+        match self {
+            DxfParserEnum::Sync(p) => {
+                let cfg = p.inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_dimensions: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().tolerance;
+                DxfParserEnum::Sync(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                ))
+            }
+            DxfParserEnum::Async(p) => {
+                let mut config = p.config().clone();
+                config.ignore_dimensions = ignore;
+                DxfParserEnum::Async(AsyncDxfParser::with_config(config))
+            }
+            DxfParserEnum::CachedSync(p) => {
+                let cfg = p.inner().inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_dimensions: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().inner().tolerance;
+                DxfParserEnum::CachedSync(DxfCache::new(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                )))
+            }
+            DxfParserEnum::CachedAsync(p) => {
+                let mut config = p.inner().config().clone();
+                config.ignore_dimensions = ignore;
+                DxfParserEnum::CachedAsync(DxfCache::new(AsyncDxfParser::with_config(config)))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => DxfParserEnum::Ezdxf(p),
+        }
+    }
+
+    /// 设置是否忽略填充图案实体
+    pub fn with_ignore_hatch(self, ignore: bool) -> Self {
+        match self {
+            DxfParserEnum::Sync(p) => {
+                let cfg = p.inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_hatch: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().tolerance;
+                DxfParserEnum::Sync(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                ))
+            }
+            DxfParserEnum::Async(p) => {
+                let mut config = p.config().clone();
+                config.ignore_hatch = ignore;
+                DxfParserEnum::Async(AsyncDxfParser::with_config(config))
+            }
+            DxfParserEnum::CachedSync(p) => {
+                let cfg = p.inner().inner().config.clone();
+                let new_cfg = DxfConfig {
+                    ignore_hatch: ignore,
+                    ..cfg
+                };
+                let tolerance = p.inner().inner().tolerance;
+                DxfParserEnum::CachedSync(DxfCache::new(SyncDxfParser::from_inner(
+                    DxfParser::new()
+                        .with_config(new_cfg)
+                        .with_tolerance(tolerance),
+                )))
+            }
+            DxfParserEnum::CachedAsync(p) => {
+                let mut config = p.inner().config().clone();
+                config.ignore_hatch = ignore;
+                DxfParserEnum::CachedAsync(DxfCache::new(AsyncDxfParser::with_config(config)))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            DxfParserEnum::Ezdxf(p) => DxfParserEnum::Ezdxf(p),
         }
     }
 }
@@ -184,10 +405,11 @@ impl ParserFactory {
             ParserType::Auto => {
                 // Auto 模式：默认使用 Async + 缓存
                 if config.enable_cache {
-                    let inner = config.dxf_config
+                    let inner = config
+                        .dxf_config
                         .clone()
                         .map(AsyncDxfParser::with_config)
-                        .unwrap_or_else(AsyncDxfParser::new)
+                        .unwrap_or_default()
                         .with_stream_buffer_size(config.async_buffer_size);
                     let cache_config = config.cache_config.unwrap_or_else(|| {
                         let mut cfg = CacheConfig::default();
@@ -198,19 +420,21 @@ impl ParserFactory {
                     });
                     DxfParserEnum::CachedAsync(DxfCache::with_config(inner, cache_config))
                 } else {
-                    let inner = config.dxf_config
+                    let inner = config
+                        .dxf_config
                         .clone()
                         .map(AsyncDxfParser::with_config)
-                        .unwrap_or_else(AsyncDxfParser::new)
+                        .unwrap_or_default()
                         .with_stream_buffer_size(config.async_buffer_size);
                     DxfParserEnum::Async(inner)
                 }
             }
             ParserType::Sync => {
-                let inner = config.dxf_config
+                let inner = config
+                    .dxf_config
                     .clone()
                     .map(SyncDxfParser::with_config)
-                    .unwrap_or_else(SyncDxfParser::new);
+                    .unwrap_or_default();
                 if config.enable_cache {
                     let cache_config = config.cache_config.unwrap_or_else(|| {
                         let mut cfg = CacheConfig::default();
@@ -225,10 +449,11 @@ impl ParserFactory {
                 }
             }
             ParserType::Async => {
-                let inner = config.dxf_config
+                let inner = config
+                    .dxf_config
                     .clone()
                     .map(AsyncDxfParser::with_config)
-                    .unwrap_or_else(AsyncDxfParser::new)
+                    .unwrap_or_default()
                     .with_stream_buffer_size(config.async_buffer_size);
                 if config.enable_cache {
                     let cache_config = config.cache_config.unwrap_or_else(|| {
@@ -245,10 +470,11 @@ impl ParserFactory {
             }
             ParserType::Cached => {
                 // Cached 类型：默认使用 Sync + 缓存
-                let inner = config.dxf_config
+                let inner = config
+                    .dxf_config
                     .clone()
                     .map(SyncDxfParser::with_config)
-                    .unwrap_or_else(SyncDxfParser::new);
+                    .unwrap_or_default();
                 let cache_config = config.cache_config.unwrap_or_else(|| {
                     let mut cfg = CacheConfig::default();
                     if let Some(limit) = config.cache_memory_limit_mb {
@@ -257,6 +483,20 @@ impl ParserFactory {
                     cfg
                 });
                 DxfParserEnum::CachedSync(DxfCache::with_config(inner, cache_config))
+            }
+            #[cfg(feature = "ezdxf-bridge")]
+            ParserType::Ezdxf => {
+                let parser = EzdxfParser::new();
+                let parser = if let Some(layers) = config
+                    .dxf_config
+                    .as_ref()
+                    .and_then(|c| c.layer_whitelist.as_ref())
+                {
+                    parser.with_layer_filter(layers.clone())
+                } else {
+                    parser
+                };
+                DxfParserEnum::Ezdxf(parser)
             }
         };
 
@@ -276,23 +516,21 @@ impl ParserFactory {
         mut config: FactoryConfig,
     ) -> Result<DxfParserEnum, CadError> {
         let path = path.as_ref();
-        
+
         // 检测文件大小
-        let file_size = std::fs::metadata(path)
-            .map(|m| m.len())
-            .unwrap_or(0);
-        
+        let file_size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
+
         // 大文件（>1MB）使用异步 + 缓存
         if file_size > 1024 * 1024 {
             config.parser_type = ParserType::Async;
             config.enable_cache = true;
-            
+
             // 大文件使用更大的缓冲区
             if config.async_buffer_size < 200 {
                 config.async_buffer_size = 200;
             }
         }
-        
+
         Self::with_config(config)
     }
 
@@ -334,6 +572,16 @@ impl ParserFactory {
     /// 创建低内存解析器
     pub fn create_low_memory() -> Result<DxfParserEnum, CadError> {
         Self::with_config(FactoryConfig::low_memory())
+    }
+
+    /// 创建 ezdxf 解析器（Python 主路径 + Rust fallback）
+    #[cfg(feature = "ezdxf-bridge")]
+    pub fn create_ezdxf() -> Result<DxfParserEnum, CadError> {
+        let config = FactoryConfig {
+            parser_type: ParserType::Ezdxf,
+            ..Default::default()
+        };
+        Self::with_config(config)
     }
 }
 
@@ -379,5 +627,12 @@ mod tests {
         // 默认应该是 Async 或 Cached
         let name = parser.name();
         assert!(name == "AsyncDxfParser" || name == "CachedDxfParser");
+    }
+
+    #[cfg(feature = "ezdxf-bridge")]
+    #[test]
+    fn test_create_ezdxf() {
+        let parser = ParserFactory::create_ezdxf().unwrap();
+        assert_eq!(parser.name(), "EzdxfParser");
     }
 }

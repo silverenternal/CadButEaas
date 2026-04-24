@@ -1,10 +1,11 @@
 //! CPU 端点吸附实现
 
-use accelerator_api::{Point2, SnapConfig};
 use accelerator_api::AcceleratorResult;
+use accelerator_api::{Point2, SnapConfig};
 
 /// 用于 R*-tree 的点包装器
 #[derive(Clone, Debug, PartialEq)]
+#[allow(dead_code)]
 struct RTreePoint {
     coords: [f64; 2],
     index: usize,
@@ -31,7 +32,10 @@ impl rstar::Point for RTreePoint {
 }
 
 /// CPU 端点吸附（使用 R*-tree 空间索引）
-pub fn snap_endpoints_cpu(points: &[Point2], config: &SnapConfig) -> AcceleratorResult<Vec<Point2>> {
+pub fn snap_endpoints_cpu(
+    points: &[Point2],
+    config: &SnapConfig,
+) -> AcceleratorResult<Vec<Point2>> {
     if points.is_empty() {
         return Ok(Vec::new());
     }
@@ -128,18 +132,14 @@ mod tests {
         };
 
         let result = snap_endpoints_cpu(&points, &config).unwrap();
-        
+
         // 前两个点应该被吸附到一起
         assert_eq!(result.len(), 3);
     }
 
     #[test]
     fn test_snap_endpoints_rtree() {
-        let points: Vec<Point2> = vec![
-            [0.0, 0.0],
-            [0.001, 0.001],
-            [10.0, 10.0],
-        ];
+        let points: Vec<Point2> = vec![[0.0, 0.0], [0.001, 0.001], [10.0, 10.0]];
 
         let config = SnapConfig {
             tolerance: 0.1,

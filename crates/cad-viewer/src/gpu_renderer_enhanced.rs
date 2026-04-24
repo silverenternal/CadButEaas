@@ -43,7 +43,6 @@
 //! ```
 
 use common_types::geometry::Point2;
-use std::sync::Arc;
 
 #[cfg(feature = "gpu")]
 use wgpu::util::DeviceExt;
@@ -136,7 +135,7 @@ impl Default for RendererConfig {
         Self {
             enable_instancing: true,
             enable_selection_buffer: true,
-            msaa_samples: 4,  // 默认 4x MSAA
+            msaa_samples: 4, // 默认 4x MSAA
             max_batch_size: 10000,
             vsync: true,
         }
@@ -149,7 +148,7 @@ impl RendererConfig {
         Self {
             enable_instancing: true,
             enable_selection_buffer: true,
-            msaa_samples: 2,  // 核显使用 2x MSAA
+            msaa_samples: 2, // 核显使用 2x MSAA
             max_batch_size: 5000,
             vsync: true,
         }
@@ -175,14 +174,9 @@ impl RendererConfig {
 #[derive(Debug, Clone)]
 pub enum RenderEntityType {
     /// 线段
-    Line {
-        start: Point2,
-        end: Point2,
-    },
+    Line { start: Point2, end: Point2 },
     /// 填充多边形（用于 HATCH）
-    HatchPolygon {
-        points: Vec<Point2>,
-    },
+    HatchPolygon { points: Vec<Point2> },
 }
 
 /// 可渲染实体（增强版）
@@ -239,11 +233,7 @@ impl RenderEntity {
     }
 
     /// 创建 HATCH 填充多边形实体
-    pub fn hatch_polygon(
-        points: Vec<Point2>,
-        color: [f32; 4],
-        instance_id: u32,
-    ) -> Self {
+    pub fn hatch_polygon(points: Vec<Point2>, color: [f32; 4], instance_id: u32) -> Self {
         Self {
             entity_type: RenderEntityType::HatchPolygon { points },
             base_color: color,
@@ -326,7 +316,7 @@ impl InstanceData {
     fn desc() -> wgpu::VertexBufferLayout<'static> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<InstanceData>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Instance,  // 关键：实例化渲染
+            step_mode: wgpu::VertexStepMode::Instance, // 关键：实例化渲染
             attributes: &[
                 // model_matrix 占用 location 2-5
                 wgpu::VertexAttribute {
@@ -543,7 +533,7 @@ impl GpuRendererEnhanced {
 
         // 创建 MSAA 纹理（如果启用）
         let (msaa_texture, msaa_texture_view, msaa_sample_count) = if config.msaa_samples > 1 {
-            let sample_count = config.msaa_samples.min(4);  // 最多 4x
+            let sample_count = config.msaa_samples.min(4); // 最多 4x
             let texture = device.create_texture(&wgpu::TextureDescriptor {
                 label: Some("MSAA Texture"),
                 size: wgpu::Extent3d {
@@ -571,7 +561,7 @@ impl GpuRendererEnhanced {
             } else {
                 vec![Vertex::desc()]
             };
-            
+
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                 label: Some("Main Render Pipeline"),
                 layout: Some(&pipeline_layout),
@@ -617,37 +607,39 @@ impl GpuRendererEnhanced {
             } else {
                 vec![Vertex::desc()]
             };
-            
-            Some(device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some("Pick Pipeline"),
-                layout: Some(&pipeline_layout),
-                vertex: wgpu::VertexState {
-                    module: &shader,
-                    entry_point: "vs_main",
-                    buffers: &vertex_buffers_storage,
-                    compilation_options: wgpu::PipelineCompilationOptions::default(),
-                },
-                fragment: Some(wgpu::FragmentState {
-                    module: &shader,
-                    entry_point: "fs_pick",
-                    targets: &[Some(wgpu::ColorTargetState {
-                        format: wgpu::TextureFormat::Rgba8Uint,
-                        blend: None,
-                        write_mask: wgpu::ColorWrites::ALL,
-                    })],
-                    compilation_options: wgpu::PipelineCompilationOptions::default(),
+
+            Some(
+                device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some("Pick Pipeline"),
+                    layout: Some(&pipeline_layout),
+                    vertex: wgpu::VertexState {
+                        module: &shader,
+                        entry_point: "vs_main",
+                        buffers: &vertex_buffers_storage,
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module: &shader,
+                        entry_point: "fs_pick",
+                        targets: &[Some(wgpu::ColorTargetState {
+                            format: wgpu::TextureFormat::Rgba8Uint,
+                            blend: None,
+                            write_mask: wgpu::ColorWrites::ALL,
+                        })],
+                        compilation_options: wgpu::PipelineCompilationOptions::default(),
+                    }),
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::LineList,
+                        ..Default::default()
+                    },
+                    depth_stencil: None,
+                    multisample: wgpu::MultisampleState {
+                        count: msaa_sample_count,
+                        ..Default::default()
+                    },
+                    multiview: None,
                 }),
-                primitive: wgpu::PrimitiveState {
-                    topology: wgpu::PrimitiveTopology::LineList,
-                    ..Default::default()
-                },
-                depth_stencil: None,
-                multisample: wgpu::MultisampleState {
-                    count: msaa_sample_count,
-                    ..Default::default()
-                },
-                multiview: None,
-            }))
+            )
         } else {
             None
         };
@@ -674,7 +666,7 @@ impl GpuRendererEnhanced {
             // 创建读取缓冲区
             let read_buffer = device.create_buffer(&wgpu::BufferDescriptor {
                 label: Some("Pick Read Buffer"),
-                size: 4,  // 1 像素 × 4 字节
+                size: 4, // 1 像素 × 4 字节
                 usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
                 mapped_at_creation: false,
             });
@@ -840,10 +832,7 @@ impl GpuRendererEnhanced {
 
         // 记录渲染命令
         {
-            let render_pipeline = self
-                .render_pipeline
-                .as_ref()
-                .ok_or("渲染管线未初始化")?;
+            let render_pipeline = self.render_pipeline.as_ref().ok_or("渲染管线未初始化")?;
 
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -864,7 +853,7 @@ impl GpuRendererEnhanced {
             render_pass.set_bind_group(0, self.bind_group.as_ref().unwrap(), &[]);
             render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
             render_pass.set_vertex_buffer(1, instance_buffer.slice(..));
-            
+
             // P0-6: 根据实体类型使用不同的拓扑
             // LineList 用于线段，TriangleFan 用于多边形填充
             // 简化处理：统一使用 LineList，HATCH 多边形在 CPU 侧三角剖分
@@ -905,9 +894,7 @@ impl GpuRendererEnhanced {
                     RenderEntityType::Line { start, end } => {
                         vec![*start, *end]
                     }
-                    RenderEntityType::HatchPolygon { points } => {
-                        points.clone()
-                    }
+                    RenderEntityType::HatchPolygon { points } => points.clone(),
                 };
 
                 positions.into_iter().map(|pos| {
@@ -944,10 +931,7 @@ impl GpuRendererEnhanced {
 
         // 渲染到拾取纹理
         {
-            let pick_pipeline = self
-                .pick_pipeline
-                .as_ref()
-                .ok_or("拾取管线未初始化")?;
+            let pick_pipeline = self.pick_pipeline.as_ref().ok_or("拾取管线未初始化")?;
             let pick_view = self
                 .pick_texture_view
                 .as_ref()
@@ -1024,16 +1008,13 @@ impl GpuRendererEnhanced {
             tx.send(result).ok();
         });
         device.poll(wgpu::Maintain::Wait);
-        
+
         match rx.recv() {
             Ok(Ok(())) => {
                 let data = buffer_slice.get_mapped_range();
                 let instance_id = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
                 drop(data);
-                self.pick_read_buffer
-                    .as_ref()
-                    .unwrap()
-                    .unmap();
+                self.pick_read_buffer.as_ref().unwrap().unmap();
 
                 if instance_id == 0 {
                     Ok(None)
@@ -1141,14 +1122,9 @@ mod tests {
 
     #[test]
     fn test_render_entity_creation() {
-        let entity = RenderEntity::line(
-            [0.0, 0.0],
-            [10.0, 10.0],
-            [1.0, 0.0, 0.0, 1.0],
-            42,
-        );
+        let entity = RenderEntity::line([0.0, 0.0], [10.0, 10.0], [1.0, 0.0, 0.0, 1.0], 42);
         assert_eq!(entity.instance_id, 42);
-        
+
         // 检查 entity_type 中的 start 和 end
         if let RenderEntityType::Line { start, end } = entity.entity_type {
             assert_eq!(start, [0.0, 0.0]);

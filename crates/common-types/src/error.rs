@@ -7,10 +7,10 @@
 //! 4. 统一错误码体系（EaaS 架构要求）
 //! 5. 可执行的恢复建议（AutoFix）
 
-use thiserror::Error;
+use serde_json;
 use std::path::PathBuf;
 use std::sync::Arc;
-use serde_json;
+use thiserror::Error;
 
 use crate::scene::SceneState;
 use crate::RawEdge;
@@ -60,7 +60,7 @@ impl AutoFix {
             description: description.into(),
             precondition: Arc::new(|_| true), // 总是满足
             func: Arc::new(func),
-            rollback: Arc::new(|_| {}), // 无操作回滚
+            rollback: Arc::new(|_| {}),        // 无操作回滚
             postcondition: Arc::new(|_| true), // 总是满足
         }
     }
@@ -128,7 +128,7 @@ impl AutoFix {
             return Err(CadError::internal(
                 crate::error::InternalErrorReason::InvariantViolated {
                     invariant: "AutoFix 前置条件不满足".to_string(),
-                }
+                },
             ));
         }
 
@@ -146,7 +146,7 @@ impl AutoFix {
                     return Err(CadError::internal(
                         crate::error::InternalErrorReason::InvariantViolated {
                             invariant: "AutoFix 后置验证失败".to_string(),
-                        }
+                        },
                     ));
                 }
                 Ok(())
@@ -220,7 +220,7 @@ impl AutoFix {
             return Err(CadError::internal(
                 crate::error::InternalErrorReason::InvariantViolated {
                     invariant: "AutoFix 前置条件不满足".to_string(),
-                }
+                },
             ));
         }
 
@@ -237,7 +237,7 @@ impl AutoFix {
                     return Err(CadError::internal(
                         crate::error::InternalErrorReason::InvariantViolated {
                             invariant: "AutoFix 后置验证失败".to_string(),
-                        }
+                        },
                     ));
                 }
                 Ok(())
@@ -395,7 +395,8 @@ impl IncrementalSnapshot {
 
         // 3. 移除添加的边：使用 retain 批量移除，O(n) 而非 O(n²)
         if !self.added_edges.is_empty() {
-            let added_ids: std::collections::HashSet<usize> = self.added_edges.keys().copied().collect();
+            let added_ids: std::collections::HashSet<usize> =
+                self.added_edges.keys().copied().collect();
             scene.edges.retain(|edge| !added_ids.contains(&edge.id));
         }
 
@@ -577,11 +578,9 @@ impl RecoverySuggestion {
         if let Some(auto_fix) = &self.auto_fix {
             auto_fix.apply(scene)
         } else {
-            Err(CadError::internal(
-                InternalErrorReason::NotImplemented {
-                    feature: "此恢复建议不支持自动修复".to_string(),
-                }
-            ))
+            Err(CadError::internal(InternalErrorReason::NotImplemented {
+                feature: "此恢复建议不支持自动修复".to_string(),
+            }))
         }
     }
 
@@ -609,7 +608,7 @@ impl std::fmt::Display for RecoverySuggestion {
 // ============================================================================
 
 /// 错误码（格式：SERVICE_CATEGORY_###）
-/// 
+///
 /// 错误码分类：
 /// - PARSE_*: 解析错误 (001-099)
 /// - TOPO_*: 拓扑错误 (100-199)
@@ -634,7 +633,7 @@ impl ErrorCode {
     pub const PARSE_IMAGE_TOO_LARGE: ErrorCode = ErrorCode("PARSE_IMG_002");
     pub const PARSE_VECTORIZE_FAILED: ErrorCode = ErrorCode("PARSE_IMG_003");
     pub const PARSE_UNSUPPORTED_FORMAT: ErrorCode = ErrorCode("PARSE_FMT_001");
-    
+
     // ========== 拓扑错误 (100-199) ==========
     pub const TOPO_EMPTY_INPUT: ErrorCode = ErrorCode("TOPO_101");
     pub const TOPO_SNAP_FAILED: ErrorCode = ErrorCode("TOPO_102");
@@ -644,7 +643,7 @@ impl ErrorCode {
     pub const TOPO_SELF_INTERSECTION: ErrorCode = ErrorCode("TOPO_106");
     pub const TOPO_DUPLICATE_EDGES: ErrorCode = ErrorCode("TOPO_107");
     pub const TOPO_OPEN_LOOP: ErrorCode = ErrorCode("TOPO_108");
-    
+
     // ========== 验证错误 (200-299) ==========
     pub const VALIDATE_SELF_INTERSECTION: ErrorCode = ErrorCode("VALIDATE_201");
     pub const VALIDATE_DUPLICATE_EDGES: ErrorCode = ErrorCode("VALIDATE_202");
@@ -652,33 +651,33 @@ impl ErrorCode {
     pub const VALIDATE_LARGE_COORDINATES: ErrorCode = ErrorCode("VALIDATE_204");
     pub const VALIDATE_OPEN_LOOPS: ErrorCode = ErrorCode("VALIDATE_205");
     pub const VALIDATE_INVALID_GEOMETRY: ErrorCode = ErrorCode("VALIDATE_206");
-    
+
     // ========== 导出错误 (300-399) ==========
     pub const EXPORT_DXF_FAILED: ErrorCode = ErrorCode("EXPORT_DXF_301");
     pub const EXPORT_SVG_FAILED: ErrorCode = ErrorCode("EXPORT_SVG_302");
     pub const EXPORT_PDF_FAILED: ErrorCode = ErrorCode("EXPORT_PDF_303");
     pub const EXPORT_JSON_FAILED: ErrorCode = ErrorCode("EXPORT_JSON_304");
     pub const EXPORT_FILE_WRITE_FAILED: ErrorCode = ErrorCode("EXPORT_IO_305");
-    
+
     // ========== 几何错误 (400-499) ==========
     pub const GEOMETRY_CONSTRUCTION_FAILED: ErrorCode = ErrorCode("GEOM_401");
     pub const GEOMETRY_INVALID_POINT: ErrorCode = ErrorCode("GEOM_402");
     pub const GEOMETRY_INVALID_SEGMENT: ErrorCode = ErrorCode("GEOM_403");
     pub const GEOMETRY_TOLERANCE_ERROR: ErrorCode = ErrorCode("GEOM_404");
     pub const GEOMETRY_SELF_INTERSECTING: ErrorCode = ErrorCode("GEOM_405");
-    
+
     // ========== IO 错误 (500-599) ==========
     pub const IO_FILE_NOT_FOUND: ErrorCode = ErrorCode("IO_501");
     pub const IO_PERMISSION_DENIED: ErrorCode = ErrorCode("IO_502");
     pub const IO_READ_FAILED: ErrorCode = ErrorCode("IO_503");
     pub const IO_WRITE_FAILED: ErrorCode = ErrorCode("IO_504");
-    
+
     // ========== 内部错误 (900-999) ==========
     pub const INTERNAL_UNKNOWN: ErrorCode = ErrorCode("INTERNAL_900");
     pub const INTERNAL_NOT_IMPLEMENTED: ErrorCode = ErrorCode("INTERNAL_901");
     pub const INTERNAL_INVARIANT_VIOLATED: ErrorCode = ErrorCode("INTERNAL_902");
     pub const INTERNAL_SERVICE_UNAVAILABLE: ErrorCode = ErrorCode("INTERNAL_903");
-    
+
     /// 获取错误码字符串
     pub fn as_str(&self) -> &'static str {
         self.0
@@ -750,9 +749,7 @@ pub enum CadError {
     },
 
     #[error("矢量化失败：{message}")]
-    VectorizeFailed {
-        message: String,
-    },
+    VectorizeFailed { message: String },
 
     // ========== 几何错误 ==========
     #[error("几何构造失败：{operation} - {reason}")]
@@ -805,10 +802,7 @@ pub enum CadError {
     },
 
     #[error("验证错误：{issue_code} - {reason}")]
-    ValidationError {
-        issue_code: String,
-        reason: String,
-    },
+    ValidationError { issue_code: String, reason: String },
 
     // ========== IO 错误 ==========
     #[error("文件 IO 错误：{path:?} - {reason}")]
@@ -839,10 +833,15 @@ pub enum DxfParseReason {
     FileNotFound,
     InvalidVersion(String),
     MissingSection(String),
-    MalformedEntity { entity_type: String, details: String },
+    MalformedEntity {
+        entity_type: String,
+        details: String,
+    },
     UnknownEntity(String),
     EncodingError(String),
     InvalidDimensionType(u16),
+    /// 通用解析失败（ezdxf 降级、子进程异常等）
+    ParseError(String),
 }
 
 impl std::fmt::Display for DxfParseReason {
@@ -851,12 +850,16 @@ impl std::fmt::Display for DxfParseReason {
             DxfParseReason::FileNotFound => write!(f, "文件未找到"),
             DxfParseReason::InvalidVersion(v) => write!(f, "无效的 DXF 版本：{}", v),
             DxfParseReason::MissingSection(s) => write!(f, "缺少必需节：{}", s),
-            DxfParseReason::MalformedEntity { entity_type, details } => {
+            DxfParseReason::MalformedEntity {
+                entity_type,
+                details,
+            } => {
                 write!(f, "实体 {} 格式错误：{}", entity_type, details)
             }
             DxfParseReason::UnknownEntity(e) => write!(f, "未知实体类型：{}", e),
             DxfParseReason::EncodingError(e) => write!(f, "编码错误：{}", e),
             DxfParseReason::InvalidDimensionType(t) => write!(f, "无效的尺寸标注类型：{}", t),
+            DxfParseReason::ParseError(msg) => write!(f, "解析失败：{}", msg),
         }
     }
 }
@@ -888,11 +891,28 @@ impl std::fmt::Display for PdfParseReason {
 /// 几何构造失败原因（语义化枚举）
 #[derive(Debug, Clone)]
 pub enum GeometryConstructionReason {
-    InvalidPoint { x: f64, y: f64, reason: String },
-    InvalidSegment { start: [f64; 2], end: [f64; 2], reason: String },
-    ArcDiscretizationError { tolerance: f64, actual_error: f64 },
-    NurbsEvaluationError { parameter: f64, reason: String },
-    IntersectionNotFound { segment1: [usize; 2], segment2: [usize; 2] },
+    InvalidPoint {
+        x: f64,
+        y: f64,
+        reason: String,
+    },
+    InvalidSegment {
+        start: [f64; 2],
+        end: [f64; 2],
+        reason: String,
+    },
+    ArcDiscretizationError {
+        tolerance: f64,
+        actual_error: f64,
+    },
+    NurbsEvaluationError {
+        parameter: f64,
+        reason: String,
+    },
+    IntersectionNotFound {
+        segment1: [usize; 2],
+        segment2: [usize; 2],
+    },
 }
 
 impl std::fmt::Display for GeometryConstructionReason {
@@ -904,8 +924,15 @@ impl std::fmt::Display for GeometryConstructionReason {
             GeometryConstructionReason::InvalidSegment { start, end, reason } => {
                 write!(f, "无效线段 [{:?} -> {:?}]: {}", start, end, reason)
             }
-            GeometryConstructionReason::ArcDiscretizationError { tolerance, actual_error } => {
-                write!(f, "圆弧离散化误差超标：容差={}, 实际误差={}", tolerance, actual_error)
+            GeometryConstructionReason::ArcDiscretizationError {
+                tolerance,
+                actual_error,
+            } => {
+                write!(
+                    f,
+                    "圆弧离散化误差超标：容差={}, 实际误差={}",
+                    tolerance, actual_error
+                )
             }
             GeometryConstructionReason::NurbsEvaluationError { parameter, reason } => {
                 write!(f, "NURBS 评估失败 (t={}): {}", parameter, reason)
@@ -929,11 +956,25 @@ pub enum ToleranceErrorReason {
 impl std::fmt::Display for ToleranceErrorReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ToleranceErrorReason::SnapToleranceTooLarge { value, max_recommended } => {
-                write!(f, "吸附容差过大：{}mm (推荐最大值：{}mm)", value, max_recommended)
+            ToleranceErrorReason::SnapToleranceTooLarge {
+                value,
+                max_recommended,
+            } => {
+                write!(
+                    f,
+                    "吸附容差过大：{}mm (推荐最大值：{}mm)",
+                    value, max_recommended
+                )
             }
-            ToleranceErrorReason::SnapToleranceTooSmall { value, min_recommended } => {
-                write!(f, "吸附容差过小：{}mm (推荐最小值：{}mm)", value, min_recommended)
+            ToleranceErrorReason::SnapToleranceTooSmall {
+                value,
+                min_recommended,
+            } => {
+                write!(
+                    f,
+                    "吸附容差过小：{}mm (推荐最小值：{}mm)",
+                    value, min_recommended
+                )
             }
             ToleranceErrorReason::AngleToleranceInvalid { value } => {
                 write!(f, "无效角度容差：{}°", value)
@@ -1163,16 +1204,14 @@ impl CadError {
             Self::PdfParseError { .. } => ErrorCode::PARSE_PDF_INVALID_FILE,
             Self::UnsupportedFormat { .. } => ErrorCode::PARSE_UNSUPPORTED_FORMAT,
             Self::GeometryConstructionError { .. } => ErrorCode::GEOMETRY_CONSTRUCTION_FAILED,
-            Self::GeometryValidationError { issue_code, .. } => {
-                match issue_code.as_str() {
-                    "SELF_INTERSECTION" => ErrorCode::VALIDATE_SELF_INTERSECTION,
-                    "DUPLICATE_EDGES" => ErrorCode::VALIDATE_DUPLICATE_EDGES,
-                    "TINY_SEGMENT" => ErrorCode::VALIDATE_TINY_SEGMENTS,
-                    "LARGE_COORDINATES" => ErrorCode::VALIDATE_LARGE_COORDINATES,
-                    "OPEN_LOOP" => ErrorCode::VALIDATE_OPEN_LOOPS,
-                    _ => ErrorCode::VALIDATE_INVALID_GEOMETRY,
-                }
-            }
+            Self::GeometryValidationError { issue_code, .. } => match issue_code.as_str() {
+                "SELF_INTERSECTION" => ErrorCode::VALIDATE_SELF_INTERSECTION,
+                "DUPLICATE_EDGES" => ErrorCode::VALIDATE_DUPLICATE_EDGES,
+                "TINY_SEGMENT" => ErrorCode::VALIDATE_TINY_SEGMENTS,
+                "LARGE_COORDINATES" => ErrorCode::VALIDATE_LARGE_COORDINATES,
+                "OPEN_LOOP" => ErrorCode::VALIDATE_OPEN_LOOPS,
+                _ => ErrorCode::VALIDATE_INVALID_GEOMETRY,
+            },
             Self::ToleranceError { .. } => ErrorCode::GEOMETRY_TOLERANCE_ERROR,
             Self::TopologyConstructionError { stage, .. } => match stage {
                 TopoStage::Snap => ErrorCode::TOPO_SNAP_FAILED,
@@ -1281,7 +1320,11 @@ impl CadError {
     }
 
     /// 创建 IO 错误
-    pub fn io_path(path: impl Into<PathBuf>, reason: IoErrorReason, source: std::io::Error) -> Self {
+    pub fn io_path(
+        path: impl Into<PathBuf>,
+        reason: IoErrorReason,
+        source: std::io::Error,
+    ) -> Self {
         Self::IoError {
             path: path.into(),
             reason,
@@ -1466,6 +1509,13 @@ impl CadError {
                         ))
                         .with_priority(6))
                     }
+                    DxfParseReason::ParseError(details) => {
+                        Some(RecoverySuggestion::new(format!(
+                            "DXF 解析失败：{}。建议：1) 用 AutoCAD 打开确认文件有效，2) 转换为兼容版本后重新导出",
+                            details
+                        ))
+                        .with_priority(5))
+                    }
                     _ => None,
                 }
             }
@@ -1632,7 +1682,10 @@ mod tests {
     fn test_error_constructors() {
         let _ = CadError::topo_construction(
             TopoStage::Snap,
-            TopoErrorReason::SnapFailed { num_points: 100, error: "测试错误".to_string() },
+            TopoErrorReason::SnapFailed {
+                num_points: 100,
+                error: "测试错误".to_string(),
+            },
         );
         let _ = CadError::geometry_validation("E001", "环未闭合");
         let _ = CadError::internal(InternalErrorReason::Unknown);
@@ -1642,14 +1695,18 @@ mod tests {
     #[test]
     fn test_error_reason_display() {
         // 测试 DXF 解析原因
-        assert!(DxfParseReason::FileNotFound.to_string().contains("文件未找到"));
+        assert!(DxfParseReason::FileNotFound
+            .to_string()
+            .contains("文件未找到"));
 
         // 测试拓扑错误原因
         let topo_err = TopoErrorReason::OpenLoop { gap_distance: 0.5 };
         assert!(topo_err.to_string().contains("环未闭合"));
 
         // 测试内部错误原因
-        assert!(InternalErrorReason::Unknown.to_string().contains("未知内部错误"));
+        assert!(InternalErrorReason::Unknown
+            .to_string()
+            .contains("未知内部错误"));
     }
 
     // ========== P11 恢复建议功能测试 ==========

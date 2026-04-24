@@ -125,25 +125,25 @@
 // ============================================================================
 pub mod dxf_parser;
 pub mod pdf_parser;
-pub mod unit_converter;  // P0-2 新增：单位转换器
 pub mod service;
+pub mod unit_converter; // P0-2 新增：单位转换器
 
 // ============================================================================
 // DXF 解析优化模块（P3 阶段）
 // ============================================================================
 
 /// 解析器 Trait 抽象层
-/// 
+///
 /// 提供统一的接口定义，支持不同解析器实现的多态切换
 pub mod parser_trait;
 
 /// 异步 DXF 解析器
-/// 
+///
 /// 使用 tokio 异步 IO 和流式解析优化大文件性能
 pub mod async_parser;
 
 /// 解析结果缓存系统
-/// 
+///
 /// 使用 LRU 策略和文件修改检测实现智能缓存
 pub mod cache;
 
@@ -174,36 +174,36 @@ pub mod builder;
 // 公共导出
 // ============================================================================
 
-pub use service::{ParserService, FileType, ParseResult};
-pub use dxf_parser::{DxfParser, DxfParseReport, DxfConfig, EntityTypeFilter, LayerFilterMode, ParseIssue, ParseIssueSeverity};
+pub use dxf_parser::{
+    evaluate_layer_filter, is_indoor_fixture, DxfConfig, DxfParseReport, DxfParser,
+    EntityTypeFilter, LayerFilterMode, LayerFilterResult, ParseIssue, ParseIssueSeverity,
+};
 pub use pdf_parser::PdfParser;
+pub use service::{FileType, ParseResult, ParserService};
 pub use unit_converter::UnitConverter;
 
 // ============================================================================
 // 优化模块导出（P3 阶段）
 // ============================================================================
 
-pub use parser_trait::{DxfParserTrait, SyncDxfParser, ParserType};
 pub use async_parser::AsyncDxfParser;
-pub use cache::{DxfCache, CacheConfig, CacheStats};
-pub use parser_factory::{ParserFactory, FactoryConfig};
+pub use cache::{CacheConfig, CacheStats, DxfCache};
+pub use parser_factory::{DxfParserEnum, FactoryConfig, ParserFactory};
+pub use parser_trait::{DxfParserTrait, ParserType, SyncDxfParser};
 
 // ============================================================================
 // 恢复模块导出（P0-3）
 // ============================================================================
 
 pub use recovery::{
-    RecoveryManager, RecoveryStrategy, EntityRepairer, DefaultEntityRepairer,
-    clean_mtext_content,
+    clean_mtext_content, DefaultEntityRepairer, EntityRepairer, RecoveryManager, RecoveryStrategy,
 };
 
 // ============================================================================
 // 构建器模式导出（P0-4）
 // ============================================================================
 
-pub use builder::{
-    DxfParserBuilder, StreamingResult,
-};
+pub use builder::{DxfParserBuilder, StreamingResult};
 
 // ============================================================================
 // DXF 版本兼容性导出（P1-4）
@@ -215,9 +215,23 @@ pub use builder::{
 pub mod dxf_version;
 
 pub use dxf_version::{
-    DxfVersion, DxfVersionStrategy, DxfVersionFeatures,
-    VersionToleranceConfig, DxfVersionDetector, VersionCompatibilityReport,
+    DxfVersion, DxfVersionDetector, DxfVersionFeatures, DxfVersionStrategy,
+    VersionCompatibilityReport, VersionToleranceConfig,
 };
+
+// ============================================================================
+// ezdxf 解析器桥接（Python 主路径 + Rust fallback）
+// ============================================================================
+
+/// ezdxf 解析器桥接模块
+///
+/// 通过 subprocess 调用 Python ezdxf 库解析 DXF 文件，
+/// 解析失败时自动降级到 Rust dxf crate 解析器。
+#[cfg(feature = "ezdxf-bridge")]
+pub mod ezdxf_parser;
+
+#[cfg(feature = "ezdxf-bridge")]
+pub use ezdxf_parser::EzdxfParser;
 
 // ============================================================================
 // HATCH 解析器（P0-1：建筑 CAD 核心功能）
@@ -229,3 +243,33 @@ pub use dxf_version::{
 pub mod hatch_parser;
 
 pub use hatch_parser::HatchParser;
+
+// ============================================================================
+// DWG 解析器（外部转换 → DXF）
+// ============================================================================
+
+/// DWG 文件解析器
+///
+/// 通过外部转换工具（libredwg dwg2dxf 或 ODA File Converter）
+/// 将 DWG 转为 DXF，然后委托给 DXF 解析器处理
+pub mod dwg_parser;
+
+pub use dwg_parser::{DwgConverter, DwgParser};
+
+// ============================================================================
+// SVG 解析器（Web CAD 集成）
+// ============================================================================
+
+/// SVG 文件解析器
+pub mod svg_parser;
+
+pub use svg_parser::SvgParser;
+
+// ============================================================================
+// STL 解析器（3D 制造/打印）
+// ============================================================================
+
+/// STL 文件解析器（二进制/ASCII）
+pub mod stl_parser;
+
+pub use stl_parser::StlParser;

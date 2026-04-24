@@ -17,8 +17,8 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
 use std::fs;
+use std::path::{Path, PathBuf};
 
 /// CAD 处理系统统一配置
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -80,10 +80,17 @@ pub struct PdfConfig {
     /// 二值化阈值 (0-255) - P11 锐评 v2.0 修复：移除硬编码
     #[serde(default = "default_threshold")]
     pub threshold: u8,
+    /// 最大图像像素数限制（默认 30,000,000）
+    #[serde(default = "default_max_pixels")]
+    pub max_pixels: usize,
 }
 
 fn default_threshold() -> u8 {
     128
+}
+
+fn default_max_pixels() -> usize {
+    30_000_000
 }
 
 /// 拓扑配置
@@ -185,6 +192,7 @@ impl Default for PdfConfig {
             edge_threshold: 0.1,
             min_line_length_px: 5.0,
             threshold: 128,
+            max_pixels: 30_000_000,
         }
     }
 }
@@ -232,17 +240,15 @@ impl CadConfig {
     /// 从 TOML 文件加载配置
     pub fn from_file(path: impl AsRef<Path>) -> Result<Self, ConfigError> {
         let path = path.as_ref();
-        let content = fs::read_to_string(path)
-            .map_err(|e| ConfigError::FileReadError {
-                path: path.to_path_buf(),
-                source: e,
-            })?;
-        
-        let config: CadConfig = toml::from_str(&content)
-            .map_err(|e| ConfigError::ParseError {
-                path: path.to_path_buf(),
-                source: Box::new(e),
-            })?;
+        let content = fs::read_to_string(path).map_err(|e| ConfigError::FileReadError {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
+
+        let config: CadConfig = toml::from_str(&content).map_err(|e| ConfigError::ParseError {
+            path: path.to_path_buf(),
+            source: Box::new(e),
+        })?;
 
         Ok(config)
     }
@@ -250,17 +256,15 @@ impl CadConfig {
     /// 保存到 TOML 文件
     pub fn save_to_file(&self, path: impl AsRef<Path>) -> Result<(), ConfigError> {
         let path = path.as_ref();
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| ConfigError::SerializeError {
-                source: Box::new(e),
-            })?;
-        
-        fs::write(path, content)
-            .map_err(|e| ConfigError::FileWriteError {
-                path: path.to_path_buf(),
-                source: e,
-            })?;
-        
+        let content = toml::to_string_pretty(self).map_err(|e| ConfigError::SerializeError {
+            source: Box::new(e),
+        })?;
+
+        fs::write(path, content).map_err(|e| ConfigError::FileWriteError {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
+
         Ok(())
     }
 
@@ -363,6 +367,7 @@ impl CadConfig {
                     edge_threshold: 0.1,
                     min_line_length_px: 5.0,
                     threshold: 128,
+                    max_pixels: 30_000_000,
                 },
             },
             topology: TopoConfig {
@@ -424,6 +429,7 @@ impl CadConfig {
                     edge_threshold: 0.08,
                     min_line_length_px: 3.0,
                     threshold: 128,
+                    max_pixels: 30_000_000,
                 },
             },
             topology: TopoConfig {
@@ -457,10 +463,7 @@ impl CadConfig {
             parser: ParserConfig {
                 dxf: DxfConfig {
                     layer_whitelist: None,
-                    entity_whitelist: Some(vec![
-                        "LINE".to_string(),
-                        "LWPOLYLINE".to_string(),
-                    ]),
+                    entity_whitelist: Some(vec!["LINE".to_string(), "LWPOLYLINE".to_string()]),
                     arc_tolerance_mm: 0.5,
                     spline_tolerance_mm: 0.5,
                     ignore_text: true,
@@ -473,6 +476,7 @@ impl CadConfig {
                     edge_threshold: 0.15,
                     min_line_length_px: 8.0,
                     threshold: 128,
+                    max_pixels: 30_000_000,
                 },
             },
             topology: TopoConfig {
@@ -506,10 +510,7 @@ impl CadConfig {
             parser: ParserConfig {
                 dxf: DxfConfig {
                     layer_whitelist: None,
-                    entity_whitelist: Some(vec![
-                        "LINE".to_string(),
-                        "LWPOLYLINE".to_string(),
-                    ]),
+                    entity_whitelist: Some(vec!["LINE".to_string(), "LWPOLYLINE".to_string()]),
                     arc_tolerance_mm: 1.0,
                     spline_tolerance_mm: 1.0,
                     ignore_text: true,
@@ -555,15 +556,15 @@ impl CadConfig {
 
         // 尝试从多个路径加载配置文件
         let mut search_paths: Vec<PathBuf> = Vec::new();
-        
+
         // 当前工作目录
         search_paths.push(PathBuf::from("cad_config.profiles.toml"));
-        
+
         // 项目根目录（开发环境）
         if let Ok(manifest_dir) = env::var("CARGO_MANIFEST_DIR") {
             search_paths.push(PathBuf::from(manifest_dir).join("../../cad_config.profiles.toml"));
         }
-        
+
         // 用户主目录
         if let Ok(home_dir) = env::var("HOME") {
             search_paths.push(PathBuf::from(home_dir).join(".cad/cad_config.profiles.toml"));
@@ -587,11 +588,10 @@ impl CadConfig {
     /// 原文档指出：嵌套获取逻辑复杂容易出错。
     /// 修复方案：使用 serde 直接反序列化整个配置结构。
     pub fn from_profile_file_path(profile_name: &str, path: &Path) -> Result<Self, ConfigError> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| ConfigError::FileReadError {
-                path: path.to_path_buf(),
-                source: e,
-            })?;
+        let content = fs::read_to_string(path).map_err(|e| ConfigError::FileReadError {
+            path: path.to_path_buf(),
+            source: e,
+        })?;
 
         // P11 锐评落实：使用 serde 直接反序列化，而非手动嵌套获取
         // 配置文件格式：
@@ -599,10 +599,10 @@ impl CadConfig {
         // [profile.architectural.topology]
         // ...
         // 直接反序列化为 CadConfig 结构
-        
+
         // 首先解析为 TOML Value
-        let config_value: toml::Value = toml::from_str(&content)
-            .map_err(|e| ConfigError::ParseError {
+        let config_value: toml::Value =
+            toml::from_str(&content).map_err(|e| ConfigError::ParseError {
                 path: path.to_path_buf(),
                 source: Box::new(e),
             })?;
@@ -622,10 +622,12 @@ impl CadConfig {
 
         // 使用 serde 直接反序列化为 CadConfig
         // 这比手动嵌套获取更简洁、更可靠
-        let config: Self = toml::Value::try_into(profile_value.clone())
-            .map_err(|e: toml::de::Error| ConfigError::ParseError {
-                path: path.to_path_buf(),
-                source: Box::new(e),
+        let config: Self =
+            toml::Value::try_into(profile_value.clone()).map_err(|e: toml::de::Error| {
+                ConfigError::ParseError {
+                    path: path.to_path_buf(),
+                    source: Box::new(e),
+                }
             })?;
 
         Ok(config)
@@ -654,15 +656,10 @@ pub enum ConfigError {
     },
 
     #[error("序列化配置失败：{source}")]
-    SerializeError {
-        source: Box<toml::ser::Error>,
-    },
+    SerializeError { source: Box<toml::ser::Error> },
 
     #[error("配置值无效：字段 '{field}' - {reason}")]
-    InvalidValue {
-        field: String,
-        reason: String,
-    },
+    InvalidValue { field: String, reason: String },
 }
 
 #[cfg(test)]
@@ -672,7 +669,7 @@ mod tests {
     #[test]
     fn test_default_config() {
         let config = CadConfig::default();
-        
+
         assert_eq!(config.parser.dxf.arc_tolerance_mm, 0.1);
         assert_eq!(config.topology.snap_tolerance_mm, 0.5);
         assert_eq!(config.validator.closure_tolerance_mm, 0.5);
@@ -697,9 +694,12 @@ mod tests {
     fn test_config_serialization() {
         let config = CadConfig::default();
         let toml_str = toml::to_string(&config).unwrap();
-        
+
         let parsed: CadConfig = toml::from_str(&toml_str).unwrap();
-        assert_eq!(parsed.parser.dxf.arc_tolerance_mm, config.parser.dxf.arc_tolerance_mm);
+        assert_eq!(
+            parsed.parser.dxf.arc_tolerance_mm,
+            config.parser.dxf.arc_tolerance_mm
+        );
     }
 
     #[test]
@@ -710,7 +710,10 @@ mod tests {
         config.save_to_file(&temp_path).unwrap();
         let loaded = CadConfig::from_file(&temp_path).unwrap();
 
-        assert_eq!(loaded.parser.dxf.arc_tolerance_mm, config.parser.dxf.arc_tolerance_mm);
+        assert_eq!(
+            loaded.parser.dxf.arc_tolerance_mm,
+            config.parser.dxf.arc_tolerance_mm
+        );
 
         fs::remove_file(temp_path).ok();
     }
@@ -746,7 +749,7 @@ mod tests {
         let config = CadConfig::from_profile("quick").unwrap();
         assert_eq!(config.profile_name, Some("quick".to_string()));
         assert_eq!(config.topology.snap_tolerance_mm, 1.0);
-        assert_eq!(config.export.auto_validate, false);
+        assert!(!config.export.auto_validate);
     }
 
     #[test]
@@ -764,8 +767,14 @@ mod tests {
         let config3 = CadConfig::from_profile("architectural").unwrap();
 
         // 所有预设应该相同
-        assert_eq!(config1.topology.snap_tolerance_mm, config2.topology.snap_tolerance_mm);
-        assert_eq!(config1.topology.snap_tolerance_mm, config3.topology.snap_tolerance_mm);
+        assert_eq!(
+            config1.topology.snap_tolerance_mm,
+            config2.topology.snap_tolerance_mm
+        );
+        assert_eq!(
+            config1.topology.snap_tolerance_mm,
+            config3.topology.snap_tolerance_mm
+        );
     }
 
     #[test]
@@ -816,9 +825,12 @@ auto_validate = false
         let config = CadConfig::from_profile_file_path("test_profile", &config_path).unwrap();
 
         // 验证 parser.dxf 配置
-        assert_eq!(config.parser.dxf.layer_whitelist, Some(vec!["WALL".to_string(), "DOOR".to_string()]));
+        assert_eq!(
+            config.parser.dxf.layer_whitelist,
+            Some(vec!["WALL".to_string(), "DOOR".to_string()])
+        );
         assert_eq!(config.parser.dxf.arc_tolerance_mm, 0.25);
-        assert_eq!(config.parser.dxf.ignore_text, false);
+        assert!(!config.parser.dxf.ignore_text);
 
         // 验证 parser.pdf 配置
         assert_eq!(config.parser.pdf.vectorize_tolerance_px, 1.5);
@@ -839,7 +851,7 @@ auto_validate = false
         // 验证 export 配置
         assert_eq!(config.export.format, "bincode");
         assert_eq!(config.export.json_indent, 4);
-        assert_eq!(config.export.auto_validate, false);
+        assert!(!config.export.auto_validate);
 
         // 清理临时文件
         fs::remove_file(config_path).ok();

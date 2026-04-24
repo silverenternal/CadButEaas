@@ -13,27 +13,25 @@ use tracing_subscriber::FmtSubscriber;
 async fn metrics() -> impl IntoResponse {
     let encoder = TextEncoder::new();
     let metric_families = prometheus::gather();
-    
+
     let mut buffer = Vec::new();
     match encoder.encode(&metric_families, &mut buffer) {
         Ok(_) => {
             // 检查指标内容
             let metrics_string = String::from_utf8_lossy(&buffer);
-            
+
             // 添加自定义指标（示例）
             let response = format!(
                 "{}\n# 自定义指标示例\n# cad_eaas_version_info 1.0.0\ncad_eaas_version_info{{version=\"1.0.0\"}} 1\n",
                 metrics_string
             );
-            
+
             (StatusCode::OK, response)
         }
-        Err(e) => {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("无法编码指标：{}", e),
-            )
-        }
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("无法编码指标：{}", e),
+        ),
     }
 }
 
@@ -50,7 +48,7 @@ async fn ready() -> impl IntoResponse {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 初始化日志
-    let _subscriber = FmtSubscriber::builder()
+    FmtSubscriber::builder()
         .with_max_level(Level::INFO)
         .with_target(false)
         .init();
@@ -66,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 绑定地址
     let addr: SocketAddr = "127.0.0.1:8080".parse()?;
     let listener = TcpListener::bind(addr).await?;
-    
+
     info!("指标服务器监听地址：http://{}", addr);
     info!("Prometheus 指标端点：http://{}/metrics", addr);
     info!("健康检查端点：http://{}/health", addr);
@@ -99,7 +97,12 @@ mod tests {
             .route("/metrics", get(metrics));
 
         let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -114,7 +117,12 @@ mod tests {
             .route("/metrics", get(metrics));
 
         let response = app
-            .oneshot(Request::builder().uri("/ready").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/ready")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
@@ -129,17 +137,22 @@ mod tests {
             .route("/metrics", get(metrics));
 
         let response = app
-            .oneshot(Request::builder().uri("/metrics").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/metrics")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::OK);
-        
+
         let body = axum::body::to_bytes(response.into_body(), usize::MAX)
             .await
             .unwrap();
         let body_str = String::from_utf8_lossy(&body);
-        
+
         // 验证包含 Prometheus 指标格式
         assert!(body_str.contains("# HELP") || body_str.contains("cad_eaas"));
     }

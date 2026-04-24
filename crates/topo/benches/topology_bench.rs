@@ -37,17 +37,17 @@
 //! | 100,000 线段 | < 1s | < 500MB |
 //! | 1,000,000 线段 | < 10s | < 2GB |
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, BenchmarkId, Throughput};
-use topo::TopoService;
+use common_types::{LengthUnit, ToleranceConfig};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use topo::service::TopoConfig;
-use common_types::{ToleranceConfig, LengthUnit};
+use topo::TopoService;
 
 /// 生成矩形网格数据
-/// 
+///
 /// # 参数
 /// - `count`: 矩形数量
 /// - `spacing`: 矩形之间的间距
-/// 
+///
 /// # 返回
 /// Vec<Vec<[f64; 2]>> - 每个矩形是一个闭合多段线
 fn generate_rectangles(count: usize, spacing: f64) -> Vec<Vec<[f64; 2]>> {
@@ -57,7 +57,7 @@ fn generate_rectangles(count: usize, spacing: f64) -> Vec<Vec<[f64; 2]>> {
             let col = i % 10;
             let offset_x = col as f64 * spacing;
             let offset_y = row as f64 * spacing;
-            
+
             // 100x100 的矩形
             vec![
                 [0.0 + offset_x, 0.0 + offset_y],
@@ -70,35 +70,32 @@ fn generate_rectangles(count: usize, spacing: f64) -> Vec<Vec<[f64; 2]>> {
 }
 
 /// 生成需要端点吸附的连续路径
-/// 
+///
 /// 模拟真实 CAD 图纸中线段端点接近但不完全重合的情况
 fn generate_snapping_path(num_segments: usize, length: f64, tolerance: f64) -> Vec<Vec<[f64; 2]>> {
     let mut segments = Vec::new();
     let mut current_x = 0.0;
-    
+
     for _ in 0..num_segments {
         // 每个线段起点与前一个终点有微小偏移
         let start_x = current_x + tolerance * 0.3;
         let end_x = start_x + length;
-        
-        segments.push(vec![
-            [start_x, 0.0],
-            [end_x, 0.0],
-        ]);
-        
+
+        segments.push(vec![[start_x, 0.0], [end_x, 0.0]]);
+
         current_x = end_x;
     }
-    
+
     segments
 }
 
 /// 生成带孔洞的多边形数据
 fn generate_polygon_with_holes(num_outer: usize, holes_per_polygon: usize) -> Vec<Vec<[f64; 2]>> {
     let mut polylines = Vec::new();
-    
+
     for i in 0..num_outer {
         let offset = i as f64 * 500.0;
-        
+
         // 外轮廓（200x200 正方形）
         let outer = vec![
             [0.0 + offset, 0.0],
@@ -107,7 +104,7 @@ fn generate_polygon_with_holes(num_outer: usize, holes_per_polygon: usize) -> Ve
             [0.0 + offset, 200.0],
         ];
         polylines.push(outer);
-        
+
         // 内孔洞
         for j in 0..holes_per_polygon {
             let hole_offset_x = offset + 50.0 + (j as f64 * 60.0);
@@ -120,7 +117,7 @@ fn generate_polygon_with_holes(num_outer: usize, holes_per_polygon: usize) -> Ve
             polylines.push(hole);
         }
     }
-    
+
     polylines
 }
 
@@ -130,14 +127,18 @@ fn bench_topology_small(c: &mut Criterion) {
     let polylines = generate_rectangles(100, 150.0);
 
     group.throughput(Throughput::Elements(400));
-    group.bench_with_input(BenchmarkId::from_parameter("100 矩形"), &polylines, |b, polylines| {
-        b.iter(|| {
-            let topo = TopoService::with_default_config();
-            let result = topo.build_topology(black_box(polylines));
-            assert!(result.is_ok());
-            result.unwrap().all_loops.len()
-        })
-    });
+    group.bench_with_input(
+        BenchmarkId::from_parameter("100 矩形"),
+        &polylines,
+        |b, polylines| {
+            b.iter(|| {
+                let topo = TopoService::with_default_config();
+                let result = topo.build_topology(black_box(polylines));
+                assert!(result.is_ok());
+                result.unwrap().all_loops.len()
+            })
+        },
+    );
     group.finish();
 }
 
@@ -147,14 +148,18 @@ fn bench_topology_medium(c: &mut Criterion) {
     let polylines = generate_rectangles(1000, 150.0);
 
     group.throughput(Throughput::Elements(4000));
-    group.bench_with_input(BenchmarkId::from_parameter("1000 矩形"), &polylines, |b, polylines| {
-        b.iter(|| {
-            let topo = TopoService::with_default_config();
-            let result = topo.build_topology(black_box(polylines));
-            assert!(result.is_ok());
-            result.unwrap().all_loops.len()
-        })
-    });
+    group.bench_with_input(
+        BenchmarkId::from_parameter("1000 矩形"),
+        &polylines,
+        |b, polylines| {
+            b.iter(|| {
+                let topo = TopoService::with_default_config();
+                let result = topo.build_topology(black_box(polylines));
+                assert!(result.is_ok());
+                result.unwrap().all_loops.len()
+            })
+        },
+    );
     group.finish();
 }
 
@@ -164,14 +169,18 @@ fn bench_topology_large(c: &mut Criterion) {
     let polylines = generate_rectangles(10000, 150.0);
 
     group.throughput(Throughput::Elements(40000));
-    group.bench_with_input(BenchmarkId::from_parameter("10000 矩形"), &polylines, |b, polylines| {
-        b.iter(|| {
-            let topo = TopoService::with_default_config();
-            let result = topo.build_topology(black_box(polylines));
-            assert!(result.is_ok());
-            result.unwrap().all_loops.len()
-        })
-    });
+    group.bench_with_input(
+        BenchmarkId::from_parameter("10000 矩形"),
+        &polylines,
+        |b, polylines| {
+            b.iter(|| {
+                let topo = TopoService::with_default_config();
+                let result = topo.build_topology(black_box(polylines));
+                assert!(result.is_ok());
+                result.unwrap().all_loops.len()
+            })
+        },
+    );
     group.finish();
 }
 
@@ -192,7 +201,7 @@ fn bench_topology_snapping(c: &mut Criterion) {
                     assert!(result.is_ok());
                     result.unwrap().all_loops.len()
                 })
-            }
+            },
         );
     }
 
@@ -205,13 +214,17 @@ fn bench_topology_xlarge(c: &mut Criterion) {
     let polylines = generate_rectangles(10000, 150.0);
 
     group.throughput(Throughput::Elements(40000));
-    group.bench_with_input(BenchmarkId::from_parameter("10000 矩形"), &polylines, |b, polylines| {
-        b.iter(|| {
-            let topo = TopoService::with_default_config();
-            let result = topo.build_topology(black_box(polylines));
-            result.is_ok()
-        })
-    });
+    group.bench_with_input(
+        BenchmarkId::from_parameter("10000 矩形"),
+        &polylines,
+        |b, polylines| {
+            b.iter(|| {
+                let topo = TopoService::with_default_config();
+                let result = topo.build_topology(black_box(polylines));
+                result.is_ok()
+            })
+        },
+    );
 
     group.finish();
 }
@@ -223,7 +236,7 @@ fn bench_topology_xlarge(c: &mut Criterion) {
 #[ignore = "耗时较长，需手动运行：cargo bench --bench topology_bench -- --ignored"]
 fn bench_topology_100k_segments(c: &mut Criterion) {
     let mut group = c.benchmark_group("topology_100k_segments");
-    
+
     // 25000 个矩形 = 100000 条线段
     let polylines = generate_rectangles(25000, 150.0);
 
@@ -238,7 +251,7 @@ fn bench_topology_100k_segments(c: &mut Criterion) {
                 assert!(result.is_ok());
                 result.unwrap().all_loops.len()
             })
-        }
+        },
     );
 
     group.finish();
@@ -251,7 +264,7 @@ fn bench_topology_100k_segments(c: &mut Criterion) {
 #[ignore = "非常耗时，需手动运行：cargo bench --bench topology_bench -- --ignored"]
 fn bench_topology_500k_segments(c: &mut Criterion) {
     let mut group = c.benchmark_group("topology_500k_segments");
-    
+
     // 125000 个矩形 = 500000 条线段
     let polylines = generate_rectangles(125000, 150.0);
 
@@ -266,7 +279,7 @@ fn bench_topology_500k_segments(c: &mut Criterion) {
                 assert!(result.is_ok());
                 result.unwrap().all_loops.len()
             })
-        }
+        },
     );
 
     group.finish();
@@ -279,7 +292,7 @@ fn bench_topology_500k_segments(c: &mut Criterion) {
 #[ignore = "极其耗时，需手动运行：cargo bench --bench topology_bench -- --ignored"]
 fn bench_topology_1m_segments(c: &mut Criterion) {
     let mut group = c.benchmark_group("topology_1m_segments");
-    
+
     // 250000 个矩形 = 1000000 条线段
     let polylines = generate_rectangles(250000, 150.0);
 
@@ -294,7 +307,7 @@ fn bench_topology_1m_segments(c: &mut Criterion) {
                 assert!(result.is_ok());
                 result.unwrap().all_loops.len()
             })
-        }
+        },
     );
 
     group.finish();
@@ -318,7 +331,7 @@ fn bench_topology_with_holes(c: &mut Criterion) {
                     assert!(result.is_ok());
                     result.unwrap().all_loops.len()
                 })
-            }
+            },
         );
 
         group.throughput(Throughput::Elements(total_polylines as u64));
@@ -347,14 +360,17 @@ fn bench_topology_tolerance_sensitivity(c: &mut Criterion) {
                             units: Some(LengthUnit::Mm),
                         },
                         layer_filter: None,
-                        use_halfedge: false,
+                        algorithm: topo::service::TopoAlgorithm::Dfs,
+                        skip_intersection_check: false,
+                        enable_parallel: false,
+                        parallel_threshold: 1000,
                     };
                     let topo = TopoService::new(config);
                     let result = topo.build_topology(black_box(&polylines));
                     assert!(result.is_ok());
                     result.unwrap().all_loops.len()
                 })
-            }
+            },
         );
     }
 

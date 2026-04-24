@@ -11,21 +11,20 @@ use std::path::PathBuf;
 /// - 如果在 tests/ 下，往上一层到项目根
 #[allow(dead_code)]
 pub fn get_workspace_root() -> PathBuf {
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR 应该设置");
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR 应该设置");
 
     let path = PathBuf::from(&manifest_dir);
 
     // 尝试往上查找项目根（通过查找 Cargo.toml 或特定目录）
     let mut current = path.as_path();
-    
+
     // 最多往上找 5 层
     for _ in 0..5 {
         // 检查是否有 dxfs 目录（项目根的标志）
         if current.join("dxfs").exists() {
             return current.to_path_buf();
         }
-        
+
         if let Some(parent) = current.parent() {
             current = parent;
         } else {
@@ -63,7 +62,7 @@ pub fn list_dxf_files() -> Vec<PathBuf> {
     if let Ok(entries) = std::fs::read_dir(&dxf_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "dxf") {
+            if path.extension().is_some_and(|ext| ext == "dxf") {
                 files.push(path);
             }
         }
@@ -81,7 +80,7 @@ pub fn list_pdf_files() -> Vec<PathBuf> {
     if let Ok(entries) = std::fs::read_dir(&pdf_dir) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "pdf") {
+            if path.extension().is_some_and(|ext| ext == "pdf") {
                 files.push(path);
             }
         }
@@ -94,10 +93,7 @@ pub fn list_pdf_files() -> Vec<PathBuf> {
 ///
 /// 用于测试中避免硬编码文件名，支持动态适配测试数据
 #[allow(dead_code)]
-pub fn find_first_parseable_dxf(
-    dxf_dir: &PathBuf,
-    parser: &parser::DxfParser,
-) -> Option<PathBuf> {
+pub fn find_first_parseable_dxf(dxf_dir: &PathBuf, parser: &parser::DxfParser) -> Option<PathBuf> {
     if !dxf_dir.exists() {
         return None;
     }

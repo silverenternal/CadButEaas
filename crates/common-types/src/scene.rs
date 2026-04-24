@@ -2,10 +2,10 @@
 //!
 //! 用于在交互服务和验证服务间传递的完整场景描述
 
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
-use std::collections::BTreeMap;
 use crate::geometry::Point2;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 // ============================================================================
 // 解析进度跟踪（P0-1: 加载进度可视化）
@@ -14,8 +14,10 @@ use crate::geometry::Point2;
 /// 解析阶段枚举
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum ParseStage {
     /// 读取文件
+    #[default]
     ReadingFile,
     /// 解析文件头
     ParsingHeader,
@@ -31,12 +33,6 @@ pub enum ParseStage {
     ComputingGeometry,
     /// 收尾处理
     Finalizing,
-}
-
-impl Default for ParseStage {
-    fn default() -> Self {
-        ParseStage::ReadingFile
-    }
 }
 
 impl ParseStage {
@@ -105,7 +101,7 @@ impl ParseProgress {
     /// 计算总体进度
     pub fn compute_overall_progress(&mut self) -> f64 {
         let stage_weight = self.stage.weight();
-        
+
         // 计算之前所有阶段的累计权重
         let previous_weight = match self.stage {
             ParseStage::ReadingFile => 0.0,
@@ -120,7 +116,7 @@ impl ParseProgress {
 
         // 当前阶段内的进度贡献
         let stage_contribution = stage_weight * self.stage_progress;
-        
+
         self.overall_progress = (previous_weight + stage_contribution).min(1.0);
         self.overall_progress
     }
@@ -197,11 +193,7 @@ impl Material {
     }
 
     /// 设置吸声系数
-    pub fn with_absorption(
-        mut self,
-        freq: crate::acoustic::Frequency,
-        coeff: f64,
-    ) -> Self {
+    pub fn with_absorption(mut self, freq: crate::acoustic::Frequency, coeff: f64) -> Self {
         self.absorption_coeffs.insert(freq, coeff);
         self
     }
@@ -249,7 +241,6 @@ pub struct SceneState {
     // ========================================================================
     // 座椅区域与 LOD 渲染支持（P11 技术设计文档 v1.0）
     // ========================================================================
-
     /// 座椅区域列表
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub seat_zones: Vec<SeatZone>,
@@ -288,7 +279,10 @@ pub struct ClosedLoop {
 impl ClosedLoop {
     pub fn new(points: Vec<Point2>) -> Self {
         let signed_area = calculate_signed_area(&points);
-        Self { points, signed_area }
+        Self {
+            points,
+            signed_area,
+        }
     }
 
     pub fn is_outer(&self) -> bool {
@@ -315,12 +309,12 @@ pub struct BoundarySegment {
 
 impl BoundarySegment {
     /// 从图层名和材料自动推断边界段语义
-    /// 
+    ///
     /// # Arguments
     /// * `layer_name` - DXF 图层名
     /// * `material` - 材料名称（可选）
     /// * `width` - 宽度（仅用于开口，可选）
-    /// 
+    ///
     /// # Returns
     /// 自动推断的 BoundarySegment
     pub fn infer_from_layer(
@@ -329,7 +323,7 @@ impl BoundarySegment {
         width: Option<f64>,
     ) -> Self {
         let semantic = Self::infer_semantic_from_layer(layer_name);
-        
+
         Self {
             segment: [0, 0], // 需要后续设置
             semantic,
@@ -339,7 +333,7 @@ impl BoundarySegment {
     }
 
     /// 根据图层名推断语义类型
-    /// 
+    ///
     /// # 推断规则
     /// 1. 门图层：包含 "DOOR", "门" 等关键词 → `BoundarySemantic::Door`
     /// 2. 窗图层：包含 "WINDOW", "窗" 等关键词 → `BoundarySemantic::Window`
@@ -350,27 +344,54 @@ impl BoundarySegment {
         let upper = layer_name.to_uppercase();
 
         // 门图层（优先于窗）
-        let door_keywords = ["DOOR", "门", "DOORS", "入户门", "室内门", "防火门", "单开门", "双开门", "推拉门"];
+        let door_keywords = [
+            "DOOR",
+            "门",
+            "DOORS",
+            "入户门",
+            "室内门",
+            "防火门",
+            "单开门",
+            "双开门",
+            "推拉门",
+        ];
         if door_keywords.iter().any(|k| upper.contains(k)) {
             return BoundarySemantic::Door;
         }
 
         // 门模式匹配
-        if upper.starts_with("A-DOOR") || upper.contains("DOOR-") || 
-           upper.contains("DOOR_") || upper.starts_with("D-") {
+        if upper.starts_with("A-DOOR")
+            || upper.contains("DOOR-")
+            || upper.contains("DOOR_")
+            || upper.starts_with("D-")
+        {
             return BoundarySemantic::Door;
         }
 
         // 窗图层
-        let window_keywords = ["WINDOW", "窗", "WINDOWS", "GLAZ", "GLASS", "采光窗", "天窗", "落地窗", "百叶窗"];
+        let window_keywords = [
+            "WINDOW",
+            "窗",
+            "WINDOWS",
+            "GLAZ",
+            "GLASS",
+            "采光窗",
+            "天窗",
+            "落地窗",
+            "百叶窗",
+        ];
         if window_keywords.iter().any(|k| upper.contains(k)) {
             return BoundarySemantic::Window;
         }
 
         // 窗模式匹配
-        if upper.starts_with("A-WIND") || upper.contains("WINDOW-") || 
-           upper.contains("WINDOW_") || upper.contains("GLAZ-") || 
-           upper.contains("GLASS-") || upper.starts_with("W-") {
+        if upper.starts_with("A-WIND")
+            || upper.contains("WINDOW-")
+            || upper.contains("WINDOW_")
+            || upper.contains("GLAZ-")
+            || upper.contains("GLASS-")
+            || upper.starts_with("W-")
+        {
             return BoundarySemantic::Window;
         }
 
@@ -387,16 +408,32 @@ impl BoundarySegment {
 
         // 墙体图层
         let wall_keywords = [
-            "WALL", "墙", "WALLS", "墙体", "内墙", "外墙", "剪力墙", "隔墙",
-            "STRUCT", "结构", "COLUMN", "柱", "BEAM", "梁", "STRUC",
+            "WALL",
+            "墙",
+            "WALLS",
+            "墙体",
+            "内墙",
+            "外墙",
+            "剪力墙",
+            "隔墙",
+            "STRUCT",
+            "结构",
+            "COLUMN",
+            "柱",
+            "BEAM",
+            "梁",
+            "STRUC",
         ];
         if wall_keywords.iter().any(|k| upper.contains(k)) {
             return BoundarySemantic::HardWall;
         }
 
         // AIA 标准墙体模式
-        if upper.starts_with("A-WALL") || upper.starts_with("S-WALL") ||
-           upper.starts_with("S-STRC") || upper.starts_with("A-COLS") {
+        if upper.starts_with("A-WALL")
+            || upper.starts_with("S-WALL")
+            || upper.starts_with("S-STRC")
+            || upper.starts_with("A-COLS")
+        {
             return BoundarySemantic::HardWall;
         }
 
@@ -405,7 +442,7 @@ impl BoundarySegment {
     }
 
     /// 根据颜色索引推断材料
-    /// 
+    ///
     /// # ACI 颜色与材料映射
     /// - 1 (红色): 混凝土 (concrete)
     /// - 2 (黄色): 砖墙 (brick)
@@ -416,12 +453,12 @@ impl BoundarySegment {
     /// - 7 (黑色/白色): 默认墙体 (default_wall)
     pub fn infer_material_from_aci_color(color_index: u16) -> Option<String> {
         match color_index {
-            1 => Some("concrete".to_string()),   // 红色=混凝土
-            2 => Some("brick".to_string()),      // 黄色=砖墙
-            3 => Some("wood".to_string()),       // 绿色=木材
-            4 => Some("gypsum".to_string()),     // 青色=石膏板
-            5 => Some("glass".to_string()),      // 蓝色=玻璃
-            6 => Some("metal".to_string()),      // 洋红=金属
+            1 => Some("concrete".to_string()),     // 红色=混凝土
+            2 => Some("brick".to_string()),        // 黄色=砖墙
+            3 => Some("wood".to_string()),         // 绿色=木材
+            4 => Some("gypsum".to_string()),       // 青色=石膏板
+            5 => Some("glass".to_string()),        // 蓝色=玻璃
+            6 => Some("metal".to_string()),        // 洋红=金属
             7 => Some("default_wall".to_string()), // 黑色/白色=默认墙体
             _ => None,
         }
@@ -452,8 +489,11 @@ impl BoundarySegment {
         }
 
         // 金属
-        if upper.contains("METAL") || upper.contains("STEEL") || 
-           upper.contains("钢") || upper.contains("金属") {
+        if upper.contains("METAL")
+            || upper.contains("STEEL")
+            || upper.contains("钢")
+            || upper.contains("金属")
+        {
             return Some("metal".to_string());
         }
 
@@ -466,21 +506,21 @@ impl BoundarySegment {
     }
 
     /// 计算开口宽度（仅用于门/窗/开口）
-    /// 
+    ///
     /// # Arguments
     /// * `start` - 起点坐标
     /// * `end` - 终点坐标
-    /// 
+    ///
     /// # Returns
     /// 宽度（米），如果不是开口类型则返回 None
     pub fn calculate_width(start: Point2, end: Point2) -> Option<f64> {
         let dx = end[0] - start[0];
         let dy = end[1] - start[1];
         let width_mm = (dx * dx + dy * dy).sqrt();
-        
+
         // 转换为米
         let width_m = width_mm / 1000.0;
-        
+
         // 合理的开口宽度范围：0.5m - 5.0m
         if (0.5..=5.0).contains(&width_m) {
             Some(width_m)
@@ -504,6 +544,18 @@ pub enum BoundarySemantic {
     Window,
     /// 门
     Door,
+    /// 家具
+    Furniture,
+    /// 卫浴设备
+    BathroomFixture,
+    /// 厨房设备
+    KitchenFixture,
+    /// 暖通空调
+    Hvac,
+    /// 电气/照明
+    Electrical,
+    /// 标注/文字
+    Annotation,
     /// 自定义
     Custom(String),
 }
@@ -690,7 +742,7 @@ impl LengthUnit {
     }
 
     /// 从 DXF $INSUNITS 代码创建单位
-    /// 
+    ///
     /// DXF $INSUNITS 代码定义：
     /// - 0: Unspecified
     /// - 1: Inches
@@ -727,11 +779,11 @@ impl LengthUnit {
             10 => LengthUnit::Micron, // 埃，近似为微米
             11 => LengthUnit::Micron, // 纳米，近似为微米
             12 => LengthUnit::Micron,
-            13 => LengthUnit::Cm, // 分米，近似为厘米
-            14 => LengthUnit::M,  // 十米，近似为米
-            15 => LengthUnit::M,  // 百米，近似为米
-            16 => LengthUnit::Kilometer, // 吉米，近似为千米
-            17 | 18 | 19 => LengthUnit::Kilometer, // 天文单位/光年/秒差距，近似为千米
+            13 => LengthUnit::Cm,             // 分米，近似为厘米
+            14 => LengthUnit::M,              // 十米，近似为米
+            15 => LengthUnit::M,              // 百米，近似为米
+            16 => LengthUnit::Kilometer,      // 吉米，近似为千米
+            17..=19 => LengthUnit::Kilometer, // 天文单位/光年/秒差距，近似为千米
             _ => LengthUnit::Unspecified,
         }
     }
@@ -749,8 +801,8 @@ impl LengthUnit {
             LengthUnit::Micron => 12,
             LengthUnit::Yard => 9,
             LengthUnit::Kilometer => 16,
-            LengthUnit::Point => 4,  // 点，近似为毫米
-            LengthUnit::Pica => 4,   // 派卡，近似为毫米
+            LengthUnit::Point => 4, // 点，近似为毫米
+            LengthUnit::Pica => 4,  // 派卡，近似为毫米
         }
     }
 }
@@ -804,8 +856,12 @@ pub struct AcousticProps {
     pub scattering_coefficient: f32,
 }
 
-fn default_absorption() -> f32 { 0.3 }
-fn default_scattering() -> f32 { 0.1 }
+fn default_absorption() -> f32 {
+    0.3
+}
+fn default_scattering() -> f32 {
+    0.1
+}
 
 impl Default for AcousticProps {
     fn default() -> Self {
@@ -886,16 +942,16 @@ fn calculate_signed_area(points: &[Point2]) -> f64 {
     if points.len() < 3 {
         return 0.0;
     }
-    
+
     let mut area = 0.0;
     let n = points.len();
-    
+
     for i in 0..n {
         let j = (i + 1) % n;
         area += points[i][0] * points[j][1];
         area -= points[j][0] * points[i][1];
     }
-    
+
     area / 2.0
 }
 
@@ -906,23 +962,13 @@ mod tests {
     #[test]
     fn test_signed_area_rectangle() {
         // 逆时针矩形 (正面积)
-        let rect_cw = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 8.0],
-            [0.0, 8.0],
-        ];
+        let rect_cw = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 8.0], [0.0, 8.0]];
         let loop_cw = ClosedLoop::new(rect_cw);
         assert!(loop_cw.is_outer());
         assert!((loop_cw.signed_area - 80.0).abs() < 1e-10);
 
         // 顺时针矩形 (负面积)
-        let rect_ccw = vec![
-            [0.0, 0.0],
-            [0.0, 8.0],
-            [10.0, 8.0],
-            [10.0, 0.0],
-        ];
+        let rect_ccw = vec![[0.0, 0.0], [0.0, 8.0], [10.0, 8.0], [10.0, 0.0]];
         let loop_ccw = ClosedLoop::new(rect_ccw);
         assert!(loop_ccw.is_hole());
     }
@@ -934,96 +980,246 @@ mod tests {
     #[test]
     fn test_infer_semantic_door() {
         // 门关键词
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("DOOR"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("入户门"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("室内门"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("防火门"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("单开门"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("双开门"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("推拉门"), BoundarySemantic::Door);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("DOOR"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("入户门"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("室内门"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("防火门"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("单开门"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("双开门"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("推拉门"),
+            BoundarySemantic::Door
+        );
+
         // AIA 标准
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-DOOR"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-DOOR-EXT"), BoundarySemantic::Door);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-DOOR"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-DOOR-EXT"),
+            BoundarySemantic::Door
+        );
+
         // 模式匹配
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("DOOR-INT"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("DOOR_01"), BoundarySemantic::Door);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("D-01"), BoundarySemantic::Door);
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("DOOR-INT"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("DOOR_01"),
+            BoundarySemantic::Door
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("D-01"),
+            BoundarySemantic::Door
+        );
     }
 
     #[test]
     fn test_infer_semantic_window() {
         // 窗关键词
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("WINDOW"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("采光窗"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("天窗"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("落地窗"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("百叶窗"), BoundarySemantic::Window);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("WINDOW"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("采光窗"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("天窗"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("落地窗"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("百叶窗"),
+            BoundarySemantic::Window
+        );
+
         // AIA 标准
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-WIND"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-WIND-EXT"), BoundarySemantic::Window);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-WIND"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-WIND-EXT"),
+            BoundarySemantic::Window
+        );
+
         // 模式匹配
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("WINDOW-01"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("GLASS-FRONT"), BoundarySemantic::Window);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("W-01"), BoundarySemantic::Window);
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("WINDOW-01"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("GLASS-FRONT"),
+            BoundarySemantic::Window
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("W-01"),
+            BoundarySemantic::Window
+        );
     }
 
     #[test]
     fn test_infer_semantic_opening() {
         // 开口关键词
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("OPEN"), BoundarySemantic::Opening);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("开口"), BoundarySemantic::Opening);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("OPENING"), BoundarySemantic::Opening);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("HOLE"), BoundarySemantic::Opening);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("通道"), BoundarySemantic::Opening);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("OPEN"),
+            BoundarySemantic::Opening
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("开口"),
+            BoundarySemantic::Opening
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("OPENING"),
+            BoundarySemantic::Opening
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("HOLE"),
+            BoundarySemantic::Opening
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("通道"),
+            BoundarySemantic::Opening
+        );
+
         // AIA 标准
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-OPEN"), BoundarySemantic::Opening);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("OPENING-01"), BoundarySemantic::Opening);
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-OPEN"),
+            BoundarySemantic::Opening
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("OPENING-01"),
+            BoundarySemantic::Opening
+        );
     }
 
     #[test]
     fn test_infer_semantic_wall() {
         // 墙关键词
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("WALL"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("墙体"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("内墙"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("外墙"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("剪力墙"), BoundarySemantic::HardWall);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("WALL"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("墙体"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("内墙"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("外墙"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("剪力墙"),
+            BoundarySemantic::HardWall
+        );
+
         // 结构
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("STRUCT"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("COLUMN"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("BEAM"), BoundarySemantic::HardWall);
-        
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("STRUCT"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("COLUMN"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("BEAM"),
+            BoundarySemantic::HardWall
+        );
+
         // AIA 标准
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("A-WALL"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("S-WALL"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("S-STRC"), BoundarySemantic::HardWall);
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("A-WALL"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("S-WALL"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("S-STRC"),
+            BoundarySemantic::HardWall
+        );
     }
 
     #[test]
     fn test_infer_semantic_default() {
         // 未知图层默认为硬墙
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("UNKNOWN"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("0"), BoundarySemantic::HardWall);
-        assert_eq!(BoundarySegment::infer_semantic_from_layer("FURNITURE"), BoundarySemantic::HardWall);
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("UNKNOWN"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("0"),
+            BoundarySemantic::HardWall
+        );
+        assert_eq!(
+            BoundarySegment::infer_semantic_from_layer("FURNITURE"),
+            BoundarySemantic::HardWall
+        );
     }
 
     #[test]
     fn test_infer_material_from_color() {
         // ACI 颜色映射
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(1), Some("concrete".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(2), Some("brick".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(3), Some("wood".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(4), Some("gypsum".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(5), Some("glass".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(6), Some("metal".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_aci_color(7), Some("default_wall".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(1),
+            Some("concrete".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(2),
+            Some("brick".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(3),
+            Some("wood".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(4),
+            Some("gypsum".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(5),
+            Some("glass".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(6),
+            Some("metal".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_aci_color(7),
+            Some("default_wall".to_string())
+        );
+
         // 未知颜色
         assert_eq!(BoundarySegment::infer_material_from_aci_color(0), None);
         assert_eq!(BoundarySegment::infer_material_from_aci_color(8), None);
@@ -1033,30 +1229,69 @@ mod tests {
     #[test]
     fn test_infer_material_from_layer() {
         // 混凝土
-        assert_eq!(BoundarySegment::infer_material_from_layer("WALL-CONC"), Some("concrete".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("混凝土墙"), Some("concrete".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("WALL-CONC"),
+            Some("concrete".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("混凝土墙"),
+            Some("concrete".to_string())
+        );
+
         // 砖墙
-        assert_eq!(BoundarySegment::infer_material_from_layer("BRICK"), Some("brick".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("砖墙"), Some("brick".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("BRICK"),
+            Some("brick".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("砖墙"),
+            Some("brick".to_string())
+        );
+
         // 木材
-        assert_eq!(BoundarySegment::infer_material_from_layer("WOOD"), Some("wood".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("木地板"), Some("wood".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("WOOD"),
+            Some("wood".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("木地板"),
+            Some("wood".to_string())
+        );
+
         // 玻璃
-        assert_eq!(BoundarySegment::infer_material_from_layer("GLASS"), Some("glass".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("玻璃幕墙"), Some("glass".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("GLASS"),
+            Some("glass".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("玻璃幕墙"),
+            Some("glass".to_string())
+        );
+
         // 金属
-        assert_eq!(BoundarySegment::infer_material_from_layer("METAL"), Some("metal".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("STEEL"), Some("metal".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("钢结构"), Some("metal".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("METAL"),
+            Some("metal".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("STEEL"),
+            Some("metal".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("钢结构"),
+            Some("metal".to_string())
+        );
+
         // 石膏板
-        assert_eq!(BoundarySegment::infer_material_from_layer("GYPSUM"), Some("gypsum".to_string()));
-        assert_eq!(BoundarySegment::infer_material_from_layer("石膏板"), Some("gypsum".to_string()));
-        
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("GYPSUM"),
+            Some("gypsum".to_string())
+        );
+        assert_eq!(
+            BoundarySegment::infer_material_from_layer("石膏板"),
+            Some("gypsum".to_string())
+        );
+
         // 未知材料
         assert_eq!(BoundarySegment::infer_material_from_layer("UNKNOWN"), None);
     }
@@ -1100,19 +1335,22 @@ mod tests {
     #[test]
     fn test_infer_from_layer() {
         // 门
-        let segment = BoundarySegment::infer_from_layer("DOOR-01", Some("wood".to_string()), Some(0.9));
+        let segment =
+            BoundarySegment::infer_from_layer("DOOR-01", Some("wood".to_string()), Some(0.9));
         assert_eq!(segment.semantic, BoundarySemantic::Door);
         assert_eq!(segment.material, Some("wood".to_string()));
         assert_eq!(segment.width, Some(0.9));
 
         // 窗
-        let segment = BoundarySegment::infer_from_layer("WINDOW-01", Some("glass".to_string()), Some(1.5));
+        let segment =
+            BoundarySegment::infer_from_layer("WINDOW-01", Some("glass".to_string()), Some(1.5));
         assert_eq!(segment.semantic, BoundarySemantic::Window);
         assert_eq!(segment.material, Some("glass".to_string()));
         assert_eq!(segment.width, Some(1.5));
 
         // 墙
-        let segment = BoundarySegment::infer_from_layer("WALL-EXT", Some("concrete".to_string()), None);
+        let segment =
+            BoundarySegment::infer_from_layer("WALL-EXT", Some("concrete".to_string()), None);
         assert_eq!(segment.semantic, BoundarySemantic::HardWall);
         assert_eq!(segment.material, Some("concrete".to_string()));
         assert_eq!(segment.width, None);

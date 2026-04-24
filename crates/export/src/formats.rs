@@ -1,7 +1,7 @@
 //! 导出格式定义
 
-use serde::{Serialize, Deserialize};
 use common_types::{SceneState, SourceType};
+use serde::{Deserialize, Serialize};
 
 /// 导出格式枚举
 #[derive(Debug, Clone, Copy)]
@@ -79,29 +79,37 @@ pub struct SourceData {
 impl SceneJson {
     /// 从 SceneState 转换
     pub fn from_scene_state(scene: &SceneState) -> Self {
-        let outer = scene.outer.as_ref().map(|l| l.points.clone()).unwrap_or_default();
-        
+        let outer = scene
+            .outer
+            .as_ref()
+            .map(|l| l.points.clone())
+            .unwrap_or_default();
+
         let holes: Vec<Vec<[f64; 2]>> = scene.holes.iter().map(|h| h.points.clone()).collect();
-        
-        let boundaries: Vec<BoundaryData> = scene.boundaries.iter().map(|b| {
-            BoundaryData {
+
+        let boundaries: Vec<BoundaryData> = scene
+            .boundaries
+            .iter()
+            .map(|b| BoundaryData {
                 segment: b.segment,
                 semantic: format!("{:?}", b.semantic),
                 material: b.material.clone(),
                 width: b.width,
-            }
-        }).collect();
-        
-        let sources: Vec<SourceData> = scene.sources.iter().map(|s| {
-            SourceData {
+            })
+            .collect();
+
+        let sources: Vec<SourceData> = scene
+            .sources
+            .iter()
+            .map(|s| SourceData {
                 id: s.id.clone(),
                 position: s.position,
                 orientation: s.orientation,
                 source_type: s.source_type.clone(),
                 gain_db: s.gain_db,
                 delay_ms: s.delay_ms,
-            }
-        }).collect();
+            })
+            .collect();
 
         Self {
             schema_version: SCHEMA_VERSION,

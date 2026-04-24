@@ -16,9 +16,9 @@
 //! Constraint  ConstraintGraph  Solver  IterativeSolver  ValidationResult
 //! ```
 
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
 use crate::geometry::Point2;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // 几何约束类型
@@ -74,13 +74,9 @@ pub enum GeometricConstraint {
         curve: ConstraintCurve,
     },
     /// 水平约束：线段水平
-    Horizontal {
-        line: ConstraintLine,
-    },
+    Horizontal { line: ConstraintLine },
     /// 垂直约束：线段垂直
-    Vertical {
-        line: ConstraintLine,
-    },
+    Vertical { line: ConstraintLine },
 }
 
 /// 约束点引用
@@ -145,7 +141,7 @@ pub enum DimensionConstraint {
     Angle {
         line1: ConstraintLine,
         line2: ConstraintLine,
-        angle: f64,  // 单位：度
+        angle: f64, // 单位：度
     },
     /// 半径约束
     Radius {
@@ -293,8 +289,7 @@ impl ConstraintSolver {
     /// # 返回
     /// 自由度数（>0 表示欠约束，=0 表示完全约束，<0 表示过约束）
     pub fn analyze_degrees_of_freedom(&self, num_variables: usize, num_constraints: usize) -> i32 {
-        let dof = num_variables as i32 - num_constraints as i32;
-        dof
+        num_variables as i32 - num_constraints as i32
     }
 
     /// 检测过约束
@@ -319,7 +314,10 @@ impl ConstraintSolver {
     ///
     /// # 返回
     /// 求解结果
-    pub fn solve(&self, initial_positions: &std::collections::HashMap<String, Point2>) -> SolveResult {
+    pub fn solve(
+        &self,
+        initial_positions: &std::collections::HashMap<String, Point2>,
+    ) -> SolveResult {
         use std::time::Instant;
         let start_time = Instant::now();
 
@@ -370,7 +368,8 @@ impl ConstraintSolver {
                         residual,
                         solve_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
                         constraint_report: self.generate_constraint_report(initial_positions),
-                        updated_positions: initial_positions.iter()
+                        updated_positions: initial_positions
+                            .iter()
                             .map(|(k, v)| (k.clone(), *v))
                             .collect(),
                     };
@@ -390,7 +389,8 @@ impl ConstraintSolver {
             residual,
             solve_time_ms: start_time.elapsed().as_secs_f64() * 1000.0,
             constraint_report: self.generate_constraint_report(initial_positions),
-            updated_positions: initial_positions.iter()
+            updated_positions: initial_positions
+                .iter()
                 .map(|(k, v)| (k.clone(), *v))
                 .collect(),
         }
@@ -441,7 +441,11 @@ impl ConstraintSolver {
         positions: &std::collections::HashMap<String, Point2>,
     ) -> f64 {
         match constraint {
-            DimensionConstraint::Distance { point1, point2, distance } => {
+            DimensionConstraint::Distance {
+                point1,
+                point2,
+                distance,
+            } => {
                 let p1 = self.get_point_position(point1, positions);
                 let p2 = self.get_point_position(point2, positions);
                 if let (Some(p1), Some(p2)) = (p1, p2) {

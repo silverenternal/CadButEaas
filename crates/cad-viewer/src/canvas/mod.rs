@@ -10,7 +10,7 @@ mod overlay_renderer;
 
 use crate::app::CadApp;
 use crate::components::SelectEdge;
-use crate::render::{Renderer, CpuRenderer, RenderContext};
+use crate::render::{CpuRenderer, RenderContext, Renderer};
 use eframe::egui;
 use egui::{Color32, Pos2, Rect, Response, Sense};
 use interact::EdgeId;
@@ -74,11 +74,7 @@ impl<'a> CanvasWidget<'a> {
 
             // 使用 Renderer trait 渲染
             self.renderer.begin_frame();
-            self.renderer.render_scene(
-                &mut ctx,
-                scene,
-                camera,
-            );
+            self.renderer.render_scene(&mut ctx, scene, camera);
         }
         {
             let ui = &self.app.state.ui;
@@ -110,11 +106,14 @@ impl<'a> CanvasWidget<'a> {
                 let world_pos_after = self.screen_to_world(mouse_pos, rect);
 
                 // 4. 调整 pan，保持鼠标下的世界坐标不变
-                self.app.state.render.camera.pan.x += ((world_pos_before[0] - world_pos_after[0]) * new_zoom as f64) as f32;
-                self.app.state.render.camera.pan.y += ((world_pos_before[1] - world_pos_after[1]) * new_zoom as f64) as f32;
+                self.app.state.render.camera.pan.x +=
+                    ((world_pos_before[0] - world_pos_after[0]) * new_zoom as f64) as f32;
+                self.app.state.render.camera.pan.y +=
+                    ((world_pos_before[1] - world_pos_after[1]) * new_zoom as f64) as f32;
             } else {
                 // 没有鼠标位置时，使用原点在中心缩放
-                self.app.state.render.camera.zoom = (self.camera().zoom * zoom_factor).clamp(0.1, 10.0);
+                self.app.state.render.camera.zoom =
+                    (self.camera().zoom * zoom_factor).clamp(0.1, 10.0);
             }
         }
 
@@ -147,7 +146,8 @@ impl<'a> CanvasWidget<'a> {
 
                     // P11 改进：构建悬停 Tooltip 文本
                     let length = ((edge.end[0] - edge.start[0]).powi(2)
-                                + (edge.end[1] - edge.start[1]).powi(2)).sqrt();
+                        + (edge.end[1] - edge.start[1]).powi(2))
+                    .sqrt();
 
                     let mut text = format!("边 #{}\n长度：{:.2}", edge.id, length);
                     if let Some(layer) = &edge.layer {
@@ -187,20 +187,17 @@ impl<'a> CanvasWidget<'a> {
                 let mut nearest_edge: Option<(EdgeId, f64)> = None;
 
                 for edge in &self.scene().edges {
-                    let dist = Self::point_to_segment_distance(
-                        world_pos,
-                        edge.start,
-                        edge.end,
-                    );
+                    let dist = Self::point_to_segment_distance(world_pos, edge.start, edge.end);
 
                     if dist < tolerance
-                        && (nearest_edge.is_none() || dist < nearest_edge.unwrap().1) {
-                            nearest_edge = Some((edge.id, dist));
+                        && (nearest_edge.is_none() || dist < nearest_edge.unwrap().1)
+                    {
+                        nearest_edge = Some((edge.id, dist));
 
-                            // 提前退出：如果距离非常近（< 1 像素），直接返回
-                            if dist < tolerance * 0.2 {
-                                break;
-                            }
+                        // 提前退出：如果距离非常近（< 1 像素），直接返回
+                        if dist < tolerance * 0.2 {
+                            break;
+                        }
                     }
                 }
 
@@ -210,7 +207,9 @@ impl<'a> CanvasWidget<'a> {
                     let append = modifiers.shift || modifiers.ctrl;
 
                     let cmd = SelectEdge::new(id, append);
-                    self.app.command_manager.execute(Box::new(cmd), &mut self.app.state);
+                    self.app
+                        .command_manager
+                        .execute(Box::new(cmd), &mut self.app.state);
                     self.app.add_log(&format!("选中边 {}", id));
                 }
             }
@@ -224,10 +223,8 @@ impl<'a> CanvasWidget<'a> {
                 if self.ui().is_lassoing {
                     // 结束圈选
                     self.app.state.ui.is_lassoing = false;
-                    self.app.add_log(&format!(
-                        "圈选完成，{} 个点",
-                        self.ui().lasso_points.len()
-                    ));
+                    self.app
+                        .add_log(&format!("圈选完成，{} 个点", self.ui().lasso_points.len()));
                 } else {
                     // 开始圈选
                     self.app.state.ui.is_lassoing = true;
@@ -245,7 +242,8 @@ impl<'a> CanvasWidget<'a> {
                 // 限制点的密度
                 if let Some(last) = self.ui().lasso_points.last() {
                     let dist = ((world_pos[0] - last[0]).powi(2)
-                              + (world_pos[1] - last[1]).powi(2)).sqrt();
+                        + (world_pos[1] - last[1]).powi(2))
+                    .sqrt();
                     if dist > 1.0 {
                         self.app.state.ui.lasso_points.push(world_pos);
                     }
@@ -257,31 +255,24 @@ impl<'a> CanvasWidget<'a> {
     }
 
     /// 计算点到线段的最近距离
-    fn point_to_segment_distance(
-        point: [f64; 2],
-        seg_start: [f64; 2],
-        seg_end: [f64; 2],
-    ) -> f64 {
+    fn point_to_segment_distance(point: [f64; 2], seg_start: [f64; 2], seg_end: [f64; 2]) -> f64 {
         let dx = seg_end[0] - seg_start[0];
         let dy = seg_end[1] - seg_start[1];
 
         if dx.abs() < 1e-10 && dy.abs() < 1e-10 {
             // 线段退化为点
-            return ((point[0] - seg_start[0]).powi(2)
-                  + (point[1] - seg_start[1]).powi(2)).sqrt();
+            return ((point[0] - seg_start[0]).powi(2) + (point[1] - seg_start[1]).powi(2)).sqrt();
         }
 
-        let t = ((point[0] - seg_start[0]) * dx
-               + (point[1] - seg_start[1]) * dy)
-              / (dx * dx + dy * dy);
+        let t =
+            ((point[0] - seg_start[0]) * dx + (point[1] - seg_start[1]) * dy) / (dx * dx + dy * dy);
 
         let t = t.clamp(0.0, 1.0);
 
         let nearest_x = seg_start[0] + t * dx;
         let nearest_y = seg_start[1] + t * dy;
 
-        ((point[0] - nearest_x).powi(2)
-          + (point[1] - nearest_y).powi(2)).sqrt()
+        ((point[0] - nearest_x).powi(2) + (point[1] - nearest_y).powi(2)).sqrt()
     }
 
     // ========================================================================
@@ -290,7 +281,7 @@ impl<'a> CanvasWidget<'a> {
 
     /// 渲染 Toast 交互元素（关闭按钮）
     fn render_toast_interactions(&mut self, ui: &mut egui::Ui, rect: Rect) {
-        use egui::{FontId};
+        use egui::FontId;
 
         let _now = std::time::Instant::now();
         let mut y_offset = 10.0f32;
@@ -348,10 +339,7 @@ impl<'a> CanvasWidget<'a> {
 
 impl<'a> egui::Widget for CanvasWidget<'a> {
     fn ui(mut self, ui: &mut egui::Ui) -> egui::Response {
-        let (rect, response) = ui.allocate_exact_size(
-            ui.available_size(),
-            Sense::click_and_drag(),
-        );
+        let (rect, response) = ui.allocate_exact_size(ui.available_size(), Sense::click_and_drag());
 
         let painter = ui.painter();
 
@@ -359,14 +347,15 @@ impl<'a> egui::Widget for CanvasWidget<'a> {
         painter.rect_filled(
             rect,
             egui::Rounding::ZERO,
-            Color32::from_rgb(15, 15, 15),  // 从 (30,30,30) 改为 (15,15,15)
+            Color32::from_rgb(15, 15, 15), // 从 (30,30,30) 改为 (15,15,15)
         );
 
         // P0-2: 使用 Renderer trait 渲染
         self.render_with_renderer(rect, painter);
 
         // P11 改进：UI 叠加层委托给有状态的 OverlayRenderer
-        self.overlay.render(painter, rect, &self.app.state, &self.app.gap_markers);
+        self.overlay
+            .render(painter, rect, &self.app.state, &self.app.gap_markers);
 
         // 处理交互
         self.handle_interaction(&response, rect);
@@ -377,7 +366,7 @@ impl<'a> egui::Widget for CanvasWidget<'a> {
             egui::Align2::LEFT_TOP,
             format!("缩放：{:.6}%", (self.camera().zoom * 100.0) as f64),
             egui::FontId::monospace(12.0),
-            Color32::from_rgb(200, 200, 200),  // 使用更亮的灰色
+            Color32::from_rgb(200, 200, 200), // 使用更亮的灰色
         );
 
         // P11 改进：绘制可交互的 Toast 关闭按钮
@@ -387,8 +376,8 @@ impl<'a> egui::Widget for CanvasWidget<'a> {
         if let Some(ref tooltip) = self.app.state.ui.hovered_tooltip {
             if let Some(mouse_pos) = response.hover_pos() {
                 // 使用 egui::Area 显示悬停提示
-                use egui::{Area, Order, Id, Frame, Margin};
-                
+                use egui::{Area, Frame, Id, Margin, Order};
+
                 let tooltip_id = Id::new("hover_tooltip");
                 Area::new(tooltip_id)
                     .order(Order::Foreground)

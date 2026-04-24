@@ -56,9 +56,9 @@
 //! }
 //! ```
 
+use common_types::geometry::Point2;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use common_types::geometry::Point2;
 
 // 确保 serde 宏可用
 use serde::{Deserializer, Serializer};
@@ -207,7 +207,7 @@ impl HalfedgeGraph {
     /// 添加顶点
     pub fn add_vertex(&mut self, position: Point2) -> VertexId {
         let key = Point2Key::from_point(position);
-        
+
         // 检查是否已存在（处理浮点精度）
         if let Some(&vid) = self.vertex_map.get(&key) {
             return vid;
@@ -215,15 +215,20 @@ impl HalfedgeGraph {
 
         let vid = self.next_vertex_id;
         self.next_vertex_id += 1;
-        
+
         self.vertices.push(Vertex::new(position));
         self.vertex_map.insert(key, vid);
-        
+
         vid
     }
 
     /// 添加边（创建两条方向相反的半边）
-    pub fn add_edge(&mut self, from: VertexId, to: VertexId, edge_index: usize) -> (HalfedgeId, HalfedgeId) {
+    pub fn add_edge(
+        &mut self,
+        from: VertexId,
+        to: VertexId,
+        edge_index: usize,
+    ) -> (HalfedgeId, HalfedgeId) {
         let he_id = self.next_halfedge_id;
         let twin_id = self.next_halfedge_id + 1;
         self.next_halfedge_id += 2;
@@ -303,7 +308,7 @@ impl HalfedgeGraph {
     pub fn face_boundary_loop(&self, face_id: FaceId) -> Vec<HalfedgeId> {
         let face = &self.faces[face_id];
         let mut loop_hes = Vec::new();
-        
+
         if let Some(start_he) = face.boundary {
             let mut current = start_he;
             loop {
@@ -319,7 +324,7 @@ impl HalfedgeGraph {
                 }
             }
         }
-        
+
         loop_hes
     }
 
@@ -355,7 +360,7 @@ impl HalfedgeGraph {
     pub fn outgoing_halfedges_from(&self, vertex_id: VertexId) -> Vec<HalfedgeId> {
         let mut result = Vec::new();
         let vertex = &self.vertices[vertex_id];
-        
+
         if let Some(start_he) = vertex.outgoing {
             // 通过 twin.next 遍历围绕顶点的所有半边
             let mut current = start_he;
@@ -373,7 +378,7 @@ impl HalfedgeGraph {
                 }
             }
         }
-        
+
         result
     }
 
@@ -442,18 +447,26 @@ impl HalfedgeGraph {
     /// - 遍历所有面，按面积符号分类
     /// - 正面积 = 外轮廓，负面积 = 孔洞
     /// - 支持嵌套孔洞和岛中岛
-    pub fn extract_outer_and_holes(&self) -> (Option<common_types::ClosedLoop>, Vec<common_types::ClosedLoop>) {
+    pub fn extract_outer_and_holes(
+        &self,
+    ) -> (
+        Option<common_types::ClosedLoop>,
+        Vec<common_types::ClosedLoop>,
+    ) {
         use common_types::ClosedLoop;
 
         let mut outer: Option<ClosedLoop> = None;
         let mut holes: Vec<ClosedLoop> = Vec::new();
 
         // 按面积绝对值排序面
-        let mut faces_with_area: Vec<(FaceId, f64)> = self.faces()
+        let mut faces_with_area: Vec<(FaceId, f64)> = self
+            .faces()
             .map(|fid| (fid, self.compute_face_area(fid)))
             .collect();
         faces_with_area.sort_by(|a, b| {
-            b.1.abs().partial_cmp(&a.1.abs()).unwrap_or(std::cmp::Ordering::Equal)
+            b.1.abs()
+                .partial_cmp(&a.1.abs())
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         for (fid, area) in faces_with_area {
@@ -499,7 +512,7 @@ impl HalfedgeGraph {
     /// 构建是否成功
     pub fn build_nesting_hierarchy(&mut self) -> Result<(), String> {
         let num_faces = self.faces.len();
-        
+
         // 重置缓存
         self.face_parent_cache = vec![None; num_faces];
         self.face_children_cache = vec![Vec::new(); num_faces];
@@ -518,31 +531,31 @@ impl HalfedgeGraph {
         for child_id in 0..num_faces {
             let child_area = face_areas[child_id];
             let child_points = &face_points[child_id];
-            
+
             if child_points.len() < 3 {
                 continue;
             }
 
             // 使用面的第一个顶点作为测试点
             let test_point = child_points[0];
-            
+
             // 找到所有包含该测试点的面（候选父面）
             let mut candidate_parents: Vec<(FaceId, f64)> = Vec::new();
-            
+
             for parent_id in 0..num_faces {
                 if parent_id == child_id {
                     continue;
                 }
 
                 let parent_area = face_areas[parent_id];
-                
+
                 // 只有面积更大的面才可能是父面
                 if parent_area.abs() <= child_area.abs() {
                     continue;
                 }
 
                 let parent_points = &face_points[parent_id];
-                
+
                 // 使用射线法判断测试点是否在父面内
                 if Self::point_in_polygon_ray_casting(test_point, parent_points) {
                     candidate_parents.push((parent_id, parent_area.abs()));
@@ -550,9 +563,10 @@ impl HalfedgeGraph {
             }
 
             // 选择面积最小的候选父面（直接父面）
-            if let Some((parent_id, _)) = candidate_parents.iter().min_by(|a, b| {
-                a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal)
-            }) {
+            if let Some((parent_id, _)) = candidate_parents
+                .iter()
+                .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            {
                 self.face_parent_cache[child_id] = Some(*parent_id);
                 self.face_children_cache[*parent_id].push(child_id);
             }
@@ -581,20 +595,20 @@ impl HalfedgeGraph {
     fn point_in_polygon_ray_casting(point: Point2, polygon: &[Point2]) -> bool {
         let mut inside = false;
         let n = polygon.len();
-        
+
         for i in 0..n {
             let p1 = polygon[i];
             let p2 = polygon[(i + 1) % n];
-            
+
             // 检查射线是否与边相交
             let intersect = ((p1[1] > point[1]) != (p2[1] > point[1]))
                 && (point[0] < (p2[0] - p1[0]) * (point[1] - p1[1]) / (p2[1] - p1[1]) + p1[0]);
-            
+
             if intersect {
                 inside = !inside;
             }
         }
-        
+
         inside
     }
 
@@ -612,7 +626,10 @@ impl HalfedgeGraph {
     /// ## 返回值
     /// 子面 ID 列表（对于外轮廓，返回所有直接孔洞）
     pub fn get_face_children(&self, face_id: FaceId) -> &[FaceId] {
-        self.face_children_cache.get(face_id).map(|v| v.as_slice()).unwrap_or(&[])
+        self.face_children_cache
+            .get(face_id)
+            .map(|v| v.as_slice())
+            .unwrap_or(&[])
     }
 
     /// O(1) 查询：获取面的嵌套深度
@@ -622,30 +639,36 @@ impl HalfedgeGraph {
     pub fn get_nesting_depth(&self, face_id: FaceId) -> usize {
         let mut depth = 0;
         let mut current = face_id;
-        
+
         while let Some(parent) = self.face_parent_cache.get(current).copied().flatten() {
             depth += 1;
             current = parent;
         }
-        
+
         depth
     }
 
     /// O(1) 查询：判断面是否为孔洞
     pub fn is_hole(&self, face_id: FaceId) -> bool {
-        self.face_parent_cache.get(face_id).map_or(false, |p| p.is_some())
+        self.face_parent_cache
+            .get(face_id)
+            .is_some_and(|p| p.is_some())
     }
 
     /// O(1) 查询：获取根面（外轮廓）
     pub fn get_root_face(&self, face_id: FaceId) -> Option<FaceId> {
         let mut current = face_id;
-        
+
         while let Some(parent) = self.face_parent_cache.get(current).copied().flatten() {
             current = parent;
         }
-        
+
         // 如果当前面就是根面（无父面），返回它
-        if self.face_parent_cache.get(current).map_or(true, |p| p.is_none()) {
+        if self
+            .face_parent_cache
+            .get(current)
+            .is_none_or(|p| p.is_none())
+        {
             Some(current)
         } else {
             None
@@ -656,12 +679,12 @@ impl HalfedgeGraph {
     pub fn get_nesting_path(&self, face_id: FaceId) -> Vec<FaceId> {
         let mut path = Vec::new();
         let mut current = Some(face_id);
-        
+
         while let Some(fid) = current {
             path.push(fid);
             current = self.face_parent_cache.get(fid).copied().flatten();
         }
-        
+
         path.reverse();
         path
     }
@@ -672,9 +695,11 @@ impl HalfedgeGraph {
             // 验证父子关系一致性
             if let Some(parent_id) = self.face_parent_cache.get(face_id).copied().flatten() {
                 // 父面的子面列表应该包含当前面
-                if !self.face_children_cache.get(parent_id).map_or(false, |children| {
-                    children.contains(&face_id)
-                }) {
+                if !self
+                    .face_children_cache
+                    .get(parent_id)
+                    .is_some_and(|children| children.contains(&face_id))
+                {
                     return Err(format!(
                         "面 {} 的父子关系不一致：父面 {} 的子面列表不包含它",
                         face_id, parent_id
@@ -682,7 +707,7 @@ impl HalfedgeGraph {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -723,10 +748,16 @@ impl HalfedgeGraph {
         let v = self.vertices.len();
         let e = self.halfedges.len() / 2; // 每条边有 2 条半边
         let f = self.faces.len();
-        
+
         // V - E + F 应该等于 2（对于连通平面图）
         // 但实际可能有多个连通分量，所以这里只做记录
-        eprintln!("欧拉公式验证：V={} E={} F={} => V-E+F={}", v, e, f, v as i32 - e as i32 + f as i32);
+        eprintln!(
+            "欧拉公式验证：V={} E={} F={} => V-E+F={}",
+            v,
+            e,
+            f,
+            v as i32 - e as i32 + f as i32
+        );
 
         Ok(())
     }
@@ -819,29 +850,29 @@ mod tests {
     #[test]
     fn test_triangle() {
         let mut graph = HalfedgeGraph::new();
-        
+
         // 创建三角形顶点
         let v0 = graph.add_vertex([0.0, 0.0]);
         let v1 = graph.add_vertex([10.0, 0.0]);
         let v2 = graph.add_vertex([10.0, 10.0]);
-        
+
         // 创建边
         let (e0, _) = graph.add_edge(v0, v1, 0);
         let (e1, _) = graph.add_edge(v1, v2, 1);
         let (e2, _) = graph.add_edge(v2, v0, 2);
-        
+
         // 设置 next 指针（逆时针）
         graph.halfedge_mut(e0).next = Some(e1);
         graph.halfedge_mut(e1).next = Some(e2);
         graph.halfedge_mut(e2).next = Some(e0);
-        
+
         // 创建面
         let face_id = graph.add_face();
         graph.set_face_boundary(face_id, e0);
-        
+
         // 验证
         assert!(graph.validate().is_ok());
-        
+
         let area = graph.compute_face_area(face_id);
         assert!((area - 50.0).abs() < 1e-10); // 三角形面积 = 10*10/2 = 50
     }
@@ -849,38 +880,28 @@ mod tests {
     #[test]
     fn test_rectangle_with_hole() {
         // 外轮廓（逆时针 - 正面积）
-        let outer = vec![
-            [0.0, 0.0],
-            [20.0, 0.0],
-            [20.0, 20.0],
-            [0.0, 20.0],
-        ];
-        
+        let outer = vec![[0.0, 0.0], [20.0, 0.0], [20.0, 20.0], [0.0, 20.0]];
+
         // 孔洞（顺时针 - 负面积）
-        let hole = vec![
-            [8.0, 8.0],
-            [8.0, 12.0],
-            [12.0, 12.0],
-            [12.0, 8.0],
-        ];
-        
+        let hole = vec![[8.0, 8.0], [8.0, 12.0], [12.0, 12.0], [12.0, 8.0]];
+
         let graph = HalfedgeGraph::from_loops(&[outer, hole]);
-        
+
         assert!(graph.validate().is_ok());
         assert_eq!(graph.faces.len(), 2);
-        
+
         // 验证面积符号
         let face0_area = graph.compute_face_area(0);
         let face1_area = graph.compute_face_area(1);
-        
+
         // 一个为正（外轮廓），一个为负（孔洞）
         assert!(face0_area > 0.0 || face1_area > 0.0);
         assert!(face0_area < 0.0 || face1_area < 0.0);
-        
+
         // 外轮廓面积应该约等于 400
         let outer_area = face0_area.abs().max(face1_area.abs());
         assert!((outer_area - 400.0).abs() < 1.0);
-        
+
         // 孔洞面积应该约等于 16
         let hole_area = face0_area.abs().min(face1_area.abs());
         assert!((hole_area - 16.0).abs() < 1.0);
@@ -888,29 +909,20 @@ mod tests {
 
     #[test]
     fn test_from_loops() {
-        let square = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
-        
+        let square = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
         let graph = HalfedgeGraph::from_loops(&[square]);
-        
+
         assert_eq!(graph.vertices.len(), 4);
         assert_eq!(graph.halfedges.len(), 8); // 4 条边 × 2 条半边
         assert_eq!(graph.faces.len(), 1);
-        
+
         assert!(graph.validate().is_ok());
     }
 
     #[test]
     fn test_face_boundary_points() {
-        let triangle = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-        ];
+        let triangle = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0]];
 
         let graph = HalfedgeGraph::from_loops(&[triangle]);
         let face_id = 0;
@@ -929,76 +941,55 @@ mod tests {
     #[test]
     fn test_nested_holes() {
         // 测试嵌套孔洞：外轮廓 → 孔 1 → 孔 2（孔中孔）
-        let outer = vec![
-            [0.0, 0.0],
-            [30.0, 0.0],
-            [30.0, 30.0],
-            [0.0, 30.0],
-        ];
-        let hole1 = vec![
-            [10.0, 10.0],
-            [20.0, 10.0],
-            [20.0, 20.0],
-            [10.0, 20.0],
-        ];
-        let hole2 = vec![
-            [12.0, 12.0],
-            [18.0, 12.0],
-            [18.0, 18.0],
-            [12.0, 18.0],
-        ];
+        let outer = vec![[0.0, 0.0], [30.0, 0.0], [30.0, 30.0], [0.0, 30.0]];
+        let hole1 = vec![[10.0, 10.0], [20.0, 10.0], [20.0, 20.0], [10.0, 20.0]];
+        let hole2 = vec![[12.0, 12.0], [18.0, 12.0], [18.0, 18.0], [12.0, 18.0]];
 
         let mut graph = HalfedgeGraph::from_loops(&[outer, hole1, hole2]);
-        
+
         // 构建嵌套层级
         assert!(graph.build_nesting_hierarchy().is_ok());
-        
+
         // 验证嵌套关系
         assert!(graph.validate_nesting().is_ok());
-        
+
         // 应该有 3 个面
         assert_eq!(graph.faces.len(), 3);
-        
+
         // 外轮廓（面积最大）应该是面 0
         let outer_area = graph.compute_face_area(0).abs();
-        assert!((outer_area - 900.0).abs() < 1.0);  // 30x30 = 900
-        
+        assert!((outer_area - 900.0).abs() < 1.0); // 30x30 = 900
+
         // 验证嵌套深度
         // 外轮廓深度 = 0
         assert_eq!(graph.get_nesting_depth(0), 0);
-        
+
         // 孔 1 和孔 2 应该有嵌套关系
         // 具体哪个是孔 1 哪个是孔 2 取决于面积排序
         let depths: Vec<usize> = (0..3).map(|i| graph.get_nesting_depth(i)).collect();
-        assert!(depths.iter().any(|&d| d == 0));  // 至少一个外轮廓
-        assert!(depths.iter().any(|&d| d >= 1));  // 至少一个孔洞
+        assert!(depths.contains(&0)); // 至少一个外轮廓
+        assert!(depths.iter().any(|&d| d >= 1)); // 至少一个孔洞
     }
 
     #[test]
     fn test_o1_hierarchy_query() {
         // 测试 O(1) 层级查询
-        let outer = vec![
-            [0.0, 0.0],
-            [20.0, 0.0],
-            [20.0, 20.0],
-            [0.0, 20.0],
-        ];
-        let hole = vec![
-            [5.0, 5.0],
-            [15.0, 5.0],
-            [15.0, 15.0],
-            [5.0, 15.0],
-        ];
+        let outer = vec![[0.0, 0.0], [20.0, 0.0], [20.0, 20.0], [0.0, 20.0]];
+        let hole = vec![[5.0, 5.0], [15.0, 5.0], [15.0, 15.0], [5.0, 15.0]];
 
         let mut graph = HalfedgeGraph::from_loops(&[outer, hole]);
         graph.build_nesting_hierarchy().unwrap();
 
         // O(1) 查询父面
-        let hole_face = if graph.get_face_parent(0).is_some() { 0 } else { 1 };
+        let hole_face = if graph.get_face_parent(0).is_some() {
+            0
+        } else {
+            1
+        };
         let outer_face = if hole_face == 0 { 1 } else { 0 };
 
-        assert!(graph.get_face_parent(outer_face).is_none());  // 外轮廓无父面
-        assert!(graph.get_face_parent(hole_face).is_some());   // 孔洞有父面
+        assert!(graph.get_face_parent(outer_face).is_none()); // 外轮廓无父面
+        assert!(graph.get_face_parent(hole_face).is_some()); // 孔洞有父面
 
         // O(1) 查询子面
         let children = graph.get_face_children(outer_face);
@@ -1020,24 +1011,9 @@ mod tests {
     #[test]
     fn test_nesting_path() {
         // 测试嵌套路径
-        let outer = vec![
-            [0.0, 0.0],
-            [40.0, 0.0],
-            [40.0, 40.0],
-            [0.0, 40.0],
-        ];
-        let hole1 = vec![
-            [10.0, 10.0],
-            [30.0, 10.0],
-            [30.0, 30.0],
-            [10.0, 30.0],
-        ];
-        let hole2 = vec![
-            [15.0, 15.0],
-            [25.0, 15.0],
-            [25.0, 25.0],
-            [15.0, 25.0],
-        ];
+        let outer = vec![[0.0, 0.0], [40.0, 0.0], [40.0, 40.0], [0.0, 40.0]];
+        let hole1 = vec![[10.0, 10.0], [30.0, 10.0], [30.0, 30.0], [10.0, 30.0]];
+        let hole2 = vec![[15.0, 15.0], [25.0, 15.0], [25.0, 25.0], [15.0, 25.0]];
 
         let mut graph = HalfedgeGraph::from_loops(&[outer, hole1, hole2]);
         graph.build_nesting_hierarchy().unwrap();
@@ -1056,20 +1032,30 @@ mod tests {
     #[test]
     fn test_point_in_polygon() {
         // 测试射线法点在多边形内判断
-        let square = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
+        let square = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
 
         // 内部点
-        assert!(HalfedgeGraph::point_in_polygon_ray_casting([5.0, 5.0], &square));
-        
+        assert!(HalfedgeGraph::point_in_polygon_ray_casting(
+            [5.0, 5.0],
+            &square
+        ));
+
         // 外部点
-        assert!(!HalfedgeGraph::point_in_polygon_ray_casting([15.0, 5.0], &square));
-        assert!(!HalfedgeGraph::point_in_polygon_ray_casting([-5.0, 5.0], &square));
-        assert!(!HalfedgeGraph::point_in_polygon_ray_casting([5.0, 15.0], &square));
-        assert!(!HalfedgeGraph::point_in_polygon_ray_casting([5.0, -5.0], &square));
+        assert!(!HalfedgeGraph::point_in_polygon_ray_casting(
+            [15.0, 5.0],
+            &square
+        ));
+        assert!(!HalfedgeGraph::point_in_polygon_ray_casting(
+            [-5.0, 5.0],
+            &square
+        ));
+        assert!(!HalfedgeGraph::point_in_polygon_ray_casting(
+            [5.0, 15.0],
+            &square
+        ));
+        assert!(!HalfedgeGraph::point_in_polygon_ray_casting(
+            [5.0, -5.0],
+            &square
+        ));
     }
 }

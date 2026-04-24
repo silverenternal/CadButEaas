@@ -9,11 +9,9 @@
 use std::collections::BTreeMap;
 use tracing::{debug, instrument};
 
-use common_types::acoustic::{
-    ReverberationResult, ReverberationFormula, Frequency, AcousticError,
-};
-use common_types::scene::{SceneState, SurfaceId};
+use crate::acoustic_types::{AcousticError, Frequency, ReverberationFormula, ReverberationResult};
 use common_types::geometry::Point2;
+use common_types::scene::{SceneState, SurfaceId};
 
 use crate::material_db::MaterialDatabase;
 
@@ -64,8 +62,7 @@ impl ReverberationCalculator {
             scene.holes.get(room_id - 1)
         };
 
-        let room_loop = room_loop
-            .ok_or_else(|| AcousticError::invalid_room_id(room_id))?;
+        let room_loop = room_loop.ok_or_else(|| AcousticError::invalid_room_id(room_id))?;
 
         // 2. 计算房间面积（二维，使用鞋带公式）
         let floor_area = self.polygon_area(&room_loop.points);
@@ -80,8 +77,10 @@ impl ReverberationCalculator {
         let wall_area = perimeter * room_height;
         let ceiling_floor_area = floor_area * 2.0;
         let total_surface_area = wall_area + ceiling_floor_area;
-        debug!("总表面积：{:.2} m² (墙面：{:.2}, 天花板 + 地面：{:.2})",
-               total_surface_area, wall_area, ceiling_floor_area);
+        debug!(
+            "总表面积：{:.2} m² (墙面：{:.2}, 天花板 + 地面：{:.2})",
+            total_surface_area, wall_area, ceiling_floor_area
+        );
 
         // 5. 计算等效吸声面积（频率相关）
         let equivalent_area = self.compute_equivalent_absorption(scene, room_id, room_height)?;
@@ -93,9 +92,11 @@ impl ReverberationCalculator {
         let t60 = Self::calculate_t60(volume, total_surface_area, &equivalent_area, formula);
         let edt = Self::calculate_edt(&t60);
 
-        debug!("T60 (500Hz): {:.2}s, EDT (500Hz): {:.2}s",
-               t60.get(&Frequency::Hz500).unwrap_or(&0.0),
-               edt.get(&Frequency::Hz500).unwrap_or(&0.0));
+        debug!(
+            "T60 (500Hz): {:.2}s, EDT (500Hz): {:.2}s",
+            t60.get(&Frequency::Hz500).unwrap_or(&0.0),
+            edt.get(&Frequency::Hz500).unwrap_or(&0.0)
+        );
 
         Ok(ReverberationResult {
             volume,
@@ -123,7 +124,7 @@ impl ReverberationCalculator {
             area -= points[j][0] * points[i][1];
         }
 
-        (area / 2.0).abs() / 1000.0 / 1000.0  // 转换为 m²（原始单位是 mm）
+        (area / 2.0).abs() / 1000.0 / 1000.0 // 转换为 m²（原始单位是 mm）
     }
 
     /// 计算多边形周长
@@ -141,7 +142,7 @@ impl ReverberationCalculator {
             perimeter += (dx * dx + dy * dy).sqrt();
         }
 
-        perimeter / 1000.0  // 转换为 m（原始单位是 mm）
+        perimeter / 1000.0 // 转换为 m（原始单位是 mm）
     }
 
     /// 计算等效吸声面积 A = Σ(S × α)
@@ -160,8 +161,7 @@ impl ReverberationCalculator {
             scene.holes.get(room_id - 1)
         };
 
-        let room_loop = room_loop
-            .ok_or_else(|| AcousticError::invalid_room_id(room_id))?;
+        let room_loop = room_loop.ok_or_else(|| AcousticError::invalid_room_id(room_id))?;
 
         // 计算墙面面积
         let perimeter = self.polygon_perimeter(&room_loop.points);
@@ -223,7 +223,7 @@ impl ReverberationCalculator {
         if let Some(coeffs) = self.material_db.get_absorption_coeffs(material) {
             return coeffs.clone();
         }
-        
+
         // 如果数据库中不存在，使用硬编码默认值
         self.get_default_absorption(material)
     }
@@ -231,7 +231,7 @@ impl ReverberationCalculator {
     /// 获取默认吸声系数（回退值）
     fn get_default_absorption(&self, material: &str) -> BTreeMap<Frequency, f64> {
         let _ = material; // 忽略参数，使用通用默认值
-        
+
         // 通用默认值（类似抹灰墙面）
         let coeffs = vec![0.02, 0.03, 0.04, 0.05, 0.06, 0.07];
         Frequency::all().into_iter().zip(coeffs).collect()
@@ -275,7 +275,7 @@ impl ReverberationCalculator {
                         if a > 0.01 {
                             0.161 * volume / a
                         } else {
-                            10.0  // 上限值
+                            10.0 // 上限值
                         }
                     }
                     ReverberationFormula::Eyring => {
@@ -315,10 +315,7 @@ impl ReverberationCalculator {
     /// # 经验公式
     /// EDT ≈ T60 × 0.85
     fn calculate_edt(t60: &BTreeMap<Frequency, f64>) -> BTreeMap<Frequency, f64> {
-        t60
-            .iter()
-            .map(|(&freq, &t)| (freq, t * 0.85))
-            .collect()
+        t60.iter().map(|(&freq, &t)| (freq, t * 0.85)).collect()
     }
 
     /// 自动选择混响公式
@@ -348,7 +345,8 @@ impl ReverberationCalculator {
         let alpha_500 = equivalent_area
             .get(&Frequency::Hz500)
             .copied()
-            .unwrap_or(0.0) / total_surface_area.max(0.01);
+            .unwrap_or(0.0)
+            / total_surface_area.max(0.01);
 
         // 根据 α 自动选择
         if alpha_500 < 0.2 {
@@ -370,18 +368,13 @@ impl Default for ReverberationCalculator {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common_types::scene::{ClosedLoop, BoundarySegment, BoundarySemantic};
+    use common_types::scene::{BoundarySegment, BoundarySemantic, ClosedLoop};
 
     fn create_test_room_scene() -> SceneState {
         let mut scene = SceneState::default();
 
         // 创建一个 10m x 8m 的房间（80 m²）
-        let room_points = vec![
-            [0.0, 0.0],
-            [10000.0, 0.0],
-            [10000.0, 8000.0],
-            [0.0, 8000.0],
-        ];
+        let room_points = vec![[0.0, 0.0], [10000.0, 0.0], [10000.0, 8000.0], [0.0, 8000.0]];
         scene.outer = Some(ClosedLoop::new(room_points));
 
         // 添加边界语义（混凝土墙）
@@ -404,12 +397,7 @@ mod tests {
     #[test]
     fn test_polygon_area_rectangle() {
         let calc = ReverberationCalculator::new();
-        let points = vec![
-            [0.0, 0.0],
-            [10000.0, 0.0],
-            [10000.0, 8000.0],
-            [0.0, 8000.0],
-        ];
+        let points = vec![[0.0, 0.0], [10000.0, 0.0], [10000.0, 8000.0], [0.0, 8000.0]];
 
         let area = calc.polygon_area(&points);
         // 10m × 8m = 80 m²
@@ -419,12 +407,7 @@ mod tests {
     #[test]
     fn test_polygon_perimeter_rectangle() {
         let calc = ReverberationCalculator::new();
-        let points = vec![
-            [0.0, 0.0],
-            [10000.0, 0.0],
-            [10000.0, 8000.0],
-            [0.0, 8000.0],
-        ];
+        let points = vec![[0.0, 0.0], [10000.0, 0.0], [10000.0, 8000.0], [0.0, 8000.0]];
 
         let perimeter = calc.polygon_perimeter(&points);
         // 2 × (10m + 8m) = 36m
@@ -436,7 +419,9 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
 
         // 房间体积：80 m² × 3m = 240 m³
         assert!((result.volume - 240.0).abs() < 1.0);
@@ -445,7 +430,7 @@ mod tests {
         assert!(result.total_surface_area > 0.0);
 
         // T60 应该在合理范围内（0.1s - 10s）
-        for (_, t60) in &result.t60 {
+        for t60 in result.t60.values() {
             assert!(*t60 > 0.1 && *t60 < 10.0);
         }
 
@@ -461,7 +446,9 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Eyring, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Eyring, 3.0)
+            .unwrap();
 
         assert_eq!(result.formula, ReverberationFormula::Eyring);
         assert!((result.volume - 240.0).abs() < 1.0);
@@ -472,8 +459,12 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result_3m = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
-        let result_4m = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 4.0).unwrap();
+        let result_3m = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
+        let result_4m = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 4.0)
+            .unwrap();
 
         // 更高的房间应该有更长的混响时间（体积更大）
         assert!(result_4m.volume > result_3m.volume);
@@ -494,7 +485,10 @@ mod tests {
 
         // 验证是 InvalidRoomId 错误，并且有恢复建议
         match result {
-            Err(AcousticError::InvalidRoomId { room_id, suggestion }) => {
+            Err(AcousticError::InvalidRoomId {
+                room_id,
+                suggestion,
+            }) => {
                 assert_eq!(room_id, 999);
                 assert!(suggestion.is_some(), "InvalidRoomId 应该包含恢复建议");
             }
@@ -507,7 +501,9 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
 
         // 所有频率都应该有 T60 和 EDT 值
         for freq in Frequency::all() {
@@ -521,13 +517,20 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
 
         // T60 应该在合理范围内
         for (freq, t60) in &result.t60 {
             // 低频通常有较长的混响时间
             // 高频通常有较短的混响时间
-            assert!(*t60 > 0.0 && *t60 < 10.0, "T60 at {:?} = {:.2}s out of range", freq, t60);
+            assert!(
+                *t60 > 0.0 && *t60 < 10.0,
+                "T60 at {:?} = {:.2}s out of range",
+                freq,
+                t60
+            );
         }
     }
 
@@ -536,13 +539,20 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
 
         // EDT/T60 比率应该接近 0.85
         for (freq, t60) in &result.t60 {
             let edt = result.edt.get(freq).unwrap();
             let ratio = edt / t60;
-            assert!((ratio - 0.85).abs() < 0.01, "EDT/T60 ratio at {:?} = {:.2}", freq, ratio);
+            assert!(
+                (ratio - 0.85).abs() < 0.01,
+                "EDT/T60 ratio at {:?} = {:.2}",
+                freq,
+                ratio
+            );
         }
     }
 
@@ -552,7 +562,9 @@ mod tests {
         let calc = ReverberationCalculator::new();
 
         // 使用 Auto 模式，应该根据α自动选择公式
-        let result = calc.calculate(&scene, 0, ReverberationFormula::Auto, 3.0).unwrap();
+        let result = calc
+            .calculate(&scene, 0, ReverberationFormula::Auto, 3.0)
+            .unwrap();
 
         // 由于是低吸声房间（混凝土墙），应该自动选择 Sabine
         assert_eq!(result.formula, ReverberationFormula::Sabine);
@@ -563,8 +575,12 @@ mod tests {
         let scene = create_test_room_scene();
         let calc = ReverberationCalculator::new();
 
-        let sabine_result = calc.calculate(&scene, 0, ReverberationFormula::Sabine, 3.0).unwrap();
-        let eyring_result = calc.calculate(&scene, 0, ReverberationFormula::Eyring, 3.0).unwrap();
+        let sabine_result = calc
+            .calculate(&scene, 0, ReverberationFormula::Sabine, 3.0)
+            .unwrap();
+        let eyring_result = calc
+            .calculate(&scene, 0, ReverberationFormula::Eyring, 3.0)
+            .unwrap();
 
         // 在低吸声系数下，Eyring 公式应该给出更短（更保守）的 T60
         // 这是因为 Eyring 公式考虑了高吸声系数的情况
@@ -573,6 +589,9 @@ mod tests {
 
         // 通常 Eyring 的 T60 会比 Sabine 短（取决于吸声系数）
         // 但在某些情况下可能相反，所以只验证它们不同
-        assert!((sabine_t60 - eyring_t60).abs() > 0.01, "Sabine 和 Eyring 应该给出不同的结果");
+        assert!(
+            (sabine_t60 - eyring_t60).abs() > 0.01,
+            "Sabine 和 Eyring 应该给出不同的结果"
+        );
     }
 }

@@ -9,6 +9,7 @@ license.workspace = true
 common-types = { path = "../common-types" }
 parser = { path = "../parser" }
 vectorize = { path = "../vectorize" }
+raster-loader = { path = "../raster-loader" }
 topo = { path = "../topo" }
 validator = { path = "../validator" }
 export = { path = "../export" }
@@ -24,7 +25,6 @@ axum = { workspace = true, features = ["multipart", "ws"] }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
 tower = { workspace = true, features = ["util", "make"] }
 tower-http = { version = "0.5", features = ["cors"] }
 http = "1.0"
@@ -34,12 +34,12 @@ async-trait = { workspace = true }
 futures = "0.3"
 prometheus = { workspace = true }
 once_cell = "1.19"
+image = { workspace = true }
 
 # WebSocket 支持（P11 锐评落实）
 tokio-tungstenite = { workspace = true }
 
 [dev-dependencies]
-insta = { workspace = true }
 common-types = { path = "../common-types" }
 config = { path = "../config" }
 parser = { path = "../parser" }

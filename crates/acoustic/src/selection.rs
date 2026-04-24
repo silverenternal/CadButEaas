@@ -12,16 +12,16 @@
 //! - 多次查询共享同一个 R*-tree，避免重复构建
 //! - 使用 Arc 实现线程安全共享
 
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use tracing::{debug, instrument};
 
-use common_types::acoustic::{
-    SelectionBoundary, SelectionMode, SelectionMaterialStatsResult,
-    MaterialDistribution, Frequency, AcousticError,
+use crate::acoustic_types::{
+    AcousticError, Frequency, MaterialDistribution, SelectionBoundary,
+    SelectionMaterialStatsResult, SelectionMode,
 };
-use common_types::scene::{SceneState, SurfaceId};
 use common_types::geometry::Point2;
+use common_types::scene::{SceneState, SurfaceId};
 
 use crate::material_db::MaterialDatabase;
 
@@ -114,11 +114,15 @@ impl SelectionCalculator {
         let mut total_area: f64 = 0.0;
 
         for &id in &surface_ids {
-            let edge = scene.edges.get(id)
+            let edge = scene
+                .edges
+                .get(id)
                 .ok_or_else(|| AcousticError::selection(format!("Invalid surface ID: {}", id)))?;
 
             // 计算表面面积（简化：长度 × 高度，假设高度 3m）
-            let length = ((edge.end[0] - edge.start[0]).powi(2) + (edge.end[1] - edge.start[1]).powi(2)).sqrt();
+            let length = ((edge.end[0] - edge.start[0]).powi(2)
+                + (edge.end[1] - edge.start[1]).powi(2))
+            .sqrt();
             let height = 3.0; // 默认高度 3m
             let area = length * height / 1000.0 / 1000.0; // 转换为 m²（原始单位是 mm）
 
@@ -146,7 +150,11 @@ impl SelectionCalculator {
             .map(|(name, &area)| MaterialDistribution {
                 material_name: name.clone(),
                 area,
-                percentage: if total_area > 0.0 { area / total_area * 100.0 } else { 0.0 },
+                percentage: if total_area > 0.0 {
+                    area / total_area * 100.0
+                } else {
+                    0.0
+                },
             })
             .collect();
 
@@ -299,12 +307,10 @@ impl SelectionCalculator {
     /// 获取选区边界的包围盒
     fn get_boundary_bbox(&self, boundary: &SelectionBoundary) -> AABB<[f64; 2]> {
         match boundary {
-            SelectionBoundary::Rect { min, max } => {
-                AABB::from_corners(
-                    [min[0].min(max[0]), min[1].min(max[1])],
-                    [min[0].max(max[0]), min[1].max(max[1])],
-                )
-            }
+            SelectionBoundary::Rect { min, max } => AABB::from_corners(
+                [min[0].min(max[0]), min[1].min(max[1])],
+                [min[0].max(max[0]), min[1].max(max[1])],
+            ),
             SelectionBoundary::Polygon { points } => {
                 if points.is_empty() {
                     return AABB::from_corners([0.0, 0.0], [0.0, 0.0]);
@@ -331,12 +337,12 @@ impl SelectionCalculator {
     fn point_in_boundary(&self, point: &Point2, boundary: &SelectionBoundary) -> bool {
         match boundary {
             SelectionBoundary::Rect { min, max } => {
-                point[0] >= min[0].min(max[0]) && point[0] <= min[0].max(max[0]) &&
-                point[1] >= min[1].min(max[1]) && point[1] <= min[1].max(max[1])
+                point[0] >= min[0].min(max[0])
+                    && point[0] <= min[0].max(max[0])
+                    && point[1] >= min[1].min(max[1])
+                    && point[1] <= min[1].max(max[1])
             }
-            SelectionBoundary::Polygon { points } => {
-                self.point_in_polygon(point, points)
-            }
+            SelectionBoundary::Polygon { points } => self.point_in_polygon(point, points),
         }
     }
 
@@ -357,8 +363,9 @@ impl SelectionCalculator {
             let yj = polygon[j][1];
 
             // 检查射线是否与边相交
-            if ((yi > point[1]) != (yj > point[1])) &&
-               (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi + 1e-10) + xi) {
+            if ((yi > point[1]) != (yj > point[1]))
+                && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi + 1e-10) + xi)
+            {
                 inside = !inside;
             }
         }
@@ -501,7 +508,9 @@ mod tests {
 
         // 选择整个房间
         let boundary = SelectionBoundary::rect([0.0, 0.0], [10000.0, 10000.0]);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
         assert_eq!(result.surface_ids.len(), 5);
         assert!(result.total_area > 0.0);
@@ -515,10 +524,12 @@ mod tests {
 
         // 只选择底部墙的一部分
         let boundary = SelectionBoundary::rect([0.0, 0.0], [5000.0, 1000.0]);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
         // 应该选中底部墙（id=0）和部分玻璃窗（id=4）
-        assert!(result.surface_ids.len() >= 1);
+        assert!(!result.surface_ids.is_empty());
     }
 
     #[test]
@@ -534,9 +545,11 @@ mod tests {
             [0.0, 10000.0],
         ];
         let boundary = SelectionBoundary::polygon(points);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
-        assert!(result.surface_ids.len() >= 1);
+        assert!(!result.surface_ids.is_empty());
     }
 
     #[test]
@@ -574,12 +587,7 @@ mod tests {
     #[test]
     fn test_point_in_polygon() {
         let calc = SelectionCalculator::new();
-        let points = vec![
-            [0.0, 0.0],
-            [10.0, 0.0],
-            [10.0, 10.0],
-            [0.0, 10.0],
-        ];
+        let points = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
         let boundary = SelectionBoundary::polygon(points);
 
         // 内部点
@@ -611,13 +619,17 @@ mod tests {
         let calc = SelectionCalculator::new();
 
         let boundary = SelectionBoundary::rect([0.0, 0.0], [10000.0, 10000.0]);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
         // 检查材料分布
         assert!(result.material_distribution.len() >= 2); // concrete_wall 和 glass
 
         // 检查百分比总和接近 100%
-        let total_percentage: f64 = result.material_distribution.iter()
+        let total_percentage: f64 = result
+            .material_distribution
+            .iter()
             .map(|d| d.percentage)
             .sum();
         assert!((total_percentage - 100.0).abs() < 0.1);
@@ -629,7 +641,9 @@ mod tests {
         let calc = SelectionCalculator::new();
 
         let boundary = SelectionBoundary::rect([0.0, 0.0], [10000.0, 10000.0]);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
         // 检查等效吸声面积
         assert!(!result.equivalent_absorption_area.is_empty());
@@ -646,13 +660,15 @@ mod tests {
         let calc = SelectionCalculator::new();
 
         let boundary = SelectionBoundary::rect([0.0, 0.0], [10000.0, 10000.0]);
-        let result = calc.calculate(&scene, boundary, SelectionMode::Smart).unwrap();
+        let result = calc
+            .calculate(&scene, boundary, SelectionMode::Smart)
+            .unwrap();
 
         // 检查平均吸声系数
         assert!(!result.average_absorption_coefficient.is_empty());
 
         // 吸声系数应该在 0-1 范围内
-        for (_, coeff) in &result.average_absorption_coefficient {
+        for coeff in result.average_absorption_coefficient.values() {
             assert!(*coeff >= 0.0 && *coeff <= 1.0);
         }
     }

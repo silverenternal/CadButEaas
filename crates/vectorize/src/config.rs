@@ -1,7 +1,11 @@
 //! 矢量化服务配置
 
-use accelerator_api::{EdgeDetectConfig, ContourExtractConfig, ArcFitConfig, SnapConfig};
+use accelerator_api::{ArcFitConfig, ContourExtractConfig, EdgeDetectConfig, SnapConfig};
 use serde::{Deserialize, Serialize};
+
+fn default_max_pixels() -> usize {
+    30_000_000
+}
 
 /// 矢量化配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +36,8 @@ pub struct VectorizeConfig {
     pub gap_filling: bool,
     /// 质量评估
     pub quality_assessment: bool,
+    /// 文字标注分离（检测并过滤文字连通区域）
+    pub text_separation: bool,
     /// DPI 自适应（如果为 true，则根据 dpi 自动调整像素阈值）
     pub dpi_adaptive: bool,
     /// 参考 DPI（用于计算缩放比例）
@@ -40,6 +46,24 @@ pub struct VectorizeConfig {
     pub dpi_scale_factor: f64,
     /// OpenCV 多边形简化精度（epsilon 值，仅在使用 OpenCV 时有效）
     pub opencv_approx_epsilon: Option<f64>,
+    /// 最大图像像素数限制（默认 30,000,000，约 5477x5477，支持 A3 @ 300 DPI）
+    /// 超过此限制的图像会自动缩放（保持宽高比）
+    #[serde(default = "default_max_pixels")]
+    pub max_pixels: usize,
+    /// 是否使用加速器进行边缘检测（GPU 加速，如果可用）
+    pub use_accelerator_edge_detect: bool,
+    /// 自动纸张检测与裁剪（去除背景黑边/干扰）
+    pub auto_crop_paper: bool,
+    /// 透视变换校正（对拍照斜视图纸进行校正）
+    pub perspective_correction: bool,
+    /// 霍夫变换辅助缺口填充（处理更大间隔的断点）
+    pub hough_gap_filling: bool,
+    /// 霍夫变换直线检测阈值（投票数，越大检测越少但越准确）
+    pub hough_threshold: u32,
+    /// 建筑规则几何校正（正交性/平行性校正，针对建筑图纸）
+    pub architectural_correction: bool,
+    /// 自适应参数调整（根据图像质量自动调整预处理参数）
+    pub adaptive_params: bool,
 }
 
 /// 图像预处理配置
@@ -64,8 +88,8 @@ impl Default for PreprocessingConfig {
             denoise: true,
             denoise_method: "median".to_string(),
             denoise_strength: 3.0,
-            enhance_contrast: false,
-            clahe_clip_limit: 2.0,
+            enhance_contrast: true,
+            clahe_clip_limit: 2.5,
             clahe_tile_size: 8,
         }
     }
@@ -86,14 +110,23 @@ impl Default for VectorizeConfig {
             adaptive_threshold: true,
             use_hough: false,
             preprocessing: PreprocessingConfig::default(),
-            line_type_detection: false,
+            line_type_detection: true,
             arc_fitting: false,
-            gap_filling: false,
-            quality_assessment: false,
+            gap_filling: true,
+            quality_assessment: true,
+            text_separation: true,
             dpi_adaptive: true,
             reference_dpi: 300.0,
             dpi_scale_factor: 1.0,
             opencv_approx_epsilon: Some(2.0),
+            max_pixels: 30_000_000,
+            use_accelerator_edge_detect: true,
+            auto_crop_paper: true,
+            perspective_correction: true,
+            hough_gap_filling: true,
+            hough_threshold: 50,
+            architectural_correction: true,
+            adaptive_params: true,
         }
     }
 }

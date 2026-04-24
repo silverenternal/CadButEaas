@@ -5,8 +5,8 @@
 //! 2. 使用 geo  crate 的 robust predicates
 
 use common_types::{ClosedLoop, Point2, RecoverySuggestion};
-use geo::{LineString, Intersects, Contains};
-use serde::{Serialize, Deserialize};
+use geo::{Contains, Intersects, LineString};
+use serde::{Deserialize, Serialize};
 
 /// 验证问题严重性
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,8 +60,7 @@ impl Default for ValidationReport {
 }
 
 /// 验证摘要
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ValidationSummary {
     pub error_count: usize,
     pub warning_count: usize,
@@ -157,7 +156,8 @@ pub fn check_self_intersection(loop_data: &ClosedLoop) -> Option<ValidationIssue
     }
 
     // 额外检查：使用 geo::LineString 诊断相交类型
-    let line_string: LineString<f64> = points.iter()
+    let line_string: LineString<f64> = points
+        .iter()
         .map(|p| geo::Coord { x: p[0], y: p[1] })
         .collect();
 
@@ -204,7 +204,7 @@ fn diagnose_intersection_type(line_string: &LineString<f64>) -> IntersectionType
 
         for k in (i + 2)..n {
             let l = (k + 1) % n;
-            
+
             // 跳过相邻边
             if i == 0 && k == n - 1 {
                 continue;
@@ -232,10 +232,10 @@ fn are_collinear(line1: geo::Line<f64>, line2: geo::Line<f64>) -> bool {
     // 使用叉积检查
     let v1 = (line1.end.x - line1.start.x, line1.end.y - line1.start.y);
     let v2 = (line2.end.x - line2.start.x, line2.end.y - line2.start.y);
-    
+
     // 叉积为零表示平行
     let cross = v1.0 * v2.1 - v1.1 * v2.0;
-    
+
     if cross.abs() > 1e-10 {
         return false;
     }
@@ -243,7 +243,7 @@ fn are_collinear(line1: geo::Line<f64>, line2: geo::Line<f64>) -> bool {
     // 检查是否在同一直线上
     let v3 = (line2.start.x - line1.start.x, line2.start.y - line1.start.y);
     let cross2 = v1.0 * v3.1 - v1.1 * v3.0;
-    
+
     cross2.abs() < 1e-10
 }
 
@@ -290,9 +290,9 @@ fn segments_overlap(line1: geo::Line<f64>, line2: geo::Line<f64>) -> bool {
 fn check_self_intersection_robust(points: &[Point2]) -> Option<ValidationIssue> {
     // 使用 geo 的 robust predicates
     // 这里我们检查所有非相邻边对
-    
+
     let n = points.len();
-    
+
     for i in 0..n {
         let j = (i + 1) % n;
         let p1 = points[i];
@@ -300,7 +300,7 @@ fn check_self_intersection_robust(points: &[Point2]) -> Option<ValidationIssue> 
 
         for k in 0..n {
             let l = (k + 1) % n;
-            
+
             // 跳过相邻边
             if k == i || k == j || l == i || l == j {
                 continue;
@@ -365,7 +365,7 @@ fn robust_intersects(p1: Point2, p2: Point2, p3: Point2, p4: Point2) -> bool {
 /// 计算 orientation（返回 -1, 0, 1）
 fn orientation(p1: Point2, p2: Point2, p3: Point2) -> i32 {
     let val = (p2[1] - p1[1]) * (p3[0] - p2[0]) - (p2[0] - p1[0]) * (p3[1] - p2[1]);
-    
+
     if val.abs() < 1e-10 {
         0 // 共线
     } else if val > 0.0 {
@@ -387,14 +387,18 @@ fn on_segment(p: Point2, r: Point2, q: Point2) -> bool {
 pub fn check_hole_containment(outer: &ClosedLoop, holes: &[ClosedLoop]) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
 
-    let outer_line: LineString<f64> = outer.points.iter()
+    let outer_line: LineString<f64> = outer
+        .points
+        .iter()
         .map(|p| geo::Coord { x: p[0], y: p[1] })
         .collect();
 
     let outer_polygon = geo::Polygon::new(outer_line.clone(), vec![]);
 
     for (i, hole) in holes.iter().enumerate() {
-        let hole_line: LineString<f64> = hole.points.iter()
+        let hole_line: LineString<f64> = hole
+            .points
+            .iter()
             .map(|p| geo::Coord { x: p[0], y: p[1] })
             .collect();
 
@@ -433,10 +437,14 @@ pub fn check_hole_containment(outer: &ClosedLoop, holes: &[ClosedLoop]) -> Vec<V
     // 检查孔洞之间是否相交
     for i in 0..holes.len() {
         for j in (i + 1)..holes.len() {
-            let line_i: LineString<f64> = holes[i].points.iter()
+            let line_i: LineString<f64> = holes[i]
+                .points
+                .iter()
                 .map(|p| geo::Coord { x: p[0], y: p[1] })
                 .collect();
-            let line_j: LineString<f64> = holes[j].points.iter()
+            let line_j: LineString<f64> = holes[j]
+                .points
+                .iter()
                 .map(|p| geo::Coord { x: p[0], y: p[1] })
                 .collect();
 
@@ -456,7 +464,11 @@ pub fn check_hole_containment(outer: &ClosedLoop, holes: &[ClosedLoop]) -> Vec<V
 }
 
 /// 微特征检查
-pub fn check_micro_features(loop_data: &ClosedLoop, min_length: f64, min_angle: f64) -> Vec<ValidationIssue> {
+pub fn check_micro_features(
+    loop_data: &ClosedLoop,
+    min_length: f64,
+    min_angle: f64,
+) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     let points = &loop_data.points;
 
@@ -491,8 +503,14 @@ pub fn check_micro_features(loop_data: &ClosedLoop, min_length: f64, min_angle: 
         let prev = if i == 0 { points.len() - 1 } else { i - 1 };
         let next = (i + 1) % points.len();
 
-        let v1 = [points[i][0] - points[prev][0], points[i][1] - points[prev][1]];
-        let v2 = [points[next][0] - points[i][0], points[next][1] - points[i][1]];
+        let v1 = [
+            points[i][0] - points[prev][0],
+            points[i][1] - points[prev][1],
+        ];
+        let v2 = [
+            points[next][0] - points[i][0],
+            points[next][1] - points[i][1],
+        ];
 
         let angle = calculate_angle(&v1, &v2);
         let angle_deg = angle.to_degrees();
@@ -557,7 +575,13 @@ mod tests {
     fn test_check_closure_valid() {
         // 闭合矩形（首尾点重合）
         let loop_data = ClosedLoop {
-            points: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0], [0.0, 0.0]],
+            points: vec![
+                [0.0, 0.0],
+                [10.0, 0.0],
+                [10.0, 10.0],
+                [0.0, 10.0],
+                [0.0, 0.0],
+            ],
             signed_area: 100.0,
         };
         assert!(check_closure(&loop_data, 0.5).is_none());
@@ -598,12 +622,13 @@ mod tests {
         // 共线重叠情况
         let loop_data = ClosedLoop {
             points: vec![
-                [0.0, 0.0], [10.0, 0.0],  // 底边
-                [10.0, 10.0],             // 右边
-                [5.0, 10.0],              // 顶边部分 1
-                [5.0, 5.0],               // 向下
-                [0.0, 5.0],               // 向左
-                [0.0, 10.0],              // 向上
+                [0.0, 0.0],
+                [10.0, 0.0],  // 底边
+                [10.0, 10.0], // 右边
+                [5.0, 10.0],  // 顶边部分 1
+                [5.0, 5.0],   // 向下
+                [0.0, 5.0],   // 向左
+                [0.0, 10.0],  // 向上
             ],
             signed_area: 75.0,
         };
@@ -614,30 +639,54 @@ mod tests {
     #[test]
     fn test_are_collinear_parallel() {
         // 平行但不共线
-        let line1 = geo::Line::new(geo::Coord { x: 0.0, y: 0.0 }, geo::Coord { x: 10.0, y: 0.0 });
-        let line2 = geo::Line::new(geo::Coord { x: 0.0, y: 1.0 }, geo::Coord { x: 10.0, y: 1.0 });
+        let line1 = geo::Line::new(
+            geo::Coord { x: 0.0, y: 0.0 },
+            geo::Coord { x: 10.0, y: 0.0 },
+        );
+        let line2 = geo::Line::new(
+            geo::Coord { x: 0.0, y: 1.0 },
+            geo::Coord { x: 10.0, y: 1.0 },
+        );
         assert!(!are_collinear(line1, line2));
     }
 
     #[test]
     fn test_are_collinear_same_line() {
         // 共线
-        let line1 = geo::Line::new(geo::Coord { x: 0.0, y: 0.0 }, geo::Coord { x: 10.0, y: 0.0 });
-        let line2 = geo::Line::new(geo::Coord { x: 5.0, y: 0.0 }, geo::Coord { x: 15.0, y: 0.0 });
+        let line1 = geo::Line::new(
+            geo::Coord { x: 0.0, y: 0.0 },
+            geo::Coord { x: 10.0, y: 0.0 },
+        );
+        let line2 = geo::Line::new(
+            geo::Coord { x: 5.0, y: 0.0 },
+            geo::Coord { x: 15.0, y: 0.0 },
+        );
         assert!(are_collinear(line1, line2));
     }
 
     #[test]
     fn test_segments_overlap_yes() {
-        let line1 = geo::Line::new(geo::Coord { x: 0.0, y: 0.0 }, geo::Coord { x: 10.0, y: 0.0 });
-        let line2 = geo::Line::new(geo::Coord { x: 5.0, y: 0.0 }, geo::Coord { x: 15.0, y: 0.0 });
+        let line1 = geo::Line::new(
+            geo::Coord { x: 0.0, y: 0.0 },
+            geo::Coord { x: 10.0, y: 0.0 },
+        );
+        let line2 = geo::Line::new(
+            geo::Coord { x: 5.0, y: 0.0 },
+            geo::Coord { x: 15.0, y: 0.0 },
+        );
         assert!(segments_overlap(line1, line2));
     }
 
     #[test]
     fn test_segments_overlap_no() {
-        let line1 = geo::Line::new(geo::Coord { x: 0.0, y: 0.0 }, geo::Coord { x: 10.0, y: 0.0 });
-        let line2 = geo::Line::new(geo::Coord { x: 11.0, y: 0.0 }, geo::Coord { x: 20.0, y: 0.0 });
+        let line1 = geo::Line::new(
+            geo::Coord { x: 0.0, y: 0.0 },
+            geo::Coord { x: 10.0, y: 0.0 },
+        );
+        let line2 = geo::Line::new(
+            geo::Coord { x: 11.0, y: 0.0 },
+            geo::Coord { x: 20.0, y: 0.0 },
+        );
         assert!(!segments_overlap(line1, line2));
     }
 }
@@ -657,9 +706,9 @@ pub fn compute_convex_hull(points: &[Point2]) -> Vec<Point2> {
             .unwrap_or(std::cmp::Ordering::Equal)
             .then_with(|| a[1].partial_cmp(&b[1]).unwrap_or(std::cmp::Ordering::Equal))
     });
-    
+
     let mut hull = Vec::with_capacity(points.len());
-    
+
     // 下凸壳
     for p in &sorted {
         while hull.len() >= 2 {
@@ -673,7 +722,7 @@ pub fn compute_convex_hull(points: &[Point2]) -> Vec<Point2> {
         }
         hull.push(*p);
     }
-    
+
     // 上凸壳
     let lower_hull_len = hull.len();
     for p in sorted.iter().rev() {
@@ -688,7 +737,7 @@ pub fn compute_convex_hull(points: &[Point2]) -> Vec<Point2> {
         }
         hull.push(*p);
     }
-    
+
     // 移除重复的终点
     if hull.len() > 1 {
         hull.pop();
@@ -706,7 +755,7 @@ pub fn calculate_polygon_area(points: &[Point2]) -> f64 {
     if points.len() < 3 {
         return 0.0;
     }
-    
+
     let mut area = 0.0;
     for i in 0..points.len() {
         let j = (i + 1) % points.len();
@@ -743,27 +792,30 @@ pub struct Indentation {
 /// 凸性检查 - 房间复杂度分析
 pub fn check_convexity(outer: &ClosedLoop) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
-    
+
     if outer.points.len() < 3 {
         return issues;
     }
-    
+
     let hull = compute_convex_hull(&outer.points);
     let actual_area = outer.signed_area.abs();
     let hull_area = calculate_polygon_area(&hull).abs();
-    
+
     if hull_area < 1e-10 {
         return issues;
     }
-    
+
     let convexity_ratio = actual_area / hull_area;
     let _complexity_score = 1.0 - convexity_ratio;
-    
+
     // 凸性过低预警（声学聚焦风险）
     if convexity_ratio < 0.6 {
         issues.push(ValidationIssue {
             code: "W004".to_string(),
-            message: format!("房间凸性比率过低 ({:.2})，可能存在声学聚焦", convexity_ratio),
+            message: format!(
+                "房间凸性比率过低 ({:.2})，可能存在声学聚焦",
+                convexity_ratio
+            ),
             severity: Severity::Warning,
             location: Some(ValidationLocation {
                 point: Some(find_deepest_concave_point(&outer.points, &hull)),
@@ -773,7 +825,7 @@ pub fn check_convexity(outer: &ClosedLoop) -> Vec<ValidationIssue> {
             suggestion: Some("考虑添加扩散体或调整房间形状".to_string()),
         });
     }
-    
+
     // 检测异常凹陷（可能是识别错误）
     let indentations = detect_wall_indentations(&outer.points, &hull);
     for indent in indentations {
@@ -781,7 +833,10 @@ pub fn check_convexity(outer: &ClosedLoop) -> Vec<ValidationIssue> {
             // 深而窄的凹陷，可能是噪声
             issues.push(ValidationIssue {
                 code: "E005".to_string(),
-                message: format!("检测到异常墙体凹陷 (深度:{:.2}m, 宽度:{:.2}m)", indent.depth, indent.width),
+                message: format!(
+                    "检测到异常墙体凹陷 (深度:{:.2}m, 宽度:{:.2}m)",
+                    indent.depth, indent.width
+                ),
                 severity: Severity::Error,
                 location: Some(ValidationLocation {
                     point: Some(outer.points[indent.start_idx]),
@@ -792,7 +847,7 @@ pub fn check_convexity(outer: &ClosedLoop) -> Vec<ValidationIssue> {
             });
         }
     }
-    
+
     issues
 }
 
@@ -812,7 +867,7 @@ fn find_deepest_concave_point(points: &[Point2], hull: &[Point2]) -> Point2 {
             return *pt;
         }
     }
-    
+
     // 如果所有点都在凸包上，返回第一个点
     points[0]
 }
@@ -823,7 +878,7 @@ fn detect_wall_indentations(points: &[Point2], hull: &[Point2]) -> Vec<Indentati
     let mut in_indentation = false;
     let mut indentation_start = None;
     let mut indentation_points = Vec::new();
-    
+
     for (i, pt) in points.iter().enumerate() {
         // 检查点是否在凸包上
         let mut on_hull = false;
@@ -833,7 +888,7 @@ fn detect_wall_indentations(points: &[Point2], hull: &[Point2]) -> Vec<Indentati
                 break;
             }
         }
-        
+
         if !on_hull {
             // 在凹陷内
             if !in_indentation {
@@ -848,7 +903,7 @@ fn detect_wall_indentations(points: &[Point2], hull: &[Point2]) -> Vec<Indentati
             if let Some(start) = indentation_start {
                 let width = calculate_indentation_width(&indentation_points);
                 let depth = calculate_indentation_depth(&indentation_points, hull);
-                
+
                 if depth > 0.1 {
                     indentations.push(Indentation {
                         start_idx: start,
@@ -863,7 +918,7 @@ fn detect_wall_indentations(points: &[Point2], hull: &[Point2]) -> Vec<Indentati
             indentation_points.clear();
         }
     }
-    
+
     indentations
 }
 
@@ -872,7 +927,7 @@ fn calculate_indentation_width(points: &[Point2]) -> f64 {
     if points.is_empty() {
         return 0.0;
     }
-    
+
     // 简单实现：第一个点和最后一个点的距离
     let first = points[0];
     let last = points[points.len() - 1];
@@ -884,7 +939,7 @@ fn calculate_indentation_depth(points: &[Point2], hull: &[Point2]) -> f64 {
     if points.is_empty() || hull.is_empty() {
         return 0.0;
     }
-    
+
     // 计算凹陷点到凸包的最短距离
     let mut max_depth = 0.0;
     for pt in points {
@@ -893,7 +948,7 @@ fn calculate_indentation_depth(points: &[Point2], hull: &[Point2]) -> f64 {
             max_depth = dist;
         }
     }
-    
+
     max_depth
 }
 
@@ -902,9 +957,9 @@ fn distance_to_hull(point: &Point2, hull: &[Point2]) -> f64 {
     if hull.len() < 3 {
         return 0.0;
     }
-    
+
     let mut min_dist = f64::MAX;
-    
+
     // 计算点到每条边的距离
     for i in 0..hull.len() {
         let j = (i + 1) % hull.len();
@@ -913,7 +968,7 @@ fn distance_to_hull(point: &Point2, hull: &[Point2]) -> f64 {
             min_dist = dist;
         }
     }
-    
+
     min_dist
 }
 
@@ -921,7 +976,7 @@ fn distance_to_hull(point: &Point2, hull: &[Point2]) -> f64 {
 fn distance_to_segment(point: Point2, a: Point2, b: Point2) -> f64 {
     let ab = [b[0] - a[0], b[1] - a[1]];
     let ap = [point[0] - a[0], point[1] - a[1]];
-    
+
     let ab_len_sq = ab[0] * ab[0] + ab[1] * ab[1];
     if ab_len_sq < 1e-10 {
         return ((point[0] - a[0]).powi(2) + (point[1] - a[1]).powi(2)).sqrt();
@@ -938,43 +993,49 @@ fn distance_to_segment(point: Point2, a: Point2, b: Point2) -> f64 {
 mod convexity_tests {
     use super::*;
     use common_types::ClosedLoop;
-    
+
     #[test]
     fn test_convex_hull_rectangle() {
-        let points = vec![
-            [0.0, 0.0], [4.0, 0.0], [4.0, 3.0], [0.0, 3.0],
-        ];
+        let points = vec![[0.0, 0.0], [4.0, 0.0], [4.0, 3.0], [0.0, 3.0]];
         let hull = compute_convex_hull(&points);
         assert_eq!(hull.len(), 4);
     }
-    
+
     #[test]
     fn test_convex_hull_l_shape() {
         let points = vec![
-            [0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [1.0, 1.0], [1.0, 2.0], [0.0, 2.0],
+            [0.0, 0.0],
+            [2.0, 0.0],
+            [2.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 2.0],
+            [0.0, 2.0],
         ];
         let hull = compute_convex_hull(&points);
         // L 形的凸包应该是矩形，但由于内角点 (1,1) 不在凸包上
         // 所以凸包有 5 个点：(0,0), (2,0), (2,1), (1,2), (0,2)
         assert_eq!(hull.len(), 5);
     }
-    
+
     #[test]
     fn test_convexity_ratio_convex() {
-        let points = vec![
-            [0.0, 0.0], [4.0, 0.0], [4.0, 3.0], [0.0, 3.0],
-        ];
+        let points = vec![[0.0, 0.0], [4.0, 0.0], [4.0, 3.0], [0.0, 3.0]];
         let loop_data = ClosedLoop::new(points);
         let issues = check_convexity(&loop_data);
         // 凸多边形应该没有问题
         assert!(issues.is_empty());
     }
-    
+
     #[test]
     fn test_convexity_ratio_concave() {
         // L 形房间
         let points = vec![
-            [0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [2.0, 2.0], [2.0, 4.0], [0.0, 4.0],
+            [0.0, 0.0],
+            [4.0, 0.0],
+            [4.0, 2.0],
+            [2.0, 2.0],
+            [2.0, 4.0],
+            [0.0, 4.0],
         ];
         let loop_data = ClosedLoop::new(points);
         let issues = check_convexity(&loop_data);

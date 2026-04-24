@@ -38,7 +38,6 @@
 //! ```
 
 use common_types::geometry::Point2;
-use std::sync::Arc;
 
 #[cfg(feature = "gpu")]
 use wgpu::util::DeviceExt;
@@ -138,7 +137,7 @@ impl Default for RendererConfig {
             preferred_backend: Backend::Auto,
             enable_instancing: true,
             enable_batching: true,
-            max_batch_size: 2000,  // 核显保守值
+            max_batch_size: 2000, // 核显保守值
             vsync: true,
             target_fps: 60,
         }
@@ -152,7 +151,7 @@ impl RendererConfig {
             preferred_backend: Backend::Auto,
             enable_instancing: true,
             enable_batching: true,
-            max_batch_size: 1000,  // 更保守的批次大小
+            max_batch_size: 1000, // 更保守的批次大小
             vsync: true,
             target_fps: 60,
         }
@@ -164,8 +163,8 @@ impl RendererConfig {
             preferred_backend: Backend::Auto,
             enable_instancing: true,
             enable_batching: true,
-            max_batch_size: 10000,  // 更大的批次
-            vsync: false,  // 关闭垂直同步以降低延迟
+            max_batch_size: 10000, // 更大的批次
+            vsync: false,          // 关闭垂直同步以降低延迟
             target_fps: 144,
         }
     }
@@ -267,7 +266,7 @@ impl RenderStats {
 struct Vertex {
     position: [f32; 2],
     color: [f32; 4],
-    line_width: f32,  // P0-3 修复：LOD 线宽
+    line_width: f32, // P0-3 修复：LOD 线宽
 }
 
 #[cfg(feature = "gpu")]
@@ -470,12 +469,13 @@ impl GpuRenderer {
 
         // 请求适配器
         let adapter = futures::executor::block_on(async {
-            instance.request_adapter(&wgpu::RequestAdapterOptions {
-                power_preference: wgpu::PowerPreference::LowPower,  // 核显优化：低功耗优先
-                force_fallback_adapter: false,
-                compatible_surface: None,
-            })
-            .await
+            instance
+                .request_adapter(&wgpu::RequestAdapterOptions {
+                    power_preference: wgpu::PowerPreference::LowPower, // 核显优化：低功耗优先
+                    force_fallback_adapter: false,
+                    compatible_surface: None,
+                })
+                .await
         })
         .ok_or("无法获取 GPU 适配器")?;
 
@@ -499,7 +499,7 @@ impl GpuRenderer {
             adapter
                 .request_device(
                     &wgpu::DeviceDescriptor {
-                        required_features: wgpu::Features::empty(),  // 核显：不要求特殊功能
+                        required_features: wgpu::Features::empty(), // 核显：不要求特殊功能
                         required_limits: Self::get_limits_for_integrated_gpu(),
                         label: Some("CAD Viewer Device"),
                     },
@@ -526,18 +526,16 @@ impl GpuRenderer {
         // 创建绑定组布局
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("Bind Group Layout"),
-            entries: &[
-                wgpu::BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: wgpu::ShaderStages::VERTEX,
-                    ty: wgpu::BindingType::Buffer {
-                        ty: wgpu::BufferBindingType::Uniform,
-                        has_dynamic_offset: false,
-                        min_binding_size: None,
-                    },
-                    count: None,
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
                 },
-            ],
+                count: None,
+            }],
         });
 
         // 创建管线布局
@@ -636,9 +634,9 @@ impl GpuRenderer {
     fn get_limits_for_integrated_gpu() -> wgpu::Limits {
         // 核显保守配置
         wgpu::Limits {
-            max_texture_dimension_2d: 4096,  // 限制纹理大小
-            max_buffer_size: 256 * 1024 * 1024,  // 256MB 最大 buffer
-            max_bind_groups: 2,  // 减少 bind group 数量
+            max_texture_dimension_2d: 4096,              // 限制纹理大小
+            max_buffer_size: 256 * 1024 * 1024,          // 256MB 最大 buffer
+            max_bind_groups: 2,                          // 减少 bind group 数量
             ..wgpu::Limits::downlevel_webgl2_defaults()  // WebGL2 兼容基线
         }
     }
@@ -695,7 +693,7 @@ impl GpuRenderer {
     /// 渲染统计信息
     pub fn render_lines(
         &mut self,
-        lines: &[(Point2, Point2, [f32; 4], String)],  // P0-3 修复：添加图层名
+        lines: &[(Point2, Point2, [f32; 4], String)], // P0-3 修复：添加图层名
         #[allow(unused_variables)] zoom: f32,
         #[allow(unused_variables)] pan: egui::Vec2,
     ) -> RenderStats {
@@ -710,7 +708,8 @@ impl GpuRenderer {
                     .iter()
                     .flat_map(|&(start, end, color, ref layer)| {
                         // P0-3 修复：根据图层语义计算线宽乘数
-                        let layer_multiplier = Self::get_layer_width_multiplier(Some(layer.as_str()));
+                        let layer_multiplier =
+                            Self::get_layer_width_multiplier(Some(layer.as_str()));
                         let line_width = base_line_width * layer_multiplier;
 
                         [
@@ -744,11 +743,7 @@ impl GpuRenderer {
                     _padding: [0.0; 3],
                 };
                 if let Some(ref uniform_buffer) = self.uniform_buffer {
-                    queue.write_buffer(
-                        uniform_buffer,
-                        0,
-                        bytemuck::cast_slice(&[uniforms]),
-                    );
+                    queue.write_buffer(uniform_buffer, 0, bytemuck::cast_slice(&[uniforms]));
                 }
 
                 // 记录渲染命令
@@ -761,8 +756,8 @@ impl GpuRenderer {
                     lines.len(),
                     (lines.len() / self.config.max_batch_size).max(1),
                     num_vertices as usize,
-                    0.0,  // 渲染时间待实现
-                    0.0,  // 显存占用待实现
+                    0.0, // 渲染时间待实现
+                    0.0, // 显存占用待实现
                     self.backend,
                 );
                 return self.stats.clone();
@@ -785,6 +780,7 @@ impl GpuRenderer {
     /// - zoom 0.5-1.0: 2.0px（正常模式）
     /// - zoom 1.0-2.0: 2.5px（放大模式）
     /// - zoom > 2.0: 3.0px（细节模式，线宽最粗）
+    #[allow(dead_code)]
     fn calculate_lod_line_width(zoom: f32) -> f32 {
         const MIN_WIDTH: f32 = 0.5;
         const MAX_WIDTH: f32 = 3.0;
@@ -805,24 +801,34 @@ impl GpuRenderer {
     /// - 家具：1.0x（正常）
     /// - 标注：0.8x（较细，避免喧宾夺主）
     /// - 其他：1.0x（默认）
+    #[allow(dead_code)]
     fn get_layer_width_multiplier(layer: Option<&str>) -> f32 {
         let layer_upper = layer.unwrap_or("").to_uppercase();
 
         // 墙体图层 - 最粗
-        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
-            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+        if layer_upper.contains("WALL")
+            || layer_upper.contains("墙体")
+            || layer_upper.contains("结构")
+            || layer_upper.contains("STRUCT")
+        {
             return 1.5;
         }
 
         // 门窗图层 - 较粗
-        if layer_upper.contains("DOOR") || layer_upper.contains("门")
-            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+        if layer_upper.contains("DOOR")
+            || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW")
+            || layer_upper.contains("窗")
+        {
             return 1.2;
         }
 
         // 标注图层 - 较细
-        if layer_upper.contains("DIM") || layer_upper.contains("标注")
-            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+        if layer_upper.contains("DIM")
+            || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT")
+            || layer_upper.contains("注释")
+        {
             return 0.8;
         }
 
@@ -936,7 +942,7 @@ impl CpuRenderer {
     /// 渲染线段到 egui painter - P0-3 修复：LOD 动态线宽
     pub fn render_lines_egui(
         &mut self,
-        lines: &[(Point2, Point2, [f32; 4], String)],  // P0-3 修复：添加图层名
+        lines: &[(Point2, Point2, [f32; 4], String)], // P0-3 修复：添加图层名
         painter: &egui::Painter,
         rect: egui::Rect,
         zoom: f32,
@@ -961,12 +967,15 @@ impl CpuRenderer {
             // 使用 egui 绘制线段 - P0-3 修复：使用 LOD 线宽
             painter.line_segment(
                 [start_pos, end_pos],
-                egui::Stroke::new(line_width, Color32::from_rgba_unmultiplied(
-                    (color[0] * 255.0) as u8,
-                    (color[1] * 255.0) as u8,
-                    (color[2] * 255.0) as u8,
-                    (color[3] * 255.0) as u8,
-                )),
+                egui::Stroke::new(
+                    line_width,
+                    Color32::from_rgba_unmultiplied(
+                        (color[0] * 255.0) as u8,
+                        (color[1] * 255.0) as u8,
+                        (color[2] * 255.0) as u8,
+                        (color[3] * 255.0) as u8,
+                    ),
+                ),
             );
 
             count += 1;
@@ -1019,20 +1028,29 @@ impl CpuRenderer {
         let layer_upper = layer.unwrap_or("").to_uppercase();
 
         // 墙体图层 - 最粗
-        if layer_upper.contains("WALL") || layer_upper.contains("墙体")
-            || layer_upper.contains("结构") || layer_upper.contains("STRUCT") {
+        if layer_upper.contains("WALL")
+            || layer_upper.contains("墙体")
+            || layer_upper.contains("结构")
+            || layer_upper.contains("STRUCT")
+        {
             return 1.5;
         }
 
         // 门窗图层 - 较粗
-        if layer_upper.contains("DOOR") || layer_upper.contains("门")
-            || layer_upper.contains("WINDOW") || layer_upper.contains("窗") {
+        if layer_upper.contains("DOOR")
+            || layer_upper.contains("门")
+            || layer_upper.contains("WINDOW")
+            || layer_upper.contains("窗")
+        {
             return 1.2;
         }
 
         // 标注图层 - 较细
-        if layer_upper.contains("DIM") || layer_upper.contains("标注")
-            || layer_upper.contains("TEXT") || layer_upper.contains("注释") {
+        if layer_upper.contains("DIM")
+            || layer_upper.contains("标注")
+            || layer_upper.contains("TEXT")
+            || layer_upper.contains("注释")
+        {
             return 0.8;
         }
 
@@ -1082,8 +1100,8 @@ mod tests {
 
     #[test]
     fn test_cpu_renderer() {
-        let mut renderer = CpuRenderer::default();
-        let lines = vec![
+        let renderer = CpuRenderer::default();
+        let _lines = [
             ([0.0, 0.0], [10.0, 10.0], [1.0, 0.0, 0.0, 1.0]),
             ([10.0, 10.0], [20.0, 0.0], [0.0, 1.0, 0.0, 1.0]),
         ];

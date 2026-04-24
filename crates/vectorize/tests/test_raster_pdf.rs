@@ -1,9 +1,9 @@
 //! 光栅 PDF 矢量化集成测试
 
-use common_types::PdfRasterImage;
-use vectorize::{VectorizeService, VectorizeConfig};
-use vectorize::algorithms::evaluate_quality;
 use accelerator_cpu::CpuAccelerator;
+use common_types::PdfRasterImage;
+use vectorize::algorithms::evaluate_quality;
+use vectorize::{VectorizeConfig, VectorizeService};
 
 /// 创建测试用的光栅图像
 fn create_test_raster_image(width: u32, height: u32, pattern: TestPattern) -> PdfRasterImage {
@@ -13,8 +13,12 @@ fn create_test_raster_image(width: u32, height: u32, pattern: TestPattern) -> Pd
         for x in 0..width {
             let val = match pattern {
                 TestPattern::HorizontalLines => {
-                    if (y / 10) % 2 == 0 { 255 } else { 0 }
-                },
+                    if (y / 10) % 2 == 0 {
+                        255
+                    } else {
+                        0
+                    }
+                }
                 TestPattern::Rectangle => {
                     let margin = 10;
                     if x < margin || x >= width - margin || y < margin || y >= height - margin {
@@ -22,10 +26,8 @@ fn create_test_raster_image(width: u32, height: u32, pattern: TestPattern) -> Pd
                     } else {
                         255
                     }
-                },
-                TestPattern::Noise => {
-                    ((x as u8).wrapping_add(y as u8)).wrapping_mul(2)
-                },
+                }
+                TestPattern::Noise => ((x as u8).wrapping_add(y as u8)).wrapping_mul(2),
             };
             pixels.push(val);
         }
@@ -175,7 +177,11 @@ fn test_vectorize_min_lines_assertion() {
         quality_report.overall_score
     );
 
-    println!("提取 {} 条多段线，质量得分：{:.2}", polylines.len(), quality_report.overall_score);
+    println!(
+        "提取 {} 条多段线，质量得分：{:.2}",
+        polylines.len(),
+        quality_report.overall_score
+    );
 }
 
 #[test]
@@ -198,26 +204,21 @@ fn test_vectorize_with_gap_filling() {
 #[test]
 fn test_line_type_analysis() {
     use vectorize::algorithms::line_type::{analyze_line_type, LineType};
-    
+
     // 测试实线
-    let continuous = vec![
-        [0.0, 0.0],
-        [10.0, 0.0],
-        [20.0, 0.0],
-        [30.0, 0.0],
-    ];
+    let continuous = vec![[0.0, 0.0], [10.0, 0.0], [20.0, 0.0], [30.0, 0.0]];
     let line_type = analyze_line_type(&continuous);
     // 由于 gap 检测可能识别为连续
     assert!(line_type == LineType::Continuous || line_type == LineType::Unknown);
-    
+
     // 测试中心线模式（长 - 短 - 长）
     let center_line = vec![
         [0.0, 0.0],
-        [20.0, 0.0],  // 长
-        [23.0, 0.0],  // 短
-        [43.0, 0.0],  // 长
-        [46.0, 0.0],  // 短
-        [66.0, 0.0],  // 长
+        [20.0, 0.0], // 长
+        [23.0, 0.0], // 短
+        [43.0, 0.0], // 长
+        [46.0, 0.0], // 短
+        [66.0, 0.0], // 长
     ];
     let line_type = analyze_line_type(&center_line);
     // 中心线检测依赖于模式识别
@@ -225,9 +226,37 @@ fn test_line_type_analysis() {
 }
 
 #[test]
+fn test_cross_segment_line_type_detection() {
+    use vectorize::algorithms::line_type::{detect_line_types_from_polylines, LineType};
+
+    // 测试从分离线段中检测虚线
+    let dashed_polylines = vec![
+        vec![[0.0, 0.0], [10.0, 0.0]],
+        vec![[12.0, 0.0], [22.0, 0.0]],
+        vec![[24.0, 0.0], [34.0, 0.0]],
+        vec![[36.0, 0.0], [46.0, 0.0]],
+    ];
+    let results = detect_line_types_from_polylines(&dashed_polylines, 15.0, 5.0);
+    assert_eq!(results.len(), 4);
+    assert_eq!(results[0].line_type, LineType::Dashed);
+
+    // 测试从分离线段中检测中心线
+    let center_polylines = vec![
+        vec![[0.0, 0.0], [20.0, 0.0]],
+        vec![[22.0, 0.0], [25.0, 0.0]],
+        vec![[27.0, 0.0], [47.0, 0.0]],
+        vec![[49.0, 0.0], [52.0, 0.0]],
+        vec![[54.0, 0.0], [74.0, 0.0]],
+    ];
+    let results = detect_line_types_from_polylines(&center_polylines, 15.0, 5.0);
+    assert_eq!(results.len(), 5);
+    assert_eq!(results[0].line_type, LineType::Center);
+}
+
+#[test]
 fn test_arc_fitting() {
-    use vectorize::algorithms::arc_fitting::fit_circle_kasa;
     use std::f64::consts::PI;
+    use vectorize::algorithms::arc_fitting::fit_circle_kasa;
 
     // 创建一个圆上的点
     let center = [50.0, 50.0];
@@ -260,52 +289,52 @@ fn test_arc_fitting() {
 #[test]
 fn test_gap_detection() {
     use vectorize::algorithms::gap_filling::detect_gaps;
-    
+
     // 两条有缺口的线段
     let polylines = vec![
         vec![[0.0, 0.0], [10.0, 0.0]],
-        vec![[11.0, 0.0], [20.0, 0.0]],  // 1.0 的缺口
+        vec![[11.0, 0.0], [20.0, 0.0]], // 1.0 的缺口
     ];
-    
+
     let gaps = detect_gaps(&polylines, 2.0);
-    
+
     // 应该检测到一个缺口
     assert!(!gaps.is_empty());
 }
 
 #[test]
 fn test_otsu_threshold() {
-    use vectorize::algorithms::threshold::otsu_threshold;
     use image::{GrayImage, Luma};
-    
+    use vectorize::algorithms::threshold::otsu_threshold;
+
     // 创建双峰分布的测试图像
     let mut img = GrayImage::new(100, 100);
-    
+
     // 左半部分暗
     for y in 0..100 {
         for x in 0..50 {
             img.put_pixel(x, y, Luma([50]));
         }
     }
-    
+
     // 右半部分亮
     for y in 0..100 {
         for x in 50..100 {
             img.put_pixel(x, y, Luma([200]));
         }
     }
-    
+
     let threshold = otsu_threshold(&img);
-    
+
     // 阈值应该在两个峰值之间（放宽验证）
     assert!(threshold > 40 && threshold < 210);
 }
 
 #[test]
 fn test_median_filter() {
-    use vectorize::algorithms::preprocessing::median_filter;
     use image::{GrayImage, Luma};
-    
+    use vectorize::algorithms::preprocessing::median_filter;
+
     // 创建带噪声的图像
     let mut img = GrayImage::new(10, 10);
     for y in 0..10 {
@@ -315,9 +344,9 @@ fn test_median_filter() {
     }
     // 添加一个白点噪声
     img.put_pixel(5, 5, Luma([255]));
-    
+
     let filtered = median_filter(&img, 3);
-    
+
     // 中值滤波应该减少噪声
     assert!(filtered.get_pixel(5, 5)[0] < 255);
 }

@@ -76,9 +76,7 @@ pub enum UiEvent {
     },
     /// 鼠标滚动
     #[allow(dead_code)]
-    MouseScroll {
-        delta: egui::Vec2,
-    },
+    MouseScroll { delta: egui::Vec2 },
     /// 键盘按键
     #[allow(dead_code)]
     KeyPress {
@@ -87,16 +85,10 @@ pub enum UiEvent {
     },
     /// 拖放
     #[allow(dead_code)]
-    DragDrop {
-        source: String,
-        target: egui::Pos2,
-    },
+    DragDrop { source: String, target: egui::Pos2 },
     /// 自定义事件
     #[allow(dead_code)]
-    Custom {
-        name: String,
-        data: Option<String>,
-    },
+    Custom { name: String, data: Option<String> },
 }
 
 /// 组件上下文 - 渲染时传递给组件，用于产生命令
@@ -120,7 +112,11 @@ pub struct ComponentContext<'a> {
 
 impl<'a> ComponentContext<'a> {
     #[cfg(not(feature = "gpu"))]
-    pub fn new(state: &'a mut AppState, command_manager: &'a crate::components::CommandManager, theme: Arc<MacOsTheme>) -> Self {
+    pub fn new(
+        state: &'a mut AppState,
+        command_manager: &'a crate::components::CommandManager,
+        theme: Arc<MacOsTheme>,
+    ) -> Self {
         Self {
             state,
             commands: Vec::new(),
@@ -130,7 +126,12 @@ impl<'a> ComponentContext<'a> {
     }
 
     #[cfg(feature = "gpu")]
-    pub fn new(state: &'a mut AppState, command_manager: &'a crate::components::CommandManager, theme: Arc<MacOsTheme>, glass_renderer: Option<&'a mut GlassEffectRenderer>) -> Self {
+    pub fn new(
+        state: &'a mut AppState,
+        command_manager: &'a crate::components::CommandManager,
+        theme: Arc<MacOsTheme>,
+        glass_renderer: Option<&'a mut GlassEffectRenderer>,
+    ) -> Self {
         Self {
             state,
             commands: Vec::new(),

@@ -1,8 +1,8 @@
 //! 几何基础类型定义
 
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
 use crate::scene::{BoundarySemantic, LengthUnit};
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// 2D 点类型 (单位：mm)
 pub type Point2 = [f64; 2];
@@ -83,13 +83,13 @@ impl LineStyle {
     pub fn pattern(&self) -> &'static [f32] {
         match self {
             LineStyle::Solid => &[],
-            LineStyle::Dashed => &[12.0, 6.0],        // 12px 划线，6px 间隔
-            LineStyle::Dotted => &[2.0, 6.0],         // 2px 点，6px 间隔
-            LineStyle::DashDot => &[12.0, 6.0, 2.0, 6.0],  // 12px 划线，6px 间隔，2px 点，6px 间隔
+            LineStyle::Dashed => &[12.0, 6.0], // 12px 划线，6px 间隔
+            LineStyle::Dotted => &[2.0, 6.0],  // 2px 点，6px 间隔
+            LineStyle::DashDot => &[12.0, 6.0, 2.0, 6.0], // 12px 划线，6px 间隔，2px 点，6px 间隔
             LineStyle::DashDotDot => &[12.0, 6.0, 2.0, 6.0, 2.0, 6.0],
-            LineStyle::LongDash => &[24.0, 6.0],      // 24px 长划线，6px 间隔
+            LineStyle::LongDash => &[24.0, 6.0], // 24px 长划线，6px 间隔
             LineStyle::LongDashDot => &[24.0, 6.0, 2.0, 6.0],
-            LineStyle::Custom => &[10.0, 5.0],        // 默认自定义模式
+            LineStyle::Custom => &[10.0, 5.0], // 默认自定义模式
         }
     }
 
@@ -230,7 +230,9 @@ impl LineWidth {
             .min_by(|(a, _), (b, _)| {
                 let diff_a = (a - mm).abs();
                 let diff_b = (b - mm).abs();
-                diff_a.partial_cmp(&diff_b).unwrap_or(std::cmp::Ordering::Equal)
+                diff_a
+                    .partial_cmp(&diff_b)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             })
             .map(|(_, lw)| *lw)
             .unwrap_or(LineWidth::W7)
@@ -239,12 +241,11 @@ impl LineWidth {
     /// 获取像素宽度（用于渲染）
     pub fn to_pixels(&self, dpi: f32) -> f32 {
         match self.to_mm() {
-            Some(mm) => mm * dpi / 25.4,  // mm 转像素
-            None => 1.0,  // ByLayer 使用默认宽度
+            Some(mm) => mm * dpi / 25.4, // mm 转像素
+            None => 1.0,                 // ByLayer 使用默认宽度
         }
     }
 }
-
 
 /// 几何容差配置 (单位：mm)
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -305,7 +306,7 @@ pub enum RawEntity {
         position: Point2,
         content: String,
         height: f64,
-        rotation: f64,           // 旋转角度（度）
+        rotation: f64,               // 旋转角度（度）
         style_name: Option<String>,  // 文字样式名
         align_left: Option<Point2>,  // 左对齐点（用于对齐文字）
         align_right: Option<Point2>, // 右对齐点（用于对齐文字）
@@ -321,8 +322,8 @@ pub enum RawEntity {
     BlockReference {
         block_name: String,
         insertion_point: Point2,
-        scale: [f64; 3],  // X, Y, Z 缩放
-        rotation: f64,    // 旋转角度（度）
+        scale: [f64; 3], // X, Y, Z 缩放
+        rotation: f64,   // 旋转角度（度）
         metadata: EntityMetadata,
         semantic: Option<BoundarySemantic>,
     },
@@ -342,8 +343,8 @@ pub enum RawEntity {
         solid_fill: bool,
         metadata: EntityMetadata,
         semantic: Option<BoundarySemantic>,
-        scale: f64,      // P0-NEW-14 修复：图案比例
-        angle: f64,      // P0-NEW-14 修复：图案角度（度）
+        scale: f64, // P0-NEW-14 修复：图案比例
+        angle: f64, // P0-NEW-14 修复：图案角度（度）
     },
     /// P1-1: 外部参照（XREF）- 指向另一个 DWG/DXF 文件的引用
     XRef {
@@ -359,6 +360,84 @@ pub enum RawEntity {
         xref_type: XRefType,
         /// 图层名称（可选，用于过滤）
         layer_name: Option<String>,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 点实体（POINT）- 用于测量标记、参考点等
+    Point {
+        position: Point2,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 光栅图像（IMAGE）- DXF 中嵌入的参考图像
+    Image {
+        /// 图像定义引用（文件路径或内部引用）
+        image_def: String,
+        position: Point2,
+        /// 显示尺寸 [宽度, 高度]
+        size: [f64; 2],
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 块属性（ATTRIB）- 块引用中的属性值
+    Attribute {
+        /// 属性标签名
+        tag: String,
+        /// 属性值
+        value: String,
+        position: Point2,
+        height: f64,
+        rotation: f64,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 属性定义（ATTDEF）- 块定义中的属性模板
+    AttributeDefinition {
+        /// 属性标签名
+        tag: String,
+        /// 默认值
+        default_value: String,
+        /// 提示文字
+        prompt: String,
+        position: Point2,
+        height: f64,
+        rotation: f64,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 引线标注（LEADER）- 带箭头的注释引线
+    Leader {
+        points: Polyline,
+        annotation_text: Option<String>,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 射线/构造线（RAY 和 XLINE）- 无限长辅助线
+    Ray {
+        start: Point2,
+        direction: Point2,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 多线（MLINE）- 建筑 CAD 中常用于表示墙体
+    MLine {
+        /// 中心线（从顶点提取）
+        center_line: Polyline,
+        /// 是否闭合
+        closed: bool,
+        /// 样式名称
+        style_name: String,
+        /// 比例因子
+        scale_factor: f64,
+        metadata: EntityMetadata,
+        semantic: Option<BoundarySemantic>,
+    },
+    /// 三角面（STL 3D 模型）- 用于 3D 打印/制造工作流
+    Triangle {
+        /// 三个顶点
+        vertices: [Point3; 3],
+        /// 法向量
+        normal: Point3,
         metadata: EntityMetadata,
         semantic: Option<BoundarySemantic>,
     },
@@ -379,13 +458,13 @@ pub enum XRefType {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum DimensionType {
-    Linear,      // 线性标注
-    Aligned,     // 对齐标注
-    Angular,     // 角度标注
-    Radial,      // 半径标注
-    Diameter,    // 直径标注
-    ArcLength,   // 弧长标注（P0-2 新增）
-    Ordinate,    // 坐标标注（P0-2 新增）
+    Linear,    // 线性标注
+    Aligned,   // 对齐标注
+    Angular,   // 角度标注
+    Radial,    // 半径标注
+    Diameter,  // 直径标注
+    ArcLength, // 弧长标注（P0-2 新增）
+    Ordinate,  // 坐标标注（P0-2 新增）
 }
 
 // ============================================================================
@@ -398,16 +477,12 @@ pub enum DimensionType {
 pub enum HatchPattern {
     /// 预定义图案（ANSI/ISO/建筑专用）
     Predefined {
-        name: String,  // "ANSI31", "ANSI37", "AR-BRSTD", "AR-CONC" 等
+        name: String, // "ANSI31", "ANSI37", "AR-BRSTD", "AR-CONC" 等
     },
     /// 自定义图案（用户定义）
-    Custom {
-        pattern_def: HatchPatternDefinition,
-    },
+    Custom { pattern_def: HatchPatternDefinition },
     /// 纯色填充
-    Solid {
-        color: Color32,
-    },
+    Solid { color: Color32 },
 }
 
 /// 填充图案定义（自定义图案）
@@ -455,7 +530,7 @@ pub enum HatchBoundaryPath {
         radius: f64,
         start_angle: f64,
         end_angle: f64,
-        ccw: bool,  // 逆时针
+        ccw: bool, // 逆时针
     },
     /// 椭圆弧边界
     EllipseArc {
@@ -517,17 +592,32 @@ pub struct BlockDefinition {
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ParameterType {
     /// 长度参数（单位：mm）
-    Length { default: f64, min: Option<f64>, max: Option<f64> },
+    Length {
+        default: f64,
+        min: Option<f64>,
+        max: Option<f64>,
+    },
     /// 角度参数（单位：度）
-    Angle { default: f64, min: Option<f64>, max: Option<f64> },
+    Angle {
+        default: f64,
+        min: Option<f64>,
+        max: Option<f64>,
+    },
     /// 布尔参数
     Boolean { default: bool },
     /// 枚举参数
-    Enum { default: String, options: Vec<String> },
+    Enum {
+        default: String,
+        options: Vec<String>,
+    },
     /// 字符串参数
     String { default: String },
     /// 点数参数（用于阵列）
-    Integer { default: i32, min: Option<i32>, max: Option<i32> },
+    Integer {
+        default: i32,
+        min: Option<i32>,
+        max: Option<i32>,
+    },
 }
 
 impl ParameterType {
@@ -542,20 +632,20 @@ impl ParameterType {
             ParameterType::Integer { default, .. } => serde_json::json!(*default),
         }
     }
-    
+
     /// 验证值是否有效
     pub fn validate(&self, value: &serde_json::Value) -> bool {
         match (self, value) {
             (ParameterType::Length { min, max, .. }, serde_json::Value::Number(v)) => {
                 if let Some(v) = v.as_f64() {
-                    min.map_or(true, |m| v >= m) && max.map_or(true, |m| v <= m)
+                    min.is_none_or(|m| v >= m) && max.is_none_or(|m| v <= m)
                 } else {
                     false
                 }
             }
             (ParameterType::Angle { min, max, .. }, serde_json::Value::Number(v)) => {
                 if let Some(v) = v.as_f64() {
-                    min.map_or(true, |m| v >= m) && max.map_or(true, |m| v <= m)
+                    min.is_none_or(|m| v >= m) && max.is_none_or(|m| v <= m)
                 } else {
                     false
                 }
@@ -567,7 +657,7 @@ impl ParameterType {
             (ParameterType::String { .. }, serde_json::Value::String(_)) => true,
             (ParameterType::Integer { min, max, .. }, serde_json::Value::Number(v)) => {
                 if let Some(v) = v.as_i64() {
-                    min.map_or(true, |m| v >= m as i64) && max.map_or(true, |m| v <= m as i64)
+                    min.is_none_or(|m| v >= m as i64) && max.is_none_or(|m| v <= m as i64)
                 } else {
                     false
                 }
@@ -599,7 +689,11 @@ pub enum ParameterConstraint {
     /// 等式约束：param1 = param2
     Equal { params: Vec<String> },
     /// 比例约束：param1 = scale * param2
-    Ratio { param1: String, param2: String, scale: f64 },
+    Ratio {
+        param1: String,
+        param2: String,
+        scale: f64,
+    },
     /// 公式约束：target = formula(other_params)
     Formula { target: String, formula: String },
     /// 范围约束：min <= param <= max
@@ -638,25 +732,25 @@ impl ParametricBlockDefinition {
             version: 1,
         }
     }
-    
+
     /// 添加参数
     pub fn add_parameter(mut self, param: ParameterDefinition) -> Self {
         self.parameters.push(param);
         self
     }
-    
+
     /// 添加几何实体
     pub fn add_entity(mut self, entity: RawEntity) -> Self {
         self.entities.push(entity);
         self
     }
-    
+
     /// 添加约束
     pub fn add_constraint(mut self, constraint: ParameterConstraint) -> Self {
         self.constraints.push(constraint);
         self
     }
-    
+
     /// 获取参数的默认值集合
     pub fn default_parameter_values(&self) -> serde_json::Map<String, serde_json::Value> {
         let mut values = serde_json::Map::new();
@@ -665,9 +759,12 @@ impl ParametricBlockDefinition {
         }
         values
     }
-    
+
     /// 验证参数值是否满足约束
-    pub fn validate_parameters(&self, values: &serde_json::Map<String, serde_json::Value>) -> Result<(), String> {
+    pub fn validate_parameters(
+        &self,
+        values: &serde_json::Map<String, serde_json::Value>,
+    ) -> Result<(), String> {
         // 验证类型和范围
         for param in &self.parameters {
             if let Some(value) = values.get(&param.name) {
@@ -678,12 +775,13 @@ impl ParametricBlockDefinition {
                 return Err(format!("缺少参数 '{}'", param.name));
             }
         }
-        
+
         // 验证约束
         for constraint in &self.constraints {
             match constraint {
                 ParameterConstraint::Equal { params } => {
-                    let first = params.first()
+                    let first = params
+                        .first()
                         .and_then(|p| values.get(p))
                         .and_then(|v| v.as_f64());
                     if let Some(first_val) = first {
@@ -691,25 +789,35 @@ impl ParametricBlockDefinition {
                             let val = values.get(param_name).and_then(|v| v.as_f64());
                             if let Some(v) = val {
                                 if (v - first_val).abs() > 1e-6 {
-                                    return Err(format!("等式约束失败：{} 应该相等", params.join(", ")));
+                                    return Err(format!(
+                                        "等式约束失败：{} 应该相等",
+                                        params.join(", ")
+                                    ));
                                 }
                             }
                         }
                     }
                 }
-                ParameterConstraint::Ratio { param1, param2, scale } => {
+                ParameterConstraint::Ratio {
+                    param1,
+                    param2,
+                    scale,
+                } => {
                     let v1 = values.get(param1).and_then(|v| v.as_f64());
                     let v2 = values.get(param2).and_then(|v| v.as_f64());
                     if let (Some(v1), Some(v2)) = (v1, v2) {
                         if (v1 - v2 * scale).abs() > 1e-6 {
-                            return Err(format!("比例约束失败：{} = {} * {}", param1, param2, scale));
+                            return Err(format!(
+                                "比例约束失败：{} = {} * {}",
+                                param1, param2, scale
+                            ));
                         }
                     }
                 }
                 _ => {} // 其他约束类型暂不验证
             }
         }
-        
+
         Ok(())
     }
 }
@@ -740,13 +848,13 @@ impl ParametricBlockInstance {
             metadata: EntityMetadata::default(),
         }
     }
-    
+
     /// 设置参数值
     pub fn with_parameter(mut self, name: impl Into<String>, value: serde_json::Value) -> Self {
         self.parameter_values.insert(name.into(), value);
         self
     }
-    
+
     /// 设置旋转角度
     pub fn with_rotation(mut self, rotation: f64) -> Self {
         self.rotation = rotation;
@@ -758,8 +866,14 @@ impl ParametricBlockInstance {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(tag = "cmd", rename_all = "PascalCase")]
 pub enum PathCommand {
-    MoveTo { x: f64, y: f64 },
-    LineTo { x: f64, y: f64 },
+    MoveTo {
+        x: f64,
+        y: f64,
+    },
+    LineTo {
+        x: f64,
+        y: f64,
+    },
     ArcTo {
         rx: f64,
         ry: f64,
@@ -779,6 +893,7 @@ pub struct EntityMetadata {
     pub color: Option<String>,
     pub lineweight: Option<f64>,
     pub line_type: Option<String>,
+    pub line_style: Option<LineStyle>,
     pub handle: Option<String>,
     /// 材料名称（从颜色/图层名映射）
     pub material: Option<String>,
@@ -822,6 +937,14 @@ impl RawEntity {
             RawEntity::Dimension { semantic, .. } => semantic.as_ref(),
             RawEntity::Hatch { semantic, .. } => semantic.as_ref(),
             RawEntity::XRef { semantic, .. } => semantic.as_ref(),
+            RawEntity::Point { semantic, .. } => semantic.as_ref(),
+            RawEntity::Image { semantic, .. } => semantic.as_ref(),
+            RawEntity::Attribute { semantic, .. } => semantic.as_ref(),
+            RawEntity::AttributeDefinition { semantic, .. } => semantic.as_ref(),
+            RawEntity::Leader { semantic, .. } => semantic.as_ref(),
+            RawEntity::Ray { semantic, .. } => semantic.as_ref(),
+            RawEntity::MLine { semantic, .. } => semantic.as_ref(),
+            RawEntity::Triangle { semantic, .. } => semantic.as_ref(),
         }
     }
 
@@ -838,6 +961,14 @@ impl RawEntity {
             RawEntity::Dimension { semantic: s, .. } => *s = semantic,
             RawEntity::Hatch { semantic: s, .. } => *s = semantic,
             RawEntity::XRef { semantic: s, .. } => *s = semantic,
+            RawEntity::Point { semantic: s, .. } => *s = semantic,
+            RawEntity::Image { semantic: s, .. } => *s = semantic,
+            RawEntity::Attribute { semantic: s, .. } => *s = semantic,
+            RawEntity::AttributeDefinition { semantic: s, .. } => *s = semantic,
+            RawEntity::Leader { semantic: s, .. } => *s = semantic,
+            RawEntity::Ray { semantic: s, .. } => *s = semantic,
+            RawEntity::MLine { semantic: s, .. } => *s = semantic,
+            RawEntity::Triangle { semantic: s, .. } => *s = semantic,
         }
     }
 
@@ -854,6 +985,14 @@ impl RawEntity {
             RawEntity::Dimension { metadata, .. } => metadata.layer.as_deref(),
             RawEntity::Hatch { metadata, .. } => metadata.layer.as_deref(),
             RawEntity::XRef { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Point { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Image { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Attribute { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::AttributeDefinition { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Leader { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Ray { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::MLine { metadata, .. } => metadata.layer.as_deref(),
+            RawEntity::Triangle { metadata, .. } => metadata.layer.as_deref(),
         }
     }
 
@@ -870,10 +1009,16 @@ impl RawEntity {
             RawEntity::Dimension { metadata, .. } => metadata.color.as_deref(),
             RawEntity::Hatch { metadata, .. } => metadata.color.as_deref(),
             RawEntity::XRef { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Point { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Image { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Attribute { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::AttributeDefinition { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Leader { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Ray { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::MLine { metadata, .. } => metadata.color.as_deref(),
+            RawEntity::Triangle { metadata, .. } => metadata.color.as_deref(),
         }
     }
-
-    /// 获取实体的元数据
     pub fn metadata(&self) -> &EntityMetadata {
         match self {
             RawEntity::Line { metadata, .. } => metadata,
@@ -886,6 +1031,14 @@ impl RawEntity {
             RawEntity::Dimension { metadata, .. } => metadata,
             RawEntity::Hatch { metadata, .. } => metadata,
             RawEntity::XRef { metadata, .. } => metadata,
+            RawEntity::Point { metadata, .. } => metadata,
+            RawEntity::Image { metadata, .. } => metadata,
+            RawEntity::Attribute { metadata, .. } => metadata,
+            RawEntity::AttributeDefinition { metadata, .. } => metadata,
+            RawEntity::Leader { metadata, .. } => metadata,
+            RawEntity::Ray { metadata, .. } => metadata,
+            RawEntity::MLine { metadata, .. } => metadata,
+            RawEntity::Triangle { metadata, .. } => metadata,
         }
     }
 
@@ -902,6 +1055,14 @@ impl RawEntity {
             RawEntity::Dimension { .. } => "Dimension",
             RawEntity::Hatch { .. } => "Hatch",
             RawEntity::XRef { .. } => "XRef",
+            RawEntity::Point { .. } => "Point",
+            RawEntity::Image { .. } => "Image",
+            RawEntity::Attribute { .. } => "Attribute",
+            RawEntity::AttributeDefinition { .. } => "AttributeDefinition",
+            RawEntity::Leader { .. } => "Leader",
+            RawEntity::Ray { .. } => "Ray",
+            RawEntity::MLine { .. } => "MLine",
+            RawEntity::Triangle { .. } => "Triangle",
         }
     }
 
@@ -936,6 +1097,42 @@ pub fn distance_squared_2d(a: Point2, b: Point2) -> f64 {
 // ============================================================================
 // PDF 光栅图像类型
 // ============================================================================
+
+/// 文字标注（从 DXF TEXT/MTEXT 实体提取）
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct TextAnnotation {
+    /// 文字位置
+    pub position: Point2,
+    /// 文字内容
+    pub content: String,
+    /// 文字高度
+    pub height: f64,
+    /// 旋转角度（度）
+    pub rotation: f64,
+}
+
+/// 标注尺寸统计摘要（从 DIMENSION 实体提取的房间/空间测量数据）
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct DimensionSummary {
+    /// 线性标注数量
+    pub linear_count: usize,
+    /// 对齐标注数量
+    pub aligned_count: usize,
+    /// 角度标注数量
+    pub angular_count: usize,
+    /// 半径标注数量
+    pub radial_count: usize,
+    /// 直径标注数量
+    pub diameter_count: usize,
+    /// 坐标标注数量
+    pub ordinate_count: usize,
+    /// 最大测量值（mm）
+    pub max_measurement: Option<f64>,
+    /// 最小测量值（mm）
+    pub min_measurement: Option<f64>,
+    /// 总标注数量
+    pub total_count: usize,
+}
 
 /// PDF 中的光栅图像
 #[derive(Debug, Clone)]
@@ -980,19 +1177,19 @@ impl PdfRasterImage {
             // 灰度图像
             image::DynamicImage::ImageLuma8(
                 image::GrayImage::from_raw(self.width, self.height, self.pixels.clone())
-                    .unwrap_or_else(|| image::GrayImage::new(self.width, self.height))
+                    .unwrap_or_else(|| image::GrayImage::new(self.width, self.height)),
             )
         } else if self.pixels.len() == (self.width * self.height * 3) as usize {
             // RGB 图像
             image::DynamicImage::ImageRgb8(
                 image::RgbImage::from_raw(self.width, self.height, self.pixels.clone())
-                    .unwrap_or_else(|| image::RgbImage::new(self.width, self.height))
+                    .unwrap_or_else(|| image::RgbImage::new(self.width, self.height)),
             )
         } else if self.pixels.len() == (self.width * self.height * 4) as usize {
             // RGBA 图像
             image::DynamicImage::ImageRgba8(
                 image::RgbaImage::from_raw(self.width, self.height, self.pixels.clone())
-                    .unwrap_or_else(|| image::RgbaImage::new(self.width, self.height))
+                    .unwrap_or_else(|| image::RgbaImage::new(self.width, self.height)),
             )
         } else {
             // 数据不匹配，创建空白图像
@@ -1017,13 +1214,13 @@ pub fn decode_image_pixels(data: &[u8], _width: u32, _height: u32) -> Vec<u8> {
     if let Ok(img) = image::load_from_memory(data) {
         return img.to_rgba8().into_raw();
     }
-    
+
     // 如果解码失败，返回原始数据（可能是裸像素）
     data.to_vec()
 }
 
 /// 从 parser crate 的 RasterImage 参数创建 PdfRasterImage
-/// 
+///
 /// 这是一个辅助函数，用于避免 common-types 和 parser 之间的循环依赖
 pub fn pdf_raster_from_parser_raster(
     name: String,
@@ -1034,7 +1231,7 @@ pub fn pdf_raster_from_parser_raster(
     dpi_y: f64,
 ) -> PdfRasterImage {
     let pixels = decode_image_pixels(data, width, height);
-    
+
     PdfRasterImage {
         name,
         width,
@@ -1096,7 +1293,7 @@ mod parametric_block_tests {
             .add_parameter(ParameterDefinition {
                 name: "height".into(),
                 param_type: ParameterType::Length {
-                    default: 1800.0,  // 修改为宽度的 2 倍
+                    default: 1800.0, // 修改为宽度的 2 倍
                     min: Some(1200.0),
                     max: Some(2400.0),
                 },
@@ -1145,7 +1342,7 @@ mod parametric_block_tests {
 
         let defaults = block.default_parameter_values();
         assert_eq!(defaults.get("width").unwrap().as_f64(), Some(900.0));
-        assert_eq!(defaults.get("height").unwrap().as_f64(), Some(1800.0));  // 修改为 1800.0
+        assert_eq!(defaults.get("height").unwrap().as_f64(), Some(1800.0)); // 修改为 1800.0
     }
 
     #[test]
@@ -1216,6 +1413,9 @@ mod parametric_block_tests {
         assert_eq!(instance.block_name, "DOOR");
         assert_eq!(instance.insertion_point, [0.0, 0.0]);
         assert_eq!(instance.rotation, 90.0);
-        assert_eq!(instance.parameter_values.get("width").unwrap().as_f64(), Some(900.0));
+        assert_eq!(
+            instance.parameter_values.get("width").unwrap().as_f64(),
+            Some(900.0)
+        );
     }
 }

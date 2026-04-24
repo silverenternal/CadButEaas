@@ -6,9 +6,9 @@
 //! 3. 只依赖 AppState，实现组件独立性
 //! 4. 应用 macOS 主题样式
 
-use crate::components::{Component, UiEvent, EventResponse, ComponentContext};
+use crate::components::{Component, ComponentContext, EventResponse, UiEvent};
+use crate::components::{SetLayerFilter, ToggleLayerVisibility};
 use crate::state::AppState;
-use crate::components::{ToggleLayerVisibility, SetLayerFilter};
 use eframe::egui;
 use egui::{Frame, Margin, Rounding};
 
@@ -28,9 +28,7 @@ impl Default for LayerPanel {
 
 impl LayerPanel {
     pub fn new() -> Self {
-        Self {
-            expanded: true,
-        }
+        Self { expanded: true }
     }
 }
 
@@ -56,12 +54,17 @@ impl Component for LayerPanel {
             })
             .show(ctx, |ui| {
                 // 标题使用强调色
-                ui.heading(egui::RichText::new("🗂️ 图层管理").strong().color(theme.accent));
+                ui.heading(
+                    egui::RichText::new("🗂️ 图层管理")
+                        .strong()
+                        .color(theme.accent),
+                );
                 ui.separator();
 
                 // P11 增强：按钮悬停效果
                 ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.1);
-                ui.style_mut().visuals.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, theme.accent);
+                ui.style_mut().visuals.widgets.hovered.fg_stroke =
+                    egui::Stroke::new(1.0, theme.accent);
 
                 // 统计信息
                 ui.horizontal(|ui| {
@@ -73,14 +76,22 @@ impl Component for LayerPanel {
 
                 if comp_ctx.state.scene.stats.total_edges > 0 {
                     let visible_ratio = comp_ctx.state.scene.stats.visible_edges as f64
-                        / comp_ctx.state.scene.stats.total_edges as f64 * 100.0;
-                    ui.label(egui::RichText::new(format!("可见比例：{:.1}%", visible_ratio)).color(theme.text_secondary));
+                        / comp_ctx.state.scene.stats.total_edges as f64
+                        * 100.0;
+                    ui.label(
+                        egui::RichText::new(format!("可见比例：{:.1}%", visible_ratio))
+                            .color(theme.text_secondary),
+                    );
                 }
 
                 ui.separator();
 
                 // 过滤模式选择
-                ui.label(egui::RichText::new("过滤模式:").color(theme.text_secondary).size(12.0));
+                ui.label(
+                    egui::RichText::new("过滤模式:")
+                        .color(theme.text_secondary)
+                        .size(12.0),
+                );
                 egui::ComboBox::from_id_salt("layer_filter_mode")
                     .selected_text(comp_ctx.state.scene.layers.filter_mode.clone())
                     .show_ui(ui, |ui| {
@@ -93,11 +104,15 @@ impl Component for LayerPanel {
                                 "Furniture" => "仅家具",
                                 _ => mode,
                             };
-                            ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.1);
-                            if ui.selectable_label(
-                                comp_ctx.state.scene.layers.filter_mode == *mode,
-                                display_name,
-                            ).clicked() {
+                            ui.style_mut().visuals.widgets.hovered.bg_fill =
+                                theme.accent.linear_multiply(0.1);
+                            if ui
+                                .selectable_label(
+                                    comp_ctx.state.scene.layers.filter_mode == *mode,
+                                    display_name,
+                                )
+                                .clicked()
+                            {
                                 // P11 锐评落实：通过命令队列产生命令，而不是直接修改 pending_action
                                 comp_ctx.push_command(SetLayerFilter::new(mode.to_string()));
                                 comp_ctx.state.add_log(&format!("图层过滤模式：{}", mode));
@@ -108,7 +123,11 @@ impl Component for LayerPanel {
                 ui.separator();
 
                 // 图层列表
-                ui.label(egui::RichText::new("图层列表:").color(theme.text_secondary).size(12.0));
+                ui.label(
+                    egui::RichText::new("图层列表:")
+                        .color(theme.text_secondary)
+                        .size(12.0),
+                );
                 ui.separator();
 
                 // 使用 ScrollArea 支持长列表
@@ -132,19 +151,31 @@ impl Component for LayerPanel {
 
                                 if ui.button(button_text).clicked() {
                                     // P11 锐评落实：通过命令队列产生命令
-                                    comp_ctx.push_command(ToggleLayerVisibility::new(layer.clone()));
+                                    comp_ctx
+                                        .push_command(ToggleLayerVisibility::new(layer.clone()));
                                     comp_ctx.state.add_log(&format!(
                                         "图层 '{}' 可见性：{}",
                                         &layer,
-                                        if !comp_ctx.state.scene.is_layer_visible(&layer) { "开启" } else { "关闭" }
+                                        if !comp_ctx.state.scene.is_layer_visible(&layer) {
+                                            "开启"
+                                        } else {
+                                            "关闭"
+                                        }
                                     ));
                                 }
 
                                 // 显示该图层的边数
-                                let edge_count = comp_ctx.state.scene.edges.iter()
+                                let edge_count = comp_ctx
+                                    .state
+                                    .scene
+                                    .edges
+                                    .iter()
                                     .filter(|e| e.layer.as_deref() == Some(&layer))
                                     .count();
-                                ui.label(egui::RichText::new(format!("({})", edge_count)).color(theme.text_secondary));
+                                ui.label(
+                                    egui::RichText::new(format!("({})", edge_count))
+                                        .color(theme.text_secondary),
+                                );
                             });
                         }
                     });
@@ -152,7 +183,8 @@ impl Component for LayerPanel {
                 // 底部操作按钮
                 ui.separator();
                 ui.horizontal(|ui| {
-                    ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.1);
+                    ui.style_mut().visuals.widgets.hovered.bg_fill =
+                        theme.accent.linear_multiply(0.1);
                     if ui.button("全部显示").clicked() {
                         comp_ctx.push_command(SetLayerFilter::new("All".to_string()));
                         comp_ctx.state.add_log("图层可见性已重置");

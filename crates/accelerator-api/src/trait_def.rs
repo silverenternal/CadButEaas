@@ -2,9 +2,8 @@
 
 use crate::error::Result;
 use crate::types::{
-    AcceleratorAvailability, AcceleratorCapabilities, AcceleratorOp,
-    Arc as Arc2d, ArcFitConfig, Contours, ContourExtractConfig, EdgeMap, Image,
-    Point2, SnapConfig, EdgeDetectConfig,
+    AcceleratorAvailability, AcceleratorCapabilities, AcceleratorOp, Arc as Arc2d, ArcFitConfig,
+    ContourExtractConfig, Contours, EdgeDetectConfig, EdgeMap, Image, Point2, SnapConfig,
 };
 use async_trait::async_trait;
 
@@ -30,11 +29,7 @@ pub trait Accelerator: Send + Sync + std::fmt::Debug {
     ///
     /// # 返回
     /// 边缘检测结果
-    async fn edge_detect(
-        &self,
-        image: &Image,
-        config: &EdgeDetectConfig,
-    ) -> Result<EdgeMap>;
+    async fn edge_detect(&self, image: &Image, config: &EdgeDetectConfig) -> Result<EdgeMap>;
 
     /// 轮廓提取
     ///

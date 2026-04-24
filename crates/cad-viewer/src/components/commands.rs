@@ -128,17 +128,37 @@ impl Command for ToggleLayerVisibility {
 
     fn execute(&mut self, state: &mut AppState) {
         // 保存旧状态
-        self.old_visibility = Some(*state.scene.layers.visibility.get(&self.layer).unwrap_or(&true));
+        self.old_visibility = Some(
+            *state
+                .scene
+                .layers
+                .visibility
+                .get(&self.layer)
+                .unwrap_or(&true),
+        );
 
         // 切换可见性
-        let current = *state.scene.layers.visibility.get(&self.layer).unwrap_or(&true);
-        state.scene.layers.visibility.insert(self.layer.clone(), !current);
+        let current = *state
+            .scene
+            .layers
+            .visibility
+            .get(&self.layer)
+            .unwrap_or(&true);
+        state
+            .scene
+            .layers
+            .visibility
+            .insert(self.layer.clone(), !current);
         state.scene.update_visibility_stats();
     }
 
     fn undo(&mut self, state: &mut AppState) {
         if let Some(old) = self.old_visibility {
-            state.scene.layers.visibility.insert(self.layer.clone(), old);
+            state
+                .scene
+                .layers
+                .visibility
+                .insert(self.layer.clone(), old);
             state.scene.update_visibility_stats();
         }
     }
@@ -226,7 +246,7 @@ impl Command for SelectEdge {
 // ============================================================================
 
 /// 打开文件命令
-/// 
+///
 /// P11 锐评落实：Toolbar 不再直接修改 pending_action，而是通过命令
 pub struct OpenFileCommand;
 

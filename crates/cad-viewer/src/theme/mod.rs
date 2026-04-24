@@ -61,9 +61,9 @@ impl MacOsTheme {
         Self {
             window_bg: Color32::from_rgb(255, 255, 255),
             panel_bg: Color32::from_rgba_unmultiplied(255, 255, 255, 230),
-            sidebar_bg: Color32::from_rgb(245, 245, 247),  // macOS 系统灰
+            sidebar_bg: Color32::from_rgb(245, 245, 247), // macOS 系统灰
             toolbar_bg: Color32::from_rgba_unmultiplied(255, 255, 255, 200),
-            accent: Color32::from_rgb(0, 122, 255),  // macOS 蓝色
+            accent: Color32::from_rgb(0, 122, 255), // macOS 蓝色
             text: Color32::from_rgb(30, 30, 30),
             text_secondary: Color32::from_rgb(142, 142, 147),
             border: Color32::from_rgba_unmultiplied(0, 0, 0, 20),
@@ -96,13 +96,14 @@ impl MacOsTheme {
     }
 
     /// 深色主题
+    #[allow(dead_code)]
     pub fn dark() -> Self {
         Self {
             window_bg: Color32::from_rgb(30, 30, 30),
-            panel_bg: Color32::from_rgba_unmultiplied(44, 44, 46, 230),  // macOS 深灰
+            panel_bg: Color32::from_rgba_unmultiplied(44, 44, 46, 230), // macOS 深灰
             sidebar_bg: Color32::from_rgb(28, 28, 30),
             toolbar_bg: Color32::from_rgba_unmultiplied(44, 44, 46, 200),
-            accent: Color32::from_rgb(10, 132, 255),  // macOS 亮蓝
+            accent: Color32::from_rgb(10, 132, 255), // macOS 亮蓝
             text: Color32::from_rgb(255, 255, 255),
             text_secondary: Color32::from_rgb(142, 142, 147),
             border: Color32::from_rgba_unmultiplied(255, 255, 255, 30),

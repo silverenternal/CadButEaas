@@ -15,8 +15,8 @@
 //! - 组码 91 = 边界路径数量
 //! - 组码 92 = 边界类型（1 = 多段线，2 = 圆弧，3 = 椭圆，4 = 样条）
 
-use parser::{DxfParser, hatch_parser::HatchParser};
 use common_types::RawEntity;
+use parser::{hatch_parser::HatchParser, DxfParser};
 
 mod common;
 use common::get_dxf_dir;
@@ -68,7 +68,8 @@ fn test_hatch_entity_parse() {
         // 解析文件
         if let Ok(entities) = parser.parse_file(&file_path) {
             // 统计 HATCH 实体数量
-            let hatch_count = entities.iter()
+            let hatch_count = entities
+                .iter()
                 .filter(|e| matches!(e, RawEntity::Hatch { .. }))
                 .count();
 
@@ -88,7 +89,10 @@ fn test_hatch_entity_parse() {
 
     // 注意：如果测试文件中没有 HATCH 实体，此测试也会通过
     // 这是预期行为，因为不是所有 DXF 文件都包含 HATCH
-    println!("✅ HATCH 解析测试完成（解析到 {} 个 HATCH 实体）", total_hatch_count);
+    println!(
+        "✅ HATCH 解析测试完成（解析到 {} 个 HATCH 实体）",
+        total_hatch_count
+    );
 }
 
 /// 测试 HATCH 边界路径类型识别
@@ -101,7 +105,7 @@ fn test_hatch_boundary_types() {
     // - Spline 边界（组码 92 = 4）
 
     let parser = HatchParser::new();
-    
+
     // 创建一个简单的 DXF 内容用于测试
     let test_dxf_content = r#"0
 SECTION
@@ -157,23 +161,45 @@ EOF
     match parser.parse_hatch_entities(&temp_path) {
         Ok(hatches) => {
             println!("✅ 解析到 {} 个 HATCH 实体", hatches.len());
-            
+
             for hatch in &hatches {
                 if let RawEntity::Hatch { boundary_paths, .. } = hatch {
                     println!("  边界路径数量：{}", boundary_paths.len());
                     for (i, path) in boundary_paths.iter().enumerate() {
                         match path {
-                            common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
-                                println!("    边界 {}: Polyline ({} 点，closed={}, bulges={:?})", i, points.len(), closed, bulges);
+                            common_types::HatchBoundaryPath::Polyline {
+                                points,
+                                closed,
+                                bulges,
+                            } => {
+                                println!(
+                                    "    边界 {}: Polyline ({} 点，closed={}, bulges={:?})",
+                                    i,
+                                    points.len(),
+                                    closed,
+                                    bulges
+                                );
                             }
                             common_types::HatchBoundaryPath::Arc { radius, .. } => {
                                 println!("    边界 {}: Arc (radius={})", i, radius);
                             }
                             common_types::HatchBoundaryPath::EllipseArc { major_axis, .. } => {
-                                println!("    边界 {}: EllipseArc (major_axis={:?})", i, major_axis);
+                                println!(
+                                    "    边界 {}: EllipseArc (major_axis={:?})",
+                                    i, major_axis
+                                );
                             }
-                            common_types::HatchBoundaryPath::Spline { control_points, degree, .. } => {
-                                println!("    边界 {}: Spline (degree={}, control_points={})", i, degree, control_points.len());
+                            common_types::HatchBoundaryPath::Spline {
+                                control_points,
+                                degree,
+                                ..
+                            } => {
+                                println!(
+                                    "    边界 {}: Spline (degree={}, control_points={})",
+                                    i,
+                                    degree,
+                                    control_points.len()
+                                );
                             }
                         }
                     }
@@ -181,7 +207,7 @@ EOF
             }
 
             // 验证至少解析到一个 HATCH
-            assert!(hatches.len() > 0, "应该解析到至少一个 HATCH 实体");
+            assert!(!hatches.is_empty(), "应该解析到至少一个 HATCH 实体");
         }
         Err(e) => {
             println!("⚠️ HATCH 解析失败：{}", e);
@@ -201,7 +227,7 @@ fn test_hatch_solid_vs_pattern() {
     // - 1 = 实体填充（Solid fill）
 
     let parser = HatchParser::new();
-    
+
     // 创建实体填充的 DXF 内容
     let solid_hatch_dxf = r#"0
 SECTION

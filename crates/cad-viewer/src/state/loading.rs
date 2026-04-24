@@ -2,9 +2,17 @@
 //!
 //! 包含所有异步加载相关的状态
 
+use crate::state::UIState;
 use common_types::ParseProgress;
 use interact::Edge;
-use crate::state::UIState;
+
+/// 缺口标记数据（用于在异步任务和主线程间传递）
+#[derive(Clone)]
+pub struct GapMarkerData {
+    pub start: [f64; 2],
+    pub end: [f64; 2],
+    pub length: f64,
+}
 
 /// 加载状态
 #[derive(Clone)]
@@ -13,6 +21,8 @@ pub struct LoadingState {
     pub is_loading: bool,
     /// 加载的边数据
     pub edges: Option<Vec<Edge>>,
+    /// 缺口标记数据
+    pub gap_markers: Option<Vec<GapMarkerData>>,
     /// 错误信息
     pub error: Option<String>,
     /// 解析进度信息
@@ -22,12 +32,12 @@ pub struct LoadingState {
 }
 
 impl LoadingState {
-    /// 创建新的加载状态
     #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             is_loading: false,
             edges: None,
+            gap_markers: None,
             error: None,
             progress: None,
             ui: UIState::default(),
@@ -39,6 +49,12 @@ impl LoadingState {
         self.is_loading = true;
         self.edges = None;
         self.error = None;
+    }
+
+    /// 设置缺口标记
+    pub fn set_gap_markers(&mut self, gaps: Vec<GapMarkerData>) {
+        self.gap_markers = Some(gaps);
+        self.ui.show_gaps = true;
     }
 
     /// 加载成功

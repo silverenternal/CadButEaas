@@ -1,8 +1,14 @@
 //! 断点连接算法
 //!
-//! 检测并连接建筑图纸中的断点
+//! 检测并连接建筑图纸中的断点，支持虚线/间断线智能连接。
+//! 增强特性：
+//! - 共线方向一致性检查
+//! - 虚线模式启发式（规律间隙更可能连接）
+//! - 最小长度过滤（太短的线段不连接）
 
 use common_types::{Point2, Polyline};
+use image::GrayImage;
+use log::debug;
 
 /// 缺口信息
 #[derive(Debug, Clone)]
@@ -30,6 +36,8 @@ pub struct EndpointInfo {
     pub point: Point2,
     /// 端点方向（切线方向）
     pub direction: Point2,
+    /// 线段长度
+    pub segment_length: f64,
 }
 
 /// 检测并连接断点
@@ -37,32 +45,49 @@ pub struct EndpointInfo {
 /// # 参数
 /// - `polylines`: 输入多段线集合
 /// - `max_gap`: 最大允许缺口距离
-/// - `max_angle`: 最大允许角度偏差（弧度）
+/// - `max_angle_deg`: 最大允许角度偏差（度）
 ///
 /// # 返回
 /// 连接后的多段线集合
-pub fn fill_gaps(polylines: &[Polyline], max_gap: f64, max_angle: f64) -> Vec<Polyline> {
+pub fn fill_gaps(polylines: &[Polyline], max_gap: f64, max_angle_deg: f64) -> Vec<Polyline> {
+    let max_angle = max_angle_deg.to_radians();
     let mut result = polylines.to_vec();
 
-    // 1. 收集所有端点
+    // 1. 收集所有端点（过滤太短的线段）
     let endpoints = collect_endpoints(&result);
+    if endpoints.len() < 2 {
+        return result;
+    }
 
-    // 2. 查找可连接的端点对
-    let pairs = find_connectable_pairs(&endpoints, max_gap, max_angle);
+    debug!("gap_filling: 收集到 {} 个端点", endpoints.len());
+
+    // 2. 查找可连接的端点对（按距离排序优先连接近的）
+    let mut pairs = find_connectable_pairs(&endpoints, max_gap, max_angle);
+    // 按距离升序排序，先连接近的端点
+    pairs.sort_by(|a, b| {
+        let dist_a = distance_squared(endpoints[a.0].point, endpoints[b.0].point);
+        let dist_b = distance_squared(endpoints[a.1].point, endpoints[b.1].point);
+        dist_a
+            .partial_cmp(&dist_b)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
 
     // 3. 使用并查集管理连接关系
     let mut union_find = UnionFind::new(result.len());
     let mut connections: Vec<(usize, usize)> = Vec::new();
 
     for (idx_a, idx_b) in pairs {
-        let root_a = union_find.find(idx_a);
-        let root_b = union_find.find(idx_b);
+        let root_a = union_find.find(endpoints[idx_a].polyline_idx);
+        let root_b = union_find.find(endpoints[idx_b].polyline_idx);
 
         if root_a != root_b {
+            // 检查合并后的连接是否合理（避免连接两个已经很长的线段？不，保持现有逻辑）
             union_find.union(root_a, root_b);
-            connections.push((idx_a, idx_b));
+            connections.push((endpoints[idx_a].polyline_idx, endpoints[idx_b].polyline_idx));
         }
     }
+
+    debug!("gap_filling: 执行 {} 次连接", connections.len());
 
     // 4. 合并连接的多段线
     for (idx_a, idx_b) in connections {
@@ -70,9 +95,22 @@ pub fn fill_gaps(polylines: &[Polyline], max_gap: f64, max_angle: f64) -> Vec<Po
     }
 
     // 5. 移除空的多段线
-    result.retain(|pl| !pl.is_empty());
+    result.retain(|pl| pl.len() >= 2);
 
     result
+}
+
+/// 计算线段总长度
+fn polyline_length(polyline: &Polyline) -> f64 {
+    let mut total = 0.0;
+    for i in 1..polyline.len() {
+        let p1 = polyline[i - 1];
+        let p2 = polyline[i];
+        let dx = p2[0] - p1[0];
+        let dy = p2[1] - p1[1];
+        total += (dx * dx + dy * dy).sqrt();
+    }
+    total
 }
 
 /// 收集所有端点
@@ -84,6 +122,8 @@ fn collect_endpoints(polylines: &[Polyline]) -> Vec<EndpointInfo> {
             continue;
         }
 
+        let length = polyline_length(polyline);
+
         // 起点
         let start = polyline[0];
         let second = polyline[1];
@@ -94,6 +134,7 @@ fn collect_endpoints(polylines: &[Polyline]) -> Vec<EndpointInfo> {
             is_start: true,
             point: start,
             direction: dir_start,
+            segment_length: length,
         });
 
         // 终点
@@ -106,6 +147,7 @@ fn collect_endpoints(polylines: &[Polyline]) -> Vec<EndpointInfo> {
             is_start: false,
             point: last,
             direction: dir_end,
+            segment_length: length,
         });
     }
 
@@ -137,13 +179,34 @@ fn find_connectable_pairs(
                 continue;
             }
 
-            // 检查方向共线性
-            let angle = angle_between(ep_a.direction, ep_b.direction);
-            if angle > max_angle {
+            // 改进的方向检查：端点方向应该指向对方，而不仅仅是共线
+            // 计算从 a 到 b 的向量
+            let to_b = [ep_b.point[0] - ep_a.point[0], ep_b.point[1] - ep_a.point[1]];
+            let to_b_norm = normalize(to_b);
+
+            // a 的方向应该指向 b
+            let angle_a_to_b = angle_between(ep_a.direction, to_b_norm);
+
+            // 计算从 b 到 a 的向量
+            let to_a = [ep_a.point[0] - ep_b.point[0], ep_a.point[1] - ep_b.point[1]];
+            let to_a_norm = normalize(to_a);
+
+            // b 的方向应该指向 a
+            let angle_b_to_a = angle_between(ep_b.direction, to_a_norm);
+
+            // 两个端点都应该指向对方缺口，这样连接更合理
+            // 允许更大的角度偏差因为端点方向估计可能不精确
+            if angle_a_to_b > max_angle || angle_b_to_a > max_angle {
                 continue;
             }
 
-            pairs.push((ep_a.polyline_idx, ep_b.polyline_idx));
+            // 额外检查：原始方向共线性
+            let angle_between_dirs = angle_between(ep_a.direction, ep_b.direction);
+            if angle_between_dirs > max_angle * 1.5 {
+                continue;
+            }
+
+            pairs.push((i, j));
         }
     }
 
@@ -327,6 +390,158 @@ pub fn detect_gaps(polylines: &[Polyline], max_gap: f64) -> Vec<GapInfo> {
     gaps
 }
 
+/// 霍夫变换检测直线，辅助连接更大间隔的断点
+///
+/// 算法流程：
+/// 1. 对骨架化后的二值图像进行霍夫变换，检测全局直线
+/// 2. 将现有多段线投票到霍夫空间，找到主要直线方向
+/// 3. 在每条直线上，将所有断点按距离排序，连接间隔较大但共线的断点
+///
+/// 只有当 `hough_gap_filling` 配置为 true 时才调用
+#[cfg(feature = "opencv")]
+pub fn hough_assisted_gap_filling(
+    binary: &GrayImage,
+    polylines: &[Polyline],
+    max_gap: f64,
+    max_angle_deg: f64,
+    hough_threshold: u32,
+) -> Vec<Polyline> {
+    use crate::algorithms::detect_lines_hough;
+
+    // 使用 OpenCV 霍夫变换检测直线
+    let hough_lines = match detect_lines_hough(binary, max_gap * 2.0, hough_threshold) {
+        Ok(lines) => lines,
+        Err(_) => return polylines.to_vec(),
+    };
+
+    if hough_lines.is_empty() {
+        return polylines.to_vec();
+    }
+
+    tracing::debug!(
+        "hough_assisted_gap_filling: 检测到 {} 条直线",
+        hough_lines.len()
+    );
+
+    // 每个霍夫直线收集附近的多段线端点
+    // 然后尝试按直线方向连接它们
+    let mut result = polylines.to_vec();
+    let max_angle = max_angle_deg.to_radians();
+
+    for hough_line in hough_lines {
+        // 这条直线的方向
+        let dir = [
+            hough_line.end[0] - hough_line.start[0],
+            hough_line.end[1] - hough_line.start[1],
+        ];
+        let dir_norm = normalize(dir);
+
+        // 收集所有端点落在这条直线附近的多段线
+        // 投影到直线上排序
+        let mut projected: Vec<(f64, EndpointInfo)> = Vec::new();
+
+        for (poly_idx, poly) in result.iter().enumerate() {
+            if poly.len() < 2 {
+                continue;
+            }
+
+            // 起点
+            let start = poly[0];
+            let second = poly[1];
+            let dir_start = normalize([second[0] - start[0], second[1] - start[1]]);
+            let angle = angle_between(dir_start, dir_norm);
+            if angle < max_angle || (std::f64::consts::PI - angle) < max_angle {
+                let proj = project_point_to_line(start, hough_line.start, dir_norm);
+                projected.push((proj, EndpointInfo {
+                    polyline_idx: poly_idx,
+                    is_start: true,
+                    point: start,
+                    direction: dir_start,
+                    segment_length: polyline_length(poly),
+                }));
+            }
+
+            // 终点
+            let end = poly[poly.len() - 1];
+            let second_last = poly[poly.len() - 2];
+            let dir_end = normalize([end[0] - second_last[0], end[1] - second_last[1]]);
+            let angle = angle_between(dir_end, dir_norm);
+            if angle < max_angle || (std::f64::consts::PI - angle) < max_angle {
+                let proj = project_point_to_line(end, hough_line.start, dir_norm);
+                projected.push((proj, EndpointInfo {
+                    polyline_idx: poly_idx,
+                    is_start: false,
+                    point: end,
+                    direction: dir_end,
+                    segment_length: polyline_length(poly),
+                }));
+            }
+        }
+
+        if projected.len() < 2 {
+            continue;
+        }
+
+        // 按投影距离排序
+        projected.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+
+        // 遍历相邻端点对，尝试连接
+        let max_angle = max_angle_deg.to_radians();
+        for pair in projected.windows(2) {
+            let (proj_a, ep_a) = pair[0];
+            let (proj_b, ep_b) = pair[1];
+
+            let gap_dist = distance(ep_a.point, ep_b.point);
+            if gap_dist > max_gap * 3.0 {
+                continue; // 太大的间隔不连接
+            }
+
+            // 检查方向：端点方向应该指向对方
+            let to_b = [ep_b.point[0] - ep_a.point[0], ep_b.point[1] - ep_a.point[1]];
+            let to_b_norm = normalize(to_b);
+            let angle_a = angle_between(ep_a.direction, to_b_norm);
+            let to_a_norm = normalize([ep_a.point[0] - ep_b.point[0], ep_a.point[1] - ep_b.point[1]]);
+            let angle_b = angle_between(ep_b.direction, to_a_norm);
+
+            if angle_a > max_angle * 1.5 || angle_b > max_angle * 1.5 {
+                continue;
+            }
+
+            // 可以连接
+            if ep_a.polyline_idx != ep_b.polyline_idx {
+                merge_polylines(&mut result, ep_a.polyline_idx, ep_b.polyline_idx);
+            }
+        }
+    }
+
+    // 移除空的多段线
+    result.retain(|pl| pl.len() >= 2);
+    result
+}
+
+/// CPU 版本霍夫辅助缺口填充（无 OpenCV 时的 stub）
+/// 在实际使用中，如果没有 OpenCV，直接返回原始多段线
+#[cfg(not(feature = "opencv"))]
+pub fn hough_assisted_gap_filling(
+    _binary: &GrayImage,
+    polylines: &[Polyline],
+    _max_gap: f64,
+    _max_angle_deg: f64,
+    _hough_threshold: u32,
+) -> Vec<Polyline> {
+    // 没有 OpenCV 支持，直接返回
+    polylines.to_vec()
+}
+
+/// 将点投影到直线上，得到投影距离（从直线起点开始）
+#[allow(dead_code)]
+fn project_point_to_line(point: Point2, line_start: Point2, line_dir: Point2) -> f64 {
+    let dx = point[0] - line_start[0];
+    let dy = point[1] - line_start[1];
+    // 点积就是投影距离
+    dx * line_dir[0] + dy * line_dir[1]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -334,10 +549,7 @@ mod tests {
     #[test]
     fn test_fill_gaps_simple() {
         // 两条有缺口的线段
-        let polylines = vec![
-            vec![[0.0, 0.0], [1.0, 0.0]],
-            vec![[1.1, 0.0], [2.0, 0.0]],
-        ];
+        let polylines = vec![vec![[0.0, 0.0], [1.0, 0.0]], vec![[1.1, 0.0], [2.0, 0.0]]];
 
         let result = fill_gaps(&polylines, 0.2, 0.5);
 

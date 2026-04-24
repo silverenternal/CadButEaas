@@ -93,7 +93,7 @@ pub fn fit_circle_kasa(points: &Polyline) -> Option<FittedCircle> {
     // 4. 计算圆心（在质心坐标系中）
     let center_x_local = -a / 2.0;
     let center_y_local = -b / 2.0;
-    
+
     // 转换回原始坐标系
     let center_x = center_x_local + centroid[0];
     let center_y = center_y_local + centroid[1];
@@ -112,9 +112,7 @@ pub fn fit_circle_kasa(points: &Polyline) -> Option<FittedCircle> {
         .map(|p| (p[1] - center_y).atan2(p[0] - center_x))
         .collect();
 
-    angles.sort_by(|a, b| {
-        a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
-    });
+    angles.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
     let start_angle = angles.first().copied().unwrap_or(0.0);
     let end_angle = angles.last().copied().unwrap_or(std::f64::consts::TAU);
@@ -148,7 +146,11 @@ pub fn fit_circle_kasa(points: &Polyline) -> Option<FittedCircle> {
 ///
 /// # 返回
 /// 拟合的圆（如果拟合失败则返回 None）
-pub fn fit_circle_ransac(points: &Polyline, iterations: usize, threshold: f64) -> Option<FittedCircle> {
+pub fn fit_circle_ransac(
+    points: &Polyline,
+    iterations: usize,
+    threshold: f64,
+) -> Option<FittedCircle> {
     if points.len() < 3 {
         return None;
     }
@@ -159,7 +161,7 @@ pub fn fit_circle_ransac(points: &Polyline, iterations: usize, threshold: f64) -
     for _ in 0..iterations {
         // 1. 随机采样 3 点
         let sample = random_sample(points, 3)?;
-        
+
         // 2. 用 3 点计算圆
         let circle = fit_circle_three_points(sample[0], sample[1], sample[2])?;
 
@@ -167,7 +169,8 @@ pub fn fit_circle_ransac(points: &Polyline, iterations: usize, threshold: f64) -
         let inliers = points
             .iter()
             .filter(|p| {
-                let d = ((p[0] - circle.center[0]).powi(2) + (p[1] - circle.center[1]).powi(2)).sqrt();
+                let d =
+                    ((p[0] - circle.center[0]).powi(2) + (p[1] - circle.center[1]).powi(2)).sqrt();
                 (d - circle.radius).abs() < threshold
             })
             .count();
@@ -196,8 +199,14 @@ fn fit_circle_three_points(p1: Point2, p2: Point2, p3: Point2) -> Option<FittedC
         return None; // 三点共线
     }
 
-    let ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d;
-    let uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d;
+    let ux = ((ax * ax + ay * ay) * (by - cy)
+        + (bx * bx + by * by) * (cy - ay)
+        + (cx * cx + cy * cy) * (ay - by))
+        / d;
+    let uy = ((ax * ax + ay * ay) * (cx - bx)
+        + (bx * bx + by * by) * (ax - cx)
+        + (cx * cx + cy * cy) * (bx - ax))
+        / d;
 
     let center = [ux, uy];
     let radius = ((ax - ux).powi(2) + (ay - uy).powi(2)).sqrt();
@@ -218,7 +227,7 @@ fn fit_circle_three_points(p1: Point2, p2: Point2, p3: Point2) -> Option<FittedC
 /// 随机采样
 fn random_sample(points: &Polyline, n: usize) -> Option<Vec<Point2>> {
     use std::collections::HashSet;
-    
+
     if points.len() < n {
         return None;
     }
@@ -275,7 +284,10 @@ pub fn fit_and_evaluate(polyline: &Polyline, tolerance: f64) -> ArcFitResult {
         .map(|c| (1.0 - (c.rms_error / tolerance).min(1.0)).max(0.0))
         .unwrap_or(0.0);
 
-    let is_arc = circle.as_ref().map(|c| c.rms_error < tolerance).unwrap_or(false);
+    let is_arc = circle
+        .as_ref()
+        .map(|c| c.rms_error < tolerance)
+        .unwrap_or(false);
 
     ArcFitResult {
         is_arc,
@@ -333,7 +345,7 @@ pub fn fit_circle_candidates(
 
             true
         })
-        .filter_map(|poly| fit_circle_kasa(poly))
+        .filter_map(fit_circle_kasa)
         .collect()
 }
 
@@ -352,10 +364,7 @@ fn is_collinear(poly: &Polyline, angle_threshold: f64) -> bool {
     }
 
     // 计算第一个线段的方向向量
-    let v1 = [
-        poly[1][0] - poly[0][0],
-        poly[1][1] - poly[0][1],
-    ];
+    let v1 = [poly[1][0] - poly[0][0], poly[1][1] - poly[0][1]];
     let v1_len = (v1[0] * v1[0] + v1[1] * v1[1]).sqrt();
 
     if v1_len < 1e-10 {
@@ -364,10 +373,7 @@ fn is_collinear(poly: &Polyline, angle_threshold: f64) -> bool {
 
     // 检查后续线段与第一个线段的角度
     for i in 2..poly.len() {
-        let vi = [
-            poly[i][0] - poly[i - 1][0],
-            poly[i][1] - poly[i - 1][1],
-        ];
+        let vi = [poly[i][0] - poly[i - 1][0], poly[i][1] - poly[i - 1][1]];
         let vi_len = (vi[0] * vi[0] + vi[1] * vi[1]).sqrt();
 
         if vi_len < 1e-10 {
@@ -415,10 +421,8 @@ fn curvature_variance(poly: &Polyline) -> f64 {
 
     // 计算方差
     let mean: f64 = curvatures.iter().sum::<f64>() / curvatures.len() as f64;
-    let variance: f64 = curvatures
-        .iter()
-        .map(|&c| (c - mean).powi(2))
-        .sum::<f64>() / curvatures.len() as f64;
+    let variance: f64 =
+        curvatures.iter().map(|&c| (c - mean).powi(2)).sum::<f64>() / curvatures.len() as f64;
 
     variance
 }
@@ -470,10 +474,10 @@ mod tests {
             .collect();
 
         let circle = fit_circle_kasa(&points);
-        
+
         assert!(circle.is_some());
         let circle = circle.unwrap();
-        
+
         assert!((circle.center[0] - center[0]).abs() < 0.1);
         assert!((circle.center[1] - center[1]).abs() < 0.1);
         assert!((circle.radius - radius).abs() < 0.1);
@@ -487,7 +491,7 @@ mod tests {
         let p3 = [5.0, 8.66]; // 等边三角形
 
         let circle = fit_circle_three_points(p1, p2, p3);
-        
+
         assert!(circle.is_some());
     }
 

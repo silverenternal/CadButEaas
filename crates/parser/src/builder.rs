@@ -59,8 +59,8 @@
 //! })?;
 //! ```
 
-use crate::{DxfParser, DxfConfig, DxfParseReport, EntityTypeFilter, LayerFilterMode};
-use common_types::{RawEntity, CadError};
+use crate::{DxfConfig, DxfParseReport, DxfParser, EntityTypeFilter, LayerFilterMode};
+use common_types::{CadError, RawEntity};
 use std::path::Path;
 
 // ============================================================================
@@ -89,7 +89,7 @@ impl DxfParserBuilder {
     pub fn new() -> Self {
         Self {
             config: DxfConfig::default(),
-            tolerance: 0.1,  // 默认 0.1mm 弦高误差
+            tolerance: 0.1, // 默认 0.1mm 弦高误差
             layer_filter: None,
             streaming_enabled: false,
             streaming_batch_size: 100,
@@ -104,7 +104,8 @@ impl DxfParserBuilder {
 
     /// 添加单个图层到白名单
     pub fn add_layer(mut self, layer: impl Into<String>) -> Self {
-        self.config.layer_whitelist
+        self.config
+            .layer_whitelist
             .get_or_insert_with(Vec::new)
             .push(layer.into());
         self
@@ -118,7 +119,8 @@ impl DxfParserBuilder {
 
     /// 添加单个实体类型到白名单
     pub fn add_entity_type(mut self, entity_type: EntityTypeFilter) -> Self {
-        self.config.entity_whitelist
+        self.config
+            .entity_whitelist
             .get_or_insert_with(Vec::new)
             .push(entity_type);
         self
@@ -132,7 +134,8 @@ impl DxfParserBuilder {
 
     /// 添加单个颜色到白名单
     pub fn add_color(mut self, color: i16) -> Self {
-        self.config.color_whitelist
+        self.config
+            .color_whitelist
             .get_or_insert_with(Vec::new)
             .push(color);
         self
@@ -211,8 +214,14 @@ impl DxfParserBuilder {
     }
 
     /// 添加自定义图层分组
-    pub fn add_layer_group(mut self, pattern: impl Into<String>, group_name: impl Into<String>) -> Self {
-        self.config.custom_layer_groups.push((pattern.into(), group_name.into()));
+    pub fn add_layer_group(
+        mut self,
+        pattern: impl Into<String>,
+        group_name: impl Into<String>,
+    ) -> Self {
+        self.config
+            .custom_layer_groups
+            .push((pattern.into(), group_name.into()));
         self
     }
 
@@ -382,20 +391,20 @@ impl DxfParser {
         F: FnMut(&[RawEntity]) -> Result<(), CadError>,
     {
         let path = path.as_ref();
-        
+
         // 使用标准解析获取所有实体
         let (entities, report) = self.parse_file_with_report(path)?;
-        
+
         let total_entities = entities.len();
-        let batch_size = 100;  // 默认批次大小
-        
+        let batch_size = 100; // 默认批次大小
+
         // 分批处理实体
         let mut batches_processed = 0;
         for chunk in entities.chunks(batch_size) {
             callback(chunk)?;
             batches_processed += 1;
         }
-        
+
         Ok(StreamingResult {
             total_entities,
             batches_processed,
@@ -432,20 +441,21 @@ impl DxfParser {
         F: FnMut(&[RawEntity], f64) -> Result<(), CadError>,
     {
         let path = path.as_ref();
-        
+
         // 使用标准解析获取所有实体
         let (entities, report) = self.parse_file_with_report(path)?;
-        
+
         let total_entities = entities.len();
         let mut batches_processed = 0;
-        
+
         // 分批处理实体（带进度）
         for chunk in entities.chunks(batch_size) {
-            let progress = (batches_processed * batch_size + chunk.len()) as f64 / total_entities as f64;
+            let progress =
+                (batches_processed * batch_size + chunk.len()) as f64 / total_entities as f64;
             callback(chunk, progress)?;
             batches_processed += 1;
         }
-        
+
         Ok(StreamingResult {
             total_entities,
             batches_processed,
@@ -492,11 +502,17 @@ mod tests {
     #[test]
     fn test_builder_presets() {
         let wall_parser = DxfParserBuilder::for_wall_extraction().build();
-        assert_eq!(wall_parser.config.layer_filter_mode, LayerFilterMode::WallsOnly);
+        assert_eq!(
+            wall_parser.config.layer_filter_mode,
+            LayerFilterMode::WallsOnly
+        );
         assert!(wall_parser.config.ignore_text);
 
         let furniture_parser = DxfParserBuilder::for_furniture_extraction().build();
-        assert_eq!(furniture_parser.config.layer_filter_mode, LayerFilterMode::Furniture);
+        assert_eq!(
+            furniture_parser.config.layer_filter_mode,
+            LayerFilterMode::Furniture
+        );
         assert!(furniture_parser.config.detect_seat_zones);
 
         let full_parser = DxfParserBuilder::for_full_parsing().build();

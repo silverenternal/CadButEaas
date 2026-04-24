@@ -78,7 +78,7 @@ impl LodSelector {
             zoom,
             viewport_size,
             target_fps,
-            actual_fps: target_fps,  // 初始假设性能充足
+            actual_fps: target_fps, // 初始假设性能充足
         }
     }
 
@@ -128,11 +128,11 @@ impl LodSelector {
 
         // 综合决策
         if screen_area_factor < 0.01 || performance_factor < 0.5 {
-            LodLevel::Simplified  // 远景或性能紧张
+            LodLevel::Simplified // 远景或性能紧张
         } else if screen_area_factor < 0.1 || performance_factor < 0.8 {
-            LodLevel::Medium      // 中景
+            LodLevel::Medium // 中景
         } else {
-            LodLevel::Detailed    // 近景且性能充足
+            LodLevel::Detailed // 近景且性能充足
         }
     }
 
@@ -172,7 +172,7 @@ impl LodSelector {
         if max_grid_lines > target_grid_lines * 2.0 {
             (max_grid_lines / target_grid_lines).ceil()
         } else {
-            1.0  // 每条都画
+            1.0 // 每条都画
         }
     }
 
@@ -257,8 +257,9 @@ mod tests {
 
     #[test]
     fn test_lod_selection_zoomed_in() {
-        // 放大查看（zoom=5.0），100 个座椅应该详细
-        let selector = LodSelector::new(5.0, 600.0, 60.0);
+        // 放大查看（zoom=50.0），100 个座椅应该详细
+        // screen_area = 100*0.25*50*50 = 62500, viewport_area = 360000, factor = 0.174 > 0.1 → Detailed
+        let selector = LodSelector::new(50.0, 600.0, 60.0);
         let lod = selector.select_seat_zone_lod(100, None);
         assert_eq!(lod, LodLevel::Detailed);
     }

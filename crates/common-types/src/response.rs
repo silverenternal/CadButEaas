@@ -98,9 +98,7 @@ pub enum ErrorDetails {
         segment_count: usize,
     },
     /// 验证错误
-    Validation {
-        issues: Vec<ValidationIssue>,
-    },
+    Validation { issues: Vec<ValidationIssue> },
     /// 几何错误
     Geometry {
         issue_type: String,
@@ -159,11 +157,7 @@ impl GeoLocation {
     }
 
     pub fn with_z(x: f64, y: f64, z: f64) -> Self {
-        Self {
-            x,
-            y,
-            z: Some(z),
-        }
+        Self { x, y, z: Some(z) }
     }
 }
 
@@ -238,7 +232,10 @@ impl<T> Response<T> {
 
     /// 检查是否成功
     pub fn is_success(&self) -> bool {
-        matches!(self.status, ResponseStatus::Success | ResponseStatus::PartialSuccess)
+        matches!(
+            self.status,
+            ResponseStatus::Success | ResponseStatus::PartialSuccess
+        )
     }
 
     /// 获取 payload 引用

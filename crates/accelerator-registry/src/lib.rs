@@ -11,10 +11,10 @@
 //! └── preferences: AcceleratorPreferences
 //! ```
 
+mod preferences;
 mod registry;
 mod strategy;
-mod preferences;
 
+pub use preferences::*;
 pub use registry::*;
 pub use strategy::*;
-pub use preferences::*;

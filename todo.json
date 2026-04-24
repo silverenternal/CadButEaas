@@ -1,0 +1,362 @@
+{
+  "title": "PNG/JPG 光栅图纸几何语义提取",
+  "version": "v0.1.0",
+  "created": "2026-04-16",
+  "status": "planning",
+  "description": "为 CAD 几何智能处理系统增加对 PNG/JPG/BMP/TIFF 等无几何语义光栅图片的几何语义提取能力，复用现有矢量化、拓扑构建、验证导出管线",
+  "architecture_decision": {
+    "core_principle": "解耦光栅加载层，复用矢量化+拓扑管线",
+    "rationale": "vectorize crate 已具备完整的 raster→polyline 能力（预处理→二值化→边缘检测→骨架化→轮廓提取→多边形简化→端点吸附→线型识别→圆弧拟合），只需新增光栅图片加载入口并将其接入 ProcessingPipeline 和 HTTP API",
+    "design_choices": [
+      "新增 raster-loader crate：统一负责 PNG/JPG/BMP/TIFF 加载、格式转换、DPI 提取，输出 DynamicImage",
+      "不修改 ParserService：Parser 专注于有几何语义的格式（DXF/DWG/PDF/SVG/STL），避免将光栅加载和几何解析混在一个服务中",
+      "复用 VectorizeService：raster-loader 的输出直接喂给 VectorizeService::vectorize_image()",
+      "复用 ProcessingPipeline 下游：polyline → Topo → Validator → Export 无需任何改动",
+      "API 层扩展：在 orch API 中新增 /process/raster 路由，复用 process_handler_v1 的渐进式渲染模式"
+    ]
+  },
+  "phases": [
+    {
+      "phase": "Phase 1: raster-loader crate（光栅加载层）",
+      "priority": "P0",
+      "estimated_effort": "2-3 files",
+      "steps": [
+        {
+          "id": "1.1",
+          "title": "创建 crates/raster-loader/ crate 骨架",
+          "description": "新建 crate，依赖 image crate（workspace 已有）、thiserror、serde、tracing。提供 RasterImageInfo 元数据结构（宽/高/DPI/色彩空间/文件路径）",
+          "files_to_create": [
+            "crates/raster-loader/Cargo.toml",
+            "crates/raster-loader/src/lib.rs"
+          ],
+          "reuse": "workspace dependencies: image, thiserror, tracing"
+        },
+        {
+          "id": "1.2",
+          "title": "实现 RasterLoader 加载器",
+          "description": "实现 RasterLoader::from_file(path) → Result<DynamicImage> 和 RasterLoader::from_bytes(&[u8], hint_ext) → Result<DynamicImage>。利用 image::ImageReader 自动检测格式，支持 PNG/JPG/BMP/TIFF/WebP。提取 EXIF DPI（如有）用于后续 scale 计算",
+          "files_to_create": [
+            "crates/raster-loader/src/loader.rs"
+          ],
+          "key_design": "输出 DynamicImage 而非自定义像素类型，直接对接 VectorizeService::vectorize_image(&DynamicImage)"
+        },
+        {
+          "id": "1.3",
+          "title": "文件格式检测工具函数",
+          "description": "实现 detect_raster_format(data: &[u8], filename: Option<&str>) → Option<RasterFormat>，通过魔数检测：PNG (89 50 4E 47)、JPEG (FF D8 FF)、BMP (42 4D)、TIFF (49 49 2A 00 / 4D 4D 00 2A)、WebP (RIFF....WEBP)。复用 api.rs 中 detect_file_type 的模式",
+          "files_to_create": [
+            "crates/raster-loader/src/format_detect.rs"
+          ],
+          "reuse": "参考 crates/orchestrator/src/api.rs:862 的 detect_file_type 魔数检测模式"
+        },
+        {
+          "id": "1.4",
+          "title": "集成到 workspace Cargo.toml",
+          "description": "在根 Cargo.toml 的 [workspace.dependencies] 中添加 raster-loader 路径引用，在 crates/orchestrator/Cargo.toml 中添加依赖",
+          "files_to_modify": [
+            "Cargo.toml",
+            "crates/orchestrator/Cargo.toml"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "Phase 2: ProcessingPipeline 集成",
+      "priority": "P0",
+      "estimated_effort": "1 file",
+      "steps": [
+        {
+          "id": "2.1",
+          "title": "新增 process_raster_file 方法",
+          "description": "在 ProcessingPipeline 中新增 pub async fn process_raster_file(&self, path: impl AsRef<Path>) → Result<ProcessResult> 方法。流程：raster-loader → DynamicImage → VectorizeService → Polyline → Topo → Validator → Export。复用现有 process_file 的异步模式和 spawn_blocking",
+          "files_to_modify": [
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "code_flow": "path → RasterLoader::from_file() → vectorize.vectorize_image() → topo.build_scene() → validator.validate() → export.export() → ProcessResult",
+          "reuse": "复用 pipeline.rs 中 process_file 的异步模式、错误处理框架、指标收集"
+        },
+        {
+          "id": "2.2",
+          "title": "新增 process_raster_bytes 方法",
+          "description": "对称实现 pub async fn process_raster_bytes(&self, bytes: &[u8], format_hint: Option<&str>) → Result<ProcessResult>。用于 API 层的字节流处理。复用 process_bytes 的模式",
+          "files_to_modify": [
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "reuse": "复用 pipeline.rs 中 process_bytes 的模式"
+        },
+        {
+          "id": "2.3",
+          "title": "新增 process_raster_file_sync 私有辅助",
+          "description": "抽取同步处理逻辑为 fn process_raster_file_sync(vectorize: &VectorizeService, topo: &TopoService, validator: &ValidatorService, export: &ExportService, img: &DynamicImage) → Result<ProcessResult>，避免 async/sync 代码重复。参考 process_bytes_sync 的设计",
+          "files_to_modify": [
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "reuse": "直接复用 extract_polylines_from_entities 之后的所有下游逻辑"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 3: HTTP API 集成",
+      "priority": "P0",
+      "estimated_effort": "1 file",
+      "steps": [
+        {
+          "id": "3.1",
+          "title": "扩展 detect_file_type 支持光栅格式",
+          "description": "在 api.rs 的 FileType 枚举中新增 Png/Jpeg/Bmp/Tiff 变体，更新 detect_file_type() 函数识别光栅图片魔数，更新 file_type_extension() 映射。保持 DXF/PDF 分支不变",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs"
+          ],
+          "magic_bytes": {
+            "PNG": "89 50 4E 47",
+            "JPEG": "FF D8 FF",
+            "BMP": "42 4D",
+            "TIFF_LE": "49 49 2A 00",
+            "TIFF_BE": "4D 4D 00 2A"
+          }
+        },
+        {
+          "id": "3.2",
+          "title": "扩展 process_handler_v1 支持光栅图片",
+          "description": "在现有的 process_handler_v1 中增加光栅图片分支。当检测到 PNG/JPG 等光栅格式时，直接调用 pipeline.process_raster_file(temp_path) 而非走 DXF 解析路径。渐进式渲染策略：光栅矢量化通常 < 2s，可同步返回完整结果（polyline + topology），无需分阶段",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs"
+          ],
+          "note": "光栅图片矢量化（含拓扑）通常 1-3 秒，建议直接返回完整 ProcessResult，不走 DXF 的两阶段模式"
+        },
+        {
+          "id": "3.3",
+          "title": "新增独立 POST /process/raster 路由（可选）",
+          "description": "提供一个专门处理光栅图片的端点，支持额外参数：threshold、skeletonize、text_separation 等矢量化配置。复用 process_handler_v1 的 multipart 解析模式，但返回完整的矢量化+拓扑结果",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs"
+          ],
+          "optional": true,
+          "rationale": "提供细粒度控制适合光栅图片特有的矢量化参数"
+        },
+        {
+          "id": "3.4",
+          "title": "新增光栅图片预设配置",
+          "description": "在 api.rs 的 get_profile_handler 中新增 \"photo_sketch\"（照片/手绘草图）预设配置，针对复杂光栅图片优化参数：更高 snap_tolerance、更强的预处理、启用 text_separation",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs"
+          ],
+          "profiles": [
+            {
+              "name": "photo_sketch",
+              "description": "照片/手绘草图预设 - 适用于复杂光栅图片，强预处理",
+              "vectorize": {
+                "adaptive_threshold": true,
+                "skeletonize": true,
+                "text_separation": true,
+                "quality_assessment": true,
+                "denoise": true,
+                "enhance_contrast": true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "Phase 4: CLI 入口（cad-cli）",
+      "priority": "P1",
+      "estimated_effort": "1 file",
+      "steps": [
+        {
+          "id": "4.1",
+          "title": "扩展 cad-cli 支持光栅图片",
+          "description": "在 crates/cad-cli/src/main.rs 中，当输入文件为 PNG/JPG/BMP/TIFF 时，自动选择 raster pipeline 而非 parser pipeline。输出与 DXF/PDF 处理相同的 JSON 结果",
+          "files_to_modify": [
+            "crates/cad-cli/src/main.rs"
+          ],
+          "reuse": "复用已有的 CLI 参数解析和输出逻辑"
+        }
+      ]
+    },
+    {
+      "phase": "Phase 5: 测试与质量保障",
+      "priority": "P0",
+      "estimated_effort": "3-4 files",
+      "steps": [
+        {
+          "id": "5.1",
+          "title": "raster-loader 单元测试",
+          "description": "测试文件格式检测（PNG/JPG/BMP/TIFF 魔数）、有效/无效文件加载、大文件限制、from_file/from_bytes 一致性",
+          "files_to_create": [
+            "crates/raster-loader/src/loader.rs (#[cfg(test)])",
+            "crates/raster-loader/src/format_detect.rs (#[cfg(test)])"
+          ],
+          "test_count": "8-12 tests"
+        },
+        {
+          "id": "5.2",
+          "title": "集成测试：光栅图片端到端管线",
+          "description": "创建 crates/orchestrator/tests/test_raster_image_pipeline.rs。使用简单几何图形（正方形、圆形、直线）的测试 PNG，验证：矢量化提取 polyline → 拓扑构建 → 验证 → 导出全链路",
+          "files_to_create": [
+            "crates/orchestrator/tests/test_raster_image_pipeline.rs"
+          ],
+          "test_cases": [
+            "简单几何图形（正方形 + 圆形）PNG → 提取到 2 个闭合环",
+            "直线网格 PNG → 提取到多条线段 + 端点吸附",
+            "带文字标注的简单图纸 PNG → text_separation 过滤文字",
+            "低质量/噪声图片 → 质量评估拦截"
+          ]
+        },
+        {
+          "id": "5.3",
+          "title": "API 集成测试",
+          "description": "在 api.rs tests 中新增光栅图片上传测试，验证 /process 端点对 PNG 文件的处理",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs"
+          ],
+          "test_count": "2-3 tests"
+        },
+        {
+          "id": "5.4",
+          "title": "准备测试用光栅图片",
+          "description": "在 test_files/ 目录下创建或收集测试用 PNG/JPG 图片：简单几何图形、网格、带文字的扫描图纸缩略图。可以使用 image crate 在测试中动态生成",
+          "files_to_create": [
+            "test_files/test_square.png",
+            "test_files/test_grid.png",
+            "test_files/test_with_text.png"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "Phase 6: 文档更新",
+      "priority": "P2",
+      "estimated_effort": "2 files",
+      "steps": [
+        {
+          "id": "6.1",
+          "title": "更新 README.md",
+          "description": "在支持格式列表中增加 PNG/JPG/BMP/TIFF，添加光栅图片处理的使用示例",
+          "files_to_modify": ["README.md"]
+        },
+        {
+          "id": "6.2",
+          "title": "更新 todo.md",
+          "description": "记录本轮焚诀循环的工作成果，更新路线图和完成度",
+          "files_to_modify": ["todo.md"]
+        }
+      ]
+    }
+  ],
+  "dependency_graph": {
+    "1.1": [],
+    "1.2": ["1.1"],
+    "1.3": ["1.1"],
+    "1.4": ["1.2"],
+    "2.1": ["1.4"],
+    "2.2": ["2.1"],
+    "2.3": ["2.1"],
+    "3.1": ["2.1"],
+    "3.2": ["3.1"],
+    "3.3": ["3.2"],
+    "3.4": ["3.2"],
+    "4.1": ["2.1"],
+    "5.1": ["1.2"],
+    "5.2": ["2.1"],
+    "5.3": ["3.2"],
+    "5.4": ["5.2"],
+    "6.1": ["3.2", "4.1"],
+    "6.2": ["5.3"]
+  },
+  "key_files_summary": {
+    "new_files": [
+      {
+        "path": "crates/raster-loader/",
+        "description": "新增 crate，光栅图片加载层",
+        "files": [
+          "Cargo.toml",
+          "src/lib.rs",
+          "src/loader.rs",
+          "src/format_detect.rs"
+        ]
+      }
+    ],
+    "modified_files": [
+      {
+        "path": "Cargo.toml",
+        "change": "workspace.dependencies 添加 raster-loader"
+      },
+      {
+        "path": "crates/orchestrator/Cargo.toml",
+        "change": "dependencies 添加 raster-loader"
+      },
+      {
+        "path": "crates/orchestrator/src/pipeline.rs",
+        "change": "新增 process_raster_file / process_raster_bytes / process_raster_file_sync 方法"
+      },
+      {
+        "path": "crates/orchestrator/src/api.rs",
+        "change": "FileType 枚举扩展、detect_file_type 支持光栅格式、process_handler_v1 增加光栅分支"
+      },
+      {
+        "path": "crates/cad-cli/src/main.rs",
+        "change": "识别光栅格式并路由到 raster pipeline"
+      },
+      {
+        "path": "README.md",
+        "change": "支持格式列表和使用示例"
+      },
+      {
+        "path": "todo.md",
+        "change": "记录本轮工作成果"
+      }
+    ]
+  },
+  "architecture_notes": {
+    "data_flow": "PNG/JPG → raster-loader → image::DynamicImage → vectorize::VectorizeService → Vec<Polyline> → topo::TopoService → SceneState → validator::ValidatorService → ValidationReport → export::ExportService → bytes",
+    "reused_components": [
+      "vectorize::VectorizeService - 完整矢量化管线（预处理→二值化→边缘检测→骨架化→轮廓提取→简化→吸附）",
+      "topo::TopoService - 拓扑构建（端点吸附、交点切分、半边界/DFS 环提取）",
+      "validator::ValidatorService - 几何验证（闭合环、最小边长、自相交）",
+      "export::ExportService - 格式导出（JSON/Bincode）",
+      "ProcessingPipeline 异步模式 - tokio::spawn_blocking + rayon 并行",
+      "VectorizeConfig - 矢量化参数配置（threshold/skeletonize/text_separation 等）",
+      "CadConfig - 全局配置系统，通过 parser.pdf.* 字段复用矢量化配置"
+    ],
+    "not_changed": [
+      "ParserService - 不修改，保持专注解析有几何语义的格式",
+      "VectorizeService 核心算法 - 零改动，已有完整能力",
+      "TopoService / ValidatorService / ExportService - 零改动",
+      "accelerator-* crates - 零改动"
+    ],
+    "decoupling_rationale": "光栅加载（raster-loader）与几何解析（parser）解耦，原因：① 输入类型不同（像素 vs 几何实体）② 错误模型不同（解码失败 vs 解析失败）③ 扩展性（未来可独立支持网络图片 URL、base64 等）④ 避免 ParserService 职责膨胀"
+  },
+  "risk_and_mitigation": [
+    {
+      "risk": "大尺寸光栅图片导致内存溢出",
+      "mitigation": "VectorizeService 已有 max_pixels 限制（30M 像素，约 5477x5477），超过自动缩放。raster-loader 中增加文件大小限制检查（默认 100MB）"
+    },
+    {
+      "risk": "复杂/低质量光栅图片矢量化结果差",
+      "mitigation": "VectorizeService 已有 quality_assessment 机制（evaluate_image_quality），得分 < 60 分返回 VectorizeFailed 错误。用户可通过调整 VectorizeConfig 参数（阈值、预处理强度）改善"
+    },
+    {
+      "risk": "颜色图片（非灰度）处理",
+      "mitigation": "image::DynamicImage::to_luma8() 已有转换，VectorizeService.vectorize_image_with_config 第一行就是 img.to_luma8()。彩色图纸会丢失颜色语义，但线条结构可提取"
+    },
+    {
+      "risk": "DPI 信息缺失导致 scale 不准确",
+      "mitivation": "VectorizeConfig 已有 dpi_adaptive + reference_dpi 机制，无 EXIF DPI 时使用默认 300 DPI。输出结果单位为像素，用户需根据实际场景换算"
+    }
+  ],
+  "future_enhancements": [
+    "AI 辅助矢量化：集成 ML 模型（如线段/圆弧分类器）提升复杂图纸识别率",
+    "颜色语义提取：彩色 PNG 中不同颜色线条映射到不同图层/语义",
+    "Web UI 上传：cad-web 中增加光栅图片上传入口和预览功能",
+    "批量处理：支持多张光栅图片批量矢量化",
+    "wgpu 加速：利用已有的 accelerator-wgpu crate 加速光栅矢量化"
+  ],
+  "success_criteria": [
+    "PNG/JPG/BMP/TIFF 文件可通过 CLI 和 API 处理",
+    "简单几何图形（正方形、圆形、直线）PNG 能正确提取为 Polyline",
+    "提取的 Polyline 能正确参与拓扑构建",
+    "0 Clippy 警告，所有新测试通过",
+    "不破坏现有 DXF/PDF/SVG/STL 处理流程"
+  ]
+}

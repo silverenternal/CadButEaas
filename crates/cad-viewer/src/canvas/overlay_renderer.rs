@@ -13,9 +13,9 @@
 //! - 添加状态（配置、缓存）
 //! - 支持帧计数器用于性能统计
 
-use common_types::{SeatZone, LodLevel, ClosedLoop, ParseProgress};
-use crate::state::{AutoTraceResult, Camera2D, ToastType};
 use crate::app::GapMarker;
+use crate::state::{AutoTraceResult, Camera2D, ToastType};
+use common_types::{ClosedLoop, LodLevel, ParseProgress, SeatZone};
 use eframe::egui;
 use egui::{Color32, Pos2, Rect, Stroke};
 use std::collections::HashMap;
@@ -129,7 +129,8 @@ impl OverlayRenderer {
         }
 
         if self.config.show_seat_zones {
-            let lod = scene.render_config
+            let lod = scene
+                .render_config
                 .as_ref()
                 .map(|c| c.recommended_lod)
                 .unwrap_or(LodLevel::Detailed);
@@ -180,7 +181,8 @@ impl OverlayRenderer {
         if let Some(trace) = &trace {
             if trace.polygon.len() > 1 {
                 // 使用缓存避免重复计算（缓存键 0 保留给追踪路径）
-                let points = self.get_cached_screen_points(0, &trace.polygon, rect, camera, scene_origin);
+                let points =
+                    self.get_cached_screen_points(0, &trace.polygon, rect, camera, scene_origin);
 
                 // 绘制虚线路径
                 for i in 0..points.len() - 1 {
@@ -214,16 +216,14 @@ impl OverlayRenderer {
             // 缺口通常不多，但使用缓存保持一致性
             let gap_key = 100 + i; // 缓存键从 100 开始保留给缺口
             let endpoints = [gap.start, gap.end];
-            let points = self.get_cached_screen_points(gap_key, &endpoints, rect, camera, scene_origin);
+            let points =
+                self.get_cached_screen_points(gap_key, &endpoints, rect, camera, scene_origin);
 
             let start = points[0];
             let end = points[1];
 
             // 红色虚线标记缺口
-            painter.line_segment(
-                [start, end],
-                Stroke::new(3.0, Color32::RED),
-            );
+            painter.line_segment([start, end], Stroke::new(3.0, Color32::RED));
 
             // 根据缩放级别调整文本大小
             let font_size = (14.0 * camera.zoom as f64).clamp(10.0, 24.0) as f32;
@@ -251,14 +251,12 @@ impl OverlayRenderer {
     ) {
         if lasso_points.len() > 1 {
             // 使用缓存（缓存键 200 保留给圈选）
-            let points = self.get_cached_screen_points(200, lasso_points, rect, camera, scene_origin);
+            let points =
+                self.get_cached_screen_points(200, lasso_points, rect, camera, scene_origin);
 
             // 绘制多边形边框
             for i in 0..points.len() - 1 {
-                painter.line_segment(
-                    [points[i], points[i + 1]],
-                    Stroke::new(2.0, Color32::GREEN),
-                );
+                painter.line_segment([points[i], points[i + 1]], Stroke::new(2.0, Color32::GREEN));
             }
 
             // 绘制填充（半透明）
@@ -322,18 +320,12 @@ impl OverlayRenderer {
             // 进度条前景
             let fill_width = bar_width * progress.overall_progress as f32;
             if fill_width > 0.0 {
-                let fill_rect = Rect::from_min_size(
-                    bar_rect.min,
-                    egui::vec2(fill_width, bar_height),
-                );
+                let fill_rect =
+                    Rect::from_min_size(bar_rect.min, egui::vec2(fill_width, bar_height));
 
                 // 渐变色进度条
                 let color = Color32::from_rgb(0, 180, 255);
-                painter.rect_filled(
-                    fill_rect,
-                    egui::Rounding::same(bar_height / 2.0),
-                    color,
-                );
+                painter.rect_filled(fill_rect, egui::Rounding::same(bar_height / 2.0), color);
             }
 
             // 进度条边框
@@ -440,10 +432,24 @@ impl OverlayRenderer {
 
             match selected_lod {
                 LodLevel::Simplified => {
-                    self.draw_seat_zone_simplified(zone, rect, painter, camera, scene_origin, boundary_key);
+                    self.draw_seat_zone_simplified(
+                        zone,
+                        rect,
+                        painter,
+                        camera,
+                        scene_origin,
+                        boundary_key,
+                    );
                 }
                 LodLevel::Medium => {
-                    self.draw_seat_zone_medium(zone, rect, painter, camera, scene_origin, boundary_key);
+                    self.draw_seat_zone_medium(
+                        zone,
+                        rect,
+                        painter,
+                        camera,
+                        scene_origin,
+                        boundary_key,
+                    );
                 }
                 LodLevel::Detailed => {
                     self.draw_seat_zone_detailed(zone, rect, painter, camera, scene_origin);
@@ -465,7 +471,13 @@ impl OverlayRenderer {
         let color = Color32::from_rgb(100, 100, 150);
 
         // 使用缓存的边界点
-        let screen_points = self.get_cached_screen_points(boundary_key, &zone.boundary.points, rect, camera, scene_origin);
+        let screen_points = self.get_cached_screen_points(
+            boundary_key,
+            &zone.boundary.points,
+            rect,
+            camera,
+            scene_origin,
+        );
 
         if screen_points.len() >= 3 {
             painter.add(egui::Shape::convex_polygon(
@@ -476,7 +488,16 @@ impl OverlayRenderer {
         }
 
         // 绘制边界（使用缓存）
-        self.draw_loop(&zone.boundary, rect, painter, color, 2.0, camera, scene_origin, boundary_key);
+        self.draw_loop(
+            &zone.boundary,
+            rect,
+            painter,
+            color,
+            2.0,
+            camera,
+            scene_origin,
+            boundary_key,
+        );
 
         // 绘制标签
         let center = Self::compute_loop_center(&zone.boundary);
@@ -503,7 +524,16 @@ impl OverlayRenderer {
         let color = Color32::from_rgb(150, 150, 200);
 
         // 使用缓存的边界点
-        self.draw_loop(&zone.boundary, rect, painter, color, 1.0, camera, scene_origin, boundary_key);
+        self.draw_loop(
+            &zone.boundary,
+            rect,
+            painter,
+            color,
+            1.0,
+            camera,
+            scene_origin,
+            boundary_key,
+        );
 
         // 采样绘制座椅点（10% 采样率）
         if let Some(positions) = &zone.original_positions {
@@ -532,22 +562,28 @@ impl OverlayRenderer {
     ) {
         // 性能警告
         if zone.seat_count > 500 {
-            tracing::warn!(
-                "座椅数量过多 ({} 个)，建议切换到 LOD 1",
-                zone.seat_count
-            );
+            tracing::warn!("座椅数量过多 ({} 个)，建议切换到 LOD 1", zone.seat_count);
         }
 
         let color = Color32::from_rgb(200, 200, 255);
 
         if let Some(positions) = &zone.original_positions {
             for pos in positions {
-                self.draw_single_seat(*pos, zone.seat_type, color, rect, painter, camera, scene_origin);
+                self.draw_single_seat(
+                    *pos,
+                    zone.seat_type,
+                    color,
+                    rect,
+                    painter,
+                    camera,
+                    scene_origin,
+                );
             }
         }
     }
 
     /// 绘制单个座椅
+    #[allow(clippy::too_many_arguments)]
     fn draw_single_seat(
         &mut self,
         pos: [f64; 2],
@@ -571,6 +607,7 @@ impl OverlayRenderer {
     }
 
     /// 绘制闭合环（P11 改进：使用缓存）
+    #[allow(clippy::too_many_arguments)]
     fn draw_loop(
         &mut self,
         loop_data: &ClosedLoop,
@@ -587,14 +624,17 @@ impl OverlayRenderer {
         }
 
         // 使用缓存的边界点
-        let points = self.get_cached_screen_points(boundary_key, &loop_data.points, rect, camera, scene_origin);
+        let points = self.get_cached_screen_points(
+            boundary_key,
+            &loop_data.points,
+            rect,
+            camera,
+            scene_origin,
+        );
 
         // 绘制边界线
         for i in 0..points.len() - 1 {
-            painter.line_segment(
-                [points[i], points[i + 1]],
-                Stroke::new(stroke_width, color),
-            );
+            painter.line_segment([points[i], points[i + 1]], Stroke::new(stroke_width, color));
         }
 
         // 闭合
@@ -620,7 +660,7 @@ impl OverlayRenderer {
     }
 
     /// 将世界坐标转换为屏幕坐标
-    /// 
+    ///
     /// P11 锐评落实：精度优化
     /// 使用相对坐标渲染，先减去场景原点再转 f32，精度损失从 0.1mm 提升到 1e-6mm
     #[inline]
@@ -638,7 +678,10 @@ impl OverlayRenderer {
     // ========================================================================
 
     /// 渲染 Toast 通知（P11 改进：返回需要渲染的 Toast 列表，由 CanvasWidget 绘制可交互版本）
-    pub fn get_active_toasts<'a>(&'a self, ui: &'a crate::state::UIState) -> Vec<(usize, &'a crate::state::ToastNotification)> {
+    pub fn get_active_toasts<'a>(
+        &'a self,
+        ui: &'a crate::state::UIState,
+    ) -> Vec<(usize, &'a crate::state::ToastNotification)> {
         let now = Instant::now();
         ui.toasts
             .iter()

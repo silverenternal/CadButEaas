@@ -479,10 +479,10 @@ impl TaskPriority {
     /// 获取目标响应时间（毫秒）
     pub fn target_latency_ms(&self) -> u64 {
         match self {
-            Self::Critical => 16,  // 60 FPS
-            Self::High => 50,      // 20 FPS
-            Self::Normal => 100,   // 10 FPS
-            Self::Low => 1000,     // 1 FPS
+            Self::Critical => 16, // 60 FPS
+            Self::High => 50,     // 20 FPS
+            Self::Normal => 100,  // 10 FPS
+            Self::Low => 1000,    // 1 FPS
         }
     }
 }
@@ -627,7 +627,11 @@ impl RenderTaskQueue {
         }
 
         // 更新统计
-        *self.stats.tasks_by_priority.entry(task.priority).or_insert(0) += 1;
+        *self
+            .stats
+            .tasks_by_priority
+            .entry(task.priority)
+            .or_insert(0) += 1;
         self.stats.total_tasks += 1;
 
         self.queue.push(task);
@@ -645,10 +649,10 @@ impl RenderTaskQueue {
 
         // 更新统计
         self.stats.completed_tasks += 1;
-        self.stats.avg_wait_time_ms =
-            (self.stats.avg_wait_time_ms * (self.stats.completed_tasks - 1) as f64
-                + task.age_ms() as f64)
-                / self.stats.completed_tasks as f64;
+        self.stats.avg_wait_time_ms = (self.stats.avg_wait_time_ms
+            * (self.stats.completed_tasks - 1) as f64
+            + task.age_ms() as f64)
+            / self.stats.completed_tasks as f64;
 
         Some(task)
     }
@@ -927,11 +931,7 @@ mod tests {
 
     #[test]
     fn test_task_expiration() {
-        let mut task = RenderTask::new(
-            TaskPriority::Low,
-            "expiring_task".to_string(),
-            || {},
-        );
+        let mut task = RenderTask::new(TaskPriority::Low, "expiring_task".to_string(), || {});
         task.expires_in = Some(Duration::from_millis(10));
 
         assert!(!task.is_expired());

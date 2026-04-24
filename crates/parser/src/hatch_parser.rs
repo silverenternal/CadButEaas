@@ -70,11 +70,11 @@
 //! # }
 //! ```
 
-use common_types::{RawEntity, EntityMetadata};
+use common_types::{EntityMetadata, RawEntity};
 use common_types::{HatchBoundaryPath, HatchPattern};
-use std::path::Path;
 use std::fs::File;
 use std::io::{BufReader, Read};
+use std::path::Path;
 
 /// HATCH 填充图案解析器
 #[derive(Clone)]
@@ -105,21 +105,22 @@ impl HatchParser {
     /// 解析 DXF 文件中的所有 HATCH 实体
     ///
     /// 使用低层级组码迭代器解析 HATCH 实体
+    /// 对单个实体解析失败采用容错策略（跳过坏实体，保留好实体）
     pub fn parse_hatch_entities(&self, file_path: &Path) -> Result<Vec<RawEntity>, String> {
         // 读取 DXF 文件为字节
-        let file = File::open(file_path)
-            .map_err(|e| format!("打开文件失败：{}", e))?;
+        let file = File::open(file_path).map_err(|e| format!("打开文件失败：{}", e))?;
         let mut reader = BufReader::new(file);
         let mut contents = String::new();
-        reader.read_to_string(&mut contents)
+        reader
+            .read_to_string(&mut contents)
             .map_err(|e| format!("读取文件失败：{}", e))?;
 
         // 解析组码
         let groups = self.parse_group_codes(&contents)?;
-        
-        // 提取 HATCH 实体
-        let hatches = self.extract_hatches(&groups)?;
-        
+
+        // 提取 HATCH 实体（容错：跳过解析失败的实体）
+        let hatches = self.extract_hatches(&groups);
+
         Ok(hatches)
     }
 
@@ -140,23 +141,38 @@ impl HatchParser {
     }
 
     /// 从组码中提取 HATCH 实体
-    fn extract_hatches(&self, groups: &[(u16, String)]) -> Result<Vec<RawEntity>, String> {
+    /// 容错：单个实体解析失败时跳过，不中断整体解析
+    fn extract_hatches(&self, groups: &[(u16, String)]) -> Vec<RawEntity> {
         let mut hatches = Vec::new();
         let mut i = 0;
+        let mut skipped = 0;
 
         while i < groups.len() {
             // 查找 HATCH 实体起始（组码 0 = "HATCH"）
             if groups[i].0 == 0 && groups[i].1.to_uppercase() == "HATCH" {
-                // 解析 HATCH 实体
-                if let Some(hatch) = self.parse_single_hatch(groups, &mut i)? {
-                    hatches.push(hatch);
+                // 解析 HATCH 实体（容错：跳过解析失败的实体）
+                match self.parse_single_hatch(groups, &mut i) {
+                    Ok(Some(hatch)) => hatches.push(hatch),
+                    Ok(None) => {} // 实体被过滤（如忽略 solid fill）
+                    Err(e) => {
+                        skipped += 1;
+                        tracing::warn!("跳过解析失败的 HATCH 实体：{}", e);
+                    }
                 }
             } else {
                 i += 1;
             }
         }
 
-        Ok(hatches)
+        if skipped > 0 {
+            tracing::warn!(
+                "HATCH 解析完成，解析 {} 个，跳过 {} 个失败的实体",
+                hatches.len(),
+                skipped
+            );
+        }
+
+        hatches
     }
 
     /// 解析单个 HATCH 实体
@@ -243,6 +259,7 @@ impl HatchParser {
             color,
             lineweight: None,
             line_type: None,
+            line_style: None,
             material: None,
             width: None,
         };
@@ -253,9 +270,7 @@ impl HatchParser {
                 color: common_types::Color32::WHITE,
             }
         } else {
-            HatchPattern::Predefined {
-                name: pattern_name,
-            }
+            HatchPattern::Predefined { name: pattern_name }
         };
 
         Ok(Some(RawEntity::Hatch {
@@ -264,8 +279,8 @@ impl HatchParser {
             solid_fill: is_solid,
             metadata,
             semantic: None,
-            scale: _pattern_scale,    // P0-NEW-14 修复：存储 scale
-            angle: _pattern_angle,    // P0-NEW-14 修复：存储 angle
+            scale: _pattern_scale, // P0-NEW-14 修复：存储 scale
+            angle: _pattern_angle, // P0-NEW-14 修复：存储 angle
         }))
     }
 
@@ -304,7 +319,7 @@ impl HatchParser {
         }
 
         let boundary_type: i32 = groups[*i].1.parse().unwrap_or(0);
-        *i += 1;  // ✅ 跳过 92 组码的值
+        *i += 1; // ✅ 跳过 92 组码的值
 
         match boundary_type {
             1 => self.parse_polyline_boundary(groups, i),
@@ -326,7 +341,7 @@ impl HatchParser {
     ) -> Result<Option<HatchBoundaryPath>, String> {
         let mut points = Vec::new();
         let mut is_closed = false;
-        let mut bulges: Vec<f64> = Vec::new();  // ✅ P0-4 新增：存储 bulge 信息
+        let mut bulges: Vec<f64> = Vec::new(); // ✅ P0-4 新增：存储 bulge 信息
 
         // 72 = 是否有宽度（跳过）
         // 73 = 是否闭合
@@ -408,8 +423,8 @@ impl HatchParser {
         Ok(Some(HatchBoundaryPath::Arc {
             center,
             radius,
-            start_angle,  // 弧度
-            end_angle,    // 弧度
+            start_angle, // 弧度
+            end_angle,   // 弧度
             ccw,
         }))
     }
@@ -450,10 +465,10 @@ impl HatchParser {
             center,
             major_axis,
             minor_axis_ratio,
-            start_angle,  // 弧度
-            end_angle,    // 弧度
+            start_angle, // 弧度
+            end_angle,   // 弧度
             ccw,
-            extrusion_direction: None,  // P2-NEW-29: 默认无法向量
+            extrusion_direction: None, // P2-NEW-29: 默认无法向量
         }))
     }
 
@@ -465,12 +480,12 @@ impl HatchParser {
     ) -> Result<Option<HatchBoundaryPath>, String> {
         let mut control_points = Vec::new();
         let mut knots = Vec::new();
-        let mut weights = Vec::new();      // P1-NEW-25 新增：权重
-        let mut fit_points = Vec::new();   // P1-NEW-25 新增：拟合点
+        let mut weights = Vec::new(); // P1-NEW-25 新增：权重
+        let mut fit_points = Vec::new(); // P1-NEW-25 新增：拟合点
         let mut degree: i32 = 3;
         let mut num_control_points: i32 = 0;
         let mut num_fit_points: i32 = 0;
-        let mut spline_flags: i32 = 0;     // P1-NEW-25 新增：样条标志
+        let mut spline_flags: i32 = 0; // P1-NEW-25 新增：样条标志
 
         // 先读取数量信息
         while *i < groups.len() {
@@ -555,8 +570,12 @@ impl HatchParser {
                 control_points,
                 knots,
                 degree: degree as u32,
-                weights: Some(weights),    // P1-NEW-25: 存储权重
-                fit_points: if fit_points.is_empty() { None } else { Some(fit_points) }, // P1-NEW-25: 存储拟合点
+                weights: Some(weights), // P1-NEW-25: 存储权重
+                fit_points: if fit_points.is_empty() {
+                    None
+                } else {
+                    Some(fit_points)
+                }, // P1-NEW-25: 存储拟合点
                 flags: Some(spline_flags as u32), // P1-NEW-25: 存储标志
             }))
         }

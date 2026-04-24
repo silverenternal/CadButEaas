@@ -6,10 +6,10 @@
 //! - 高并发测试：100 个并发连接（P11 v4.0 新增）
 //! - 长连接测试：持续 1 分钟稳定性（P11 v4.0 新增）
 
-use std::time::Duration;
-use tokio_tungstenite::{connect_async, tungstenite::Message};
 use futures::{SinkExt, StreamExt};
+use std::time::Duration;
 use tokio::time::sleep;
+use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 /// 测试 WebSocket 并发连接能力
 ///
@@ -41,9 +41,7 @@ async fn test_websocket_concurrent_connections() -> Result<(), Box<dyn std::erro
 
     for i in 0..NUM_CONNECTIONS {
         let addr = server_addr.to_string();
-        let handle = tokio::spawn(async move {
-            run_websocket_client(i, &addr).await
-        });
+        let handle = tokio::spawn(async move { run_websocket_client(i, &addr).await });
         handles.push(handle);
     }
 
@@ -68,7 +66,10 @@ async fn test_websocket_concurrent_connections() -> Result<(), Box<dyn std::erro
         }
     }
 
-    println!("\n📊 测试结果：{}/{} 个连接成功", success_count, NUM_CONNECTIONS);
+    println!(
+        "\n📊 测试结果：{}/{} 个连接成功",
+        success_count, NUM_CONNECTIONS
+    );
 
     // 验证：至少 80% 的连接成功（允许网络波动）
     assert!(
@@ -95,13 +96,10 @@ async fn run_websocket_client(
 
     // 等待接收连接确认消息
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if text.contains("connected") {
-                    println!("  [客户端 {}] ✓ 收到连接确认", client_id);
-                }
+        if let Message::Text(text) = msg? {
+            if text.contains("connected") {
+                println!("  [客户端 {}] ✓ 收到连接确认", client_id);
             }
-            _ => {}
         }
     }
 
@@ -114,13 +112,10 @@ async fn run_websocket_client(
 
     // 等待 pong 响应
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if text.contains("pong") || text.contains("Pong") {
-                    println!("  [客户端 {}] ← 收到 pong", client_id);
-                }
+        if let Message::Text(text) = msg? {
+            if text.contains("pong") || text.contains("Pong") {
+                println!("  [客户端 {}] ← 收到 pong", client_id);
             }
-            _ => {}
         }
     }
 
@@ -133,11 +128,8 @@ async fn run_websocket_client(
 
     // 等待响应
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(_) => {
-                println!("  [客户端 {}] ← 收到响应", client_id);
-            }
-            _ => {}
+        if let Message::Text(_) = msg? {
+            println!("  [客户端 {}] ← 收到响应", client_id);
         }
     }
 
@@ -172,16 +164,17 @@ async fn test_websocket_100_concurrent_connections() -> Result<(), Box<dyn std::
 
     const NUM_CONNECTIONS: usize = 100;
 
-    println!("🔌 开始高并发测试：{} 个并发 WebSocket 连接", NUM_CONNECTIONS);
+    println!(
+        "🔌 开始高并发测试：{} 个并发 WebSocket 连接",
+        NUM_CONNECTIONS
+    );
 
     // 创建 100 个并发连接任务
     let mut handles = Vec::new();
 
     for i in 0..NUM_CONNECTIONS {
         let addr = server_addr.to_string();
-        let handle = tokio::spawn(async move {
-            run_websocket_client_light(i, &addr).await
-        });
+        let handle = tokio::spawn(async move { run_websocket_client_light(i, &addr).await });
         handles.push(handle);
     }
 
@@ -213,7 +206,10 @@ async fn test_websocket_100_concurrent_connections() -> Result<(), Box<dyn std::
         }
     }
 
-    println!("\n📊 高并发测试结果：{}/{} 个连接成功", success_count, NUM_CONNECTIONS);
+    println!(
+        "\n📊 高并发测试结果：{}/{} 个连接成功",
+        success_count, NUM_CONNECTIONS
+    );
 
     // 验证：至少 90% 的连接成功（高并发场景下允许少量失败）
     assert!(
@@ -238,13 +234,10 @@ async fn run_websocket_client_light(
 
     // 等待接收连接确认消息
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if !text.contains("connected") {
-                    return Err("未收到连接确认".into());
-                }
+        if let Message::Text(text) = msg? {
+            if !text.contains("connected") {
+                return Err("未收到连接确认".into());
             }
-            _ => {}
         }
     }
 
@@ -256,13 +249,10 @@ async fn run_websocket_client_light(
 
     // 等待 pong 响应
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if !text.contains("pong") && !text.contains("Pong") {
-                    return Err("未收到 pong 响应".into());
-                }
+        if let Message::Text(text) = msg? {
+            if !text.contains("pong") && !text.contains("Pong") {
+                return Err("未收到 pong 响应".into());
             }
-            _ => {}
         }
     }
 
@@ -308,13 +298,10 @@ async fn test_websocket_long_running_connection() -> Result<(), Box<dyn std::err
 
     // 等待接收连接确认消息
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if !text.contains("connected") {
-                    return Err("未收到连接确认".into());
-                }
+        if let Message::Text(text) = msg? {
+            if !text.contains("connected") {
+                return Err("未收到连接确认".into());
             }
-            _ => {}
         }
     }
 
@@ -334,13 +321,10 @@ async fn test_websocket_long_running_connection() -> Result<(), Box<dyn std::err
 
         // 等待 pong 响应
         if let Some(msg) = read.next().await {
-            match msg? {
-                Message::Text(text) => {
-                    if !text.contains("pong") && !text.contains("Pong") {
-                        return Err("未收到 pong 响应".into());
-                    }
+            if let Message::Text(text) = msg? {
+                if !text.contains("pong") && !text.contains("Pong") {
+                    return Err("未收到 pong 响应".into());
                 }
-                _ => {}
             }
         }
 
@@ -379,10 +363,13 @@ async fn test_websocket_message_loss_simulation() -> Result<(), Box<dyn std::err
     drop(test_connection);
 
     const TOTAL_MESSAGES: usize = 20;
-    const SIMULATE_LOSS_RATE: f64 = 0.1;  // 10% 丢失率模拟
+    const SIMULATE_LOSS_RATE: f64 = 0.1; // 10% 丢失率模拟
 
-    println!("🔌 开始消息丢失模拟测试：发送 {} 条消息（模拟 {}% 丢失率）",
-             TOTAL_MESSAGES, (SIMULATE_LOSS_RATE * 100.0) as i32);
+    println!(
+        "🔌 开始消息丢失模拟测试：发送 {} 条消息（模拟 {}% 丢失率）",
+        TOTAL_MESSAGES,
+        (SIMULATE_LOSS_RATE * 100.0) as i32
+    );
 
     // 连接服务器
     let (ws_stream, _) = connect_async(server_addr).await?;
@@ -390,13 +377,10 @@ async fn test_websocket_message_loss_simulation() -> Result<(), Box<dyn std::err
 
     // 等待接收连接确认消息
     if let Some(msg) = read.next().await {
-        match msg? {
-            Message::Text(text) => {
-                if !text.contains("connected") {
-                    return Err("未收到连接确认".into());
-                }
+        if let Message::Text(text) = msg? {
+            if !text.contains("connected") {
+                return Err("未收到连接确认".into());
             }
-            _ => {}
         }
     }
 
@@ -421,18 +405,12 @@ async fn test_websocket_message_loss_simulation() -> Result<(), Box<dyn std::err
         }
 
         // 等待响应（带超时）
-        let response = tokio::time::timeout(
-            Duration::from_millis(500),
-            read.next()
-        ).await;
+        let response = tokio::time::timeout(Duration::from_millis(500), read.next()).await;
 
         match response {
             Ok(Some(Ok(msg))) => {
-                match msg {
-                    Message::Text(_) => {
-                        received_count += 1;
-                    }
-                    _ => {}
+                if let Message::Text(_) = msg {
+                    received_count += 1;
                 }
             }
             Ok(Some(Err(e))) => {

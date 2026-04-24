@@ -23,14 +23,16 @@ pub fn evaluate_image_quality(image: &GrayImage) -> f64 {
     let total_pixels = (width * height) as usize;
     let mean_brightness = (0..256)
         .map(|i| i as f64 * histogram[i] as f64)
-        .sum::<f64>() / total_pixels as f64;
+        .sum::<f64>()
+        / total_pixels as f64;
 
     let variance = (0..256)
         .map(|i| {
             let diff = i as f64 - mean_brightness;
             diff * diff * histogram[i] as f64
         })
-        .sum::<f64>() / total_pixels as f64;
+        .sum::<f64>()
+        / total_pixels as f64;
 
     let std_dev = variance.sqrt();
     let contrast_score = (std_dev / 128.0 * 25.0).min(25.0);
@@ -69,15 +71,15 @@ pub fn evaluate_image_quality(image: &GrayImage) -> f64 {
                 + 2i32.saturating_mul(image.get_pixel(x + 1, y)[0] as i32)
                 + image.get_pixel(x + 1, y + 1)[0] as i32)
                 - (image.get_pixel(x - 1, y - 1)[0] as i32
-                + 2i32.saturating_mul(image.get_pixel(x - 1, y)[0] as i32)
-                + image.get_pixel(x - 1, y + 1)[0] as i32);
+                    + 2i32.saturating_mul(image.get_pixel(x - 1, y)[0] as i32)
+                    + image.get_pixel(x - 1, y + 1)[0] as i32);
 
             let gy = (image.get_pixel(x - 1, y + 1)[0] as i32
                 + 2i32.saturating_mul(image.get_pixel(x, y + 1)[0] as i32)
                 + image.get_pixel(x + 1, y + 1)[0] as i32)
                 - (image.get_pixel(x - 1, y - 1)[0] as i32
-                + 2i32.saturating_mul(image.get_pixel(x, y - 1)[0] as i32)
-                + image.get_pixel(x + 1, y - 1)[0] as i32);
+                    + 2i32.saturating_mul(image.get_pixel(x, y - 1)[0] as i32)
+                    + image.get_pixel(x + 1, y - 1)[0] as i32);
 
             let magnitude = (gx * gx + gy * gy) as f64;
 

@@ -41,8 +41,8 @@
 //! let visible: Vec<_> = index.query_viewport(viewport).collect();
 //! ```
 
-use common_types::{Point2, orient2d, Orientation};
-use rstar::{RTree, AABB, RTreeObject};
+use common_types::{orient2d, Orientation, Point2};
+use rstar::{RTree, RTreeObject, AABB};
 use std::collections::{HashMap, HashSet};
 
 // ============================================================================
@@ -96,9 +96,7 @@ impl RenderEntity {
     /// 获取实体的包围盒
     pub fn aabb(&self) -> AABB<[f64; 2]> {
         match self {
-            RenderEntity::Line { start, end, .. } => {
-                AABB::from_corners(*start, *end)
-            }
+            RenderEntity::Line { start, end, .. } => AABB::from_corners(*start, *end),
             RenderEntity::Polyline { points, .. } => {
                 if points.is_empty() {
                     AABB::from_corners([0.0, 0.0], [0.0, 0.0])
@@ -114,13 +112,15 @@ impl RenderEntity {
                     AABB::from_corners(min, max)
                 }
             }
-            RenderEntity::Arc { center, radius, .. } |
-            RenderEntity::Circle { center, radius, .. } => {
+            RenderEntity::Arc { center, radius, .. }
+            | RenderEntity::Circle { center, radius, .. } => {
                 let min = [center[0] - radius, center[1] - radius];
                 let max = [center[0] + radius, center[1] + radius];
                 AABB::from_corners(min, max)
             }
-            RenderEntity::Text { position, height, .. } => {
+            RenderEntity::Text {
+                position, height, ..
+            } => {
                 // 文本包围盒估算
                 let min = [position[0], position[1] - height];
                 let max = [position[0] + height * 2.0, position[1]];
@@ -132,11 +132,11 @@ impl RenderEntity {
     /// 获取图层名
     pub fn layer(&self) -> &str {
         match self {
-            RenderEntity::Line { layer, .. } |
-            RenderEntity::Polyline { layer, .. } |
-            RenderEntity::Arc { layer, .. } |
-            RenderEntity::Circle { layer, .. } |
-            RenderEntity::Text { layer, .. } => layer,
+            RenderEntity::Line { layer, .. }
+            | RenderEntity::Polyline { layer, .. }
+            | RenderEntity::Arc { layer, .. }
+            | RenderEntity::Circle { layer, .. }
+            | RenderEntity::Text { layer, .. } => layer,
         }
     }
 
@@ -144,10 +144,8 @@ impl RenderEntity {
     pub fn id(&self) -> usize {
         // 这里返回一个简化的哈希值，实际使用需要外部 ID
         match self {
-            RenderEntity::Line { start, .. } => {
-                (start[0] * 1000.0 + start[1]) as usize
-            }
-            _ => 0
+            RenderEntity::Line { start, .. } => (start[0] * 1000.0 + start[1]) as usize,
+            _ => 0,
         }
     }
 }
@@ -168,7 +166,7 @@ impl RTreeObject for RTreeItem {
     type Envelope = AABB<[f64; 2]>;
 
     fn envelope(&self) -> Self::Envelope {
-        self.aabb.clone()
+        self.aabb
     }
 }
 
@@ -197,7 +195,11 @@ impl RTreeIndex {
     /// 插入实体
     pub fn insert(&mut self, id: usize, entity: RenderEntity) {
         let aabb = entity.aabb();
-        let item = RTreeItem { id, aabb, entity: entity.clone() };
+        let item = RTreeItem {
+            id,
+            aabb,
+            entity: entity.clone(),
+        };
         self.tree.insert(item);
         self.item_map.insert(id, entity);
     }
@@ -287,7 +289,7 @@ impl GridIndex {
         Self {
             cell_size,
             offset,
-            grid_size: [1024, 1024],  // 默认网格尺寸
+            grid_size: [1024, 1024], // 默认网格尺寸
             cells: HashMap::new(),
             entity_aabbs: HashMap::new(),
         }
@@ -297,10 +299,10 @@ impl GridIndex {
     pub fn with_bounds(scene_min: Point2, scene_max: Point2, target_cells: usize) -> Self {
         let width = scene_max[0] - scene_min[0];
         let height = scene_max[1] - scene_min[1];
-        
+
         // 计算单元格大小
         let cell_size = (width / target_cells as f64).max(height / target_cells as f64);
-        
+
         Self {
             cell_size,
             offset: scene_min,
@@ -324,10 +326,7 @@ impl GridIndex {
                 self.offset[0] + grid_coord[0] as f64 * self.cell_size,
                 self.offset[1] + grid_coord[1] as f64 * self.cell_size,
             ];
-            let max = [
-                min[0] + self.cell_size,
-                min[1] + self.cell_size,
-            ];
+            let max = [min[0] + self.cell_size, min[1] + self.cell_size];
             GridCell {
                 aabb: AABB::from_corners(min, max),
                 ..Default::default()
@@ -338,7 +337,7 @@ impl GridIndex {
     /// 插入实体
     pub fn insert(&mut self, id: usize, entity: &RenderEntity) {
         let aabb = entity.aabb();
-        let lower = aabb.lower();  // rstar 0.12 返回 [f64; 2] 值
+        let lower = aabb.lower(); // rstar 0.12 返回 [f64; 2] 值
         let upper = aabb.upper();
         let min_grid = self.world_to_grid(lower);
         let max_grid = self.world_to_grid(upper);
@@ -357,7 +356,7 @@ impl GridIndex {
     /// 删除实体
     pub fn remove(&mut self, id: usize) {
         if let Some(aabb) = self.entity_aabbs.get(&id).cloned() {
-            let lower = aabb.lower();  // rstar 0.12 返回 [f64; 2] 值
+            let lower = aabb.lower(); // rstar 0.12 返回 [f64; 2] 值
             let upper = aabb.upper();
             let min_grid = self.world_to_grid(lower);
             let max_grid = self.world_to_grid(upper);
@@ -369,7 +368,7 @@ impl GridIndex {
                     }
                 }
             }
-            
+
             self.entity_aabbs.remove(&id);
         }
     }
@@ -403,19 +402,29 @@ impl GridIndex {
     }
 
     /// 检查包围盒是否与视口相交
-    fn aabb_intersects_viewport(&self, aabb: &AABB<[f64; 2]>, viewport_min: Point2, viewport_max: Point2) -> bool {
+    fn aabb_intersects_viewport(
+        &self,
+        aabb: &AABB<[f64; 2]>,
+        viewport_min: Point2,
+        viewport_max: Point2,
+    ) -> bool {
         let lower = aabb.lower();
         let upper = aabb.upper();
 
-        !(lower[0] > viewport_max[0] ||
-          upper[0] < viewport_min[0] ||
-          lower[1] > viewport_max[1] ||
-          upper[1] < viewport_min[1])
+        !(lower[0] > viewport_max[0]
+            || upper[0] < viewport_min[0]
+            || lower[1] > viewport_max[1]
+            || upper[1] < viewport_min[1])
     }
 
     /// 获取索引中的实体总数
     pub fn len(&self) -> usize {
         self.entity_aabbs.len()
+    }
+
+    /// 检查索引是否为空
+    pub fn is_empty(&self) -> bool {
+        self.entity_aabbs.is_empty()
     }
 }
 
@@ -505,7 +514,7 @@ impl SpatialIndex {
     /// 创建自适应空间索引
     pub fn with_bounds(scene_min: Point2, scene_max: Point2) -> Self {
         let config = SpatialIndexConfig::default();
-        
+
         let grid_index = if config.enable_grid {
             Some(GridIndex::with_bounds(scene_min, scene_max, 64))
         } else {
@@ -537,7 +546,7 @@ impl SpatialIndex {
 
         // 更新实体映射
         self.entities.insert(id, entity);
-        
+
         // 更新图层索引
         self.layer_index.entry(layer).or_default().insert(id);
     }
@@ -576,8 +585,7 @@ impl SpatialIndex {
         // 回退到 R*-tree
         else if let Some(ref rtree) = self.rtree_index {
             rtree.query_viewport(viewport_min, viewport_max)
-        }
-        else {
+        } else {
             Vec::new()
         }
     }
@@ -590,7 +598,7 @@ impl SpatialIndex {
         visible_layers: &HashSet<String>,
     ) -> Vec<&RenderEntity> {
         let entities = self.query_viewport(viewport_min, viewport_max);
-        
+
         if visible_layers.is_empty() || visible_layers.contains("*") {
             return entities;
         }
@@ -626,7 +634,7 @@ impl SpatialIndex {
     pub fn stats(&self) -> SpatialIndexStats {
         let grid_count = self.grid_index.as_ref().map(|g| g.len()).unwrap_or(0);
         let rtree_count = self.rtree_index.as_ref().map(|r| r.len()).unwrap_or(0);
-        
+
         SpatialIndexStats {
             total_entities: self.entities.len(),
             grid_entities: grid_count,
@@ -639,11 +647,11 @@ impl SpatialIndex {
     pub fn clear(&mut self) {
         self.entities.clear();
         self.layer_index.clear();
-        
+
         if let Some(ref mut grid) = self.grid_index {
             *grid = GridIndex::new(self.config.grid_cell_size, [0.0, 0.0]);
         }
-        
+
         if let Some(ref mut rtree) = self.rtree_index {
             *rtree = RTreeIndex::new();
         }
@@ -679,7 +687,10 @@ pub struct ViewportCuller {
 impl ViewportCuller {
     /// 创建新的视口裁剪器
     pub fn new(viewport_min: Point2, viewport_max: Point2) -> Self {
-        Self { viewport_min, viewport_max }
+        Self {
+            viewport_min,
+            viewport_max,
+        }
     }
 
     /// 更新视口范围
@@ -696,8 +707,11 @@ impl ViewportCuller {
         let min_y = start[1].min(end[1]);
         let max_y = start[1].max(end[1]);
 
-        if max_x < self.viewport_min[0] || min_x > self.viewport_max[0] ||
-           max_y < self.viewport_min[1] || min_y > self.viewport_max[1] {
+        if max_x < self.viewport_min[0]
+            || min_x > self.viewport_max[0]
+            || max_y < self.viewport_min[1]
+            || min_y > self.viewport_max[1]
+        {
             return false;
         }
 
@@ -712,8 +726,10 @@ impl ViewportCuller {
 
     /// 检查点是否在视口内
     pub fn point_in_viewport(&self, point: Point2) -> bool {
-        point[0] >= self.viewport_min[0] && point[0] <= self.viewport_max[0] &&
-        point[1] >= self.viewport_min[1] && point[1] <= self.viewport_max[1]
+        point[0] >= self.viewport_min[0]
+            && point[0] <= self.viewport_max[0]
+            && point[1] >= self.viewport_min[1]
+            && point[1] <= self.viewport_max[1]
     }
 
     /// 检查线段是否与视口边界相交
@@ -754,8 +770,8 @@ impl ViewportCuller {
     fn intersects_strict(d1: Orientation, d2: Orientation) -> bool {
         matches!(
             (d1, d2),
-            (Orientation::Clockwise, Orientation::CounterClockwise) |
-            (Orientation::CounterClockwise, Orientation::Clockwise)
+            (Orientation::Clockwise, Orientation::CounterClockwise)
+                | (Orientation::CounterClockwise, Orientation::Clockwise)
         )
     }
 
@@ -794,7 +810,7 @@ mod tests {
     fn test_render_entity_aabb() {
         let entity = create_test_entity();
         let aabb = entity.aabb();
-        
+
         assert!((aabb.lower()[0] - 0.0).abs() < 1e-10);
         assert!((aabb.lower()[1] - 0.0).abs() < 1e-10);
         assert!((aabb.upper()[0] - 10.0).abs() < 1e-10);
@@ -804,14 +820,17 @@ mod tests {
     #[test]
     fn test_rtree_index() {
         let mut index = RTreeIndex::new();
-        
+
         index.insert(1, create_test_entity());
-        index.insert(2, RenderEntity::Line {
-            start: [50.0, 50.0],
-            end: [60.0, 60.0],
-            layer: "TEST".to_string(),
-            color: [0.0, 1.0, 0.0, 1.0],
-        });
+        index.insert(
+            2,
+            RenderEntity::Line {
+                start: [50.0, 50.0],
+                end: [60.0, 60.0],
+                layer: "TEST".to_string(),
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+        );
 
         // 查询视口
         let results = index.query_viewport([0.0, 0.0], [20.0, 20.0]);
@@ -825,9 +844,9 @@ mod tests {
     #[test]
     fn test_grid_index() {
         let mut index = GridIndex::new(50.0, [0.0, 0.0]);
-        
+
         index.insert(1, &create_test_entity());
-        
+
         // 查询视口
         let ids = index.query_viewport_ids([0.0, 0.0], [20.0, 20.0]);
         assert!(ids.contains(&1));
@@ -836,14 +855,17 @@ mod tests {
     #[test]
     fn test_spatial_index() {
         let mut index = SpatialIndex::new();
-        
+
         index.insert(1, create_test_entity());
-        index.insert(2, RenderEntity::Line {
-            start: [100.0, 100.0],
-            end: [110.0, 110.0],
-            layer: "OTHER".to_string(),
-            color: [0.0, 0.0, 1.0, 1.0],
-        });
+        index.insert(
+            2,
+            RenderEntity::Line {
+                start: [100.0, 100.0],
+                end: [110.0, 110.0],
+                layer: "OTHER".to_string(),
+                color: [0.0, 0.0, 1.0, 1.0],
+            },
+        );
 
         // 查询视口
         let results = index.query_viewport([0.0, 0.0], [50.0, 50.0]);
@@ -855,10 +877,7 @@ mod tests {
 
         // 带图层过滤的查询
         let visible_layers = ["TEST".to_string()].iter().cloned().collect();
-        let results = index.query_viewport_with_layers(
-            [0.0, 0.0], [200.0, 200.0],
-            &visible_layers
-        );
+        let results = index.query_viewport_with_layers([0.0, 0.0], [200.0, 200.0], &visible_layers);
         assert_eq!(results.len(), 1);
     }
 
@@ -883,14 +902,17 @@ mod tests {
     #[test]
     fn test_spatial_index_stats() {
         let mut index = SpatialIndex::new();
-        
+
         index.insert(1, create_test_entity());
-        index.insert(2, RenderEntity::Line {
-            start: [50.0, 50.0],
-            end: [60.0, 60.0],
-            layer: "TEST".to_string(),
-            color: [0.0, 1.0, 0.0, 1.0],
-        });
+        index.insert(
+            2,
+            RenderEntity::Line {
+                start: [50.0, 50.0],
+                end: [60.0, 60.0],
+                layer: "TEST".to_string(),
+                color: [0.0, 1.0, 0.0, 1.0],
+            },
+        );
 
         let stats = index.stats();
         assert_eq!(stats.total_entities, 2);

@@ -6,18 +6,18 @@
 //! - 并行执行独立步骤
 //! - 质量预检插件
 
-use crate::pipeline::{ProcessingPipeline, ProcessResult};
-use common_types::{CadError, SceneState, Polyline, RawEntity};
-use validator::ValidationReport;
+use crate::pipeline::{ProcessResult, ProcessingPipeline};
+use common_types::{CadError, Polyline, RawEntity, SceneState};
+use once_cell::sync::Lazy;
 use parser::ParserService;
+use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, HistogramVec};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{broadcast, RwLock};
 use tokio::task::spawn_blocking;
-use prometheus::{register_counter_vec, register_histogram_vec, CounterVec, HistogramVec};
-use once_cell::sync::Lazy;
+use validator::ValidationReport;
 
 /// 服务阶段枚举
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -166,6 +166,10 @@ struct StageContext {
     validation: Arc<RwLock<Option<ValidationReport>>>,
     /// 导出字节
     output_bytes: Arc<RwLock<Vec<u8>>>,
+    /// 文字标注
+    text_annotations: Arc<RwLock<Vec<common_types::TextAnnotation>>>,
+    /// 标注尺寸统计
+    dimension_summary: Arc<RwLock<common_types::DimensionSummary>>,
 }
 
 /// 阶段诊断信息（在执行前采集，用于超时错误诊断）
@@ -185,11 +189,8 @@ struct StageDiagnostic {
 /// 阶段超时计数器
 /// 标签：stage（阶段名称）
 static STAGE_TIMEOUT_COUNTER: Lazy<CounterVec> = Lazy::new(|| {
-    register_counter_vec!(
-        "stage_timeout_total",
-        "阶段执行超时总次数",
-        &["stage"]
-    ).expect("阶段超时指标注册失败")
+    register_counter_vec!("stage_timeout_total", "阶段执行超时总次数", &["stage"])
+        .expect("阶段超时指标注册失败")
 });
 
 /// 阶段执行耗时直方图
@@ -200,27 +201,22 @@ static STAGE_DURATION_HISTOGRAM: Lazy<HistogramVec> = Lazy::new(|| {
         "阶段执行耗时（秒）",
         &["stage"],
         vec![0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, 30.0, 60.0, 300.0]
-    ).expect("阶段耗时指标注册失败")
+    )
+    .expect("阶段耗时指标注册失败")
 });
 
 /// 阶段取消计数器
 /// 标签：stage（阶段名称）
 static STAGE_CANCEL_COUNTER: Lazy<CounterVec> = Lazy::new(|| {
-    register_counter_vec!(
-        "stage_cancel_total",
-        "阶段被取消总次数",
-        &["stage"]
-    ).expect("阶段取消指标注册失败")
+    register_counter_vec!("stage_cancel_total", "阶段被取消总次数", &["stage"])
+        .expect("阶段取消指标注册失败")
 });
 
 /// 阶段完成计数器
 /// 标签：stage（阶段名称）
 static STAGE_COMPLETED_COUNTER: Lazy<CounterVec> = Lazy::new(|| {
-    register_counter_vec!(
-        "stage_completed_total",
-        "阶段完成总次数",
-        &["stage"]
-    ).expect("阶段完成指标注册失败")
+    register_counter_vec!("stage_completed_total", "阶段完成总次数", &["stage"])
+        .expect("阶段完成指标注册失败")
 });
 
 /// 超时或取消结果（精简版）
@@ -300,36 +296,39 @@ impl ConfigurablePipeline {
         let ctx = StageContext::default();
 
         // 3. 按配置顺序执行阶段
-        let stages_to_execute: Vec<&StageConfig> = self.config
-            .stages
-            .iter()
-            .filter(|s| s.enabled)
-            .collect();
+        let stages_to_execute: Vec<&StageConfig> =
+            self.config.stages.iter().filter(|s| s.enabled).collect();
 
         if stages_to_execute.is_empty() {
             return Err(CadError::internal(
                 common_types::InternalErrorReason::ServiceUnavailable {
                     service: "没有启用的阶段可执行".to_string(),
-                }
+                },
             ));
         }
 
         // 4. 执行阶段（支持并行）
         if self.config.parallel {
-            self.execute_stages_parallel(&path, &ctx, &stages_to_execute).await?;
+            self.execute_stages_parallel(&path, &ctx, &stages_to_execute)
+                .await?;
         } else {
-            self.execute_stages_sequential(&path, &ctx, &stages_to_execute).await?;
+            self.execute_stages_sequential(&path, &ctx, &stages_to_execute)
+                .await?;
         }
 
         // 5. 构建最终结果（从 RwLock 中提取数据）
         let scene_guard = ctx.scene.read().await;
         let validation_guard = ctx.validation.read().await;
         let output_bytes_guard = ctx.output_bytes.read().await;
+        let text_annotations_guard = ctx.text_annotations.read().await;
+        let dimension_summary_guard = ctx.dimension_summary.read().await;
 
         Ok(ProcessResult {
             scene: scene_guard.clone().unwrap_or_default(),
             validation: validation_guard.clone().unwrap_or_default(),
             output_bytes: (*output_bytes_guard).clone(),
+            text_annotations: (*text_annotations_guard).clone(),
+            dimension_summary: (*dimension_summary_guard).clone(),
         })
     }
 
@@ -409,7 +408,7 @@ impl ConfigurablePipeline {
                 return Err(CadError::internal(
                     common_types::InternalErrorReason::InvariantViolated {
                         invariant: "并行执行调度失败：没有可执行的阶段但仍有待处理阶段".to_string(),
-                    }
+                    },
                 ));
             }
 
@@ -418,7 +417,8 @@ impl ConfigurablePipeline {
             let (cancel_tx, _) = broadcast::channel::<()>(ready_stages.len().max(1));
 
             // 先创建所有接收者，再执行任务
-            let mut cancel_rxs: Vec<broadcast::Receiver<()>> = Vec::with_capacity(ready_stages.len());
+            let mut cancel_rxs: Vec<broadcast::Receiver<()>> =
+                Vec::with_capacity(ready_stages.len());
             for _ in &ready_stages {
                 cancel_rxs.push(cancel_tx.subscribe());
             }
@@ -436,7 +436,11 @@ impl ConfigurablePipeline {
                     stage: stage_clone.stage.clone(),
                     entities_count: ctx.entities.read().await.len(),
                     polylines_count: ctx.polylines.read().await.len(),
-                    scene_status: if ctx.scene.read().await.is_some() { "已构建" } else { "未构建" },
+                    scene_status: if ctx.scene.read().await.is_some() {
+                        "已构建"
+                    } else {
+                        "未构建"
+                    },
                     start_time: std::time::Instant::now(),
                 };
 
@@ -460,7 +464,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::Parse(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::Parse(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::Vectorize => {
                         let ctx_entities = Arc::clone(&ctx.entities);
@@ -469,7 +477,8 @@ impl ConfigurablePipeline {
                         let task = tokio::task::spawn_blocking(move || {
                             // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
                             let entities = futures::executor::block_on(ctx_entities.read());
-                            let polylines = ProcessingPipeline::extract_polylines_from_entities(&entities);
+                            let polylines =
+                                ProcessingPipeline::extract_polylines_from_entities(&entities);
                             Ok::<_, CadError>(polylines)
                         });
                         // 添加超时保护和取消机制
@@ -480,7 +489,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::Vectorize(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::Vectorize(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::BuildTopology => {
                         let pipeline = Arc::clone(&self.base_pipeline);
@@ -506,7 +519,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::BuildTopology(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::BuildTopology(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::Validate => {
                         let pipeline = Arc::clone(&self.base_pipeline);
@@ -516,11 +533,16 @@ impl ConfigurablePipeline {
                         let task = tokio::task::spawn_blocking(move || {
                             // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
                             let scene_opt = futures::executor::block_on(ctx_scene.read());
-                            let scene = scene_opt.as_ref().ok_or_else(|| {
-                                CadError::internal(common_types::InternalErrorReason::InvariantViolated {
-                                    invariant: "验证阶段需要场景已构建".to_string(),
-                                })
-                            })?.clone();
+                            let scene = scene_opt
+                                .as_ref()
+                                .ok_or_else(|| {
+                                    CadError::internal(
+                                        common_types::InternalErrorReason::InvariantViolated {
+                                            invariant: "验证阶段需要场景已构建".to_string(),
+                                        },
+                                    )
+                                })?
+                                .clone();
                             let validation = pipeline.validator().validate(&scene)?;
                             Ok::<_, CadError>(validation)
                         });
@@ -532,7 +554,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::Validate(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::Validate(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::Export => {
                         let pipeline = Arc::clone(&self.base_pipeline);
@@ -542,11 +568,16 @@ impl ConfigurablePipeline {
                         let task = tokio::task::spawn_blocking(move || {
                             // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
                             let scene_opt = futures::executor::block_on(ctx_scene.read());
-                            let scene = scene_opt.as_ref().ok_or_else(|| {
-                                CadError::internal(common_types::InternalErrorReason::InvariantViolated {
-                                    invariant: "导出阶段需要场景已构建".to_string(),
-                                })
-                            })?.clone();
+                            let scene = scene_opt
+                                .as_ref()
+                                .ok_or_else(|| {
+                                    CadError::internal(
+                                        common_types::InternalErrorReason::InvariantViolated {
+                                            invariant: "导出阶段需要场景已构建".to_string(),
+                                        },
+                                    )
+                                })?
+                                .clone();
                             let export_result = pipeline.export().export(&scene)?;
                             Ok::<_, CadError>(export_result.bytes)
                         });
@@ -558,24 +589,34 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::Export(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::Export(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::QualityCheck => {
                         let ctx_entities = Arc::clone(&ctx.entities);
                         let ctx_polylines = Arc::clone(&ctx.polylines);
                         let task = tokio::spawn(async move {
                             // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
-                            let entities: Arc<[RawEntity]> = Arc::clone(&*ctx_entities.read().await);
-                            let polylines: Arc<[Polyline]> = Arc::clone(&*ctx_polylines.read().await);
+                            let entities: Arc<[RawEntity]> =
+                                Arc::clone(&*ctx_entities.read().await);
+                            let polylines: Arc<[Polyline]> =
+                                Arc::clone(&*ctx_polylines.read().await);
                             // 在锁外处理数据（不持有锁）
                             if entities.is_empty() {
                                 return Err(CadError::internal(
                                     common_types::InternalErrorReason::InvariantViolated {
                                         invariant: "质量预检失败：实体数量为 0".to_string(),
-                                    }
+                                    },
                                 ));
                             }
-                            tracing::info!("质量预检：{} 个实体，{} 条多段线", entities.len(), polylines.len());
+                            tracing::info!(
+                                "质量预检：{} 个实体，{} 条多段线",
+                                entities.len(),
+                                polylines.len()
+                            );
                             Ok::<_, CadError>(())
                         });
                         // 添加超时保护和取消机制
@@ -585,7 +626,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::QualityCheck(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::QualityCheck(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                     PipelineStage::AcousticAnalysis => {
                         let ctx_scene = Arc::clone(&ctx.scene);
@@ -596,7 +641,7 @@ impl ConfigurablePipeline {
                                 return Err(CadError::internal(
                                     common_types::InternalErrorReason::InvariantViolated {
                                         invariant: "声学分析需要场景已构建".to_string(),
-                                    }
+                                    },
                                 ));
                             }
                             drop(scene_guard);
@@ -610,7 +655,11 @@ impl ConfigurablePipeline {
                             cancel_rx,
                             diagnostic.clone(),
                         );
-                        tasks.push((stage_clone, TaskResult::AcousticAnalysis(task_with_timeout), diagnostic));
+                        tasks.push((
+                            stage_clone,
+                            TaskResult::AcousticAnalysis(task_with_timeout),
+                            diagnostic,
+                        ));
                     }
                 }
             }
@@ -619,13 +668,13 @@ impl ConfigurablePipeline {
             let mut first_error: Option<CadError> = None;
             for (stage, task_result, diagnostic) in tasks {
                 let result: Result<(), CadError> = match task_result {
-                    TaskResult::Parse(task) |
-                    TaskResult::Vectorize(task) |
-                    TaskResult::BuildTopology(task) |
-                    TaskResult::Validate(task) |
-                    TaskResult::Export(task) |
-                    TaskResult::QualityCheck(task) |
-                    TaskResult::AcousticAnalysis(task) => {
+                    TaskResult::Parse(task)
+                    | TaskResult::Vectorize(task)
+                    | TaskResult::BuildTopology(task)
+                    | TaskResult::Validate(task)
+                    | TaskResult::Export(task)
+                    | TaskResult::QualityCheck(task)
+                    | TaskResult::AcousticAnalysis(task) => {
                         match task.await {
                             Ok(cancel_or_err) => match cancel_or_err {
                                 Ok(TimeoutOrCancel::Timeout) => {
@@ -652,13 +701,16 @@ impl ConfigurablePipeline {
                                 Ok(TimeoutOrCancel::Cancelled) => {
                                     // P11 锐评建议 3: 记录 Prometheus 指标
                                     let stage_name = format!("{:?}", stage.stage);
-                                    STAGE_CANCEL_COUNTER
-                                        .with_label_values(&[&stage_name])
-                                        .inc();
+                                    STAGE_CANCEL_COUNTER.with_label_values(&[&stage_name]).inc();
 
-                                    Err(CadError::internal(common_types::InternalErrorReason::ServiceUnavailable {
-                                        service: format!("阶段 {:?} 被取消（其他任务失败）", stage.stage),
-                                    }))
+                                    Err(CadError::internal(
+                                        common_types::InternalErrorReason::ServiceUnavailable {
+                                            service: format!(
+                                                "阶段 {:?} 被取消（其他任务失败）",
+                                                stage.stage
+                                            ),
+                                        },
+                                    ))
                                 }
                                 Ok(TimeoutOrCancel::Completed) => {
                                     // P11 锐评建议 3: 记录 Prometheus 指标
@@ -674,9 +726,14 @@ impl ConfigurablePipeline {
                                 }
                                 Err(e) => Err(e),
                             },
-                            Err(join_err) => Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                                message: format!("阶段 {:?} 任务执行失败：{}", stage.stage, join_err),
-                            })),
+                            Err(join_err) => Err(CadError::internal(
+                                common_types::InternalErrorReason::Panic {
+                                    message: format!(
+                                        "阶段 {:?} 任务执行失败：{}",
+                                        stage.stage, join_err
+                                    ),
+                                },
+                            )),
                         }
                     }
                 };
@@ -927,11 +984,7 @@ impl ConfigurablePipeline {
     /// - Parse → Vectorize → BuildTopology → Validate → Export
     /// - QualityCheck 需要 polylines 数据，所以需要 Parse + Vectorize 完成
     /// - AcousticAnalysis 可能需要验证结果，所以需要 BuildTopology + Validate 完成
-    fn stage_dependencies_met(
-        &self,
-        stage: &PipelineStage,
-        completed: &[PipelineStage],
-    ) -> bool {
+    fn stage_dependencies_met(&self, stage: &PipelineStage, completed: &[PipelineStage]) -> bool {
         match stage {
             PipelineStage::Parse => true, // 无依赖
             PipelineStage::Vectorize => completed.contains(&PipelineStage::Parse),
@@ -942,12 +995,12 @@ impl ConfigurablePipeline {
             PipelineStage::QualityCheck => {
                 completed.contains(&PipelineStage::Parse)
                     && completed.contains(&PipelineStage::Vectorize)
-            },
+            }
             // AcousticAnalysis 可能需要验证结果，所以需要 BuildTopology + Validate 完成
             PipelineStage::AcousticAnalysis => {
                 completed.contains(&PipelineStage::BuildTopology)
                     && completed.contains(&PipelineStage::Validate)
-            },
+            }
         }
     }
 
@@ -967,14 +1020,24 @@ impl ConfigurablePipeline {
         })
         .await
         .unwrap_or_else(|e| {
-            Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                message: format!("解析任务执行失败：{}", e),
-            }))
+            Err(CadError::internal(
+                common_types::InternalErrorReason::Panic {
+                    message: format!("解析任务执行失败：{}", e),
+                },
+            ))
         })?;
 
         // P11 锐评修复 1: 零拷贝 - 直接转换为 Arc<[T]>
-        *ctx_entities.write().await = result.into_entities().into();
+        let entities_arc: Arc<[RawEntity]> = result.into_entities().into();
+        *ctx_entities.write().await = entities_arc.clone();
         let entities_len = ctx_entities.read().await.len();
+
+        // 提取文字标注和标注尺寸统计
+        let text_annotations = ProcessingPipeline::extract_text_annotations(&entities_arc);
+        *ctx.text_annotations.write().await = text_annotations;
+        let dimension_summary = ProcessingPipeline::extract_dimension_summary(&entities_arc);
+        *ctx.dimension_summary.write().await = dimension_summary;
+
         tracing::info!("解析阶段完成：得到 {} 个实体", entities_len);
         Ok(())
     }
@@ -985,7 +1048,7 @@ impl ConfigurablePipeline {
         let entities: Arc<[RawEntity]> = Arc::clone(&*ctx.entities.read().await);
         let polylines = ProcessingPipeline::extract_polylines_from_entities(&entities);
         drop(entities); // 释放读锁
-        // P11 锐评修复 1: 零拷贝 - 直接转换为 Arc<[T]>
+                        // P11 锐评修复 1: 零拷贝 - 直接转换为 Arc<[T]>
         *ctx.polylines.write().await = polylines.into();
         let polylines_len = ctx.polylines.read().await.len();
         tracing::info!("矢量化阶段完成：得到 {} 条多段线", polylines_len);
@@ -1018,9 +1081,11 @@ impl ConfigurablePipeline {
         })
         .await
         .unwrap_or_else(|e| {
-            Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                message: format!("拓扑构建任务执行失败：{}", e),
-            }))
+            Err(CadError::internal(
+                common_types::InternalErrorReason::Panic {
+                    message: format!("拓扑构建任务执行失败：{}", e),
+                },
+            ))
         })?;
 
         *ctx_scene.write().await = Some(result);
@@ -1033,11 +1098,14 @@ impl ConfigurablePipeline {
         let validator = self.base_pipeline.validator().clone();
         let scene = {
             let scene_guard = ctx.scene.read().await;
-            scene_guard.as_ref().ok_or_else(|| {
-                CadError::internal(common_types::InternalErrorReason::InvariantViolated {
-                    invariant: "验证阶段需要场景已构建".to_string(),
-                })
-            })?.clone()
+            scene_guard
+                .as_ref()
+                .ok_or_else(|| {
+                    CadError::internal(common_types::InternalErrorReason::InvariantViolated {
+                        invariant: "验证阶段需要场景已构建".to_string(),
+                    })
+                })?
+                .clone()
         };
 
         let result = spawn_blocking(move || {
@@ -1046,13 +1114,16 @@ impl ConfigurablePipeline {
         })
         .await
         .unwrap_or_else(|e| {
-            Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                message: format!("验证任务执行失败：{}", e),
-            }))
+            Err(CadError::internal(
+                common_types::InternalErrorReason::Panic {
+                    message: format!("验证任务执行失败：{}", e),
+                },
+            ))
         })?;
 
         if !result.passed && result.summary.error_count > 0 {
-            let issues: Vec<common_types::ValidationIssue> = result.issues
+            let issues: Vec<common_types::ValidationIssue> = result
+                .issues
                 .into_iter()
                 .map(|i| common_types::ValidationIssue {
                     code: i.code,
@@ -1087,11 +1158,14 @@ impl ConfigurablePipeline {
         let export = self.base_pipeline.export().clone();
         let scene = {
             let scene_guard = ctx.scene.read().await;
-            scene_guard.as_ref().ok_or_else(|| {
-                CadError::internal(common_types::InternalErrorReason::InvariantViolated {
-                    invariant: "导出阶段需要场景已构建".to_string(),
-                })
-            })?.clone()
+            scene_guard
+                .as_ref()
+                .ok_or_else(|| {
+                    CadError::internal(common_types::InternalErrorReason::InvariantViolated {
+                        invariant: "导出阶段需要场景已构建".to_string(),
+                    })
+                })?
+                .clone()
         };
 
         let result = spawn_blocking(move || {
@@ -1100,9 +1174,11 @@ impl ConfigurablePipeline {
         })
         .await
         .unwrap_or_else(|e| {
-            Err(CadError::internal(common_types::InternalErrorReason::Panic {
-                message: format!("导出任务执行失败：{}", e),
-            }))
+            Err(CadError::internal(
+                common_types::InternalErrorReason::Panic {
+                    message: format!("导出任务执行失败：{}", e),
+                },
+            ))
         })?;
 
         *ctx.output_bytes.write().await = result;
@@ -1115,14 +1191,18 @@ impl ConfigurablePipeline {
         // 质量预检：检查实体数量、多段线质量等
         let entities_len = ctx.entities.read().await.len();
         let polylines_len = ctx.polylines.read().await.len();
-        tracing::info!("质量预检：{} 个实体，{} 条多段线", entities_len, polylines_len);
+        tracing::info!(
+            "质量预检：{} 个实体，{} 条多段线",
+            entities_len,
+            polylines_len
+        );
 
         // 简单检查：实体数量不能为 0
         if entities_len == 0 {
             return Err(CadError::internal(
                 common_types::InternalErrorReason::InvariantViolated {
                     invariant: "质量预检失败：实体数量为 0".to_string(),
-                }
+                },
             ));
         }
 
@@ -1137,7 +1217,7 @@ impl ConfigurablePipeline {
             return Err(CadError::internal(
                 common_types::InternalErrorReason::InvariantViolated {
                     invariant: "声学分析需要场景已构建".to_string(),
-                }
+                },
             ));
         }
 
@@ -1352,7 +1432,9 @@ mod tests {
         let config = PipelineConfig::quick_prototype();
         assert_eq!(config.name, "quick_prototype");
         // 验证阶段应该被禁用
-        let validate_stage = config.stages.iter()
+        let validate_stage = config
+            .stages
+            .iter()
             .find(|s| s.stage == PipelineStage::Validate)
             .unwrap();
         assert!(!validate_stage.enabled);
@@ -1363,7 +1445,9 @@ mod tests {
         let config = PipelineConfig::strict_validation();
         assert_eq!(config.name, "strict_validation");
         // 应该包含质量预检阶段
-        let qc_stage = config.stages.iter()
+        let qc_stage = config
+            .stages
+            .iter()
             .find(|s| s.stage == PipelineStage::QualityCheck)
             .unwrap();
         assert!(qc_stage.enabled);
@@ -1383,7 +1467,9 @@ mod tests {
         assert_eq!(config.name, "dxf_workflow");
         assert_eq!(config.file_types, Some(vec!["dxf".to_string()]));
         // 矢量化阶段应该被禁用
-        let vec_stage = config.stages.iter()
+        let vec_stage = config
+            .stages
+            .iter()
             .find(|s| s.stage == PipelineStage::Vectorize)
             .unwrap();
         assert!(!vec_stage.enabled);
@@ -1401,7 +1487,11 @@ mod tests {
         assert!(pipeline.stage_dependencies_met(&PipelineStage::Vectorize, &[PipelineStage::Parse]));
 
         // BuildTopology 依赖 Vectorize
-        assert!(!pipeline.stage_dependencies_met(&PipelineStage::BuildTopology, &[PipelineStage::Parse]));
-        assert!(pipeline.stage_dependencies_met(&PipelineStage::BuildTopology, &[PipelineStage::Parse, PipelineStage::Vectorize]));
+        assert!(!pipeline
+            .stage_dependencies_met(&PipelineStage::BuildTopology, &[PipelineStage::Parse]));
+        assert!(pipeline.stage_dependencies_met(
+            &PipelineStage::BuildTopology,
+            &[PipelineStage::Parse, PipelineStage::Vectorize]
+        ));
     }
 }

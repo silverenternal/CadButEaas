@@ -13,6 +13,4 @@ geo = { workspace = true }
 approx = { workspace = true }
 thiserror = { workspace = true }
 async-trait = { workspace = true }
-
-[dev-dependencies]
-insta = { workspace = true }
+rayon = { workspace = true }

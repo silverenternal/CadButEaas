@@ -34,10 +34,10 @@
 //! └─────────────────────────────────────────────────────────────┘
 //! ```
 
-mod types;
-mod trait_def;
 mod error;
+mod trait_def;
+mod types;
 
-pub use types::*;
 pub use error::{AcceleratorError, Result as AcceleratorResult};
 pub use trait_def::{Accelerator, AcceleratorRef, OptionAcceleratorRef};
+pub use types::*;

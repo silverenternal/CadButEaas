@@ -6,9 +6,12 @@
 //! - 基本实体导出（Line, Polyline, Arc, Circle）
 //! - 块引用导出（BlockReference）
 
-use common_types::{RawEntity, Point2};
-use dxf::{Drawing, entities::EntityType, entities::Entity, entities::Line, entities::LwPolyline, entities::Arc, entities::Circle};
+use common_types::{Point2, RawEntity};
 use dxf::Block;
+use dxf::{
+    entities::Arc, entities::Circle, entities::Entity, entities::EntityType, entities::Line,
+    entities::LwPolyline, Drawing,
+};
 use std::path::Path;
 
 /// DXF 导出器
@@ -70,7 +73,14 @@ impl DxfWriter {
     }
 
     /// 添加圆弧
-    pub fn add_arc(&mut self, center: Point2, radius: f64, start_angle: f64, end_angle: f64, layer: &str) {
+    pub fn add_arc(
+        &mut self,
+        center: Point2,
+        radius: f64,
+        start_angle: f64,
+        end_angle: f64,
+        layer: &str,
+    ) {
         let arc = EntityType::Arc(Arc {
             center: dxf::Point::new(center[0], center[1], 0.0),
             radius,
@@ -98,12 +108,12 @@ impl DxfWriter {
     }
 
     /// 添加块定义（BLOCK + ENDBLK）
-    /// 
+    ///
     /// ## 参数
     /// - `name`: 块名称
     /// - `entities`: 块内实体列表
     /// - `base_point`: 块基点（插入时的参考点）
-    /// 
+    ///
     /// ## DXF 结构
     /// ```text
     /// BLOCK
@@ -135,7 +145,7 @@ impl DxfWriter {
         // 添加到绘图的块定义表
         self.drawing.add_block(block);
         self.defined_blocks.insert(name.to_string());
-        
+
         // 注意：dxf 0.6.0 的块定义实体管理需要更复杂的处理
         // 当前实现仅创建块定义头信息，块内实体通过 add_entities 添加到主绘图
         // 完整的块定义支持（包含块内实体）需要扩展 dxf crate 或使用其内部 API
@@ -171,23 +181,52 @@ impl DxfWriter {
     pub fn add_entities(&mut self, entities: &[RawEntity]) {
         for entity in entities {
             match entity {
-                RawEntity::Line { start, end, metadata, .. } => {
+                RawEntity::Line {
+                    start,
+                    end,
+                    metadata,
+                    ..
+                } => {
                     let layer = metadata.layer.as_deref().unwrap_or("0");
                     self.add_line(*start, *end, layer);
                 }
-                RawEntity::Polyline { points, closed, metadata, .. } => {
+                RawEntity::Polyline {
+                    points,
+                    closed,
+                    metadata,
+                    ..
+                } => {
                     let layer = metadata.layer.as_deref().unwrap_or("0");
                     self.add_polyline(points, *closed, layer);
                 }
-                RawEntity::Arc { center, radius, start_angle, end_angle, metadata, .. } => {
+                RawEntity::Arc {
+                    center,
+                    radius,
+                    start_angle,
+                    end_angle,
+                    metadata,
+                    ..
+                } => {
                     let layer = metadata.layer.as_deref().unwrap_or("0");
                     self.add_arc(*center, *radius, *start_angle, *end_angle, layer);
                 }
-                RawEntity::Circle { center, radius, metadata, .. } => {
+                RawEntity::Circle {
+                    center,
+                    radius,
+                    metadata,
+                    ..
+                } => {
                     let layer = metadata.layer.as_deref().unwrap_or("0");
                     self.add_circle(*center, *radius, layer);
                 }
-                RawEntity::BlockReference { block_name, insertion_point, scale, rotation, metadata, .. } => {
+                RawEntity::BlockReference {
+                    block_name,
+                    insertion_point,
+                    scale,
+                    rotation,
+                    metadata,
+                    ..
+                } => {
                     let layer = metadata.layer.as_deref().unwrap_or("0");
                     self.add_block_reference(
                         block_name,
@@ -322,7 +361,9 @@ mod tests {
         writer.add_block_reference("TEST_BLOCK", [100.0, 100.0], [1.0, 1.0, 1.0], 45.0, "0");
 
         // 验证引用存在
-        let insert_count = writer.drawing().entities()
+        let insert_count = writer
+            .drawing()
+            .entities()
             .filter(|e| matches!(e.specific, EntityType::Insert(_)))
             .count();
         assert_eq!(insert_count, 1, "应该有 1 个块引用");
@@ -392,17 +433,15 @@ mod tests {
         let mut writer = DxfWriter::new();
 
         // 创建块定义
-        let block_entities = vec![
-            RawEntity::Line {
-                start: [0.0, 0.0],
-                end: [10.0, 0.0],
-                metadata: common_types::EntityMetadata {
-                    layer: Some("0".to_string()),
-                    ..Default::default()
-                },
-                semantic: None,
+        let block_entities = vec![RawEntity::Line {
+            start: [0.0, 0.0],
+            end: [10.0, 0.0],
+            metadata: common_types::EntityMetadata {
+                layer: Some("0".to_string()),
+                ..Default::default()
             },
-        ];
+            semantic: None,
+        }];
         writer.add_block_definition("MY_BLOCK", &block_entities, [0.0, 0.0]);
 
         // 添加块引用
@@ -410,7 +449,9 @@ mod tests {
 
         // 验证块定义和引用都存在
         assert_eq!(writer.block_definitions().count(), 1, "应该有 1 个块定义");
-        let insert_count = writer.drawing().entities()
+        let insert_count = writer
+            .drawing()
+            .entities()
             .filter(|e| matches!(e.specific, EntityType::Insert(_)))
             .count();
         assert_eq!(insert_count, 1, "应该有 1 个块引用");

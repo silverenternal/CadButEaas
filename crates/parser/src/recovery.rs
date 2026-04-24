@@ -43,10 +43,10 @@
 //! }
 //! ```
 
-use common_types::{RawEntity, CadError, InternalErrorReason};
-use crate::{DxfParser, DxfParseReport, ParseIssue, ParseIssueSeverity};
-use std::path::Path;
+use crate::{DxfParseReport, DxfParser, ParseIssue, ParseIssueSeverity};
+use common_types::{CadError, InternalErrorReason, RawEntity};
 use std::panic::{self, AssertUnwindSafe};
+use std::path::Path;
 use tracing;
 
 // ============================================================================
@@ -72,23 +72,27 @@ impl RecoveryStrategy {
     pub fn should_skip_damaged_entity(self) -> bool {
         match self {
             RecoveryStrategy::Conservative => false,
-            RecoveryStrategy::Balanced | RecoveryStrategy::Aggressive | RecoveryStrategy::Custom => true,
+            RecoveryStrategy::Balanced
+            | RecoveryStrategy::Aggressive
+            | RecoveryStrategy::Custom => true,
         }
     }
 
     /// 是否应该尝试修复损坏数据
     pub fn should_attempt_repair(self) -> bool {
-        match self {
-            RecoveryStrategy::Aggressive | RecoveryStrategy::Custom => true,
-            _ => false,
-        }
+        matches!(
+            self,
+            RecoveryStrategy::Aggressive | RecoveryStrategy::Custom
+        )
     }
 
     /// 是否应该继续解析（遇到非致命错误时）
     pub fn should_continue_on_error(self) -> bool {
         match self {
             RecoveryStrategy::Conservative => false,
-            RecoveryStrategy::Balanced | RecoveryStrategy::Aggressive | RecoveryStrategy::Custom => true,
+            RecoveryStrategy::Balanced
+            | RecoveryStrategy::Aggressive
+            | RecoveryStrategy::Custom => true,
         }
     }
 }
@@ -101,7 +105,7 @@ impl RecoveryStrategy {
 pub trait EntityRepairer {
     /// 尝试修复损坏的实体
     fn repair_entity(&self, entity_type: &str, error_msg: &str) -> Option<RawEntity>;
-    
+
     /// 检查实体是否有效
     fn is_valid_entity(&self, entity: &RawEntity) -> bool;
 }
@@ -114,9 +118,13 @@ impl EntityRepairer for DefaultEntityRepairer {
     fn repair_entity(&self, entity_type: &str, error_msg: &str) -> Option<RawEntity> {
         // 激进策略：尝试从错误中恢复部分数据
         // 注意：这里只是示例实现，实际修复逻辑需要根据具体错误类型定制
-        
-        tracing::debug!("尝试修复损坏实体：type={}, error={}", entity_type, error_msg);
-        
+
+        tracing::debug!(
+            "尝试修复损坏实体：type={}, error={}",
+            entity_type,
+            error_msg
+        );
+
         // 当前不支持自动修复，返回 None
         // 未来可以扩展为：
         // - 修复零长度线段：使用端点平均值创建点实体
@@ -124,18 +132,18 @@ impl EntityRepairer for DefaultEntityRepairer {
         // - 修复缺失数据：使用默认值填充
         None
     }
-    
+
     fn is_valid_entity(&self, entity: &RawEntity) -> bool {
         // 基础验证：检查是否有 NaN 或无穷大值
         match entity {
             RawEntity::Line { start, end, .. } => {
                 is_valid_point(start) && is_valid_point(end) && {
                     let len = distance_2d(start, end);
-                    len > 1e-6 && len < 1e6  // 长度在合理范围内
+                    len > 1e-6 && len < 1e6 // 长度在合理范围内
                 }
             }
             RawEntity::Polyline { points, .. } => {
-                points.iter().all(|p| is_valid_point(p)) && points.len() >= 2
+                points.iter().all(is_valid_point) && points.len() >= 2
             }
             RawEntity::Arc { center, radius, .. } => {
                 is_valid_point(center) && *radius > 0.0 && *radius < 1e6
@@ -143,29 +151,34 @@ impl EntityRepairer for DefaultEntityRepairer {
             RawEntity::Circle { center, radius, .. } => {
                 is_valid_point(center) && *radius > 0.0 && *radius < 1e6
             }
-            RawEntity::Text { position, height, .. } => {
-                is_valid_point(position) && *height > 0.0 && *height < 1e3
-            }
-            RawEntity::BlockReference { .. } => true,  // 块引用不需要几何验证
-            RawEntity::Dimension { .. } => true,  // 标注不需要严格验证
-            RawEntity::Path { .. } => true,  // 路径不需要严格验证
+            RawEntity::Text {
+                position, height, ..
+            } => is_valid_point(position) && *height > 0.0 && *height < 1e3,
+            RawEntity::BlockReference { .. } => true, // 块引用不需要几何验证
+            RawEntity::Dimension { .. } => true,      // 标注不需要严格验证
+            RawEntity::Path { .. } => true,           // 路径不需要严格验证
             RawEntity::Hatch { boundary_paths, .. } => {
                 // 验证 HATCH 边界路径
-                boundary_paths.iter().all(|path| {
-                    match path {
-                        common_types::HatchBoundaryPath::Polyline { points, .. } => {
-                            points.iter().all(|p| is_valid_point(p)) && points.len() >= 2
-                        }
-                        common_types::HatchBoundaryPath::Arc { center, radius, .. } => {
-                            is_valid_point(center) && *radius > 0.0 && *radius < 1e6
-                        }
-                        common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, .. } => {
-                            is_valid_point(center) && is_valid_point(major_axis) && 
-                            *minor_axis_ratio > 0.0 && *minor_axis_ratio <= 1.0
-                        }
-                        common_types::HatchBoundaryPath::Spline { control_points, .. } => {
-                            control_points.iter().all(|p| is_valid_point(p)) && control_points.len() >= 2
-                        }
+                boundary_paths.iter().all(|path| match path {
+                    common_types::HatchBoundaryPath::Polyline { points, .. } => {
+                        points.iter().all(is_valid_point) && points.len() >= 2
+                    }
+                    common_types::HatchBoundaryPath::Arc { center, radius, .. } => {
+                        is_valid_point(center) && *radius > 0.0 && *radius < 1e6
+                    }
+                    common_types::HatchBoundaryPath::EllipseArc {
+                        center,
+                        major_axis,
+                        minor_axis_ratio,
+                        ..
+                    } => {
+                        is_valid_point(center)
+                            && is_valid_point(major_axis)
+                            && *minor_axis_ratio > 0.0
+                            && *minor_axis_ratio <= 1.0
+                    }
+                    common_types::HatchBoundaryPath::Spline { control_points, .. } => {
+                        control_points.iter().all(is_valid_point) && control_points.len() >= 2
                     }
                 })
             }
@@ -173,6 +186,33 @@ impl EntityRepairer for DefaultEntityRepairer {
                 // P1-1: XREF 外部参照支持 - 待完整实现
                 // XREF 不需要严格几何验证，仅验证基本结构
                 true
+            }
+            RawEntity::Point { position, .. } => is_valid_point(position),
+            RawEntity::Image { position, .. } => is_valid_point(position),
+            RawEntity::Attribute {
+                position, height, ..
+            } => is_valid_point(position) && *height > 0.0 && *height < 1e3,
+            RawEntity::AttributeDefinition {
+                position, height, ..
+            } => is_valid_point(position) && *height > 0.0 && *height < 1e3,
+            RawEntity::Leader { points, .. } => {
+                points.iter().all(is_valid_point) && points.len() >= 2
+            }
+            RawEntity::Ray {
+                start, direction, ..
+            } => is_valid_point(start) && is_valid_point(direction),
+            RawEntity::MLine { center_line, .. } => {
+                center_line.iter().all(is_valid_point) && center_line.len() >= 2
+            }
+            RawEntity::Triangle {
+                vertices, normal, ..
+            } => {
+                vertices
+                    .iter()
+                    .all(|v| v[0].is_finite() && v[1].is_finite() && v[2].is_finite())
+                    && normal[0].is_finite()
+                    && normal[1].is_finite()
+                    && normal[2].is_finite()
             }
         }
     }
@@ -216,7 +256,7 @@ impl RecoveryManager {
         Self {
             strategy: RecoveryStrategy::Balanced,
             repairer: DefaultEntityRepairer,
-            max_errors: 100,  // 默认最多允许 100 个错误
+            max_errors: 100, // 默认最多允许 100 个错误
             verbose_logging: false,
         }
     }
@@ -272,11 +312,9 @@ impl<R: EntityRepairer> RecoveryManager<R> {
         path: P,
     ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let path = path.as_ref();
-        
+
         // 使用 catch_unwind 捕获整个解析过程的 panic
-        let result = panic::catch_unwind(AssertUnwindSafe(|| {
-            parser.parse_file_with_report(path)
-        }));
+        let result = panic::catch_unwind(AssertUnwindSafe(|| parser.parse_file_with_report(path)));
 
         match result {
             Ok(Ok((entities, report))) => {
@@ -296,12 +334,10 @@ impl<R: EntityRepairer> RecoveryManager<R> {
                     .unwrap_or("未知 panic");
 
                 tracing::error!("解析过程中捕获 panic: {}", panic_msg);
-                
-                Err(CadError::internal(
-                    InternalErrorReason::Panic {
-                        message: format!("解析过程中发生未处理错误：{}", panic_msg),
-                    }
-                ))
+
+                Err(CadError::internal(InternalErrorReason::Panic {
+                    message: format!("解析过程中发生未处理错误：{}", panic_msg),
+                }))
             }
         }
     }
@@ -320,7 +356,7 @@ impl<R: EntityRepairer> RecoveryManager<R> {
                 true
             } else {
                 removed_count += 1;
-                
+
                 // 记录问题
                 let issue = ParseIssue::new(
                     "INVALID_ENTITY",
@@ -330,23 +366,24 @@ impl<R: EntityRepairer> RecoveryManager<R> {
                 .with_entity_type(entity.entity_type_name())
                 .with_layer(entity.layer().unwrap_or("unknown").to_string())
                 .with_suggestion("检查源 DXF 文件是否损坏".to_string());
-                
+
                 report.issues.push(issue);
-                
+
                 false
             }
         });
 
         // 记录统计
         report.parse_stats.valid_entities = entities.len();
-        report.parse_stats.recovered_entities = 0;  // 暂时不支持自动修复
+        report.parse_stats.recovered_entities = 0; // 暂时不支持自动修复
         report.parse_stats.corrupted_entities = removed_count;
         report.parse_stats.calculate_recovery_rate();
 
         if self.verbose_logging {
             tracing::info!(
                 "实体验证完成：保留 {} 个，移除 {} 个",
-                entities.len(), removed_count
+                entities.len(),
+                removed_count
             );
         }
 
@@ -371,14 +408,16 @@ impl<R: EntityRepairer> RecoveryManager<R> {
         // - 尝试使用备用解析器（如 ODA 库）
         // - 尝试逐段解析文件
         // - 尝试从备份文件恢复
-        
+
         let mut report = DxfParseReport::default();
-        report.issues.push(ParseIssue::new(
-            "PARSE_FAILED",
-            format!("文件解析失败：{}", error),
-            ParseIssueSeverity::Error,
-        )
-        .with_suggestion("尝试使用 AutoCAD 重新保存文件".to_string()));
+        report.issues.push(
+            ParseIssue::new(
+                "PARSE_FAILED",
+                format!("文件解析失败：{}", error),
+                ParseIssueSeverity::Error,
+            )
+            .with_suggestion("尝试使用 AutoCAD 重新保存文件".to_string()),
+        );
 
         Err(error)
     }
@@ -389,30 +428,21 @@ impl<R: EntityRepairer> RecoveryManager<R> {
         parser: &DxfParser,
         bytes: &[u8],
     ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
-        let result = panic::catch_unwind(AssertUnwindSafe(|| {
-            parser.parse_bytes(bytes)
-        }));
+        let result = panic::catch_unwind(AssertUnwindSafe(|| parser.parse_bytes(bytes)));
 
         match result {
             Ok(Ok(entities)) => {
                 // 创建一个基本报告
                 let mut report = DxfParseReport::default();
-                report.entity_type_distribution.insert(
-                    "parsed_from_bytes".to_string(),
-                    entities.len(),
-                );
+                report
+                    .entity_type_distribution
+                    .insert("parsed_from_bytes".to_string(), entities.len());
                 self.validate_and_fix_entities(entities, report)
             }
-            Ok(Err(e)) => {
-                self.handle_parse_error(e, Path::new("<bytes>"))
-            }
-            Err(_) => {
-                Err(CadError::internal(
-                    InternalErrorReason::Panic {
-                        message: "解析字节时发生未处理错误".to_string(),
-                    }
-                ))
-            }
+            Ok(Err(e)) => self.handle_parse_error(e, Path::new("<bytes>")),
+            Err(_) => Err(CadError::internal(InternalErrorReason::Panic {
+                message: "解析字节时发生未处理错误".to_string(),
+            })),
         }
     }
 }
@@ -433,7 +463,7 @@ impl<R: EntityRepairer> RecoveryManager<R> {
 /// - }   右大括号
 /// - \Cn  颜色（n=1-255）
 /// - \Ln  行间距
-/// 等等
+/// - 等等
 pub fn clean_mtext_content(text: &str) -> String {
     let mut result = String::with_capacity(text.len());
     let mut chars = text.chars().peekable();
@@ -444,32 +474,32 @@ pub fn clean_mtext_content(text: &str) -> String {
             match chars.peek() {
                 Some('X') | Some('x') => {
                     chars.next();
-                    result.push('\n');  // 换行
+                    result.push('\n'); // 换行
                 }
                 Some('P') | Some('p') => {
                     chars.next();
-                    result.push('\n');  // 新段落
+                    result.push('\n'); // 新段落
                     result.push('\n');
                 }
                 Some('n') => {
                     chars.next();
-                    result.push('\n');  // 新行
+                    result.push('\n'); // 新行
                 }
                 Some('~') => {
                     chars.next();
-                    result.push(' ');   // 非换行空格
+                    result.push(' '); // 非换行空格
                 }
                 Some('\\') => {
                     chars.next();
-                    result.push('\\');  // 反斜杠本身
+                    result.push('\\'); // 反斜杠本身
                 }
                 Some('{') => {
                     chars.next();
-                    result.push('{');   // 左大括号
+                    result.push('{'); // 左大括号
                 }
                 Some('}') => {
                     chars.next();
-                    result.push('}');   // 右大括号
+                    result.push('}'); // 右大括号
                 }
                 Some('C') | Some('c') => {
                     // 颜色代码 \Cn
@@ -588,8 +618,7 @@ mod tests {
         let manager = RecoveryManager::default();
         assert_eq!(manager.strategy(), RecoveryStrategy::Balanced);
 
-        let manager = RecoveryManager::new()
-            .with_strategy(RecoveryStrategy::Aggressive);
+        let manager = RecoveryManager::new().with_strategy(RecoveryStrategy::Aggressive);
         assert_eq!(manager.strategy(), RecoveryStrategy::Aggressive);
     }
 }

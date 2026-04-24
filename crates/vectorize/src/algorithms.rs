@@ -2,6 +2,8 @@
 //!
 //! 提供纯 Rust 实现，支持可选的 OpenCV 加速
 
+#![allow(clippy::needless_range_loop)]
+
 // OpenCV 配置（仅在启用 feature 时）
 #[cfg(feature = "opencv")]
 pub mod opencv_config;
@@ -34,6 +36,26 @@ pub use quality::*;
 pub mod nurbs_adaptive;
 pub use nurbs_adaptive::*;
 
+// 文字标注分离
+pub mod text_blob;
+pub use text_blob::*;
+
+// 自适应参数调整（基于图像质量）
+pub mod adaptive_params;
+pub use adaptive_params::*;
+
+// 纸张检测与自动裁剪
+pub mod paper_detection;
+pub use paper_detection::*;
+
+// 透视变换校正
+pub mod perspective_correction;
+pub use perspective_correction::*;
+
+// 建筑规则几何校正（正交性/平行性）
+pub mod architectural_rules;
+pub use architectural_rules::*;
+
 use common_types::{Point2, Polyline};
 use image::{GrayImage, Luma};
 use rayon::prelude::*;
@@ -42,9 +64,11 @@ use rayon::prelude::*;
 mod opencv_impl {
     use super::*;
     use opencv::{
-        core::{Mat, MatTraitConst, MatTraitManual, Scalar, Size, Point, Vector},
-        imgproc::{self, canny, threshold as cv_threshold, THRESH_BINARY, THRESH_OTSU, approx_poly_dp},
-        prelude::{MatTraitConstManual, MatExprTraitConst},
+        core::{Mat, MatTraitConst, MatTraitManual, Point, Scalar, Size, Vector},
+        imgproc::{
+            self, approx_poly_dp, canny, threshold as cv_threshold, THRESH_BINARY, THRESH_OTSU,
+        },
+        prelude::{MatExprTraitConst, MatTraitConstManual},
     };
 
     /// 快速将 GrayImage 转换为 OpenCV Mat（批量内存拷贝）
@@ -59,7 +83,8 @@ mod opencv_impl {
             .map_err(|e| format!("clone Mat 失败：{}", e))?;
 
         // 重塑为正确尺寸（Mat::from_slice 默认是 1D 数组）
-        let reshaped = mat.reshape(1, height as i32) // 1 通道，height 行
+        let reshaped = mat
+            .reshape(1, height as i32) // 1 通道，height 行
             .map_err(|e| format!("reshape 失败：{}", e))?
             .try_clone()
             .map_err(|e| format!("clone reshaped Mat 失败：{}", e))?;
@@ -73,7 +98,8 @@ mod opencv_impl {
         let width = mat.cols();
 
         // 直接读取连续内存
-        let data = mat.data_typed::<u8>()
+        let data = mat
+            .data_typed::<u8>()
             .map_err(|e| format!("data_typed 失败：{}", e))?;
 
         let mut image = GrayImage::new(width as u32, height as u32);
@@ -98,7 +124,8 @@ mod opencv_impl {
         .map_err(|e| format!("创建 Mat 失败：{}", e))?;
 
         // 批量拷贝数据
-        let mat_data = mat.data_typed_mut::<u8>()
+        let mat_data = mat
+            .data_typed_mut::<u8>()
             .map_err(|e| format!("获取 Mat 数据失败：{}", e))?;
         mat_data.copy_from_slice(raw_data);
 
@@ -155,14 +182,8 @@ mod opencv_impl {
             .map_err(|e| format!("Otsu 阈值失败：{}", e))?;
             tracing::debug!("Otsu 自动阈值：{}", ret);
         } else {
-            cv_threshold(
-                &mat,
-                &mut result_mat,
-                128.0,
-                255.0,
-                THRESH_BINARY,
-            )
-            .map_err(|e| format!("固定阈值失败：{}", e))?;
+            cv_threshold(&mat, &mut result_mat, 128.0, 255.0, THRESH_BINARY)
+                .map_err(|e| format!("固定阈值失败：{}", e))?;
         }
 
         let result = mat_to_gray_image(&result_mat)?;
@@ -205,11 +226,27 @@ mod opencv_impl {
         .map_err(|e| format!("创建结构元素失败：{}", e))?;
 
         loop {
-            imgproc::erode(&mat, &mut eroded, &kernel, Point::new(-1, -1), 1, opencv::core::BORDER_CONSTANT, opencv::core::Scalar::all(0.0))
-                .map_err(|e| format!("腐蚀失败：{}", e))?;
+            imgproc::erode(
+                &mat,
+                &mut eroded,
+                &kernel,
+                Point::new(-1, -1),
+                1,
+                opencv::core::BORDER_CONSTANT,
+                opencv::core::Scalar::all(0.0),
+            )
+            .map_err(|e| format!("腐蚀失败：{}", e))?;
 
-            imgproc::dilate(&eroded, &mut temp, &kernel, Point::new(-1, -1), 1, opencv::core::BORDER_CONSTANT, opencv::core::Scalar::all(0.0))
-                .map_err(|e| format!("膨胀失败：{}", e))?;
+            imgproc::dilate(
+                &eroded,
+                &mut temp,
+                &kernel,
+                Point::new(-1, -1),
+                1,
+                opencv::core::BORDER_CONSTANT,
+                opencv::core::Scalar::all(0.0),
+            )
+            .map_err(|e| format!("膨胀失败：{}", e))?;
 
             // 使用单独的临时变量避免借用冲突
             let mut diff = Mat::default();
@@ -217,13 +254,19 @@ mod opencv_impl {
                 .map_err(|e| format!("减法失败：{}", e))?;
 
             // 克隆 skeleton 避免借用冲突
-            let skeleton_clone = skeleton.try_clone()
+            let skeleton_clone = skeleton
+                .try_clone()
                 .map_err(|e| format!("clone skeleton 失败：{}", e))?;
-            opencv::core::bitwise_or(&skeleton_clone, &diff, &mut skeleton, &opencv::core::no_array())
-                .map_err(|e| format!("位或失败：{}", e))?;
+            opencv::core::bitwise_or(
+                &skeleton_clone,
+                &diff,
+                &mut skeleton,
+                &opencv::core::no_array(),
+            )
+            .map_err(|e| format!("位或失败：{}", e))?;
 
-            let count = opencv::core::count_non_zero(&eroded)
-                .map_err(|e| format!("计数失败：{}", e))?;
+            let count =
+                opencv::core::count_non_zero(&eroded).map_err(|e| format!("计数失败：{}", e))?;
 
             mat = eroded.clone();
 
@@ -261,7 +304,11 @@ mod opencv_impl {
     }
 
     #[tracing::instrument(name = "opencv_hough", skip(image), level = "debug")]
-    pub fn detect_lines_hough(image: &GrayImage, min_length: f64) -> Result<Vec<HoughLine>, String> {
+    pub fn detect_lines_hough(
+        image: &GrayImage,
+        min_length: f64,
+        threshold: u32,
+    ) -> Result<Vec<HoughLine>, String> {
         let start = std::time::Instant::now();
         let mat = gray_image_to_mat(image)?;
 
@@ -271,7 +318,7 @@ mod opencv_impl {
             &mut lines,
             1.0,
             std::f64::consts::PI / 180.0,
-            50,
+            threshold as f64,
             min_length,
             10.0,
         )
@@ -306,12 +353,15 @@ mod opencv_impl {
 
     /// 使用 OpenCV 查找轮廓
     #[tracing::instrument(name = "opencv_contours", skip(image), level = "debug")]
-    pub fn find_contours_opencv(image: &GrayImage, min_length: usize) -> Result<Vec<Polyline>, String> {
+    pub fn find_contours_opencv(
+        image: &GrayImage,
+        min_length: usize,
+    ) -> Result<Vec<Polyline>, String> {
         let start = std::time::Instant::now();
         // 转换为二值 Mat（反转：黑->白，白->黑，因为 findContours 查找白色对象）
         let mut mat = gray_image_to_binary_mat(image, true)?;
 
-        let mut contours = opencv::core::Vector::<opencv::core::Vector::<opencv::core::Point>>::new();
+        let mut contours = opencv::core::Vector::<opencv::core::Vector<opencv::core::Point>>::new();
 
         // P11 锐评 v2.0 修复：移除不必要的 mut 警告
         #[allow(clippy::unnecessary_mut_passed)]
@@ -326,7 +376,8 @@ mod opencv_impl {
 
         let mut result = Vec::new();
         for i in 0..contours.len() {
-            let contour = contours.get(i)
+            let contour = contours
+                .get(i)
                 .map_err(|e| format!("读取轮廓失败：{}", e))?;
 
             if contour.len() >= min_length {
@@ -360,7 +411,11 @@ mod opencv_impl {
     ///
     /// # 返回
     /// 简化后的多边形点集
-    pub fn approx_polyline_opencv(polyline: &[Point2], epsilon: f64, closed: bool) -> Result<Vec<Point2>, String> {
+    pub fn approx_polyline_opencv(
+        polyline: &[Point2],
+        epsilon: f64,
+        closed: bool,
+    ) -> Result<Vec<Point2>, String> {
         // 转换为 OpenCV Point 格式
         let points: Vector<Point> = polyline
             .iter()
@@ -368,25 +423,20 @@ mod opencv_impl {
             .collect();
 
         let mut approx = Vector::<Point>::new();
-        approx_poly_dp(
-            &points,
-            &mut approx,
-            epsilon,
-            closed,
-        )
-        .map_err(|e| format!("approxPolyDP 失败：{}", e))?;
+        approx_poly_dp(&points, &mut approx, epsilon, closed)
+            .map_err(|e| format!("approxPolyDP 失败：{}", e))?;
 
         // 转换回 Point2 格式
-        let result: Vec<Point2> = approx
-            .iter()
-            .map(|p| [p.x as f64, p.y as f64])
-            .collect();
+        let result: Vec<Point2> = approx.iter().map(|p| [p.x as f64, p.y as f64]).collect();
 
         Ok(result)
     }
 
     /// 简化轮廓（批量处理）
-    pub fn simplify_contours_opencv(contours: &[Polyline], epsilon: f64) -> Result<Vec<Polyline>, String> {
+    pub fn simplify_contours_opencv(
+        contours: &[Polyline],
+        epsilon: f64,
+    ) -> Result<Vec<Polyline>, String> {
         let mut result = Vec::with_capacity(contours.len());
         for contour in contours {
             match approx_polyline_opencv(contour, epsilon, true) {
@@ -414,7 +464,7 @@ pub use opencv_impl::*;
 /// 边缘检测 - Sobel 算子（并行版本）
 pub fn detect_edges(image: &GrayImage) -> GrayImage {
     let (width, height) = image.dimensions();
-    
+
     // 预分配结果缓冲区
     let mut pixels = vec![0u8; (width * height) as usize];
     let width_usize = width as usize;
@@ -459,7 +509,7 @@ pub fn detect_edges(image: &GrayImage) -> GrayImage {
 pub fn threshold(image: &GrayImage, thresh: u8) -> GrayImage {
     let mut result = GrayImage::new(image.width(), image.height());
     let width = image.width() as usize;
-    
+
     // 使用 slice 并行迭代器
     result
         .as_mut()
@@ -470,7 +520,7 @@ pub fn threshold(image: &GrayImage, thresh: u8) -> GrayImage {
                 *dst_pixel = if src_pixel >= thresh { 255u8 } else { 0u8 };
             }
         });
-    
+
     result
 }
 
@@ -504,8 +554,7 @@ fn count_neighbors(image: &GrayImage, x: i32, y: i32) -> u8 {
             }
             let nx = x + dx;
             let ny = y + dy;
-            if nx >= 0 && ny >= 0
-                && image.get_pixel(nx as u32, ny as u32)[0] == 0 {
+            if nx >= 0 && ny >= 0 && image.get_pixel(nx as u32, ny as u32)[0] == 0 {
                 count += 1;
             }
         }
@@ -544,45 +593,54 @@ fn dfs_contour_iterative(
     contour: &mut Vec<Point2>,
 ) {
     let (width, height) = image.dimensions();
-    
+
     // 使用显式栈模拟递归
     let mut stack: Vec<(i32, i32)> = Vec::new();
     stack.push((start_x, start_y));
-    
+
     // 8 邻域方向
     let directions: [(i32, i32); 8] = [
-        (-1, -1), (0, -1), (1, -1),
-        (-1,  0),          (1,  0),
-        (-1,  1), (0,  1), (1,  1),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (-1, 0),
+        (1, 0),
+        (-1, 1),
+        (0, 1),
+        (1, 1),
     ];
-    
+
     while let Some((x, y)) = stack.pop() {
         // 边界检查
         if x < 0 || y < 0 || x >= width as i32 || y >= height as i32 {
             continue;
         }
-        
+
         // 已访问检查
         if visited[x as usize][y as usize] {
             continue;
         }
-        
+
         // 边缘检查（黑色像素为边缘）
         if image.get_pixel(x as u32, y as u32)[0] != 0 {
             continue;
         }
-        
+
         // 标记为已访问并添加到轮廓
         visited[x as usize][y as usize] = true;
         contour.push([x as f64, y as f64]);
-        
+
         // 将邻域点压入栈
         for (dx, dy) in &directions {
             let nx = x + dx;
             let ny = y + dy;
-            
-            if nx >= 0 && ny >= 0 && (nx < width as i32) && (ny < height as i32)
-                && !visited[nx as usize][ny as usize] {
+
+            if nx >= 0
+                && ny >= 0
+                && (nx < width as i32)
+                && (ny < height as i32)
+                && !visited[nx as usize][ny as usize]
+            {
                 stack.push((nx, ny));
             }
         }
@@ -617,6 +675,7 @@ pub fn douglas_peucker(points: &[Point2], epsilon: f64) -> Vec<Point2> {
 }
 
 /// Douglas-Peucker 递归实现
+#[allow(clippy::needless_range_loop)]
 fn douglas_peucker_recursive(
     points: &[Point2],
     start: usize,
@@ -635,6 +694,7 @@ fn douglas_peucker_recursive(
     let line_start = points[start];
     let line_end = points[end];
 
+    #[allow(clippy::needless_range_loop)]
     for i in (start + 1)..end {
         let dist = point_to_line_distance(points[i], line_start, line_end);
         if dist > max_dist {
@@ -661,7 +721,8 @@ fn point_to_line_distance(point: Point2, line_start: Point2, line_end: Point2) -
         return ((point[0] - line_start[0]).powi(2) + (point[1] - line_start[1]).powi(2)).sqrt();
     }
 
-    let t = ((point[0] - line_start[0]) * dx + (point[1] - line_start[1]) * dy) / (dx * dx + dy * dy);
+    let t =
+        ((point[0] - line_start[0]) * dx + (point[1] - line_start[1]) * dy) / (dx * dx + dy * dy);
     let t = t.clamp(0.0, 1.0);
 
     let proj_x = line_start[0] + t * dx;

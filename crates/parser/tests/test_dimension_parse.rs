@@ -2,8 +2,8 @@
 //!
 //! 测试 DIMENSION 实体的解析功能
 
-use parser::DxfParser;
 use common_types::RawEntity;
+use parser::DxfParser;
 
 mod common;
 use common::get_dxf_dir;
@@ -46,17 +46,24 @@ fn test_dimension_entity_parse() {
         // 解析文件
         if let Ok(entities) = parser.parse_file(&file_path) {
             // 统计 DIMENSION 实体数量
-            let dimension_count = entities.iter()
+            let dimension_count = entities
+                .iter()
                 .filter(|e| matches!(e, RawEntity::Dimension { .. }))
                 .count();
 
             if dimension_count > 0 {
                 files_with_dimension += 1;
                 total_dimension_count += dimension_count;
-                
+
                 // 详细统计
                 for entity in entities.iter() {
-                    if let RawEntity::Dimension { definition_points, measurement, text, .. } = entity {
+                    if let RawEntity::Dimension {
+                        definition_points,
+                        measurement,
+                        text,
+                        ..
+                    } = entity
+                    {
                         total_definition_points += definition_points.len();
                         if *measurement > 0.0 {
                             dimensions_with_measurement += 1;
@@ -66,7 +73,7 @@ fn test_dimension_entity_parse() {
                         }
                     }
                 }
-                
+
                 println!("✅ {}: {} 个 DIMENSION 实体", file_name, dimension_count);
             }
         }
@@ -90,12 +97,12 @@ fn test_dimension_entity_parse() {
 fn test_dimension_type_parse() {
     // 验证维度类型转换逻辑
     use common_types::DimensionType;
-    
+
     // 测试各种标注类型的识别
     // 注意：实际类型识别在 convert_dimension_type() 中实现
     // 这里验证 DimensionType 枚举的变体
-    
-    let dimension_types = vec![
+
+    let dimension_types = [
         DimensionType::Linear,
         DimensionType::Aligned,
         DimensionType::Angular,
@@ -104,16 +111,16 @@ fn test_dimension_type_parse() {
         DimensionType::Ordinate,
         DimensionType::ArcLength,
     ];
-    
+
     // 断言：所有类型都能正确创建
     assert_eq!(dimension_types.len(), 7, "应该有 7 种维度类型");
-    
+
     // 验证类型匹配
     match dimension_types[0] {
-        DimensionType::Linear => {}, // 预期
+        DimensionType::Linear => {} // 预期
         _ => panic!("第一个类型应该是 Linear"),
     }
-    
+
     println!("✅ DIMENSION 类型识别测试通过");
 }
 
@@ -122,19 +129,25 @@ fn test_dimension_type_parse() {
 fn test_dimension_measurement_parse() {
     // 创建测试数据验证测量值提取
     // 注意：实际测量值提取在 parse_*_dimension_entity() 中实现
-    
+
     // 验证测量值缩放逻辑
     let raw_measurement: f64 = 100.0;
     let scale: f64 = 1.0;
     let scaled_measurement = raw_measurement * scale;
-    
-    assert!((scaled_measurement - 100.0_f64).abs() < 0.001, "测量值缩放应该正确");
-    
+
+    assert!(
+        (scaled_measurement - 100.0_f64).abs() < 0.001,
+        "测量值缩放应该正确"
+    );
+
     // 验证不同缩放比例
     let scale_1000: f64 = 1000.0;
     let scaled_1000 = raw_measurement * scale_1000;
-    assert!((scaled_1000 - 100000.0_f64).abs() < 0.001, "米到毫米的缩放应该正确");
-    
+    assert!(
+        (scaled_1000 - 100000.0_f64).abs() < 0.001,
+        "米到毫米的缩放应该正确"
+    );
+
     println!("✅ DIMENSION 测量值提取逻辑测试通过");
 }
 
@@ -144,22 +157,28 @@ fn test_dimension_definition_points_parse() {
     // 验证定义点提取逻辑
     // RotatedDimension 应该有 3 个定义点
     // RadialDimension 和 DiameterDimension 应该有 1-2 个定义点
-    
+
     // 测试定义点数量要求
     let rotated_dim_points = 3; // pt1, pt2, pt3
     let radial_dim_points_min = 1; // pt1 (pt2 optional)
-    
-    assert!(rotated_dim_points >= 2, "RotatedDimension 应该至少有 2 个定义点");
-    assert!(radial_dim_points_min >= 1, "RadialDimension 应该至少有 1 个定义点");
-    
+
+    assert!(
+        rotated_dim_points >= 2,
+        "RotatedDimension 应该至少有 2 个定义点"
+    );
+    assert!(
+        radial_dim_points_min >= 1,
+        "RadialDimension 应该至少有 1 个定义点"
+    );
+
     // 验证坐标缩放逻辑
     let raw_point = (100.0_f64, 200.0_f64);
     let scale: f64 = 1.0;
     let scaled_point = (raw_point.0 * scale, raw_point.1 * scale);
-    
+
     assert!((scaled_point.0 - 100.0).abs() < 0.001, "X 坐标缩放应该正确");
     assert!((scaled_point.1 - 200.0).abs() < 0.001, "Y 坐标缩放应该正确");
-    
+
     println!("✅ DIMENSION 定义点提取逻辑测试通过");
 }
 
@@ -229,7 +248,8 @@ fn test_dimension_from_real_file() {
         // 解析文件
         if let Ok(entities) = parser.parse_file(&file_path) {
             // 筛选出 DIMENSION 实体
-            let dimensions: Vec<_> = entities.iter()
+            let dimensions: Vec<_> = entities
+                .iter()
                 .filter(|e| matches!(e, RawEntity::Dimension { .. }))
                 .collect();
 
@@ -270,7 +290,10 @@ fn test_dimension_from_real_file() {
     // 注意：不强制要求有 DIMENSION 实体，因为当前测试文件可能不包含标注
     // 当未来添加带 DIMENSION 的测试文件时，以下断言会自动验证
     if files_with_dimension > 0 {
-        assert!(total_dimension_count >= 1, "应该解析到至少 1 个 DIMENSION 实体");
+        assert!(
+            total_dimension_count >= 1,
+            "应该解析到至少 1 个 DIMENSION 实体"
+        );
         assert!(!dimension_types_found.is_empty(), "应该至少有一种维度类型");
         println!("✅ DIMENSION 真实文件解析测试通过");
     } else {

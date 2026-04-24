@@ -99,7 +99,11 @@ impl RequestMetadata {
     /// * `trace_id` - 整个请求链路的唯一标识
     /// * `span_id` - 当前服务调用的标识
     /// * `parent_span_id` - 父服务调用的标识（可选）
-    pub fn with_trace(trace_id: impl Into<String>, span_id: impl Into<String>, parent_span_id: Option<String>) -> Self {
+    pub fn with_trace(
+        trace_id: impl Into<String>,
+        span_id: impl Into<String>,
+        parent_span_id: Option<String>,
+    ) -> Self {
         Self {
             trace_id: Some(trace_id.into()),
             span_id: Some(span_id.into()),

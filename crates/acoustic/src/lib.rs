@@ -1,6 +1,12 @@
+#![deprecated(since = "0.1.0", note = "声学功能已停止开发，此 crate 不再维护")]
 //! 声学分析服务
 //!
-//! # 功能范围
+//! # 状态：已停止开发 (deprecated)
+//!
+//! 此 crate 已标记为停止开发，不再接受新功能或维护更新。
+//! 保留代码仅供历史参考，未来版本可能移除。
+//!
+//! # 原始功能范围
 //!
 //! ## P0 核心功能（本期实现）
 //! - ✅ 选区材料统计：框选区域 → 显示表面积、材料分布
@@ -19,8 +25,7 @@
 //! # 使用示例
 //!
 //! ```rust,no_run
-//! use acoustic::{AcousticService, AcousticServiceConfig};
-//! use common_types::acoustic::{AcousticInput, AcousticRequest, SelectionBoundary, SelectionMode};
+//! use acoustic::{AcousticService, AcousticServiceConfig, AcousticInput, AcousticRequest, SelectionBoundary, SelectionMode};
 //! use common_types::scene::SceneState;
 //!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -63,38 +68,24 @@
 //! └─────────────────────────────────────────────────────────┘
 //! ```
 
-pub mod service;
-pub mod selection;
-pub mod reverberation;
+pub mod acoustic_types;
 pub mod comparative;
 pub mod material_db;
+pub mod reverberation;
+pub mod selection;
+pub mod service;
 
 // 重新导出常用类型
-pub use service::{AcousticService, AcousticServiceConfig};
-pub use selection::SelectionCalculator;
-pub use reverberation::ReverberationCalculator;
-pub use comparative::ComparativeAnalyzer;
-
-// 重新导出 common-types 中的声学类型
-pub use common_types::acoustic::{
-    AcousticInput,
-    AcousticOutput,
-    AcousticRequest,
-    AcousticResult,
-    AcousticMetrics,
-    SelectionBoundary,
-    SelectionMode,
-    NamedSelection,
-    ComparisonMetric,
-    ReverberationFormula,
-    Frequency,
-    SelectionMaterialStatsResult,
-    MaterialDistribution,
-    ReverberationResult,
-    ComparativeAnalysisResult,
-    RegionStats,
-    AcousticError,
+pub use acoustic_types::{
+    AcousticError, AcousticInput, AcousticMetrics, AcousticOutput, AcousticRequest, AcousticResult,
+    ComparativeAnalysisResult, ComparisonMetric, Frequency, MaterialDistribution, NamedSelection,
+    RegionStats, ReverberationFormula, ReverberationResult, SelectionBoundary,
+    SelectionMaterialStatsResult, SelectionMode,
 };
+pub use comparative::ComparativeAnalyzer;
+pub use reverberation::ReverberationCalculator;
+pub use selection::SelectionCalculator;
+pub use service::{AcousticService, AcousticServiceConfig};
 
 /// Crate 版本号
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -32,7 +32,10 @@ impl WgpuContext {
             .ok_or_else(|| "无法获取 wgpu 适配器".to_string())?;
 
         let adapter_info = adapter.get_info();
-        info!("wgpu 适配器：{} ({:?})", adapter_info.name, adapter_info.backend);
+        info!(
+            "wgpu 适配器：{} ({:?})",
+            adapter_info.name, adapter_info.backend
+        );
 
         let (device, queue) = adapter
             .request_device(

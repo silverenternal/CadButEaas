@@ -3,10 +3,13 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use common_types::{SceneState, CadError, InternalErrorReason, IoErrorReason, Service, ServiceHealth, ServiceVersion, ServiceMetrics};
+use crate::formats::{ExportFormat, SceneJson};
 use common_types::request::Request;
 use common_types::response::Response;
-use crate::formats::{SceneJson, ExportFormat};
+use common_types::{
+    CadError, InternalErrorReason, IoErrorReason, SceneState, Service, ServiceHealth,
+    ServiceMetrics, ServiceVersion,
+};
 use std::fmt::Debug;
 
 /// 导出配置
@@ -144,18 +147,26 @@ impl ExportService {
         let scene_json = SceneJson::from_scene_state(&scaled_scene);
 
         let bytes = match self.config.format {
-            ExportFormat::Json => scene_json
-                .to_json_bytes(self.config.pretty_json)
-                .map_err(|e| CadError::InternalError {
-                    reason: InternalErrorReason::Panic { message: format!("JSON 序列化失败：{}", e) },
-                    location: None,
-                })?,
-            ExportFormat::Binary => scene_json
-                .to_binary_bytes()
-                .map_err(|e| CadError::InternalError {
-                    reason: InternalErrorReason::Panic { message: format!("二进制序列化失败：{}", e) },
-                    location: None,
-                })?,
+            ExportFormat::Json => {
+                scene_json
+                    .to_json_bytes(self.config.pretty_json)
+                    .map_err(|e| CadError::InternalError {
+                        reason: InternalErrorReason::Panic {
+                            message: format!("JSON 序列化失败：{}", e),
+                        },
+                        location: None,
+                    })?
+            }
+            ExportFormat::Binary => {
+                scene_json
+                    .to_binary_bytes()
+                    .map_err(|e| CadError::InternalError {
+                        reason: InternalErrorReason::Panic {
+                            message: format!("二进制序列化失败：{}", e),
+                        },
+                        location: None,
+                    })?
+            }
         };
 
         let extension = match self.config.format {
@@ -173,15 +184,20 @@ impl ExportService {
     /// 导出为 JSON 字符串
     pub fn export_to_json_string(&self, scene: &SceneState) -> Result<String, CadError> {
         let result = self.export(scene)?;
-        String::from_utf8(result.bytes)
-            .map_err(|e| CadError::InternalError {
-                reason: InternalErrorReason::Panic { message: format!("UTF-8 转换失败：{}", e) },
-                location: None,
-            })
+        String::from_utf8(result.bytes).map_err(|e| CadError::InternalError {
+            reason: InternalErrorReason::Panic {
+                message: format!("UTF-8 转换失败：{}", e),
+            },
+            location: None,
+        })
     }
 
     /// 导出到文件
-    pub fn export_to_file(&self, scene: &SceneState, path: impl AsRef<std::path::Path>) -> Result<(), CadError> {
+    pub fn export_to_file(
+        &self,
+        scene: &SceneState,
+        path: impl AsRef<std::path::Path>,
+    ) -> Result<(), CadError> {
         let result = self.export(scene)?;
         let path_buf = path.as_ref().to_path_buf();
         std::fs::write(path.as_ref(), &result.bytes)
@@ -208,7 +224,10 @@ impl Service for ExportService {
     type Data = ExportResult;
     type Error = CadError;
 
-    async fn process(&self, request: Request<Self::Payload>) -> Result<Response<Self::Data>, Self::Error> {
+    async fn process(
+        &self,
+        request: Request<Self::Payload>,
+    ) -> Result<Response<Self::Data>, Self::Error> {
         let start = Instant::now();
 
         // 如果需要导出到文件
@@ -226,11 +245,7 @@ impl Service for ExportService {
         self.metrics.record_request(result.is_ok(), latency);
 
         let data = result?;
-        Ok(Response::success(
-            request.id,
-            data,
-            latency as u64,
-        ))
+        Ok(Response::success(request.id, data, latency as u64))
     }
 
     fn health_check(&self) -> ServiceHealth {
@@ -253,7 +268,7 @@ impl Service for ExportService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common_types::{ClosedLoop, LengthUnit, CoordinateSystem, SceneState};
+    use common_types::{ClosedLoop, CoordinateSystem, LengthUnit, SceneState};
 
     #[test]
     fn test_export_service_json() {

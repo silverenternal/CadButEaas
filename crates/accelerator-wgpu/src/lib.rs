@@ -9,9 +9,14 @@
 //! - 端点吸附（GPU 并行 R*-tree 构建）
 //! - 圆弧拟合（GPU 最小二乘拟合）
 
-mod wgpu_accelerator;
-mod edge_detect;
-mod context;
+#![allow(dead_code)]
 
-pub use wgpu_accelerator::WgpuAccelerator;
+mod arc_fit;
+mod context;
+mod contour_extract;
+mod edge_detect;
+mod snap;
+mod wgpu_accelerator;
+
 pub use context::WgpuContext;
+pub use wgpu_accelerator::WgpuAccelerator;

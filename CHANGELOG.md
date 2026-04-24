@@ -8,19 +8,61 @@
 
 ## [未发布]
 
-### 计划 (P2 阶段)
+### 新增
 
-#### 新增
-- WebSocket 实时通信支持
-- Halfedge 数据结构主流程集成
-- 复杂扫描图纸矢量化增强
-- 语义标注 UI 校正功能
-- 配置热加载功能
+#### 多格式解析增强
+- **DWG 解析**
+  - AutoCAD 默认格式支持（R13-R2018 版本）
+  - 通过 libredwg 外部转换器集成
+  - 实体映射到 RawEntity 标准格式
 
-#### 改进
-- 虚线/中心线/剖面线识别能力
-- 真实图纸测试集（50+ 张）
-- 前端实时交互体验
+- **SVG 导入/导出**
+  - 导入：解析 SVG `<line>/<path>/<circle>/<text>/<polygon>` 等元素 → RawEntity
+  - 导出：RawEntity → SVG XML 格式
+  - 自动计算 viewBox（基于实体边界框 + 10% 边距）
+  - 支持图层可见性过滤
+  - 支持 RawEntity 类型：Line, Polyline, Circle, Arc, Text, Path, Triangle (XY 投影)
+
+- **STL 解析**
+  - 支持二进制和 ASCII 双格式
+  - 自动检测格式类型
+  - 三角面片 → `RawEntity::Triangle`
+  - 法线向量记录
+  - 新增 `RawEntity::Triangle` 变体（3D 几何支持）
+
+#### PDF 增强
+- **PDF 文字提取**
+  - 支持 Tj/TJ 操作符（显示文字）
+  - BT/ET 文字对象解析
+  - Tm 变换矩阵合成
+  - Td/T*/Tf 文字定位和字体设置
+  - 变换矩阵应用于 Path 和 Text 实体位置
+
+#### 模块拆分
+- **raster-loader** 独立 crate
+  - 统一光栅图片加载接口
+  - 支持 PNG/JPG/BMP/TIFF/WebP 格式
+  - 自动格式检测和元数据提取
+  - 解耦 vectorize 和图片加载依赖
+
+### 改进
+
+- 测试套件从 310+ 扩展到 585+ 测试
+
+#### wgpu 加速器功能完备化
+- **圆弧拟合 GPU 实现** (`accelerator-wgpu/src/arc_fit.rs`)
+  - Kåsa 算法 GPU 并行版本，workgroup 归约计算累加和
+  - GPU 计算统计量，CPU 求解线性方程组得到圆心半径
+- **端点吸附 GPU 实现** (`accelerator-wgpu/src/snap.rs`)
+  - 工作组内存缓存 + 并行最近邻搜索
+  - 在容差范围内吸附到最近端点
+- 完整实现 Accelerator trait 所有四个操作：边缘检测 ✅ + 轮廓提取 ✅ + 圆弧拟合 ✅ + 端点吸附 ✅
+- wgpu 加速器现在功能完备，所有操作都有 GPU 加速版本
+- export crate 新增 SVG 导出器（SvgWriter）
+- parser crate 新增 SVG 导入器（SvgParser）、STL 解析器（StlParser）、DWG 解析器（DwgParser）
+- common-types 新增 `RawEntity::Triangle` 变体
+- parser 缓存系统支持 Triangle 实体哈希计算
+- parser 恢复系统支持 Triangle 实体验证
 
 ---
 
@@ -174,7 +216,7 @@
 ### 当前状态
 
 - **最新版本**: v0.1.0 (稳定版本)
-- **测试状态**: 220+ 测试全部通过
+- **测试状态**: 585+ 测试（584 通过，1 已知失败）
 - **代码质量**: Clippy 0 警告
 - **整体完成度**: 92%
 
@@ -185,6 +227,8 @@
 - Halfedge 主流程集成
 - PDF 矢量化增强
 - 配置热加载
+- 微服务拆分（HTTP/gRPC）
+- 语义标注 UI 校正入口
 
 ---
 
@@ -198,4 +242,4 @@
 
 ---
 
-**最后更新**: 2026 年 2 月 28 日
+**最后更新**: 2026 年 4 月 15 日

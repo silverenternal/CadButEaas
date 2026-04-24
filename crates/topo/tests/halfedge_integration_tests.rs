@@ -6,35 +6,30 @@
 //! 2. 带孔洞的矩形（嵌套孔洞）
 //! 3. 真实 DXF 文件（报告厅平面图）
 
-use topo::halfedge::HalfedgeGraph;
 use common_types::geometry::Point2;
 use std::path::PathBuf;
+use topo::halfedge::HalfedgeGraph;
 
 /// 测试简单矩形的 Halfedge 构建
 #[test]
 fn test_halfedge_simple_rectangle() {
     // 创建简单矩形
-    let rectangle = vec![
-        [0.0, 0.0],
-        [10.0, 0.0],
-        [10.0, 10.0],
-        [0.0, 10.0],
-    ];
-    
+    let rectangle = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
     let graph = HalfedgeGraph::from_loops(&[rectangle]);
-    
+
     // 验证：应该有 1 个面（外轮廓）
     let face_count = graph.faces().count();
     assert_eq!(face_count, 1, "简单矩形应该有 1 个面");
-    
+
     // 验证：应该有 4 个顶点
     let vertex_count = graph.vertices().count();
     assert_eq!(vertex_count, 4, "矩形应该有 4 个顶点");
-    
+
     // 验证：应该有 8 条半边（每条边 2 条）
     let halfedge_count = graph.halfedges.len();
     assert_eq!(halfedge_count, 8, "矩形应该有 8 条半边");
-    
+
     println!("✅ 简单矩形 Halfedge 测试通过");
 }
 
@@ -42,42 +37,32 @@ fn test_halfedge_simple_rectangle() {
 #[test]
 fn test_halfedge_rectangle_with_hole() {
     // 外轮廓
-    let outer = vec![
-        [0.0, 0.0],
-        [20.0, 0.0],
-        [20.0, 20.0],
-        [0.0, 20.0],
-    ];
-    
+    let outer = vec![[0.0, 0.0], [20.0, 0.0], [20.0, 20.0], [0.0, 20.0]];
+
     // 孔洞
-    let hole = vec![
-        [8.0, 8.0],
-        [12.0, 8.0],
-        [12.0, 12.0],
-        [8.0, 12.0],
-    ];
-    
+    let hole = vec![[8.0, 8.0], [12.0, 8.0], [12.0, 12.0], [8.0, 12.0]];
+
     let graph = HalfedgeGraph::from_loops(&[outer, hole]);
-    
+
     // 验证：应该有 2 个面（外轮廓 + 孔洞）
     let face_count = graph.faces().count();
     assert_eq!(face_count, 2, "带孔洞矩形应该有 2 个面");
-    
+
     // 验证：应该有 8 个顶点
     let vertex_count = graph.vertices().count();
     assert_eq!(vertex_count, 8, "带孔洞矩形应该有 8 个顶点");
-    
+
     // 验证：应该有 16 条半边（8 条边 × 2）
     let halfedge_count = graph.halfedges.len();
     assert_eq!(halfedge_count, 16, "带孔洞矩形应该有 16 条半边");
-    
+
     // 验证：可以遍历面的边界
     for face_id in graph.faces() {
         let boundary = graph.face_boundary_points(face_id);
         assert!(!boundary.is_empty(), "面 {:?} 的边界不应为空", face_id);
         println!("  面 {:?}: {:?} 个点", face_id, boundary.len());
     }
-    
+
     println!("✅ 带孔洞矩形 Halfedge 测试通过");
 }
 
@@ -85,35 +70,20 @@ fn test_halfedge_rectangle_with_hole() {
 #[test]
 fn test_halfedge_nested_holes() {
     // 外轮廓
-    let outer = vec![
-        [0.0, 0.0],
-        [30.0, 0.0],
-        [30.0, 30.0],
-        [0.0, 30.0],
-    ];
-    
+    let outer = vec![[0.0, 0.0], [30.0, 0.0], [30.0, 30.0], [0.0, 30.0]];
+
     // 外层孔洞
-    let hole1 = vec![
-        [10.0, 10.0],
-        [20.0, 10.0],
-        [20.0, 20.0],
-        [10.0, 20.0],
-    ];
-    
+    let hole1 = vec![[10.0, 10.0], [20.0, 10.0], [20.0, 20.0], [10.0, 20.0]];
+
     // 内层岛（孔洞中的岛）
-    let island = vec![
-        [14.0, 14.0],
-        [16.0, 14.0],
-        [16.0, 16.0],
-        [14.0, 16.0],
-    ];
-    
+    let island = vec![[14.0, 14.0], [16.0, 14.0], [16.0, 16.0], [14.0, 16.0]];
+
     let graph = HalfedgeGraph::from_loops(&[outer, hole1, island]);
-    
+
     // 验证：应该有 3 个面
     let face_count = graph.faces().count();
     assert_eq!(face_count, 3, "嵌套孔洞应该有 3 个面");
-    
+
     println!("✅ 嵌套孔洞 Halfedge 测试通过");
 }
 
@@ -122,51 +92,49 @@ fn test_halfedge_nested_holes() {
 fn test_halfedge_with_dxf_file() {
     // 使用真实 DXF 文件（报告厅 1.dxf）
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
-    let dxf_path = PathBuf::from(&manifest_dir)
-        .join("../../dxfs/报告厅 1.dxf");
-    
+    let dxf_path = PathBuf::from(&manifest_dir).join("../../dxfs/报告厅 1.dxf");
+
     if !dxf_path.exists() {
         println!("⚠️  跳过测试：DXF 文件不存在 ({:?})", dxf_path);
         return;
     }
-    
+
     println!("📄 加载 DXF 文件：{:?}", dxf_path);
-    
+
     // 解析 DXF 文件（简化实现，仅用于测试）
-    let dxf_content = std::fs::read_to_string(&dxf_path)
-        .expect("读取 DXF 文件失败");
-    
+    let dxf_content = std::fs::read_to_string(&dxf_path).expect("读取 DXF 文件失败");
+
     // 简单解析 DXF，提取线段
     let polylines = parse_dxf_simple(&dxf_content);
-    
+
     if polylines.is_empty() {
         println!("⚠️  跳过测试：未能从 DXF 中提取线段");
         return;
     }
-    
+
     println!("  提取到 {:?} 条多段线", polylines.len());
-    
+
     // 构建 Halfedge 图
     let graph = HalfedgeGraph::from_loops(&polylines);
-    
+
     // 验证基本统计
     let vertex_count = graph.vertices().count();
     let halfedge_count = graph.halfedges.len();
     let face_count = graph.faces().count();
-    
+
     println!("  顶点数：{:?}", vertex_count);
     println!("  半边数：{:?}", halfedge_count);
     println!("  面数：{:?}", face_count);
-    
+
     // 验证：至少有一个面
     assert!(face_count > 0, "DXF 文件应该至少有一个面");
-    
+
     // 验证：可以遍历所有面的边界
     let mut total_boundary_points = 0;
     for face_id in graph.faces() {
         let boundary = graph.face_boundary_points(face_id);
         total_boundary_points += boundary.len();
-        
+
         // 验证边界是闭合的（首尾点相同）
         if boundary.len() > 1 {
             let first = boundary.first().unwrap();
@@ -180,7 +148,7 @@ fn test_halfedge_with_dxf_file() {
             );
         }
     }
-    
+
     println!("  总边界点数：{:?}", total_boundary_points);
     println!("✅ DXF 文件 Halfedge 测试通过");
 }
@@ -188,15 +156,10 @@ fn test_halfedge_with_dxf_file() {
 /// 测试 Halfedge 的 twin 关系
 #[test]
 fn test_halfedge_twin_relationship() {
-    let rectangle = vec![
-        [0.0, 0.0],
-        [10.0, 0.0],
-        [10.0, 10.0],
-        [0.0, 10.0],
-    ];
-    
+    let rectangle = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
     let graph = HalfedgeGraph::from_loops(&[rectangle]);
-    
+
     // 验证：每条半边的 twin 的 twin 是自己
     for he_id in 0..graph.halfedges.len() {
         let twin_id = graph.halfedge(he_id).twin;
@@ -207,33 +170,28 @@ fn test_halfedge_twin_relationship() {
             he_id, twin_id, twin_of_twin
         );
     }
-    
+
     println!("✅ Halfedge twin 关系测试通过");
 }
 
 /// 测试 Halfedge 的 next/prev 关系
 #[test]
 fn test_halfedge_next_prev_relationship() {
-    let rectangle = vec![
-        [0.0, 0.0],
-        [10.0, 0.0],
-        [10.0, 10.0],
-        [0.0, 10.0],
-    ];
-    
+    let rectangle = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+
     let graph = HalfedgeGraph::from_loops(&[rectangle]);
-    
+
     // 验证：遍历面的边界，next 指针应该形成闭环
     for face_id in graph.faces() {
         let boundary_loop = graph.face_boundary_loop(face_id);
-        
+
         if !boundary_loop.is_empty() {
             let start_he = boundary_loop[0];
             // 验证 next 指针形成闭环
             let mut current = start_he;
             let mut count = 0;
             let max_iterations = graph.halfedges.len() * 2;
-            
+
             loop {
                 let he = graph.halfedge(current);
                 match he.next {
@@ -253,33 +211,33 @@ fn test_halfedge_next_prev_relationship() {
                     }
                 }
             }
-            
+
             println!("  面 {:?} 的 next 指针形成闭环，边数：{:?}", face_id, count);
         }
     }
-    
+
     println!("✅ Halfedge next/prev 关系测试通过");
 }
 
 /// 简单的 DXF 解析器（用于测试）
-/// 
+///
 /// 注意：这是一个简化实现，仅用于测试目的。
 /// 生产环境应使用 parser crate 的完整 DXF 解析。
 fn parse_dxf_simple(content: &str) -> Vec<Vec<Point2>> {
     let mut polylines = Vec::new();
     let mut current_polyline = Vec::new();
     let mut in_polyline = false;
-    
+
     for line in content.lines() {
         let line = line.trim();
-        
+
         // 检测 POLYLINE 开始
         if line == "POLYLINE" || line == "LWPOLYLINE" {
             in_polyline = true;
             current_polyline = Vec::new();
             continue;
         }
-        
+
         // 检测 POLYLINE 结束
         if line == "SEQEND" || line == "ACAD_REACTORS" {
             if in_polyline && !current_polyline.is_empty() {
@@ -288,7 +246,7 @@ fn parse_dxf_simple(content: &str) -> Vec<Vec<Point2>> {
             in_polyline = false;
             continue;
         }
-        
+
         // 尝试解析顶点（简化逻辑）
         if in_polyline {
             if let Some(point) = parse_vertex(line) {
@@ -296,12 +254,12 @@ fn parse_dxf_simple(content: &str) -> Vec<Vec<Point2>> {
             }
         }
     }
-    
+
     // 处理最后一个多段线
     if !current_polyline.is_empty() {
         polylines.push(current_polyline);
     }
-    
+
     polylines
 }
 
@@ -357,14 +315,17 @@ fn test_halfedge_non_manifold_t_junction() {
     // 点 (10.0, 5.0) 是 T 型连接点
     let t_junction = [10.0, 5.0];
     let mut incident_edges = 0;
-    for (_he_idx, he) in graph.halfedges.iter().enumerate() {
+    for he in graph.halfedges.iter() {
         // he.twin 是 usize 类型，直接访问
         let twin = &graph.halfedges[he.twin];
         // 检查是否有顶点接近 T 型连接点
         let origin_pos = graph.vertices[he.origin].position;
         let twin_origin_pos = graph.vertices[twin.origin].position;
-        if (origin_pos[0] - t_junction[0]).abs() < 1e-6 && (origin_pos[1] - t_junction[1]).abs() < 1e-6 ||
-           (twin_origin_pos[0] - t_junction[0]).abs() < 1e-6 && (twin_origin_pos[1] - t_junction[1]).abs() < 1e-6 {
+        if (origin_pos[0] - t_junction[0]).abs() < 1e-6
+            && (origin_pos[1] - t_junction[1]).abs() < 1e-6
+            || (twin_origin_pos[0] - t_junction[0]).abs() < 1e-6
+                && (twin_origin_pos[1] - t_junction[1]).abs() < 1e-6
+        {
             incident_edges += 1;
         }
     }
@@ -386,7 +347,7 @@ fn test_halfedge_self_intersecting_figure_eight() {
         [10.0, 10.0],
         [0.0, 10.0],
         [10.0, 0.0],
-        [0.0, 0.0],  // 闭合
+        [0.0, 0.0], // 闭合
     ];
 
     // Halfedge 应该能构建，但可能产生多个面
@@ -418,7 +379,10 @@ fn test_halfedge_self_intersecting_figure_eight() {
     assert!(
         euler_characteristic == 1 || euler_characteristic == 0,
         "欧拉特征数应该为 1（单连通）或 0（有孔洞）：V={} E={} F={} => χ={}",
-        vertex_count, edge_count, face_count, euler_characteristic
+        vertex_count,
+        edge_count,
+        face_count,
+        euler_characteristic
     );
 
     // P11 v4.0 新增：验证每个面都有合理的面积
@@ -435,21 +399,19 @@ fn test_halfedge_self_intersecting_figure_eight() {
         }
     }
     // 八字形至少能构建图结构，可能形成 0 个或多个有效面
-    println!("✅ 自相交多边形 Halfedge 测试通过（有效面数={})", valid_faces);
+    println!(
+        "✅ 自相交多边形 Halfedge 测试通过（有效面数={})",
+        valid_faces
+    );
 }
 
 /// 测试重合边（两条边完全重叠）
 #[test]
 fn test_halfedge_coincident_edges() {
     // 两个矩形共享一条完整的边
-    let rectangle1 = vec![
-        [0.0, 0.0],
-        [10.0, 0.0],
-        [10.0, 10.0],
-        [0.0, 10.0],
-    ];
+    let rectangle1 = vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
     let rectangle2 = vec![
-        [10.0, 0.0],  // 共享边起点
+        [10.0, 0.0], // 共享边起点
         [20.0, 0.0],
         [20.0, 10.0],
         [10.0, 10.0], // 共享边终点
@@ -467,19 +429,23 @@ fn test_halfedge_coincident_edges() {
     for (i, he) in graph.halfedges.iter().enumerate() {
         // he.twin 是 usize 类型，直接访问
         let twin_idx = he.twin;
-        if twin_idx > i {  // 避免重复计数
+        if twin_idx > i {
+            // 避免重复计数
             let origin = graph.vertices[he.origin].position;
             let twin_origin = graph.vertices[graph.halfedges[twin_idx].origin].position;
             // 检查是否在共享边上（x=10.0）
-            if (origin[0] - 10.0).abs() < 1e-10 &&
-               (twin_origin[0] - 10.0).abs() < 1e-10 {
+            if (origin[0] - 10.0).abs() < 1e-10 && (twin_origin[0] - 10.0).abs() < 1e-10 {
                 shared_edge_twins += 1;
             }
         }
     }
     // 共享边应该有 2 条半边（互为 twin）
     // 注意：两个矩形共享边会创建 2 对 twin 半边（每边一对）
-    assert!(shared_edge_twins >= 1, "共享边应该有 twin 半边，实际找到 {} 对", shared_edge_twins);
+    assert!(
+        shared_edge_twins >= 1,
+        "共享边应该有 twin 半边，实际找到 {} 对",
+        shared_edge_twins
+    );
 
     println!("✅ 重合边 Halfedge 测试通过");
 }
@@ -492,7 +458,7 @@ fn test_halfedge_degenerate_face() {
         [0.0, 0.0],
         [5.0, 0.0],
         [10.0, 0.0],
-        [5.0, 0.0],  // 回退
+        [5.0, 0.0], // 回退
     ];
 
     // Halfedge 应该能构建，但面积为零
@@ -508,7 +474,11 @@ fn test_halfedge_degenerate_face() {
         if let Some(loop_idx) = face.boundary {
             let area = graph.compute_face_area(loop_idx);
             // 退化面的面积应该接近零
-            assert!(area.abs() < 1e-10, "退化面的面积应该接近零，实际为={}", area);
+            assert!(
+                area.abs() < 1e-10,
+                "退化面的面积应该接近零，实际为={}",
+                area
+            );
         }
     }
 
@@ -519,11 +489,7 @@ fn test_halfedge_degenerate_face() {
 #[test]
 fn test_halfedge_tiny_face() {
     // 极小的三角形
-    let tiny_triangle = vec![
-        [0.0, 0.0],
-        [1e-6, 0.0],
-        [0.0, 1e-6],
-    ];
+    let tiny_triangle = vec![[0.0, 0.0], [1e-6, 0.0], [0.0, 1e-6]];
 
     let graph = HalfedgeGraph::from_loops(&[tiny_triangle]);
 
@@ -541,11 +507,13 @@ fn test_halfedge_tiny_face() {
             // 如果找到有效面，面积应该是正的小值
             if area > 0.0 {
                 found_valid_face = true;
-                assert!(area < 1e-6,
-                        "极小三角形面积应该非常小，实际为={}", area);
+                assert!(area < 1e-6, "极小三角形面积应该非常小，实际为={}", area);
             }
         }
     }
     // 只打印结果，不强制要求有有效面
-    println!("✅ 极小面 Halfedge 测试通过（找到有效面={})", found_valid_face);
+    println!(
+        "✅ 极小面 Halfedge 测试通过（找到有效面={})",
+        found_valid_face
+    );
 }

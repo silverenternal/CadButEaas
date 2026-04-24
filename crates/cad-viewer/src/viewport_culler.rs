@@ -48,7 +48,7 @@ pub struct ViewportCuller {
     /// 视口边界（世界坐标）
     viewport: BoundingBox,
     /// 视口对角线长度（用于动态选择算法）
-    #[allow(dead_code)]  // 预留用于未来优化
+    #[allow(dead_code)] // 预留用于未来优化
     viewport_diagonal: f64,
 }
 
@@ -81,34 +81,29 @@ impl From<Rect> for BoundingBox {
     }
 }
 
-/// Cohen-Sutherland 区域编码
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u8)]
-enum RegionCode {
-    Inside = 0b0000,
-    Left = 0b0001,
-    Right = 0b0010,
-    Bottom = 0b0100,
-    Top = 0b1000,
+/// Cohen-Sutherland 区域编码（手动 bitflags）
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct RegionCode(u8);
+
+impl RegionCode {
+    const INSIDE: RegionCode = RegionCode(0b0000);
+    const LEFT: RegionCode = RegionCode(0b0001);
+    const RIGHT: RegionCode = RegionCode(0b0010);
+    const BOTTOM: RegionCode = RegionCode(0b0100);
+    const TOP: RegionCode = RegionCode(0b1000);
+}
+
+impl std::ops::BitOrAssign for RegionCode {
+    fn bitor_assign(&mut self, rhs: Self) {
+        self.0 |= rhs.0;
+    }
 }
 
 impl std::ops::BitAnd for RegionCode {
     type Output = Self;
 
-    fn bitand(self, rhs: Self) -> Self::Output {
-        Self::from_bits(self as u8 & rhs as u8)
-    }
-}
-
-impl RegionCode {
-    fn from_bits(bits: u8) -> Self {
-        match bits {
-            0b0001 => RegionCode::Left,
-            0b0010 => RegionCode::Right,
-            0b0100 => RegionCode::Bottom,
-            0b1000 => RegionCode::Top,
-            _ => RegionCode::Inside,
-        }
+    fn bitand(self, rhs: Self) -> Self {
+        RegionCode(self.0 & rhs.0)
     }
 }
 
@@ -232,17 +227,17 @@ impl ViewportCuller {
 
         loop {
             // Trivial accept
-            if code1 == RegionCode::Inside && code2 == RegionCode::Inside {
+            if code1 == RegionCode::INSIDE && code2 == RegionCode::INSIDE {
                 return true;
             }
 
             // Trivial reject
-            if code1 & code2 != RegionCode::Inside {
+            if code1 & code2 != RegionCode::INSIDE {
                 return false;
             }
 
             // 选择需要裁剪的端点（选择在外部的点）
-            let code_out = if code1 != RegionCode::Inside {
+            let code_out = if code1 != RegionCode::INSIDE {
                 code1
             } else {
                 code2
@@ -278,17 +273,17 @@ impl ViewportCuller {
 
         // 检查四个边界
         let edges = [
-            (-dx, start[0] - self.viewport.min_x),  // 左边界
-            (dx, self.viewport.max_x - start[0]),   // 右边界
-            (-dy, start[1] - self.viewport.min_y),  // 下边界
-            (dy, self.viewport.max_y - start[1]),   // 上边界
+            (-dx, start[0] - self.viewport.min_x), // 左边界
+            (dx, self.viewport.max_x - start[0]),  // 右边界
+            (-dy, start[1] - self.viewport.min_y), // 下边界
+            (dy, self.viewport.max_y - start[1]),  // 上边界
         ];
 
         for (p, q) in &edges {
             if *p == 0.0 {
                 // 线段平行于边界
                 if *q < 0.0 {
-                    return false;  // 线段在边界外
+                    return false; // 线段在边界外
                 }
             } else {
                 let t = *q / *p;
@@ -314,28 +309,18 @@ impl ViewportCuller {
 
     /// 计算区域编码
     fn compute_out_code(&self, p: Point2) -> RegionCode {
-        let mut code = RegionCode::Inside;
+        let mut code = RegionCode::INSIDE;
 
         if p[0] < self.viewport.min_x {
-            code = RegionCode::Left;
+            code |= RegionCode::LEFT;
         } else if p[0] > self.viewport.max_x {
-            code = RegionCode::Right;
+            code |= RegionCode::RIGHT;
         }
 
         if p[1] < self.viewport.min_y {
-            code = match code {
-                RegionCode::Left | RegionCode::Right => {
-                    unsafe { std::mem::transmute(code as u8 | RegionCode::Bottom as u8) }
-                }
-                _ => RegionCode::Bottom,
-            };
+            code |= RegionCode::BOTTOM;
         } else if p[1] > self.viewport.max_y {
-            code = match code {
-                RegionCode::Left | RegionCode::Right => {
-                    unsafe { std::mem::transmute(code as u8 | RegionCode::Top as u8) }
-                }
-                _ => RegionCode::Top,
-            };
+            code |= RegionCode::TOP;
         }
 
         code
@@ -347,28 +332,23 @@ impl ViewportCuller {
         let dy = end[1] - start[1];
         let mut intersection = start;
 
-        match code {
-            RegionCode::Left => {
-                let t = (self.viewport.min_x - start[0]) / dx;
-                intersection[1] = start[1] + t * dy;
-                intersection[0] = self.viewport.min_x;
-            }
-            RegionCode::Right => {
-                let t = (self.viewport.max_x - start[0]) / dx;
-                intersection[1] = start[1] + t * dy;
-                intersection[0] = self.viewport.max_x;
-            }
-            RegionCode::Bottom => {
-                let t = (self.viewport.min_y - start[1]) / dy;
-                intersection[0] = start[0] + t * dx;
-                intersection[1] = self.viewport.min_y;
-            }
-            RegionCode::Top => {
-                let t = (self.viewport.max_y - start[1]) / dy;
-                intersection[0] = start[0] + t * dx;
-                intersection[1] = self.viewport.max_y;
-            }
-            RegionCode::Inside => {}
+        // 按优先级裁剪到各边界（Cohen-Sutherland 每次裁剪一个边界）
+        if code.0 & RegionCode::LEFT.0 != 0 {
+            let t = (self.viewport.min_x - start[0]) / dx;
+            intersection[1] = start[1] + t * dy;
+            intersection[0] = self.viewport.min_x;
+        } else if code.0 & RegionCode::RIGHT.0 != 0 {
+            let t = (self.viewport.max_x - start[0]) / dx;
+            intersection[1] = start[1] + t * dy;
+            intersection[0] = self.viewport.max_x;
+        } else if code.0 & RegionCode::BOTTOM.0 != 0 {
+            let t = (self.viewport.min_y - start[1]) / dy;
+            intersection[0] = start[0] + t * dx;
+            intersection[1] = self.viewport.min_y;
+        } else if code.0 & RegionCode::TOP.0 != 0 {
+            let t = (self.viewport.max_y - start[1]) / dy;
+            intersection[0] = start[0] + t * dx;
+            intersection[1] = self.viewport.max_y;
         }
 
         intersection
@@ -387,7 +367,7 @@ impl ViewportCuller {
     }
 
     /// 获取视口对角线长度
-    #[allow(dead_code)]  // 预留用于未来优化
+    #[allow(dead_code)] // 预留用于未来优化
     pub fn viewport_diagonal(&self) -> f64 {
         self.viewport_diagonal
     }

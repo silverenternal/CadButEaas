@@ -217,7 +217,7 @@ impl Default for GpuInfo {
             name: String::new(),
             vram_mb: 0,
             is_integrated: false,
-            backend: wgpu::Backend::Gl,  // 使用 Gl 作为默认值
+            backend: wgpu::Backend::Gl, // 使用 Gl 作为默认值
         }
     }
 }
@@ -283,7 +283,7 @@ pub fn detect_gpu_tier() -> (GpuTier, GpuInfo) {
         wgpu::DeviceType::IntegratedGpu => {
             // 集成显卡
             match backend {
-                wgpu::Backend::Metal => GpuTier::Medium,  // Apple Silicon
+                wgpu::Backend::Metal => GpuTier::Medium, // Apple Silicon
                 wgpu::Backend::Dx12 | wgpu::Backend::Vulkan => GpuTier::Medium,
                 _ => GpuTier::Low,
             }

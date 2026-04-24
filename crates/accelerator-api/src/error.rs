@@ -15,10 +15,7 @@ pub enum AcceleratorError {
 
     /// 操作不支持
     #[error("加速器 {accelerator} 不支持操作 {op}")]
-    OperationNotSupported {
-        accelerator: String,
-        op: String,
-    },
+    OperationNotSupported { accelerator: String, op: String },
 
     /// 内存不足
     #[error("加速器内存不足：需要 {needed}MB，可用 {available}MB")]
@@ -38,10 +35,7 @@ pub enum AcceleratorError {
 
     /// 后端特定错误
     #[error("后端错误 [{backend}]: {message}")]
-    BackendError {
-        backend: String,
-        message: String,
-    },
+    BackendError { backend: String, message: String },
 }
 
 impl AcceleratorError {

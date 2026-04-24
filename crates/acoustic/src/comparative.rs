@@ -7,11 +7,9 @@
 
 use tracing::{debug, instrument};
 
-use common_types::acoustic::{
-    ComparativeAnalysisResult, RegionStats,
-    NamedSelection, ComparisonMetric,
-    SelectionBoundary, SelectionMode,
-    Frequency, AcousticError,
+use crate::acoustic_types::{
+    AcousticError, ComparativeAnalysisResult, ComparisonMetric, Frequency, NamedSelection,
+    RegionStats, SelectionBoundary, SelectionMode,
 };
 use common_types::scene::SceneState;
 
@@ -89,11 +87,9 @@ impl ComparativeAnalyzer {
         boundary: &SelectionBoundary,
     ) -> Result<RegionStats, AcousticError> {
         // 使用 SelectionCalculator 计算材料统计
-        let material_stats = self.selection_calculator.calculate(
-            scene,
-            boundary.clone(),
-            SelectionMode::Smart,
-        )?;
+        let material_stats =
+            self.selection_calculator
+                .calculate(scene, boundary.clone(), SelectionMode::Smart)?;
 
         // 转换为 RegionStats
         Ok(RegionStats {
@@ -118,7 +114,11 @@ impl ComparativeAnalyzer {
         match metric {
             ComparisonMetric::Area => {
                 let diff = region1.area - region2.area;
-                let ratio = if region2.area > 0.0 { region1.area / region2.area } else { f64::INFINITY };
+                let ratio = if region2.area > 0.0 {
+                    region1.area / region2.area
+                } else {
+                    f64::INFINITY
+                };
                 RegionComparison {
                     metric: "Area".to_string(),
                     value1: region1.area,
@@ -146,27 +146,51 @@ impl ComparativeAnalyzer {
             }
             ComparisonMetric::AverageAbsorption => {
                 // 比较 500Hz 的平均吸声系数
-                let val1 = region1.average_absorption.get(&Frequency::Hz500).copied().unwrap_or(0.0);
-                let val2 = region2.average_absorption.get(&Frequency::Hz500).copied().unwrap_or(0.0);
+                let val1 = region1
+                    .average_absorption
+                    .get(&Frequency::Hz500)
+                    .copied()
+                    .unwrap_or(0.0);
+                let val2 = region2
+                    .average_absorption
+                    .get(&Frequency::Hz500)
+                    .copied()
+                    .unwrap_or(0.0);
                 RegionComparison {
                     metric: "AverageAbsorption@500Hz".to_string(),
                     value1: val1,
                     value2: val2,
                     diff: val1 - val2,
-                    ratio: if val2 > 0.0 { val1 / val2 } else { f64::INFINITY },
+                    ratio: if val2 > 0.0 {
+                        val1 / val2
+                    } else {
+                        f64::INFINITY
+                    },
                     unit: "coefficient".to_string(),
                 }
             }
             ComparisonMetric::EquivalentAbsorptionArea => {
                 // 比较 500Hz 的等效吸声面积
-                let val1 = region1.equivalent_absorption_area.get(&Frequency::Hz500).copied().unwrap_or(0.0);
-                let val2 = region2.equivalent_absorption_area.get(&Frequency::Hz500).copied().unwrap_or(0.0);
+                let val1 = region1
+                    .equivalent_absorption_area
+                    .get(&Frequency::Hz500)
+                    .copied()
+                    .unwrap_or(0.0);
+                let val2 = region2
+                    .equivalent_absorption_area
+                    .get(&Frequency::Hz500)
+                    .copied()
+                    .unwrap_or(0.0);
                 RegionComparison {
                     metric: "EquivalentAbsorptionArea@500Hz".to_string(),
                     value1: val1,
                     value2: val2,
                     diff: val1 - val2,
-                    ratio: if val2 > 0.0 { val1 / val2 } else { f64::INFINITY },
+                    ratio: if val2 > 0.0 {
+                        val1 / val2
+                    } else {
+                        f64::INFINITY
+                    },
                     unit: "m²".to_string(),
                 }
             }
@@ -210,8 +234,8 @@ impl RegionComparison {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeMap;
     use common_types::scene::RawEdge;
+    use std::collections::BTreeMap;
 
     fn create_test_scene() -> SceneState {
         let mut scene = SceneState::default();
@@ -222,7 +246,11 @@ mod tests {
                 id: i,
                 start: [i as f64 * 1000.0, 0.0],
                 end: [(i + 1) as f64 * 1000.0, 0.0],
-                layer: Some(if i < 5 { "concrete".to_string() } else { "glass".to_string() }),
+                layer: Some(if i < 5 {
+                    "concrete".to_string()
+                } else {
+                    "glass".to_string()
+                }),
                 color_index: None,
             });
         }
@@ -241,12 +269,10 @@ mod tests {
         let scene = create_test_scene();
         let mut analyzer = ComparativeAnalyzer::new();
 
-        let selections = vec![
-            NamedSelection {
-                name: "Region 1".to_string(),
-                boundary: SelectionBoundary::rect([0.0, 0.0], [5000.0, 1000.0]),
-            }
-        ];
+        let selections = vec![NamedSelection {
+            name: "Region 1".to_string(),
+            boundary: SelectionBoundary::rect([0.0, 0.0], [5000.0, 1000.0]),
+        }];
 
         let result = analyzer.analyze(&scene, selections, vec![]).unwrap();
         assert_eq!(result.regions.len(), 1);
@@ -327,7 +353,8 @@ mod tests {
             equivalent_absorption_area: BTreeMap::new(),
         };
 
-        let comparison = analyzer.compare_regions(&region1, &region2, ComparisonMetric::MaterialCount);
+        let comparison =
+            analyzer.compare_regions(&region1, &region2, ComparisonMetric::MaterialCount);
         assert_eq!(comparison.metric, "MaterialCount");
         assert!((comparison.diff - 3.0).abs() < 0.01);
         assert!((comparison.ratio - 2.0).abs() < 0.01);
@@ -359,7 +386,8 @@ mod tests {
             equivalent_absorption_area: BTreeMap::new(),
         };
 
-        let comparison = analyzer.compare_regions(&region1, &region2, ComparisonMetric::AverageAbsorption);
+        let comparison =
+            analyzer.compare_regions(&region1, &region2, ComparisonMetric::AverageAbsorption);
         assert!(comparison.metric.contains("AverageAbsorption"));
         assert!((comparison.diff - 0.3).abs() < 0.01);
         assert!((comparison.ratio - 2.0).abs() < 0.01);

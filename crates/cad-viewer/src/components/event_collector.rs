@@ -4,7 +4,7 @@
 
 use crate::components::UiEvent;
 use eframe::egui;
-use egui::{Response, Context, Vec2};
+use egui::{Context, Response, Vec2};
 
 /// 事件收集器
 pub struct EventCollector {
@@ -65,13 +65,21 @@ impl EventCollector {
         // 鼠标滚动
         let scroll_delta = ctx.input(|i| i.raw_scroll_delta);
         if scroll_delta != Vec2::ZERO {
-            self.events.push(UiEvent::MouseScroll { delta: scroll_delta });
+            self.events.push(UiEvent::MouseScroll {
+                delta: scroll_delta,
+            });
         }
 
         // 键盘按键
         ctx.input(|i| {
             for event in &i.events {
-                if let egui::Event::Key { key, modifiers, pressed: true, .. } = event {
+                if let egui::Event::Key {
+                    key,
+                    modifiers,
+                    pressed: true,
+                    ..
+                } = event
+                {
                     self.events.push(UiEvent::KeyPress {
                         key: *key,
                         modifiers: *modifiers,
@@ -96,7 +104,13 @@ impl EventCollector {
         // 键盘按键（全局）
         ctx.input(|i| {
             for event in &i.events {
-                if let egui::Event::Key { key, modifiers, pressed: true, .. } = event {
+                if let egui::Event::Key {
+                    key,
+                    modifiers,
+                    pressed: true,
+                    ..
+                } = event
+                {
                     self.events.push(UiEvent::KeyPress {
                         key: *key,
                         modifiers: *modifiers,
@@ -108,7 +122,9 @@ impl EventCollector {
         // 鼠标滚动（全局）
         let scroll_delta = ctx.input(|i| i.raw_scroll_delta);
         if scroll_delta != Vec2::ZERO {
-            self.events.push(UiEvent::MouseScroll { delta: scroll_delta });
+            self.events.push(UiEvent::MouseScroll {
+                delta: scroll_delta,
+            });
         }
     }
 

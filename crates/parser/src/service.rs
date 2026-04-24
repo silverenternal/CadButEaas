@@ -3,35 +3,88 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use common_types::{RawEntity, CadError, Service, ServiceHealth, ServiceVersion, ServiceMetrics};
+use crate::dwg_parser::DwgParser;
+use crate::hatch_parser::HatchParser;
+use crate::parser_factory::{DxfParserEnum, ParserFactory};
+use crate::pdf_parser::{PdfContent, PdfParser};
+use crate::stl_parser::StlParser;
+use crate::svg_parser::SvgParser;
 use common_types::request::Request;
 use common_types::response::Response;
-use crate::dxf_parser::DxfParser;
-use crate::pdf_parser::{PdfParser, PdfContent};
+use common_types::{CadError, RawEntity, Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 use std::path::Path;
 
 /// 图纸解析服务
 ///
 /// 统一入口，自动检测文件类型并分发到对应解析器
 pub struct ParserService {
-    dxf_parser: DxfParser,
+    dxf_parser: DxfParserEnum,
+    dwg_parser: DwgParser,
     pdf_parser: PdfParser,
+    hatch_parser: HatchParser,
+    svg_parser: SvgParser,
+    stl_parser: StlParser,
     metrics: Arc<ServiceMetrics>,
 }
 
 impl ParserService {
     pub fn new() -> Self {
         Self {
-            dxf_parser: DxfParser::new(),
+            #[cfg(feature = "ezdxf-bridge")]
+            dxf_parser: ParserFactory::create_ezdxf().expect("ezdxf parser creation"),
+            #[cfg(not(feature = "ezdxf-bridge"))]
+            dxf_parser: ParserFactory::create_default().expect("parser creation"),
+            dwg_parser: DwgParser::new(),
             pdf_parser: PdfParser::new(),
+            hatch_parser: HatchParser::new(),
+            svg_parser: SvgParser::new(),
+            stl_parser: StlParser::new(),
             metrics: Arc::new(ServiceMetrics::new("ParserService")),
         }
     }
 
-    /// 设置图层过滤器
+    /// 使用自定义 DXF 解析器创建服务
+    pub fn with_dxf_parser(dxf_parser: DxfParserEnum) -> Self {
+        Self {
+            dxf_parser,
+            dwg_parser: DwgParser::new(),
+            pdf_parser: PdfParser::new(),
+            hatch_parser: HatchParser::new(),
+            svg_parser: SvgParser::new(),
+            stl_parser: StlParser::new(),
+            metrics: Arc::new(ServiceMetrics::new("ParserService")),
+        }
+    }
+
+    /// 设置图层过滤器（仅 ezdxf-bridge feature 下有效）
+    #[cfg(feature = "ezdxf-bridge")]
     pub fn with_layer_filter(mut self, layers: Vec<String>) -> Self {
-        self.dxf_parser = self.dxf_parser.with_layer_filter(layers.clone());
+        self.dxf_parser = self.dxf_parser.with_layer_filter(layers);
         self
+    }
+
+    /// 设置 HATCH 解析配置
+    pub fn with_hatch_ignore_solid(mut self, ignore: bool) -> Self {
+        self.hatch_parser = self.hatch_parser.with_ignore_solid(ignore);
+        self
+    }
+
+    /// 应用 DXF 过滤配置（直接从 config crate 的字段提取）
+    ///
+    /// 应用 ignore_* 设置到内部解析器
+    pub fn with_dxf_filter(
+        self,
+        ignore_text: bool,
+        ignore_dimensions: bool,
+        ignore_hatch: bool,
+    ) -> Self {
+        let dxf_parser = self
+            .dxf_parser
+            .with_ignore_text(ignore_text)
+            .with_ignore_dimensions(ignore_dimensions)
+            .with_ignore_hatch(ignore_hatch);
+
+        Self { dxf_parser, ..self }
     }
 
     /// 获取服务指标
@@ -42,33 +95,59 @@ impl ParserService {
     /// 解析文件，自动检测类型
     pub fn parse_file(&self, path: impl AsRef<Path>) -> Result<ParseResult, CadError> {
         let path = path.as_ref();
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(|e| e.to_str())
             .map(|s| s.to_lowercase())
             .ok_or_else(|| CadError::UnsupportedFormat {
                 format: "unknown".to_string(),
-                supported_formats: vec!["dxf".to_string(), "pdf".to_string()],
+                supported_formats: vec![
+                    "dxf".to_string(),
+                    "dwg".to_string(),
+                    "pdf".to_string(),
+                    "svg".to_string(),
+                    "stl".to_string(),
+                ],
             })?;
 
         match extension.as_str() {
             "dxf" => {
-                let entities = self.dxf_parser.parse_file(path)?;
+                let mut entities = self.dxf_parser.parse_file(path)?;
+                // 集成 HATCH 解析（补充 dxf crate 无法直接提取的填充图案）
+                if let Ok(mut hatches) = self.hatch_parser.parse_hatch_entities(path) {
+                    let hatch_count = hatches.len();
+                    entities.append(&mut hatches);
+                    if hatch_count > 0 {
+                        tracing::info!("DXF 解析: 额外提取 {} 个 HATCH 实体", hatch_count);
+                    }
+                }
                 Ok(ParseResult::Cad(entities))
             }
             "dwg" => {
-                // DWG 是专有格式，需要 ODA 或 LibreDWG 支持
-                Err(CadError::UnsupportedFormat {
-                    format: "dwg".to_string(),
-                    supported_formats: vec!["dxf".to_string(), "pdf".to_string()],
-                })
+                let entities = self.dwg_parser.parse_file(path)?;
+                Ok(ParseResult::Cad(entities))
             }
             "pdf" => {
                 let content = self.pdf_parser.parse_file(path)?;
                 Ok(ParseResult::Pdf(content))
             }
+            "svg" => {
+                let entities = self.svg_parser.parse_file(path)?;
+                Ok(ParseResult::Cad(entities))
+            }
+            "stl" => {
+                let entities = self.stl_parser.parse_file(path)?;
+                Ok(ParseResult::Cad(entities))
+            }
             _ => Err(CadError::UnsupportedFormat {
                 format: extension,
-                supported_formats: vec!["dxf".to_string(), "pdf".to_string()],
+                supported_formats: vec![
+                    "dxf".to_string(),
+                    "dwg".to_string(),
+                    "pdf".to_string(),
+                    "svg".to_string(),
+                    "stl".to_string(),
+                ],
             }),
         }
     }
@@ -78,17 +157,26 @@ impl ParserService {
         match file_type {
             FileType::Dxf => {
                 let entities = self.dxf_parser.parse_bytes(bytes)?;
+                // parse_bytes 无法读取原始组码，跳过 HATCH 补充解析
                 Ok(ParseResult::Cad(entities))
             }
-            FileType::Dwg => {
-                Err(CadError::UnsupportedFormat {
-                    format: "dwg".to_string(),
-                    supported_formats: vec!["dxf".to_string(), "pdf".to_string()],
-                })
-            }
+            FileType::Dwg => Err(CadError::UnsupportedFormat {
+                format: "dwg".to_string(),
+                supported_formats: vec![
+                    "DWG 字节解析不支持，请使用 parse_file() 解析 DWG 文件".to_string()
+                ],
+            }),
             FileType::Pdf => {
                 let content = self.pdf_parser.parse_bytes(bytes)?;
                 Ok(ParseResult::Pdf(content))
+            }
+            FileType::Svg => {
+                let entities = self.svg_parser.parse_bytes(bytes)?;
+                Ok(ParseResult::Cad(entities))
+            }
+            FileType::Stl => {
+                let entities = self.stl_parser.parse_bytes(bytes)?;
+                Ok(ParseResult::Cad(entities))
             }
         }
     }
@@ -110,7 +198,10 @@ impl Service for ParserService {
     type Data = ParseResult;
     type Error = CadError;
 
-    async fn process(&self, request: Request<Self::Payload>) -> std::result::Result<Response<Self::Data>, Self::Error> {
+    async fn process(
+        &self,
+        request: Request<Self::Payload>,
+    ) -> std::result::Result<Response<Self::Data>, Self::Error> {
         let start = Instant::now();
         let result = self.parse_file(&request.payload.path);
         let latency = start.elapsed().as_secs_f64() * 1000.0;
@@ -119,11 +210,7 @@ impl Service for ParserService {
         self.metrics.record_request(result.is_ok(), latency);
 
         let data = result?;
-        Ok(Response::success(
-            request.id,
-            data,
-            latency as u64,
-        ))
+        Ok(Response::success(request.id, data, latency as u64))
     }
 
     fn health_check(&self) -> ServiceHealth {
@@ -161,6 +248,8 @@ pub enum FileType {
     Dxf,
     Dwg,
     Pdf,
+    Svg,
+    Stl,
 }
 
 impl FileType {
@@ -170,6 +259,8 @@ impl FileType {
             "dxf" => Some(FileType::Dxf),
             "dwg" => Some(FileType::Dwg),
             "pdf" => Some(FileType::Pdf),
+            "svg" => Some(FileType::Svg),
+            "stl" => Some(FileType::Stl),
             _ => None,
         }
     }
@@ -217,6 +308,20 @@ mod tests {
     #[test]
     fn test_parser_service_new() {
         let service = ParserService::new();
-        assert!(service.dxf_parser.layer_filter.is_none());
+        // ParserService 现在使用 DxfParserEnum（默认为 ezdxf 类型）
+        let _ = service.dxf_parser.name();
+    }
+
+    #[test]
+    fn test_parser_service_with_hatch_config() {
+        let service = ParserService::new().with_hatch_ignore_solid(true);
+        assert!(service.hatch_parser.ignores_solid());
+    }
+
+    #[test]
+    fn test_parser_service_with_dxf_filter() {
+        // 验证 with_dxf_filter 链式调用可以正常编译和执行
+        let service = ParserService::new().with_dxf_filter(false, false, false);
+        let _ = service.dxf_parser.name();
     }
 }

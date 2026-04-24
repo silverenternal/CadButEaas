@@ -113,7 +113,7 @@ impl CircuitBreaker {
     /// 获取当前状态
     pub fn state(&self) -> CircuitState {
         let mut inner = self.inner.write().unwrap();
-        
+
         // 检查是否应该从 Open 状态转换到 Half-Open
         if inner.state == CircuitState::Open {
             if let Some(last_failure) = inner.last_failure_time {
@@ -125,14 +125,14 @@ impl CircuitBreaker {
                 }
             }
         }
-        
+
         inner.state
     }
 
     /// 记录成功
     pub fn record_success(&self) {
         let mut inner = self.inner.write().unwrap();
-        
+
         match inner.state {
             CircuitState::Closed => {
                 // 成功时重置失败计数
@@ -158,10 +158,10 @@ impl CircuitBreaker {
     /// 记录失败
     pub fn record_failure(&self) {
         let mut inner = self.inner.write().unwrap();
-        
+
         inner.failure_count += 1;
         inner.last_failure_time = Some(Instant::now());
-        
+
         match inner.state {
             CircuitState::Closed => {
                 // 失败次数达到阈值，打开熔断器
@@ -191,7 +191,7 @@ impl CircuitBreaker {
     /// 检查熔断器是否打开
     pub fn is_open(&self) -> bool {
         let state = self.state();
-        
+
         // 如果是 Half-Open，允许一个请求通过
         if state == CircuitState::HalfOpen {
             let mut inner = self.inner.write().unwrap();
@@ -200,7 +200,7 @@ impl CircuitBreaker {
                 return false; // 允许一个请求尝试
             }
         }
-        
+
         state == CircuitState::Open
     }
 
@@ -224,7 +224,7 @@ impl CircuitBreaker {
     pub fn status(&self) -> CircuitBreakerStatus {
         let inner = self.inner.read().unwrap();
         let open_time = self.open_time.read().unwrap();
-        
+
         CircuitBreakerStatus {
             state: inner.state,
             failure_count: inner.failure_count,
@@ -257,16 +257,16 @@ mod tests {
     #[test]
     fn test_circuit_breaker_basic() {
         let breaker = CircuitBreaker::new(3, Duration::from_secs(1));
-        
+
         // 初始状态为 Closed
         assert_eq!(breaker.state(), CircuitState::Closed);
         assert!(breaker.is_closed());
-        
+
         // 记录 3 次失败
         breaker.record_failure();
         breaker.record_failure();
         breaker.record_failure();
-        
+
         // 状态变为 Open
         assert_eq!(breaker.state(), CircuitState::Open);
         assert!(breaker.is_open());
@@ -276,18 +276,18 @@ mod tests {
     fn test_circuit_breaker_recovery() {
         // 使用 1 秒的开放时间，避免立即变为 HalfOpen
         let breaker = CircuitBreaker::new(2, Duration::from_secs(1));
-        
+
         // 触发熔断
         breaker.record_failure();
         breaker.record_failure();
         assert_eq!(breaker.state(), CircuitState::Open);
-        
+
         // 等待恢复时间（留一些余量）
         std::thread::sleep(Duration::from_millis(1100));
-        
+
         // state() 方法在超时后返回 HalfOpen
         assert_eq!(breaker.state(), CircuitState::HalfOpen);
-        
+
         // 记录成功，恢复到 Closed
         breaker.record_success();
         assert_eq!(breaker.state(), CircuitState::Closed);

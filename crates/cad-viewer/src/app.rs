@@ -7,19 +7,19 @@
 //! 4. 组件负责渲染和事件处理，CadApp 负责协调
 
 use crate::api::ApiClient;
-use crate::api::{WsTraceResult, WsGapDetectionResult};
+use crate::api::{WsGapDetectionResult, WsTraceResult};
 use crate::canvas::CanvasWidget;
-#[cfg(feature = "gpu")]
-use crate::render::GpuRendererWrapper;
-#[cfg(feature = "gpu")]
-use crate::gpu_renderer_enhanced::RendererConfig;
-use crate::panels::{Toolbar, LeftPanel, LayerPanel, BottomPanel, RightPanel};
-use crate::state::{AppState, ToastNotification};
-use crate::state::AutoTraceResult as UiAutoTraceResult;
-use crate::components::{CommandManager, ToggleLayerVisibility, SetLayerFilter};
+use crate::components::{CommandManager, SetLayerFilter, ToggleLayerVisibility};
 use crate::components::{ComponentRegistry, EventCollector};
 #[cfg(feature = "gpu")]
+use crate::gpu_renderer_enhanced::RendererConfig;
+use crate::panels::{BottomPanel, LayerPanel, LeftPanel, RightPanel, Toolbar};
+#[cfg(feature = "gpu")]
 use crate::render::GlassEffectRenderer;
+#[cfg(feature = "gpu")]
+use crate::render::GpuRendererWrapper;
+use crate::state::AutoTraceResult as UiAutoTraceResult;
+use crate::state::{AppState, GapMarkerData, ToastNotification};
 use crate::theme::MacOsTheme;
 use eframe::egui;
 use interact::Edge;
@@ -27,10 +27,10 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 // 导入加速器相关类型
-#[cfg(feature = "registry")]
-use accelerator_registry::AcceleratorRegistry;
 use accelerator_api::Accelerator;
 use accelerator_cpu::CpuAccelerator;
+#[cfg(feature = "registry")]
+use accelerator_registry::AcceleratorRegistry;
 
 /// 主应用状态
 ///
@@ -88,7 +88,8 @@ impl CadApp {
         #[cfg(feature = "registry")]
         let (accelerator_registry, accelerator) = {
             let registry = AcceleratorRegistry::discover_all();
-            let best = registry.select_best(accelerator_api::AcceleratorOp::EdgeDetect)
+            let best = registry
+                .select_best(accelerator_api::AcceleratorOp::EdgeDetect)
                 .map(|a| Box::new(a.clone()) as Box<dyn Accelerator>)
                 .unwrap_or_else(|| Box::new(CpuAccelerator::new()));
             (Some(registry), best)
@@ -110,7 +111,7 @@ impl CadApp {
         // P11 新增：GPU 分级检测（在后台线程中进行）
         #[cfg(feature = "gpu")]
         let (gpu_tier, gpu_info) = crate::render::detect_gpu_tier();
-        
+
         #[cfg(feature = "gpu")]
         log::info!("GPU 检测完成：{} ({})", gpu_info.name, gpu_tier);
 
@@ -122,11 +123,14 @@ impl CadApp {
         components.register("bottom_panel".to_string(), Box::new(BottomPanel::new()));
         components.register("right_panel".to_string(), Box::new(RightPanel::new()));
         #[cfg(feature = "gpu")]
-        components.register("visual_settings".to_string(), Box::new(crate::panels::VisualSettingsPanel::new()));
+        components.register(
+            "visual_settings".to_string(),
+            Box::new(crate::panels::VisualSettingsPanel::new()),
+        );
 
         // 创建应用状态
-        let mut state = AppState::new(ctx);
-        
+        let state = AppState::new(ctx);
+
         // P11 新增：初始化视觉效果设置
         #[cfg(feature = "gpu")]
         {
@@ -240,7 +244,10 @@ impl CadApp {
 
         // 替换边数据
         self.state.scene.edges = edges;
-        self.add_log(&format!("加载完成，共 {} 条边", self.state.scene.edges.len()));
+        self.add_log(&format!(
+            "加载完成，共 {} 条边",
+            self.state.scene.edges.len()
+        ));
 
         // 自动适配视图
         self.fit_to_scene();
@@ -253,7 +260,10 @@ impl CadApp {
             let view_width = 800.0;
             let view_height = 600.0;
 
-            self.state.render.camera.fit_to_scene(min, max, view_width, view_height);
+            self.state
+                .render
+                .camera
+                .fit_to_scene(min, max, view_width, view_height);
 
             // 设置场景原点为场景边界的最小值
             self.state.scene.scene_origin = [min[0], min[1]];
@@ -262,10 +272,7 @@ impl CadApp {
             let zoom_percent = self.state.render.camera.zoom as f64 * 100.0;
             self.add_log(&format!(
                 "已适配视图：缩放 {:.6}% (zoom={:.10}), 场景范围 [{:.1}, {:.1}] × [{:.1}, {:.1}]",
-                zoom_percent,
-                self.state.render.camera.zoom,
-                min[0], max[0],
-                min[1], max[1]
+                zoom_percent, self.state.render.camera.zoom, min[0], max[0], min[1], max[1]
             ));
         }
     }
@@ -295,7 +302,10 @@ impl CadApp {
                     Ok(_) => log::info!("导出成功"),
                     Err(e) => {
                         log::warn!("后端导出失败 {}，使用本地导出", e);
-                        if let Err(local_err) = client.export_scene_local(&path_str_clone, &edges, "json").await {
+                        if let Err(local_err) = client
+                            .export_scene_local(&path_str_clone, &edges, "json")
+                            .await
+                        {
                             log::error!("本地导出也失败：{}", local_err);
                         }
                     }
@@ -331,27 +341,28 @@ impl CadApp {
                     // 使用 WebSocket
                     match client.ws_select_edge(edge_id).await {
                         Ok(trace_result) => {
-                            log::info!("WebSocket 自动追踪成功：{} 条边，闭环={}",
-                                trace_result.edges.len(), trace_result.loop_closed);
+                            log::info!(
+                                "WebSocket 自动追踪成功：{} 条边，闭环={}",
+                                trace_result.edges.len(),
+                                trace_result.loop_closed
+                            );
                             Ok(trace_result)
                         }
                         Err(e) => {
                             log::warn!("WebSocket 追踪失败，回退到 HTTP: {}", e);
                             // 回退到 HTTP
-                            client.auto_trace(edge_id).await
-                                .map(|r| WsTraceResult {
-                                    edges: vec![],
-                                    loop_closed: r.success
-                                })
+                            client.auto_trace(edge_id).await.map(|r| WsTraceResult {
+                                edges: vec![],
+                                loop_closed: r.success,
+                            })
                         }
                     }
                 } else {
                     // 直接使用 HTTP
-                    client.auto_trace(edge_id).await
-                        .map(|r| WsTraceResult { 
-                            edges: vec![], 
-                            loop_closed: r.success 
-                        })
+                    client.auto_trace(edge_id).await.map(|r| WsTraceResult {
+                        edges: vec![],
+                        loop_closed: r.success,
+                    })
                 };
 
                 // 处理结果
@@ -361,7 +372,7 @@ impl CadApp {
                         {
                             let mut state = loading.write();
                             state.ui.auto_trace_result = Some(UiAutoTraceResult {
-                                edges: trace_result.edges.iter().map(|&id| id).collect(),
+                                edges: trace_result.edges.to_vec(),
                                 loop_closed: trace_result.loop_closed,
                                 polygon: vec![],
                             });
@@ -373,7 +384,7 @@ impl CadApp {
                         state.error(e);
                     }
                 }
-                
+
                 {
                     let mut state = loading.write();
                     state.is_loading = false;
@@ -400,7 +411,7 @@ impl CadApp {
 
         tokio::spawn(async move {
             let mut client = api_client.lock().await;
-            
+
             // P11 落实：优先使用 WebSocket 实时交互
             let result = if client.is_websocket_connected().await {
                 // 使用 WebSocket
@@ -416,22 +427,39 @@ impl CadApp {
                 }
             } else {
                 // 直接使用 HTTP
-                client.detect_gaps(0.5).await
-                    .map(|r| WsGapDetectionResult {
-                        gaps: r.gaps.iter().map(|g| crate::api::WsGapInfoResponse {
+                client.detect_gaps(0.5).await.map(|r| WsGapDetectionResult {
+                    gaps: r
+                        .gaps
+                        .iter()
+                        .map(|g| crate::api::WsGapInfoResponse {
                             id: g.id,
                             start: g.start,
                             end: g.end,
                             length: g.length,
                             gap_type: g.gap_type.clone(),
-                        }).collect()
-                    })
+                        })
+                        .collect(),
+                })
             };
 
             // 处理结果
             match result {
                 Ok(response) => {
                     log::info!("缺口检测完成，检测到 {} 个缺口", response.gaps.len());
+                    // 将缺口数据写入加载状态
+                    {
+                        let mut state = loading.write();
+                        let gap_markers: Vec<GapMarkerData> = response
+                            .gaps
+                            .iter()
+                            .map(|g| GapMarkerData {
+                                start: g.start,
+                                end: g.end,
+                                length: g.length,
+                            })
+                            .collect();
+                        state.set_gap_markers(gap_markers);
+                    }
                 }
                 Err(e) => {
                     log::error!("缺口检测失败：{}", e);
@@ -439,7 +467,7 @@ impl CadApp {
                     state.error(e);
                 }
             }
-            
+
             {
                 let mut state = loading.write();
                 state.is_loading = false;
@@ -457,8 +485,15 @@ impl CadApp {
         // 使用命令模式，支持撤销
         let cmd = ToggleLayerVisibility::new(layer.to_string());
         self.command_manager.execute(Box::new(cmd), &mut self.state);
-        self.add_log(&format!("图层 '{}' 可见性：{}", layer,
-            if !self.state.scene.is_layer_visible(layer) { "开启" } else { "关闭" }));
+        self.add_log(&format!(
+            "图层 '{}' 可见性：{}",
+            layer,
+            if !self.state.scene.is_layer_visible(layer) {
+                "开启"
+            } else {
+                "关闭"
+            }
+        ));
     }
 
     /// 设置图层过滤模式
@@ -480,7 +515,10 @@ impl CadApp {
 
     /// 显示成功 Toast
     pub fn show_success_toast(&mut self, message: impl Into<String>) {
-        self.state.ui.toasts.push(ToastNotification::success(message));
+        self.state
+            .ui
+            .toasts
+            .push(ToastNotification::success(message));
     }
 
     /// 显示信息 Toast
@@ -490,7 +528,10 @@ impl CadApp {
 
     /// 显示警告 Toast
     pub fn show_warning_toast(&mut self, message: impl Into<String>) {
-        self.state.ui.toasts.push(ToastNotification::warning(message));
+        self.state
+            .ui
+            .toasts
+            .push(ToastNotification::warning(message));
     }
 
     /// 显示错误 Toast（保留用于未来错误处理）
@@ -537,7 +578,10 @@ impl CadApp {
     pub fn update_gpu_entities(&mut self) {
         use crate::gpu_renderer_enhanced::RenderEntity;
         if let Some(ref mut renderer) = self.gpu_renderer {
-            let entities: Vec<RenderEntity> = self.state.scene.edges
+            let entities: Vec<RenderEntity> = self
+                .state
+                .scene
+                .edges
                 .iter()
                 .enumerate()
                 .map(|(idx, edge)| {
@@ -628,7 +672,9 @@ impl CadApp {
 
         // 分发事件到组件，收集产生的命令
         for event in self.event_collector.drain() {
-            let commands = self.components.dispatch_event_with_commands(&event, &mut self.state);
+            let commands = self
+                .components
+                .dispatch_event_with_commands(&event, &mut self.state);
 
             // 执行组件产生的命令
             for cmd in commands {
@@ -649,11 +695,13 @@ impl eframe::App for CadApp {
         // 1. 检查加载状态更新
         let error_msg;
         let edges_data;
+        let gap_markers_data;
 
         {
             let state = self.state.loading.read();
             error_msg = state.error.clone();
             edges_data = state.edges.clone();
+            gap_markers_data = state.gap_markers.clone();
         }
 
         // 同步边数据
@@ -664,6 +712,28 @@ impl eframe::App for CadApp {
             {
                 let mut state = self.state.loading.write();
                 state.edges = None;
+            }
+        }
+
+        // 同步缺口标记
+        if let Some(gap_markers) = gap_markers_data {
+            self.gap_markers = gap_markers
+                .into_iter()
+                .map(|g| GapMarker {
+                    start: g.start,
+                    end: g.end,
+                    length: g.length,
+                })
+                .collect();
+            self.add_log(&format!(
+                "缺口标记已更新：{} 个缺口",
+                self.gap_markers.len()
+            ));
+
+            // 清除加载状态
+            {
+                let mut state = self.state.loading.write();
+                state.gap_markers = None;
             }
         }
 
@@ -680,8 +750,13 @@ impl eframe::App for CadApp {
         // 3. 渲染所有组件（P11 锐评落实：使用 ComponentContext 收集命令）
         // 注意：面板组件现在自己负责自己的布局
         #[cfg(not(feature = "gpu"))]
-        let commands = self.components.render(ctx, &mut self.state, &self.command_manager, self.theme.clone());
-        
+        let commands = self.components.render(
+            ctx,
+            &mut self.state,
+            &self.command_manager,
+            self.theme.clone(),
+        );
+
         // P11 新增：GPU 特性版本需要传递 glass_renderer 引用
         // 使用分离的借用模式来避免借用检查器冲突
         #[cfg(feature = "gpu")]
@@ -740,7 +815,7 @@ impl eframe::App for CadApp {
         // GPU 渲染集成（P11 锐评落实：通过 Renderer trait 统一接口）
         // 注意：eframe 0.29 中 wgpu_state API 已变更，暂时禁用此功能
         // 未来版本将使用新的 egui_wgpu 集成方式
-        #[cfg(all(feature = "gpu", test))]  // 仅在测试时编译，避免错误
+        #[cfg(all(feature = "gpu", test))] // 仅在测试时编译，避免错误
         if let Some(ref mut renderer) = self.gpu_renderer {
             // 暂时禁用 GPU 渲染提交
             // if let Some(wgpu_state) = _frame.wgpu_state() {

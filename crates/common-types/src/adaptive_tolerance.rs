@@ -35,22 +35,17 @@ use crate::scene::LengthUnit;
 use serde::{Deserialize, Serialize};
 
 /// 精度级别（从用户行为推断）
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum PrecisionLevel {
     /// 粗加工：容差放大 10 倍（快速但不精确）
     Rough,
     /// 正常：标准容差（默认）
+    #[default]
     Normal,
     /// 精加工：容差缩小 10 倍（精确但慢）
     Fine,
     /// 超精密：容差缩小 100 倍（极高精度）
     Ultra,
-}
-
-impl Default for PrecisionLevel {
-    fn default() -> Self {
-        Self::Normal
-    }
 }
 
 /// 自适应容差计算器
@@ -152,7 +147,7 @@ impl AdaptiveTolerance {
     /// 计算场景特征尺度（坐标范围的对角线长度）
     fn compute_scene_scale(entities: &[crate::geometry::RawEntity]) -> f64 {
         if entities.is_empty() {
-            return 1000.0;  // 默认 1 米
+            return 1000.0; // 默认 1 米
         }
 
         let mut min_x = f64::INFINITY;
@@ -202,17 +197,17 @@ impl AdaptiveTolerance {
     fn base_tolerance(&self) -> f64 {
         match self.base_unit {
             LengthUnit::Mm => 0.5,
-            LengthUnit::Cm => 0.05,        // 0.5mm in cm
-            LengthUnit::M => 0.0005,       // 0.5mm in meters
-            LengthUnit::Inch => 0.02,      // 0.5mm in inches
-            LengthUnit::Foot => 0.0016,    // 0.5mm in feet
-            LengthUnit::Yard => 0.00055,   // 0.5mm in yards
-            LengthUnit::Mile => 0.00000031, // 0.5mm in miles
-            LengthUnit::Micron => 500.0,   // 0.5mm in microns
+            LengthUnit::Cm => 0.05,             // 0.5mm in cm
+            LengthUnit::M => 0.0005,            // 0.5mm in meters
+            LengthUnit::Inch => 0.02,           // 0.5mm in inches
+            LengthUnit::Foot => 0.0016,         // 0.5mm in feet
+            LengthUnit::Yard => 0.00055,        // 0.5mm in yards
+            LengthUnit::Mile => 0.00000031,     // 0.5mm in miles
+            LengthUnit::Micron => 500.0,        // 0.5mm in microns
             LengthUnit::Kilometer => 0.0000005, // 0.5mm in kilometers
-            LengthUnit::Point => 1.42,     // 0.5mm in points
-            LengthUnit::Pica => 0.118,     // 0.5mm in picas
-            LengthUnit::Unspecified => 0.5, // 假设毫米
+            LengthUnit::Point => 1.42,          // 0.5mm in points
+            LengthUnit::Pica => 0.118,          // 0.5mm in picas
+            LengthUnit::Unspecified => 0.5,     // 假设毫米
         }
     }
 
@@ -224,11 +219,11 @@ impl AdaptiveTolerance {
     /// - 其他：不调整
     fn scale_factor(&self) -> f64 {
         if self.scene_scale > 10000.0 {
-            10.0  // 大场景（如总图），容差放大
+            10.0 // 大场景（如总图），容差放大
         } else if self.scene_scale < 100.0 {
-            0.1   // 小场景（如零件图），容差缩小
+            0.1 // 小场景（如零件图），容差缩小
         } else {
-            1.0   // 正常场景
+            1.0 // 正常场景
         }
     }
 
@@ -297,7 +292,7 @@ impl AdaptiveTolerance {
     /// ```
     pub fn bulge_threshold(&self, chord_length: f64) -> f64 {
         let tolerance = self.snap_tolerance();
-        let max_sagitta = tolerance * 0.1;  // 拱高小于容差的 1/10
+        let max_sagitta = tolerance * 0.1; // 拱高小于容差的 1/10
 
         // bulge = 2 * sagitta / L
         // 防止除以零，chord_length 至少为 tolerance
@@ -404,11 +399,7 @@ impl AdaptiveTolerance {
 impl Default for AdaptiveTolerance {
     /// 默认配置：毫米单位，1 米场景，正常精度
     fn default() -> Self {
-        Self::new(
-            LengthUnit::Mm,
-            1000.0,
-            PrecisionLevel::Normal,
-        )
+        Self::new(LengthUnit::Mm, 1000.0, PrecisionLevel::Normal)
     }
 }
 

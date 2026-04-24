@@ -12,23 +12,25 @@
 //! - ServiceMetrics 内部使用 Arc 实现指标收集
 //! - ComparativeAnalyzer 使用 RwLock 包装，支持 &self 下的可变调用（用于 R*-tree 缓存）
 
-use std::time::Instant;
-use std::sync::RwLock;
 use async_trait::async_trait;
+use std::sync::RwLock;
+use std::time::Instant;
 use tracing::{info, instrument};
 
-use common_types::service::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
+use crate::acoustic_types::{
+    AcousticError, AcousticInput, AcousticMetrics, AcousticOutput, AcousticRecoverySuggestion,
+    AcousticRequest, AcousticResult, ComparativeAnalysisResult, ComparisonMetric, NamedSelection,
+    ReverberationFormula, ReverberationResult, SelectionBoundary, SelectionMaterialStatsResult,
+    SelectionMode,
+};
 use common_types::request::Request;
 use common_types::response::Response;
-use common_types::acoustic::{
-    AcousticInput, AcousticOutput, AcousticRequest, AcousticResult,
-    AcousticMetrics, AcousticError, ReverberationFormula,
-};
 use common_types::scene::SceneState;
+use common_types::service::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 
-use crate::selection::SelectionCalculator;
-use crate::reverberation::ReverberationCalculator;
 use crate::comparative::ComparativeAnalyzer;
+use crate::reverberation::ReverberationCalculator;
+use crate::selection::SelectionCalculator;
 
 /// AcousticService 配置
 #[derive(Debug, Clone)]
@@ -103,21 +105,31 @@ impl AcousticService {
                 let stats = self.calculator.calculate(&input.scene, boundary, mode)?;
                 AcousticResult::SelectionMaterialStats(stats)
             }
-            AcousticRequest::RoomReverberation { room_id, formula, room_height } => {
+            AcousticRequest::RoomReverberation {
+                room_id,
+                formula,
+                room_height,
+            } => {
                 info!("执行房间混响时间计算，room_id={:?}", room_id);
                 let formula = formula.unwrap_or(self.config.default_formula);
                 let height = room_height.unwrap_or(self.config.default_room_height);
-                let rev = self.reverberation_calc.calculate(&input.scene, room_id, formula, height)?;
+                let rev =
+                    self.reverberation_calc
+                        .calculate(&input.scene, room_id, formula, height)?;
                 AcousticResult::RoomReverberation(rev)
             }
-            AcousticRequest::ComparativeAnalysis { selections, metrics } => {
+            AcousticRequest::ComparativeAnalysis {
+                selections,
+                metrics,
+            } => {
                 info!("执行多区域对比分析，regions={}", selections.len());
-                let comparison = self.comparative
+                let comparison = self
+                    .comparative
                     .write()
                     .map_err(|e| AcousticError::CalculationFailed {
                         message: format!("锁中毒：{}", e),
-                        suggestion: Some(common_types::acoustic::AcousticRecoverySuggestion::new(
-                            "重试请求，锁中毒通常是暂时性的"
+                        suggestion: Some(AcousticRecoverySuggestion::new(
+                            "重试请求，锁中毒通常是暂时性的",
                         )),
                     })?
                     .analyze(&input.scene, selections, metrics)?;
@@ -145,9 +157,9 @@ impl AcousticService {
     pub fn calculate_selection_material_stats(
         &self,
         scene: &SceneState,
-        boundary: common_types::acoustic::SelectionBoundary,
-        mode: common_types::acoustic::SelectionMode,
-    ) -> Result<common_types::acoustic::SelectionMaterialStatsResult, AcousticError> {
+        boundary: SelectionBoundary,
+        mode: SelectionMode,
+    ) -> Result<SelectionMaterialStatsResult, AcousticError> {
         self.calculator.calculate(scene, boundary, mode)
     }
 
@@ -158,23 +170,24 @@ impl AcousticService {
         room_id: common_types::scene::SurfaceId,
         formula: ReverberationFormula,
         room_height: f64,
-    ) -> Result<common_types::acoustic::ReverberationResult, AcousticError> {
-        self.reverberation_calc.calculate(scene, room_id, formula, room_height)
+    ) -> Result<ReverberationResult, AcousticError> {
+        self.reverberation_calc
+            .calculate(scene, room_id, formula, room_height)
     }
 
     /// 多区域对比分析（便捷方法）
     pub fn calculate_comparative_analysis(
         &self,
         scene: &SceneState,
-        selections: Vec<common_types::acoustic::NamedSelection>,
-        metrics: Vec<common_types::acoustic::ComparisonMetric>,
-    ) -> Result<common_types::acoustic::ComparativeAnalysisResult, AcousticError> {
+        selections: Vec<NamedSelection>,
+        metrics: Vec<ComparisonMetric>,
+    ) -> Result<ComparativeAnalysisResult, AcousticError> {
         self.comparative
             .write()
             .map_err(|e| AcousticError::CalculationFailed {
                 message: format!("锁中毒：{}", e),
-                suggestion: Some(common_types::acoustic::AcousticRecoverySuggestion::new(
-                    "重试请求，锁中毒通常是暂时性的"
+                suggestion: Some(AcousticRecoverySuggestion::new(
+                    "重试请求，锁中毒通常是暂时性的",
                 )),
             })?
             .analyze(scene, selections, metrics)
@@ -187,7 +200,10 @@ impl Service for AcousticService {
     type Data = AcousticOutput;
     type Error = AcousticError;
 
-    async fn process(&self, request: Request<Self::Payload>) -> Result<Response<Self::Data>, Self::Error> {
+    async fn process(
+        &self,
+        request: Request<Self::Payload>,
+    ) -> Result<Response<Self::Data>, Self::Error> {
         let start = Instant::now();
 
         // 直接使用 &self 调用 process_sync，无需创建临时实例
@@ -200,11 +216,7 @@ impl Service for AcousticService {
         self.metrics.record_request(result.is_ok(), latency);
 
         let data = result?;
-        Ok(Response::success(
-            request.id,
-            data,
-            latency as u64,
-        ))
+        Ok(Response::success(request.id, data, latency as u64))
     }
 
     fn health_check(&self) -> ServiceHealth {
@@ -227,8 +239,8 @@ impl Service for AcousticService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use common_types::service::HealthStatus;
     use common_types::scene::RawEdge;
+    use common_types::service::HealthStatus;
 
     #[allow(dead_code)]
     fn create_test_scene() -> SceneState {
@@ -253,7 +265,10 @@ mod tests {
         let config = AcousticServiceConfig::default();
         let service = AcousticService::new(config);
         assert_eq!(service.config().default_room_height, 3.0);
-        assert_eq!(service.config().default_formula, ReverberationFormula::Sabine);
+        assert_eq!(
+            service.config().default_formula,
+            ReverberationFormula::Sabine
+        );
     }
 
     #[test]
@@ -264,7 +279,10 @@ mod tests {
         };
         let service = AcousticService::new(config);
         assert_eq!(service.config().default_room_height, 4.0);
-        assert_eq!(service.config().default_formula, ReverberationFormula::Eyring);
+        assert_eq!(
+            service.config().default_formula,
+            ReverberationFormula::Eyring
+        );
     }
 
     #[test]

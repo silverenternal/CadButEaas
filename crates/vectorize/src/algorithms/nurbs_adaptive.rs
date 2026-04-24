@@ -8,6 +8,8 @@
 //! # 核心思想
 //!
 //! 1. **曲率分析**: 计算曲线各点的曲率，识别高曲率区域
+
+#![allow(clippy::needless_range_loop)]
 //! 2. **自适应采样**: 高曲率区域密集采样，低曲率区域稀疏采样
 //! 3. **弦高误差控制**: 确保离散化后的折线与原始曲线的最大偏差不超过容差
 //!
@@ -69,10 +71,10 @@ pub struct AdaptiveDiscretizationConfig {
 impl Default for AdaptiveDiscretizationConfig {
     fn default() -> Self {
         Self {
-            max_chord_height: 0.1,          // 0.1mm 弦高误差
-            min_samples: 10,                // 最少 10 个采样点
-            max_samples: 1000,              // 最多 1000 个采样点
-            curvature_sensitivity: 0.5,     // 中等曲率敏感度
+            max_chord_height: 0.1,      // 0.1mm 弦高误差
+            min_samples: 10,            // 最少 10 个采样点
+            max_samples: 1000,          // 最多 1000 个采样点
+            curvature_sensitivity: 0.5, // 中等曲率敏感度
             enable_curvature_analysis: true,
             angle_tolerance: 5.0_f64.to_radians(), // 5 度角容差
         }
@@ -169,15 +171,15 @@ impl NurbsAdaptiveDiscretizer {
 
         // de Boor 算法计算点
         let point = self.de_boor_point(curve, u, span);
-        
+
         // 数值微分计算一阶导数
         let h = 1e-6;
         let u_prev = (u - h).max(u_start(curve));
         let u_next = (u + h).min(u_end(curve));
-        
+
         let point_prev = self.de_boor_point(curve, u_prev, span);
         let point_next = self.de_boor_point(curve, u_next, span);
-        
+
         let derivative = [
             (point_next[0] - point_prev[0]) / (u_next - u_prev),
             (point_next[1] - point_prev[1]) / (u_next - u_prev),
@@ -186,7 +188,7 @@ impl NurbsAdaptiveDiscretizer {
         // 二阶导数
         let second_prev = self.de_boor_point(curve, u_prev - h.min(u_prev - u_start(curve)), span);
         let second_next = self.de_boor_point(curve, u_next + h.min(u_end(curve) - u_next), span);
-        
+
         let second_derivative = [
             (second_next[0] - 2.0 * point[0] + second_prev[0]) / (h * h),
             (second_next[1] - 2.0 * point[1] + second_prev[1]) / (h * h),
@@ -218,7 +220,8 @@ impl NurbsAdaptiveDiscretizer {
         let w = weights.unwrap();
 
         // 齐次坐标下的 de Boor 算法
-        let mut control_points_4d: Vec<[f64; 4]> = curve.control_points
+        let mut control_points_4d: Vec<[f64; 4]> = curve
+            .control_points
             .iter()
             .zip(w.iter())
             .map(|(&pt, &wt)| [pt[0] * wt, pt[1] * wt, 0.0, wt])
@@ -230,16 +233,21 @@ impl NurbsAdaptiveDiscretizer {
                 let idx = i - 1;
                 if idx + j + 1 < curve.knots.len() && idx + 1 < curve.knots.len() {
                     let alpha = if (curve.knots[idx + j + 1] - curve.knots[idx + 1]).abs() > 1e-10 {
-                        (u - curve.knots[idx + 1]) / (curve.knots[idx + j + 1] - curve.knots[idx + 1])
+                        (u - curve.knots[idx + 1])
+                            / (curve.knots[idx + j + 1] - curve.knots[idx + 1])
                     } else {
                         0.0
                     };
 
                     control_points_4d[i] = [
-                        (1.0 - alpha) * control_points_4d[i - 1][0] + alpha * control_points_4d[i][0],
-                        (1.0 - alpha) * control_points_4d[i - 1][1] + alpha * control_points_4d[i][1],
-                        (1.0 - alpha) * control_points_4d[i - 1][2] + alpha * control_points_4d[i][2],
-                        (1.0 - alpha) * control_points_4d[i - 1][3] + alpha * control_points_4d[i][3],
+                        (1.0 - alpha) * control_points_4d[i - 1][0]
+                            + alpha * control_points_4d[i][0],
+                        (1.0 - alpha) * control_points_4d[i - 1][1]
+                            + alpha * control_points_4d[i][1],
+                        (1.0 - alpha) * control_points_4d[i - 1][2]
+                            + alpha * control_points_4d[i][2],
+                        (1.0 - alpha) * control_points_4d[i - 1][3]
+                            + alpha * control_points_4d[i][3],
                     ];
                 }
             }
@@ -264,7 +272,8 @@ impl NurbsAdaptiveDiscretizer {
                 let idx = i - 1;
                 if idx + j + 1 < curve.knots.len() && idx + 1 < curve.knots.len() {
                     let alpha = if (curve.knots[idx + j + 1] - curve.knots[idx + 1]).abs() > 1e-10 {
-                        (u - curve.knots[idx + 1]) / (curve.knots[idx + j + 1] - curve.knots[idx + 1])
+                        (u - curve.knots[idx + 1])
+                            / (curve.knots[idx + j + 1] - curve.knots[idx + 1])
                     } else {
                         0.0
                     };
@@ -295,7 +304,7 @@ impl NurbsAdaptiveDiscretizer {
     fn get_valid_parameter_range(&self, curve: &NurbsCurve) -> (f64, f64) {
         let p = curve.degree;
         let n = curve.control_points.len();
-        
+
         // 起始参数：第一个非零节点
         let u_start = curve.knots.get(p).copied().unwrap_or(0.0);
         // 结束参数：最后一个非最大节点
@@ -313,14 +322,14 @@ impl NurbsAdaptiveDiscretizer {
         num_samples: usize,
     ) -> Vec<CurvePoint> {
         let mut points = Vec::with_capacity(num_samples);
-        
+
         for i in 0..num_samples {
             let u = if num_samples == 1 {
                 (u_start + u_end) / 2.0
             } else {
                 u_start + (u_end - u_start) * (i as f64) / ((num_samples - 1) as f64)
             };
-            
+
             points.push(self.evaluate(curve, u));
         }
 
@@ -348,7 +357,7 @@ impl NurbsAdaptiveDiscretizer {
             let mid_point = self.evaluate(curve, mid_u);
 
             // 找到插入位置
-            let insert_pos = (start_idx + end_idx + 1) / 2;
+            let insert_pos = (start_idx + end_idx).div_ceil(2);
             points.insert(insert_pos, mid_point);
 
             // 递归细分（简化版，只处理左半部分，右半部分通过迭代处理）
@@ -392,7 +401,7 @@ impl NurbsAdaptiveDiscretizer {
         if self.config.enable_curvature_analysis {
             let max_curvature = p_start.curvature.max(p_end.curvature);
             let curvature_threshold = self.compute_curvature_threshold();
-            
+
             if max_curvature > curvature_threshold {
                 return true;
             }
@@ -427,7 +436,7 @@ impl NurbsAdaptiveDiscretizer {
         // 计算距离
         let dx = curve_point.point[0] - chord_mid[0];
         let dy = curve_point.point[1] - chord_mid[1];
-        
+
         (dx * dx + dy * dy).sqrt()
     }
 
@@ -458,7 +467,7 @@ impl NurbsAdaptiveDiscretizer {
         // 点积计算角度
         let dot = t1_norm[0] * t2_norm[0] + t1_norm[1] * t2_norm[1];
         let cos_angle = dot.clamp(-1.0, 1.0);
-        
+
         cos_angle.acos()
     }
 
@@ -468,10 +477,15 @@ impl NurbsAdaptiveDiscretizer {
             return polyline.clone();
         }
 
-        let indices = self.douglas_peucker_recursive(polyline, 0, polyline.len() - 1, self.config.max_chord_height);
-        
+        let indices = self.douglas_peucker_recursive(
+            polyline,
+            0,
+            polyline.len() - 1,
+            self.config.max_chord_height,
+        );
+
         let mut result: Polyline = indices.iter().map(|&i| polyline[i]).collect();
-        
+
         // 确保结果有序
         result.sort_by(|a, b| {
             let idx_a = polyline.iter().position(|p| p == a).unwrap_or(0);
@@ -483,6 +497,7 @@ impl NurbsAdaptiveDiscretizer {
     }
 
     /// Douglas-Peucker 递归实现
+    #[allow(clippy::needless_range_loop)]
     fn douglas_peucker_recursive(
         &self,
         polyline: &Polyline,
@@ -501,6 +516,7 @@ impl NurbsAdaptiveDiscretizer {
         let line_start = polyline[start];
         let line_end = polyline[end];
 
+        #[allow(clippy::needless_range_loop)]
         for i in (start + 1)..end {
             let dist = self.point_to_line_distance(polyline[i], line_start, line_end);
             if dist > max_dist {
@@ -513,7 +529,7 @@ impl NurbsAdaptiveDiscretizer {
         if max_dist > epsilon {
             let mut left = self.douglas_peucker_recursive(polyline, start, max_idx, epsilon);
             let right = self.douglas_peucker_recursive(polyline, max_idx, end, epsilon);
-            
+
             // 合并结果（避免重复）
             left.extend_from_slice(&right[1..]);
             left
@@ -526,7 +542,7 @@ impl NurbsAdaptiveDiscretizer {
     fn point_to_line_distance(&self, point: Point2, line_start: Point2, line_end: Point2) -> f64 {
         let dx = line_end[0] - line_start[0];
         let dy = line_end[1] - line_start[1];
-        
+
         if dx.abs() < 1e-10 && dy.abs() < 1e-10 {
             // 线段退化为点
             let pdx = point[0] - line_start[0];
@@ -537,17 +553,14 @@ impl NurbsAdaptiveDiscretizer {
         // 计算投影参数
         let t = ((point[0] - line_start[0]) * dx + (point[1] - line_start[1]) * dy)
             / (dx * dx + dy * dy);
-        
+
         // 找到最近点
         let closest = if t < 0.0 {
             line_start
         } else if t > 1.0 {
             line_end
         } else {
-            [
-                line_start[0] + t * dx,
-                line_start[1] + t * dy,
-            ]
+            [line_start[0] + t * dx, line_start[1] + t * dy]
         };
 
         let pdx = point[0] - closest[0];
@@ -590,11 +603,7 @@ mod tests {
     fn create_quarter_circle() -> NurbsCurve {
         // 90 度圆弧的 NURBS 表示（二次）
         NurbsCurve {
-            control_points: vec![
-                [1.0, 0.0],
-                [1.0, 1.0],
-                [0.0, 1.0],
-            ],
+            control_points: vec![[1.0, 0.0], [1.0, 1.0], [0.0, 1.0]],
             knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
             weights: Some(vec![1.0, f64::sqrt(2.0) / 2.0, 1.0]),
             degree: 2,
@@ -617,9 +626,19 @@ mod tests {
                 [1.0, -1.0],
                 [1.0, 0.0],
             ],
-            knots: vec![0.0, 0.0, 0.0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0, 1.0, 1.0],
+            knots: vec![
+                0.0, 0.0, 0.0, 0.25, 0.25, 0.5, 0.5, 0.75, 0.75, 1.0, 1.0, 1.0,
+            ],
             weights: Some(vec![
-                1.0, sqrt2 / 2.0, 1.0, sqrt2 / 2.0, 1.0, sqrt2 / 2.0, 1.0, sqrt2 / 2.0, 1.0,
+                1.0,
+                sqrt2 / 2.0,
+                1.0,
+                sqrt2 / 2.0,
+                1.0,
+                sqrt2 / 2.0,
+                1.0,
+                sqrt2 / 2.0,
+                1.0,
             ]),
             degree: 2,
         }
@@ -628,10 +647,7 @@ mod tests {
     /// 创建一条直线
     fn create_line() -> NurbsCurve {
         NurbsCurve {
-            control_points: vec![
-                [0.0, 0.0],
-                [10.0, 10.0],
-            ],
+            control_points: vec![[0.0, 0.0], [10.0, 10.0]],
             knots: vec![0.0, 0.0, 1.0, 1.0],
             weights: None,
             degree: 1,
@@ -753,19 +769,19 @@ impl NurbsCurve {
     /// 新的 NURBS 曲线（原曲线不变）
     pub fn insert_knot(&self, u: f64, multiplicity: usize) -> NurbsCurve {
         let mut curve = self.clone();
-        
+
         for _ in 0..multiplicity {
             curve = curve.insert_single_knot(u);
         }
-        
+
         curve
     }
-    
+
     /// 插入单个节点（Boehm 算法）
     fn insert_single_knot(&self, u: f64) -> NurbsCurve {
         let n = self.control_points.len() - 1;
         let p = self.degree;
-        
+
         // 找到 u 所在的节点区间
         let mut span = 0;
         for i in 0..self.knots.len() - 1 {
@@ -774,7 +790,7 @@ impl NurbsCurve {
                 break;
             }
         }
-        
+
         // 计算现有重数
         let mut mult = 0;
         for i in (0..self.knots.len()).rev() {
@@ -784,12 +800,12 @@ impl NurbsCurve {
                 break;
             }
         }
-        
+
         // 如果已经达到最大重数，直接返回
         if mult >= p {
             return self.clone();
         }
-        
+
         // 新的节点向量
         let mut new_knots = Vec::with_capacity(self.knots.len() + 1);
         for (i, &k) in self.knots.iter().enumerate() {
@@ -798,17 +814,17 @@ impl NurbsCurve {
                 new_knots.push(u);
             }
         }
-        
+
         // 如果节点已经在末尾，添加到末尾
         if mult > 0 {
             new_knots.push(u);
         }
-        
+
         // 新的控制点和权重
         let r = span - p + 1;
         let mut new_control_points = Vec::with_capacity(self.control_points.len() + 1);
         let mut new_weights = Vec::with_capacity(self.control_points.len() + 1);
-        
+
         // 复制不受影响的部分
         for i in 0..r {
             if i < self.control_points.len() {
@@ -820,19 +836,20 @@ impl NurbsCurve {
                 }
             }
         }
-        
+
         // 计算新的控制点
         for j in 0..=p - mult {
             let idx1 = span - p + j;
             let idx2 = span - p + j + 1;
-            
+
             if idx1 >= self.control_points.len() || idx2 >= self.control_points.len() {
                 continue;
             }
-            
+
             let alpha = if mult > 0 {
-                (u - self.knots[span - p + j + mult]) / 
-                (self.knots[span + 1 + j].max(self.knots[span - p + j + mult] + 1e-10) - self.knots[span - p + j + mult])
+                (u - self.knots[span - p + j + mult])
+                    / (self.knots[span + 1 + j].max(self.knots[span - p + j + mult] + 1e-10)
+                        - self.knots[span - p + j + mult])
             } else {
                 let denom = self.knots[span + 1 + j] - self.knots[span - p + j];
                 if denom.abs() < 1e-10 {
@@ -841,18 +858,16 @@ impl NurbsCurve {
                     (u - self.knots[span - p + j]) / denom
                 }
             };
-            
+
             let alpha = alpha.clamp(0.0, 1.0);
-            
+
             let new_point = [
-                alpha * self.control_points[idx2][0] + 
-                (1.0 - alpha) * self.control_points[idx1][0],
-                alpha * self.control_points[idx2][1] + 
-                (1.0 - alpha) * self.control_points[idx1][1],
+                alpha * self.control_points[idx2][0] + (1.0 - alpha) * self.control_points[idx1][0],
+                alpha * self.control_points[idx2][1] + (1.0 - alpha) * self.control_points[idx1][1],
             ];
-            
+
             new_control_points.push(new_point);
-            
+
             // 权重插值
             if let Some(ref w) = self.weights {
                 if idx1 < w.len() && idx2 < w.len() {
@@ -861,7 +876,7 @@ impl NurbsCurve {
                 }
             }
         }
-        
+
         // 复制剩余部分
         for i in (span - mult + 1)..=n {
             if i < self.control_points.len() {
@@ -873,15 +888,19 @@ impl NurbsCurve {
                 }
             }
         }
-        
+
         NurbsCurve {
             control_points: new_control_points,
             knots: new_knots,
-            weights: if self.weights.is_some() { Some(new_weights) } else { None },
+            weights: if self.weights.is_some() {
+                Some(new_weights)
+            } else {
+                None
+            },
             degree: p,
         }
     }
-    
+
     /// 曲线求逆：根据给定点反算参数值
     ///
     /// # 参数
@@ -894,64 +913,61 @@ impl NurbsCurve {
         // 使用牛顿迭代法求解
         let mut u = 0.5; // 初始猜测
         let max_iterations = 50;
-        
+
         for _ in 0..max_iterations {
             let pt = self.evaluate_at(u);
-            
+
             // 计算距离
             let dist = ((pt[0] - point[0]).powi(2) + (pt[1] - point[1]).powi(2)).sqrt();
-            
+
             if dist < tolerance {
                 return Some(u);
             }
-            
+
             // 数值微分
             let h = 1e-6;
             let pt_plus = self.evaluate_at((u + h).min(1.0));
-            let derivative = [
-                (pt_plus[0] - pt[0]) / h,
-                (pt_plus[1] - pt[1]) / h,
-            ];
-            
+            let derivative = [(pt_plus[0] - pt[0]) / h, (pt_plus[1] - pt[1]) / h];
+
             // 牛顿步
             let diff = [point[0] - pt[0], point[1] - pt[1]];
             let deriv_len = (derivative[0].powi(2) + derivative[1].powi(2)).sqrt();
-            
+
             if deriv_len < 1e-10 {
                 break;
             }
-            
-            let delta_u = (diff[0] * derivative[0] + diff[1] * derivative[1]) / 
-                          (derivative[0].powi(2) + derivative[1].powi(2));
-            
+
+            let delta_u = (diff[0] * derivative[0] + diff[1] * derivative[1])
+                / (derivative[0].powi(2) + derivative[1].powi(2));
+
             u = (u + delta_u).clamp(0.0, 1.0);
         }
-        
+
         // 如果没有收敛，返回最近点的参数
         None
     }
-    
+
     /// 在曲线上评估参数 u 处的点
     pub fn evaluate_at(&self, u: f64) -> Point2 {
         let discretizer = NurbsAdaptiveDiscretizer::with_default_config();
         let point = discretizer.evaluate(self, u);
         point.point
     }
-    
+
     /// 计算曲线在参数 u 处的导数
     pub fn derivative_at(&self, u: f64) -> Point2 {
         let discretizer = NurbsAdaptiveDiscretizer::with_default_config();
         let point = discretizer.evaluate(self, u);
         point.derivative
     }
-    
+
     /// 计算曲线在参数 u 处的曲率
     pub fn curvature_at(&self, u: f64) -> f64 {
         let discretizer = NurbsAdaptiveDiscretizer::with_default_config();
         let point = discretizer.evaluate(self, u);
         point.curvature
     }
-    
+
     /// 分析两条曲线的连接连续性
     ///
     /// # 参数
@@ -964,50 +980,56 @@ impl NurbsCurve {
         // 检查 G0 连续性（位置连续）
         let my_end = self.control_points.last().copied().unwrap_or([0.0, 0.0]);
         let other_start = other.control_points.first().copied().unwrap_or([0.0, 0.0]);
-        
-        let dist = ((my_end[0] - other_start[0]).powi(2) + 
-                   (my_end[1] - other_start[1]).powi(2)).sqrt();
-        
+
+        let dist =
+            ((my_end[0] - other_start[0]).powi(2) + (my_end[1] - other_start[1]).powi(2)).sqrt();
+
         if dist > tolerance {
             return ContinuityLevel::C0; // 不连续
         }
-        
+
         // 检查 G1 连续性（切线连续）
         let my_tangent = self.derivative_at(1.0);
         let other_tangent = other.derivative_at(0.0);
-        
+
         let my_tangent_len = (my_tangent[0].powi(2) + my_tangent[1].powi(2)).sqrt();
         let other_tangent_len = (other_tangent[0].powi(2) + other_tangent[1].powi(2)).sqrt();
-        
+
         if my_tangent_len < 1e-10 || other_tangent_len < 1e-10 {
             return ContinuityLevel::G0;
         }
-        
+
         // 归一化切线
-        let my_tangent_norm = [my_tangent[0] / my_tangent_len, my_tangent[1] / my_tangent_len];
-        let other_tangent_norm = [other_tangent[0] / other_tangent_len, other_tangent[1] / other_tangent_len];
-        
+        let my_tangent_norm = [
+            my_tangent[0] / my_tangent_len,
+            my_tangent[1] / my_tangent_len,
+        ];
+        let other_tangent_norm = [
+            other_tangent[0] / other_tangent_len,
+            other_tangent[1] / other_tangent_len,
+        ];
+
         // 计算切线夹角
-        let dot = my_tangent_norm[0] * other_tangent_norm[0] + 
-                  my_tangent_norm[1] * other_tangent_norm[1];
-        
+        let dot =
+            my_tangent_norm[0] * other_tangent_norm[0] + my_tangent_norm[1] * other_tangent_norm[1];
+
         let angle_diff = (1.0 - dot.abs()).acos();
-        
+
         if angle_diff > tolerance.to_radians() {
             return ContinuityLevel::G0;
         }
-        
+
         // 检查 G2 连续性（曲率连续）
         let my_curvature = self.curvature_at(1.0);
         let other_curvature = other.curvature_at(0.0);
-        
+
         if (my_curvature - other_curvature).abs() > tolerance {
             return ContinuityLevel::G1;
         }
-        
+
         ContinuityLevel::G2
     }
-    
+
     /// 曲线细化：均匀增加控制点
     ///
     /// # 参数
@@ -1017,16 +1039,16 @@ impl NurbsCurve {
     /// 细化后的曲线
     pub fn refine(&self, num_new_points: usize) -> NurbsCurve {
         let mut curve = self.clone();
-        
+
         // 在内部节点区间均匀插入节点
         let (u_start, u_end) = (0.0, 1.0);
         let step = (u_end - u_start) / (num_new_points + 1) as f64;
-        
+
         for i in 1..=num_new_points {
             let u = u_start + i as f64 * step;
             curve = curve.insert_knot(u, 1);
         }
-        
+
         curve
     }
 }
@@ -1058,138 +1080,126 @@ impl std::fmt::Display for ContinuityLevel {
 #[cfg(test)]
 mod nurbs_enhancement_tests {
     use super::*;
-    
+
     fn create_simple_curve() -> NurbsCurve {
         NurbsCurve {
-            control_points: vec![
-                [0.0, 0.0],
-                [5.0, 10.0],
-                [10.0, 10.0],
-                [15.0, 0.0],
-            ],
+            control_points: vec![[0.0, 0.0], [5.0, 10.0], [10.0, 10.0], [15.0, 0.0]],
             knots: vec![0.0, 0.0, 0.0, 0.333, 0.667, 1.0, 1.0, 1.0],
             weights: None,
             degree: 2,
         }
     }
-    
+
     #[test]
     fn test_knot_insertion() {
         let curve = create_simple_curve();
         let original_points = curve.control_points.len();
         let original_knots = curve.knots.len();
-        
+
         let refined = curve.insert_knot(0.5, 1);
-        
+
         // 插入一个节点后，控制点和节点应该增加
-        assert!(refined.control_points.len() >= original_points, 
-            "控制点应该增加或保持不变");
-        assert_eq!(refined.knots.len(), original_knots + 1, 
-            "节点应该增加 1 个");
-        assert_eq!(refined.degree, curve.degree, 
-            "次数应该保持不变");
+        assert!(
+            refined.control_points.len() >= original_points,
+            "控制点应该增加或保持不变"
+        );
+        assert_eq!(refined.knots.len(), original_knots + 1, "节点应该增加 1 个");
+        assert_eq!(refined.degree, curve.degree, "次数应该保持不变");
     }
-    
+
     #[test]
     fn test_multiple_knot_insertion() {
         let curve = create_simple_curve();
         let original_points = curve.control_points.len();
-        
+
         // 插入重数为 2 的节点
         let refined = curve.insert_knot(0.5, 2);
-        
+
         // 控制点应该增加或保持不变
         assert!(refined.control_points.len() >= original_points);
     }
-    
+
     #[test]
     fn test_curve_refinement() {
         let curve = create_simple_curve();
-        
+
         let refined = curve.refine(3);
-        
+
         // 细化后应该增加控制点（至少 1 个）
-        assert!(refined.control_points.len() > curve.control_points.len(), 
-            "细化后应该增加控制点");
+        assert!(
+            refined.control_points.len() > curve.control_points.len(),
+            "细化后应该增加控制点"
+        );
         // 节点向量也应该增加
-        assert!(refined.knots.len() > curve.knots.len(), 
-            "细化后应该增加节点");
+        assert!(
+            refined.knots.len() > curve.knots.len(),
+            "细化后应该增加节点"
+        );
     }
-    
+
     #[test]
     fn test_continuity_g2() {
         // 创建两条共线的直线（线性 NURBS）
         let curve1 = NurbsCurve {
-            control_points: vec![
-                [0.0, 0.0],
-                [5.0, 0.0],
-            ],
+            control_points: vec![[0.0, 0.0], [5.0, 0.0]],
             knots: vec![0.0, 0.0, 1.0, 1.0],
             weights: None,
             degree: 1,
         };
-        
+
         let curve2 = NurbsCurve {
-            control_points: vec![
-                [5.0, 0.0],
-                [10.0, 0.0],
-            ],
+            control_points: vec![[5.0, 0.0], [10.0, 0.0]],
             knots: vec![0.0, 0.0, 1.0, 1.0],
             weights: None,
             degree: 1,
         };
-        
+
         let continuity = curve1.analyze_continuity(&curve2, 0.1);
-        
+
         // 两条共线的直线应该至少是 G0 连续（位置连续）
         // 由于直线曲率为 0，G2 检查可能不适用
-        assert!(continuity == ContinuityLevel::G2 || 
-                continuity == ContinuityLevel::G1 || 
-                continuity == ContinuityLevel::G0,
-            "共线直线应该至少是 G0 连续，实际：{:?}", continuity);
+        assert!(
+            continuity == ContinuityLevel::G2
+                || continuity == ContinuityLevel::G1
+                || continuity == ContinuityLevel::G0,
+            "共线直线应该至少是 G0 连续，实际：{:?}",
+            continuity
+        );
     }
-    
+
     #[test]
     fn test_continuity_g1() {
         // 创建两条 G1 连续但 G2 不连续的曲线
         let curve1 = NurbsCurve {
-            control_points: vec![
-                [0.0, 0.0],
-                [5.0, 5.0],
-                [10.0, 10.0],
-            ],
+            control_points: vec![[0.0, 0.0], [5.0, 5.0], [10.0, 10.0]],
             knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
             weights: None,
             degree: 2,
         };
-        
+
         let curve2 = NurbsCurve {
-            control_points: vec![
-                [10.0, 10.0],
-                [15.0, 5.0],
-                [20.0, 0.0],
-            ],
+            control_points: vec![[10.0, 10.0], [15.0, 5.0], [20.0, 0.0]],
             knots: vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
             weights: None,
             degree: 2,
         };
-        
+
         let continuity = curve1.analyze_continuity(&curve2, 0.1);
-        
+
         // 切线连续但曲率不连续
         assert!(continuity == ContinuityLevel::G1 || continuity == ContinuityLevel::G0);
     }
-    
+
     #[test]
     fn test_point_inversion() {
         let curve = create_simple_curve();
-        
+
         // 获取曲线上的一个点
         let point_on_curve = curve.evaluate_at(0.5);
-        
+
         // 尝试反算参数
         let u = curve.invert_point(point_on_curve, 0.01);
-        
+
         // 应该能找到接近 0.5 的参数值
         assert!(u.is_some());
         if let Some(found_u) = u {

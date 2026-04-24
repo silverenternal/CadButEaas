@@ -21,14 +21,14 @@
 //! let service = VectorizeService::new(accelerator, VectorizeConfig::default());
 //! ```
 
-pub mod service;
 pub mod algorithms;
 pub mod config;
 pub mod quality;
+pub mod service;
 
-pub use service::VectorizeService;
-pub use config::VectorizeConfig;
 pub use algorithms::*;
+pub use config::VectorizeConfig;
+pub use service::VectorizeService;
 
 #[cfg(feature = "registry")]
 pub use accelerator_registry;

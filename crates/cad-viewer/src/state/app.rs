@@ -2,7 +2,7 @@
 //!
 //! P11 锐评落实：将 CadApp 的状态按职责分离
 
-use crate::state::{SceneState, UIState, RenderState, LoadingState};
+use crate::state::{LoadingState, RenderState, SceneState, UIState};
 use eframe::egui;
 use parking_lot::RwLock;
 use std::sync::Arc;

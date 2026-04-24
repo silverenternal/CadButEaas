@@ -28,7 +28,7 @@
 //!     .collect();
 //! ```
 
-use common_types::{RawEntity, Point2, LengthUnit};
+use common_types::{LengthUnit, Point2, RawEntity};
 use serde::{Deserialize, Serialize};
 
 /// 坐标范围 bounding box
@@ -273,57 +273,81 @@ impl UnitConverter {
     /// 转换实体到毫米
     pub fn convert_entity(&self, entity: &RawEntity) -> RawEntity {
         match entity {
-            RawEntity::Line { start, end, metadata, semantic } => {
-                RawEntity::Line {
-                    start: self.convert_point(*start),
-                    end: self.convert_point(*end),
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Polyline { points, closed, metadata, semantic } => {
-                RawEntity::Polyline {
-                    points: points.iter().map(|p| self.convert_point(*p)).collect(),
-                    closed: *closed,
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Arc { center, radius, start_angle, end_angle, metadata, semantic } => {
-                RawEntity::Arc {
-                    center: self.convert_point(*center),
-                    radius: *radius * self.scale_to_mm,
-                    start_angle: *start_angle,
-                    end_angle: *end_angle,
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Circle { center, radius, metadata, semantic } => {
-                RawEntity::Circle {
-                    center: self.convert_point(*center),
-                    radius: *radius * self.scale_to_mm,
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Text { position, content, height, metadata, semantic, .. } => {
-                RawEntity::Text {
-                    position: self.convert_point(*position),
-                    content: content.clone(),
-                    height: *height * self.scale_to_mm,
-                    rotation: 0.0,
-                    style_name: None,
-                    align_left: None,
-                    align_right: None,
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Path { commands, metadata, semantic } => {
+            RawEntity::Line {
+                start,
+                end,
+                metadata,
+                semantic,
+            } => RawEntity::Line {
+                start: self.convert_point(*start),
+                end: self.convert_point(*end),
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Polyline {
+                points,
+                closed,
+                metadata,
+                semantic,
+            } => RawEntity::Polyline {
+                points: points.iter().map(|p| self.convert_point(*p)).collect(),
+                closed: *closed,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Arc {
+                center,
+                radius,
+                start_angle,
+                end_angle,
+                metadata,
+                semantic,
+            } => RawEntity::Arc {
+                center: self.convert_point(*center),
+                radius: *radius * self.scale_to_mm,
+                start_angle: *start_angle,
+                end_angle: *end_angle,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Circle {
+                center,
+                radius,
+                metadata,
+                semantic,
+            } => RawEntity::Circle {
+                center: self.convert_point(*center),
+                radius: *radius * self.scale_to_mm,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Text {
+                position,
+                content,
+                height,
+                metadata,
+                semantic,
+                ..
+            } => RawEntity::Text {
+                position: self.convert_point(*position),
+                content: content.clone(),
+                height: *height * self.scale_to_mm,
+                rotation: 0.0,
+                style_name: None,
+                align_left: None,
+                align_right: None,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Path {
+                commands,
+                metadata,
+                semantic,
+            } => {
                 // Path 命令中的坐标也需要转换
-                let converted_commands = commands.iter().map(|cmd| {
-                    match cmd {
+                let converted_commands = commands
+                    .iter()
+                    .map(|cmd| match cmd {
                         common_types::PathCommand::MoveTo { x, y } => {
                             let pt = self.convert_point([*x, *y]);
                             common_types::PathCommand::MoveTo { x: pt[0], y: pt[1] }
@@ -332,7 +356,15 @@ impl UnitConverter {
                             let pt = self.convert_point([*x, *y]);
                             common_types::PathCommand::LineTo { x: pt[0], y: pt[1] }
                         }
-                        common_types::PathCommand::ArcTo { rx, ry, x_axis_rotation, large_arc, sweep, x, y } => {
+                        common_types::PathCommand::ArcTo {
+                            rx,
+                            ry,
+                            x_axis_rotation,
+                            large_arc,
+                            sweep,
+                            x,
+                            y,
+                        } => {
                             let pt = self.convert_point([*x, *y]);
                             common_types::PathCommand::ArcTo {
                                 rx: *rx * self.scale_to_mm,
@@ -345,8 +377,8 @@ impl UnitConverter {
                             }
                         }
                         common_types::PathCommand::Close => common_types::PathCommand::Close,
-                    }
-                }).collect();
+                    })
+                    .collect();
 
                 RawEntity::Path {
                     commands: converted_commands,
@@ -354,70 +386,113 @@ impl UnitConverter {
                     semantic: semantic.clone(),
                 }
             }
-            RawEntity::BlockReference { block_name, insertion_point, scale, rotation, metadata, semantic } => {
+            RawEntity::BlockReference {
+                block_name,
+                insertion_point,
+                scale,
+                rotation,
+                metadata,
+                semantic,
+            } => {
                 RawEntity::BlockReference {
                     block_name: block_name.clone(),
                     insertion_point: self.convert_point(*insertion_point),
-                    scale: *scale,  // 缩放比例不变
+                    scale: *scale, // 缩放比例不变
                     rotation: *rotation,
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
                 }
             }
-            RawEntity::Dimension { dimension_type, measurement, text, definition_points, metadata, semantic } => {
-                RawEntity::Dimension {
-                    dimension_type: dimension_type.clone(),
-                    measurement: *measurement * self.scale_to_mm,
-                    text: text.clone(),
-                    definition_points: definition_points.iter().map(|p| self.convert_point(*p)).collect(),
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }
-            }
-            RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic, scale, angle } => {
+            RawEntity::Dimension {
+                dimension_type,
+                measurement,
+                text,
+                definition_points,
+                metadata,
+                semantic,
+            } => RawEntity::Dimension {
+                dimension_type: dimension_type.clone(),
+                measurement: *measurement * self.scale_to_mm,
+                text: text.clone(),
+                definition_points: definition_points
+                    .iter()
+                    .map(|p| self.convert_point(*p))
+                    .collect(),
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Hatch {
+                boundary_paths,
+                pattern,
+                solid_fill,
+                metadata,
+                semantic,
+                scale,
+                angle,
+            } => {
                 // 转换 HATCH 边界路径中的坐标
                 let converted_boundaries: Vec<common_types::HatchBoundaryPath> = boundary_paths
                     .iter()
-                    .map(|boundary| {
-                        match boundary {
-                            common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
-                                common_types::HatchBoundaryPath::Polyline {
-                                    points: points.iter().map(|p| self.convert_point(*p)).collect(),
-                                    closed: *closed,
-                                    bulges: bulges.clone(),
-                                }
-                            }
-                            common_types::HatchBoundaryPath::Arc { center, radius, start_angle, end_angle, ccw } => {
-                                common_types::HatchBoundaryPath::Arc {
-                                    center: self.convert_point(*center),
-                                    radius: *radius * self.scale_to_mm,
-                                    start_angle: *start_angle,
-                                    end_angle: *end_angle,
-                                    ccw: *ccw,
-                                }
-                            }
-                            common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw, extrusion_direction } => {
-                                common_types::HatchBoundaryPath::EllipseArc {
-                                    center: self.convert_point(*center),
-                                    major_axis: self.convert_point(*major_axis),
-                                    minor_axis_ratio: *minor_axis_ratio,
-                                    start_angle: *start_angle,
-                                    end_angle: *end_angle,
-                                    ccw: *ccw,
-                                    extrusion_direction: *extrusion_direction,
-                                }
-                            }
-                            common_types::HatchBoundaryPath::Spline { control_points, knots, degree, weights, fit_points, flags } => {
-                                common_types::HatchBoundaryPath::Spline {
-                                    control_points: control_points.iter().map(|p| self.convert_point(*p)).collect(),
-                                    knots: knots.clone(),
-                                    degree: *degree,
-                                    weights: weights.clone(),
-                                    fit_points: fit_points.as_ref().map(|fp| fp.iter().map(|p| self.convert_point(*p)).collect()),
-                                    flags: *flags,
-                                }
-                            }
-                        }
+                    .map(|boundary| match boundary {
+                        common_types::HatchBoundaryPath::Polyline {
+                            points,
+                            closed,
+                            bulges,
+                        } => common_types::HatchBoundaryPath::Polyline {
+                            points: points.iter().map(|p| self.convert_point(*p)).collect(),
+                            closed: *closed,
+                            bulges: bulges.clone(),
+                        },
+                        common_types::HatchBoundaryPath::Arc {
+                            center,
+                            radius,
+                            start_angle,
+                            end_angle,
+                            ccw,
+                        } => common_types::HatchBoundaryPath::Arc {
+                            center: self.convert_point(*center),
+                            radius: *radius * self.scale_to_mm,
+                            start_angle: *start_angle,
+                            end_angle: *end_angle,
+                            ccw: *ccw,
+                        },
+                        common_types::HatchBoundaryPath::EllipseArc {
+                            center,
+                            major_axis,
+                            minor_axis_ratio,
+                            start_angle,
+                            end_angle,
+                            ccw,
+                            extrusion_direction,
+                        } => common_types::HatchBoundaryPath::EllipseArc {
+                            center: self.convert_point(*center),
+                            major_axis: self.convert_point(*major_axis),
+                            minor_axis_ratio: *minor_axis_ratio,
+                            start_angle: *start_angle,
+                            end_angle: *end_angle,
+                            ccw: *ccw,
+                            extrusion_direction: *extrusion_direction,
+                        },
+                        common_types::HatchBoundaryPath::Spline {
+                            control_points,
+                            knots,
+                            degree,
+                            weights,
+                            fit_points,
+                            flags,
+                        } => common_types::HatchBoundaryPath::Spline {
+                            control_points: control_points
+                                .iter()
+                                .map(|p| self.convert_point(*p))
+                                .collect(),
+                            knots: knots.clone(),
+                            degree: *degree,
+                            weights: weights.clone(),
+                            fit_points: fit_points
+                                .as_ref()
+                                .map(|fp| fp.iter().map(|p| self.convert_point(*p)).collect()),
+                            flags: *flags,
+                        },
                     })
                     .collect();
 
@@ -427,8 +502,8 @@ impl UnitConverter {
                     solid_fill: *solid_fill,
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
-                    scale: *scale,    // P0-NEW-14 修复：传递 scale
-                    angle: *angle,    // P0-NEW-14 修复：传递 angle
+                    scale: *scale, // P0-NEW-14 修复：传递 scale
+                    angle: *angle, // P0-NEW-14 修复：传递 angle
                 }
             }
             RawEntity::XRef { .. } => {
@@ -436,6 +511,132 @@ impl UnitConverter {
                 // 目前仅做类型标记，不进行几何处理
                 todo!("XREF 外部参照单位转换 - 需要后续实现外部文件加载和单位转换")
             }
+            RawEntity::Point {
+                position,
+                metadata,
+                semantic,
+            } => RawEntity::Point {
+                position: self.convert_point(*position),
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Image {
+                image_def,
+                position,
+                size,
+                metadata,
+                semantic,
+            } => RawEntity::Image {
+                image_def: image_def.clone(),
+                position: self.convert_point(*position),
+                size: [size[0] * self.scale_to_mm, size[1] * self.scale_to_mm],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Attribute {
+                tag,
+                value,
+                position,
+                height,
+                rotation,
+                metadata,
+                semantic,
+            } => RawEntity::Attribute {
+                tag: tag.clone(),
+                value: value.clone(),
+                position: self.convert_point(*position),
+                height: *height * self.scale_to_mm,
+                rotation: *rotation,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::AttributeDefinition {
+                tag,
+                default_value,
+                prompt,
+                position,
+                height,
+                rotation,
+                metadata,
+                semantic,
+            } => RawEntity::AttributeDefinition {
+                tag: tag.clone(),
+                default_value: default_value.clone(),
+                prompt: prompt.clone(),
+                position: self.convert_point(*position),
+                height: *height * self.scale_to_mm,
+                rotation: *rotation,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Leader {
+                points,
+                annotation_text,
+                metadata,
+                semantic,
+            } => RawEntity::Leader {
+                points: points.iter().map(|p| self.convert_point(*p)).collect(),
+                annotation_text: annotation_text.clone(),
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::Ray {
+                start,
+                direction,
+                metadata,
+                semantic,
+            } => RawEntity::Ray {
+                start: self.convert_point(*start),
+                direction: [
+                    direction[0] * self.scale_to_mm,
+                    direction[1] * self.scale_to_mm,
+                ],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            RawEntity::MLine {
+                center_line,
+                closed,
+                style_name,
+                scale_factor,
+                metadata,
+                semantic,
+            } => RawEntity::MLine {
+                center_line: center_line.iter().map(|p| self.convert_point(*p)).collect(),
+                closed: *closed,
+                style_name: style_name.clone(),
+                scale_factor: *scale_factor,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
+            // Triangle 使用 3D 单位转换
+            RawEntity::Triangle {
+                vertices,
+                normal,
+                metadata,
+                semantic,
+            } => RawEntity::Triangle {
+                vertices: [
+                    [
+                        vertices[0][0] * self.scale_to_mm,
+                        vertices[0][1] * self.scale_to_mm,
+                        vertices[0][2] * self.scale_to_mm,
+                    ],
+                    [
+                        vertices[1][0] * self.scale_to_mm,
+                        vertices[1][1] * self.scale_to_mm,
+                        vertices[1][2] * self.scale_to_mm,
+                    ],
+                    [
+                        vertices[2][0] * self.scale_to_mm,
+                        vertices[2][1] * self.scale_to_mm,
+                        vertices[2][2] * self.scale_to_mm,
+                    ],
+                ],
+                normal: *normal, // 法向量是方向，不需要缩放
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            },
         }
     }
 
@@ -474,14 +675,12 @@ mod tests {
     fn test_unit_inference_m_to_mm() {
         // 声明单位是米，但坐标值很大（实际是毫米）
         // 10000.0 米 = 10 公里，这在实际建筑图纸中不合理，应推断为毫米（10 米）
-        let entities = vec![
-            RawEntity::Line {
-                start: [0.0, 0.0],
-                end: [10001.0, 0.0],  // > 10000 触发推断规则
-                metadata: Default::default(),
-                semantic: None,
-            }
-        ];
+        let entities = vec![RawEntity::Line {
+            start: [0.0, 0.0],
+            end: [10001.0, 0.0], // > 10000 触发推断规则
+            metadata: Default::default(),
+            semantic: None,
+        }];
 
         let converter = UnitConverter::new(LengthUnit::M, &entities);
         assert_eq!(converter.inferred_unit, LengthUnit::Mm);
@@ -491,14 +690,12 @@ mod tests {
     #[test]
     fn test_unit_inference_mm_to_m() {
         // 声明单位是毫米，但坐标值很小（实际是米）
-        let entities = vec![
-            RawEntity::Line {
-                start: [0.0, 0.0],
-                end: [5.0, 0.0],
-                metadata: Default::default(),
-                semantic: None,
-            }
-        ];
+        let entities = vec![RawEntity::Line {
+            start: [0.0, 0.0],
+            end: [5.0, 0.0],
+            metadata: Default::default(),
+            semantic: None,
+        }];
 
         let converter = UnitConverter::new(LengthUnit::Mm, &entities);
         assert_eq!(converter.inferred_unit, LengthUnit::M);
@@ -507,21 +704,19 @@ mod tests {
 
     #[test]
     fn test_unit_conversion() {
-        let entities = vec![
-            RawEntity::Line {
-                start: [0.0, 0.0],
-                end: [10.0, 0.0],
-                metadata: Default::default(),
-                semantic: None,
-            }
-        ];
+        let entities = vec![RawEntity::Line {
+            start: [0.0, 0.0],
+            end: [10.0, 0.0],
+            metadata: Default::default(),
+            semantic: None,
+        }];
 
         let converter = UnitConverter::new(LengthUnit::M, &entities);
         let converted = converter.convert_entities(&entities);
 
         if let RawEntity::Line { start, end, .. } = &converted[0] {
             assert!((start[0] - 0.0).abs() < 1e-10);
-            assert!((end[0] - 10000.0).abs() < 1e-10);  // 10 米 = 10000 毫米
+            assert!((end[0] - 10000.0).abs() < 1e-10); // 10 米 = 10000 毫米
         } else {
             panic!("Expected Line entity");
         }

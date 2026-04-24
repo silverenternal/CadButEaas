@@ -6,7 +6,7 @@
 //! 3. 只依赖 AppState，实现组件独立性
 //! 4. 应用 macOS 主题样式
 
-use crate::components::{Component, UiEvent, EventResponse, ComponentContext};
+use crate::components::{Component, ComponentContext, EventResponse, UiEvent};
 use crate::state::AppState;
 use eframe::egui;
 use egui::{Frame, Margin, Rounding};
@@ -25,9 +25,7 @@ impl Default for BottomPanel {
 
 impl BottomPanel {
     pub fn new() -> Self {
-        Self {
-            auto_scroll: true,
-        }
+        Self { auto_scroll: true }
     }
 }
 
@@ -55,12 +53,17 @@ impl Component for BottomPanel {
             })
             .show(ctx, |ui| {
                 // 标题使用强调色
-                ui.heading(egui::RichText::new("📜 日志控制台").strong().color(theme.accent));
+                ui.heading(
+                    egui::RichText::new("📜 日志控制台")
+                        .strong()
+                        .color(theme.accent),
+                );
                 ui.separator();
 
                 // P11 增强：按钮悬停效果
                 ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.15);
-                ui.style_mut().visuals.widgets.hovered.fg_stroke = egui::Stroke::new(1.0, theme.accent);
+                ui.style_mut().visuals.widgets.hovered.fg_stroke =
+                    egui::Stroke::new(1.0, theme.accent);
 
                 // 质量评分显示
                 ui.horizontal(|ui| {
@@ -68,7 +71,8 @@ impl Component for BottomPanel {
 
                     // 根据评分显示不同颜色
                     let quality_color = if comp_ctx.state.scene.stats.total_edges > 0
-                        && comp_ctx.state.scene.stats.visible_edges > 0 {
+                        && comp_ctx.state.scene.stats.visible_edges > 0
+                    {
                         let ratio = comp_ctx.state.scene.stats.visible_edges as f64
                             / comp_ctx.state.scene.stats.total_edges as f64;
                         if ratio >= 0.9 {
@@ -82,17 +86,21 @@ impl Component for BottomPanel {
                         egui::Color32::GRAY
                     };
 
-                    ui.label(egui::RichText::new(format!(
-                        "{:.1}% (可见：{}/{})",
-                        if comp_ctx.state.scene.stats.total_edges > 0 {
-                            comp_ctx.state.scene.stats.visible_edges as f64
-                                / comp_ctx.state.scene.stats.total_edges as f64 * 100.0
-                        } else {
-                            0.0
-                        },
-                        comp_ctx.state.scene.stats.visible_edges,
-                        comp_ctx.state.scene.stats.total_edges
-                    )).color(quality_color));
+                    ui.label(
+                        egui::RichText::new(format!(
+                            "{:.1}% (可见：{}/{})",
+                            if comp_ctx.state.scene.stats.total_edges > 0 {
+                                comp_ctx.state.scene.stats.visible_edges as f64
+                                    / comp_ctx.state.scene.stats.total_edges as f64
+                                    * 100.0
+                            } else {
+                                0.0
+                            },
+                            comp_ctx.state.scene.stats.visible_edges,
+                            comp_ctx.state.scene.stats.total_edges
+                        ))
+                        .color(quality_color),
+                    );
                 });
 
                 ui.separator();
@@ -110,7 +118,8 @@ impl Component for BottomPanel {
 
                 // 控制选项
                 ui.horizontal(|ui| {
-                    ui.style_mut().visuals.widgets.hovered.bg_fill = theme.accent.linear_multiply(0.1);
+                    ui.style_mut().visuals.widgets.hovered.bg_fill =
+                        theme.accent.linear_multiply(0.1);
                     if ui.checkbox(&mut self.auto_scroll, "自动滚动").changed() {
                         comp_ctx.state.add_log(if self.auto_scroll {
                             "已启用日志自动滚动"

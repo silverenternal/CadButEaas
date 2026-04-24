@@ -19,8 +19,6 @@ async-trait = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-insta = { workspace = true }
-proptest = { workspace = true }
 criterion = "0.5"
 rand = "0.9"
 rand_chacha = "0.9"

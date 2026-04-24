@@ -34,7 +34,7 @@
 //! ```
 
 use crate::{DxfConfig, DxfParseReport, DxfParser};
-use common_types::{RawEntity, CadError};
+use common_types::{CadError, InternalErrorReason, RawEntity};
 use std::path::Path;
 
 // ============================================================================
@@ -59,16 +59,25 @@ pub trait DxfParserTrait: Send + Sync {
     }
 
     /// 同步解析 DXF 文件并返回报告
-    fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError>;
+    fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError>;
 
     /// 异步解析 DXF 文件
-    async fn parse_file_async(&self, path: impl AsRef<Path> + Send) -> Result<Vec<RawEntity>, CadError> {
+    async fn parse_file_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<Vec<RawEntity>, CadError> {
         // 默认实现：回退到同步版本
         self.parse_file(path)
     }
 
     /// 异步解析 DXF 文件并返回报告
-    async fn parse_file_with_report_async(&self, path: impl AsRef<Path> + Send) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    async fn parse_file_with_report_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         // 默认实现：回退到同步版本
         let (entities, report) = self.parse_file_with_report(path)?;
         Ok((entities, report))
@@ -81,7 +90,10 @@ pub trait DxfParserTrait: Send + Sync {
     }
 
     /// 解析 DXF 字节并返回报告
-    fn parse_bytes_with_report(&self, bytes: &[u8]) -> Result<(Vec<RawEntity>, DxfParseReport), CadError>;
+    fn parse_bytes_with_report(
+        &self,
+        bytes: &[u8],
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError>;
 
     /// 获取解析器配置
     fn config(&self) -> &DxfConfig;
@@ -117,9 +129,43 @@ impl SyncDxfParser {
         }
     }
 
+    /// 获取内部 DxfParser 的引用（用于调用底层方法）
+    pub fn inner(&self) -> &DxfParser {
+        &self.inner
+    }
+
     /// 获取内部 DxfParser 的可变引用（用于高级配置）
     pub fn inner_mut(&mut self) -> &mut DxfParser {
         &mut self.inner
+    }
+
+    /// 设置图层过滤器
+    pub fn with_layer_filter(mut self, layers: Vec<String>) -> Self {
+        self.inner = self.inner.with_layer_filter(layers);
+        self
+    }
+
+    /// 设置是否忽略文本实体
+    pub fn with_ignore_text(mut self, ignore: bool) -> Self {
+        self.inner = self.inner.with_ignore_text(ignore);
+        self
+    }
+
+    /// 设置是否忽略标注实体
+    pub fn with_ignore_dimensions(mut self, ignore: bool) -> Self {
+        self.inner = self.inner.with_ignore_dimensions(ignore);
+        self
+    }
+
+    /// 设置是否忽略填充图案实体
+    pub fn with_ignore_hatch(mut self, ignore: bool) -> Self {
+        self.inner = self.inner.with_ignore_hatch(ignore);
+        self
+    }
+
+    /// 使用指定的内部解析器创建（用于工厂模式）
+    pub fn from_inner(inner: DxfParser) -> Self {
+        Self { inner }
     }
 }
 
@@ -131,38 +177,50 @@ impl Default for SyncDxfParser {
 
 #[async_trait::async_trait]
 impl DxfParserTrait for SyncDxfParser {
-    fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         self.inner.parse_file_with_report(path)
     }
 
-    async fn parse_file_async(&self, path: impl AsRef<Path> + Send) -> Result<Vec<RawEntity>, CadError> {
+    async fn parse_file_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<Vec<RawEntity>, CadError> {
         // 同步解析器也支持异步调用（在 tokio 环境中自动 spawn_blocking）
         let path = path.as_ref().to_path_buf();
         let parser = self.inner.clone();
 
-        tokio::task::spawn_blocking(move || {
-            parser.parse_file(path)
-        })
-        .await
-        .unwrap_or_else(|e| Err(CadError::VectorizeFailed {
-            message: format!("tokio join error: {}", e),
-        }))
+        tokio::task::spawn_blocking(move || parser.parse_file(path))
+            .await
+            .unwrap_or_else(|e| {
+                Err(CadError::internal(InternalErrorReason::Panic {
+                    message: format!("tokio join error: {}", e),
+                }))
+            })
     }
 
-    async fn parse_file_with_report_async(&self, path: impl AsRef<Path> + Send) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    async fn parse_file_with_report_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let path = path.as_ref().to_path_buf();
         let parser = self.inner.clone();
 
-        tokio::task::spawn_blocking(move || {
-            parser.parse_file_with_report(path)
-        })
-        .await
-        .unwrap_or_else(|e| Err(CadError::VectorizeFailed {
-            message: format!("tokio join error: {}", e),
-        }))
+        tokio::task::spawn_blocking(move || parser.parse_file_with_report(path))
+            .await
+            .unwrap_or_else(|e| {
+                Err(CadError::internal(InternalErrorReason::Panic {
+                    message: format!("tokio join error: {}", e),
+                }))
+            })
     }
 
-    fn parse_bytes_with_report(&self, bytes: &[u8]) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_bytes_with_report(
+        &self,
+        bytes: &[u8],
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         // 注意：parse_bytes 不支持报告，这里创建一个空报告
         let entities = self.inner.parse_bytes(bytes)?;
         let report = DxfParseReport::default();
@@ -183,7 +241,7 @@ impl DxfParserTrait for SyncDxfParser {
 // ============================================================================
 
 /// 解析器类型枚举
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ParserType {
     /// 同步解析器（默认，兼容性好）
     Sync,
@@ -191,14 +249,12 @@ pub enum ParserType {
     Async,
     /// 缓存解析器（重复读取优化）
     Cached,
+    /// ezdxf Python 解析器（高精度，需要 Python 环境）
+    #[cfg(feature = "ezdxf-bridge")]
+    Ezdxf,
     /// 自动选择（根据环境和文件特征）
+    #[default]
     Auto,
-}
-
-impl Default for ParserType {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 impl std::fmt::Display for ParserType {
@@ -207,6 +263,8 @@ impl std::fmt::Display for ParserType {
             ParserType::Sync => write!(f, "Sync"),
             ParserType::Async => write!(f, "Async"),
             ParserType::Cached => write!(f, "Cached"),
+            #[cfg(feature = "ezdxf-bridge")]
+            ParserType::Ezdxf => write!(f, "Ezdxf"),
             ParserType::Auto => write!(f, "Auto"),
         }
     }
@@ -221,6 +279,8 @@ mod tests {
         assert_eq!(ParserType::Sync.to_string(), "Sync");
         assert_eq!(ParserType::Async.to_string(), "Async");
         assert_eq!(ParserType::Cached.to_string(), "Cached");
+        #[cfg(feature = "ezdxf-bridge")]
+        assert_eq!(ParserType::Ezdxf.to_string(), "Ezdxf");
         assert_eq!(ParserType::Auto.to_string(), "Auto");
     }
 

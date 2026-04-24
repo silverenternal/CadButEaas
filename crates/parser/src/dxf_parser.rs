@@ -10,11 +10,11 @@
 //! - 二进制 DXF 检测与诊断
 //!
 //! ## 并行化（P11 锐评落实）
-//! 
+//!
 //! ### 并行化策略说明
 //! **注意**：实体转换本身是轻量操作（主要是字段拷贝），并行化的 overhead 可能比收益还大。
 //! 真正的耗时大户是几何处理（端点吸附、交点计算）。
-//! 
+//!
 //! ### P11 落实方案
 //! - **Parser 层**：保持串行处理实体转换（避免过度优化）
 //! - **Topo 层**：在 TopoService::build_topology 中实现并行化
@@ -29,19 +29,22 @@
 //! - 场景特征尺度（从坐标范围计算）
 //! - 用户操作精度（从交互行为推断）
 
-use common_types::{RawEntity, EntityMetadata, Point2, Polyline, CadError, BoundarySemantic, DxfParseReason, BlockDefinition, PathCommand};
-use common_types::{SeatZone, SeatType, AcousticProps, ClosedLoop};
-use common_types::{ParseStage, ParseProgress, adaptive_tolerance::AdaptiveTolerance};
-use common_types::{HatchBoundaryPath, HatchPattern, DimensionType};
 use crate::hatch_parser::HatchParser;
-use dxf::{Drawing, entities::EntityType};
-use dxf::entities::Insert;
+use common_types::{adaptive_tolerance::AdaptiveTolerance, ParseProgress, ParseStage};
+use common_types::{AcousticProps, ClosedLoop, SeatType, SeatZone};
+use common_types::{
+    BlockDefinition, BoundarySemantic, CadError, DxfParseReason, EntityMetadata, LineStyle,
+    PathCommand, Point2, Polyline, RawEntity,
+};
+use common_types::{DimensionType, HatchBoundaryPath, HatchPattern};
 use curvo::prelude::NurbsCurve;
-use std::path::{Path, PathBuf};
+use dxf::entities::Insert;
+use dxf::{entities::EntityType, Drawing};
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Read, BufReader};
-use rayon::prelude::*;
+use std::io::{BufReader, Read};
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::watch;
 
@@ -89,7 +92,7 @@ pub struct SplineSimplificationStats {
 const BULGE_EPSILON: f64 = 1e-10;
 
 /// DXF 线宽枚举值转换为毫米值
-/// 
+///
 /// DXF 线宽值（组码 370）与毫米值的映射关系：
 /// -3 = BYLAYER, -2 = BYBLOCK, -1 = DEFAULT
 /// 0 = 0.00mm, 1 = 0.05mm, ..., 23 = 2.11mm
@@ -135,7 +138,7 @@ fn lineweight_enum_to_mm(enum_value: i16) -> Option<f64> {
 ///
 /// # P0 优化：动态阈值
 /// 本函数已更新为使用动态容差。
-/// 
+///
 /// ## 使用示例（推荐）
 /// ```rust
 /// use common_types::adaptive_tolerance::AdaptiveTolerance;
@@ -151,12 +154,12 @@ fn lineweight_enum_to_mm(enum_value: i16) -> Option<f64> {
 fn bulge_to_arc_points(p1: Point2, p2: Point2, bulge: f64, tolerance: f64) -> Polyline {
     // 先计算弦长，用于动态 bulge 阈值
     let chord_length = ((p2[0] - p1[0]).powi(2) + (p2[1] - p1[1]).powi(2)).sqrt();
-    
+
     // 使用动态计算的 bulge 阈值替代硬编码的 BULGE_EPSILON
     // 公式：bulge_threshold = 2 * max_sagitta / chord_length
     // 其中 max_sagitta = tolerance * 0.1
     let bulge_threshold = 2.0 * (tolerance * 0.1) / chord_length.max(tolerance);
-    
+
     if bulge.abs() < bulge_threshold {
         // bulge 足够小，简化为直线
         return vec![p1, p2];
@@ -214,7 +217,15 @@ fn bulge_to_arc_points(p1: Point2, p2: Point2, bulge: f64, tolerance: f64) -> Po
     let end_angle = (p2[1] - center[1]).atan2(p2[0] - center[0]);
 
     // 离散化圆弧 - 优化版本
-    discretize_arc_optimized(center, radius, start_angle, end_angle, bulge > 0.0, tolerance, chord_length)
+    discretize_arc_optimized(
+        center,
+        radius,
+        start_angle,
+        end_angle,
+        bulge > 0.0,
+        tolerance,
+        chord_length,
+    )
 }
 
 /// 离散化圆弧（优化版本 - P1 精度改进）
@@ -256,17 +267,20 @@ fn discretize_arc_optimized(
     // 方法 1：基于弦高误差的计算（适用于中小半径）
     // 弦高 h = R * (1 - cos(θ/2)) => θ = 2 * acos(1 - h/R)
     let max_angle_step_h = if radius > tolerance {
-        2.0 * ((1.0 - tolerance / radius).acos().min(std::f64::consts::PI / 8.0))
+        2.0 * ((1.0 - tolerance / radius)
+            .acos()
+            .min(std::f64::consts::PI / 8.0))
     } else {
-        std::f64::consts::PI / 8.0  // 半径很小时限制最大步长
+        std::f64::consts::PI / 8.0 // 半径很小时限制最大步长
     };
 
     // 方法 2：基于固定角度步长（适用于大半径 R > 10m）
     // 大半径时弦高误差公式会失效，改用固定角度步长
-    let max_angle_step_fixed = std::f64::consts::PI / 32.0;  // 5.625 度
+    let max_angle_step_fixed = std::f64::consts::PI / 32.0; // 5.625 度
 
     // 选择更保守的步长
-    let max_angle_step = if radius > 10000.0 {  // R > 10m
+    let max_angle_step = if radius > 10000.0 {
+        // R > 10m
         max_angle_step_fixed
     } else {
         max_angle_step_h.min(max_angle_step_fixed)
@@ -281,8 +295,9 @@ fn discretize_arc_optimized(
 
     // P1 优化：弦长感知调整
     // 如果弦长较长，增加段数以保持离散化精度
-    let chord_based_segments = if chord_length > 1000.0 {  // 弦长 > 1m
-        ((chord_length / 100.0).ceil() as usize).max(min_segments)  // 每 100mm 至少 1 段
+    let chord_based_segments = if chord_length > 1000.0 {
+        // 弦长 > 1m
+        ((chord_length / 100.0).ceil() as usize).max(min_segments) // 每 100mm 至少 1 段
     } else {
         min_segments
     };
@@ -320,17 +335,17 @@ fn discretize_arc_optimized(
 }
 
 /// P11 新增：过滤共线冗余顶点
-/// 
+///
 /// 移除多段线中连续的三点共线的中间点，减少冗余顶点
-/// 
+///
 /// # 算法
 /// 对于连续的三点 A-B-C，计算向量 AB 和 BC 的夹角
 /// 如果夹角小于阈值（默认 0.5 度），则 B 点被认为是冗余的
-/// 
+///
 /// # 参数
 /// - `points`: 输入点列表
 /// - `angle_tolerance_rad`: 角度容差（弧度）
-/// 
+///
 /// # 返回
 /// 过滤后的点列表
 fn filter_collinear_points(points: &Polyline, angle_tolerance_rad: f64) -> Polyline {
@@ -365,13 +380,14 @@ fn filter_collinear_points(points: &Polyline, angle_tolerance_rad: f64) -> Polyl
         let cos_angle = dot / (ab_len * bc_len);
 
         // 限制 cos 值在 [-1, 1] 范围内（避免数值误差）
-        let cos_angle = cos_angle.max(-1.0).min(1.0);
+        let cos_angle = cos_angle.clamp(-1.0, 1.0);
 
         // 计算角度（0 表示同向，PI 表示反向）
         let angle = cos_angle.acos();
 
         // 如果角度接近 0 或 PI（共线），跳过该点
-        let is_collinear = angle < angle_tolerance_rad || (std::f64::consts::PI - angle) < angle_tolerance_rad;
+        let is_collinear =
+            angle < angle_tolerance_rad || (std::f64::consts::PI - angle) < angle_tolerance_rad;
 
         if !is_collinear {
             filtered.push(*curr);
@@ -407,7 +423,6 @@ pub struct DxfParseReport {
     // ========================================================================
     // P11 技术设计文档 v1.0 新增字段
     // ========================================================================
-
     /// 检测到的座椅区块
     pub seat_zones: Vec<common_types::SeatZone>,
     /// 3D 实体警告
@@ -418,7 +433,6 @@ pub struct DxfParseReport {
     // ========================================================================
     // P3 增强：图层分组统计
     // ========================================================================
-
     /// 图层分组统计：分组名 -> 图层名列表
     pub layer_groups: HashMap<String, Vec<String>>,
     /// 图层可见性状态：图层名 -> 是否可见
@@ -429,7 +443,6 @@ pub struct DxfParseReport {
     // ========================================================================
     // P5 增强：解析质量报告
     // ========================================================================
-
     /// 解析质量评分（0.0 - 1.0）
     pub quality_score: f64,
     /// 解析问题详情
@@ -440,7 +453,6 @@ pub struct DxfParseReport {
     // ========================================================================
     // P11 修复：HATCH 解析错误上报
     // ========================================================================
-
     /// HATCH 解析错误信息（如果存在）
     pub hatch_parse_error: Option<String>,
     /// HATCH 解析统计
@@ -561,10 +573,10 @@ impl ParseIssue {
 /// P5 新增：问题严重程度
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ParseIssueSeverity {
-    Info,       // 信息
-    Warning,    // 警告
-    Error,      // 错误
-    Critical,   // 严重
+    Info,     // 信息
+    Warning,  // 警告
+    Error,    // 错误
+    Critical, // 严重
 }
 
 /// P5 新增：解析统计
@@ -646,7 +658,6 @@ pub struct DxfConfig {
     // ========================================================================
     // P11 技术设计文档 v1.0 新增配置
     // ========================================================================
-
     /// 是否检测座椅区块
     pub detect_seat_zones: bool,
     /// 座椅区块最小数量阈值
@@ -661,7 +672,6 @@ pub struct DxfConfig {
     // ========================================================================
     // P3 增强：智能图层过滤
     // ========================================================================
-
     /// 图层过滤模式
     pub layer_filter_mode: LayerFilterMode,
     /// 自定义图层分组（图层名模式 -> 分组名）
@@ -952,9 +962,7 @@ impl DxfParser {
         let drawing = Drawing::load_file(path)
             .map_err(|e| CadError::dxf_parse_with_source(path, DxfParseReason::FileNotFound, e))?;
 
-        let mut layers: Vec<String> = drawing.layers()
-            .map(|l| l.name.clone())
-            .collect();
+        let mut layers: Vec<String> = drawing.layers().map(|l| l.name.clone()).collect();
         layers.sort();
         layers.dedup();
 
@@ -966,14 +974,14 @@ impl DxfParser {
     /// 自动检测包含墙相关关键词的图层（支持 AIA 标准和常见变体）
     pub fn detect_wall_layers(&self, path: impl AsRef<Path>) -> Result<Vec<String>, CadError> {
         let layers = self.get_layer_list(path)?;
-        Ok(layers
-            .into_iter()
-            .filter(|l| is_wall_layer(l))
-            .collect())
+        Ok(layers.into_iter().filter(|l| is_wall_layer(l)).collect())
     }
 
     /// 智能识别门窗图层
-    pub fn detect_door_window_layers(&self, path: impl AsRef<Path>) -> Result<Vec<String>, CadError> {
+    pub fn detect_door_window_layers(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<Vec<String>, CadError> {
         let layers = self.get_layer_list(path)?;
         Ok(layers
             .into_iter()
@@ -1000,13 +1008,14 @@ impl DxfParser {
     }
 
     /// 解析 DXF 文件并返回实体和统计报告
-    pub fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    pub fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let path = path.as_ref();
 
         // 获取文件大小用于进度计算
-        let total_bytes = std::fs::metadata(path)
-            .map(|m| m.len())
-            .unwrap_or(0);
+        let total_bytes = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
 
         // 发送初始进度
         self.send_progress(ParseProgress {
@@ -1046,24 +1055,23 @@ impl DxfParser {
             ..Default::default()
         });
 
-        let drawing = Drawing::load_file(path)
-            .map_err(|e| {
-                CadError::dxf_parse_with_source(
-                    path,
-                    DxfParseReason::FileNotFound,
-                    std::io::Error::new(
-                        std::io::ErrorKind::InvalidData,
-                        format!(
-                            "DXF 文件加载失败：{}\n\
+        let drawing = Drawing::load_file(path).map_err(|e| {
+            CadError::dxf_parse_with_source(
+                path,
+                DxfParseReason::FileNotFound,
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!(
+                        "DXF 文件加载失败：{}\n\
                              建议：\n\
                              1. 检查文件是否存在：{:?}\n\
                              2. 检查文件权限是否可读\n\
                              3. 确认 DXF 版本兼容性（支持 R12-R2018）",
-                            e, path
-                        ),
+                        e, path
                     ),
-                )
-            })?;
+                ),
+            )
+        })?;
 
         // 更新进度：解析表格段
         self.send_progress(ParseProgress {
@@ -1098,17 +1106,26 @@ impl DxfParser {
             match self.hatch_parser.parse_hatch_entities(path.as_ref()) {
                 Ok(hatch_entities) => {
                     tracing::info!("解析到 {} 个 HATCH 实体", hatch_entities.len());
-                    
+
                     // P11 新增：统计 HATCH 类型
-                    let solid_count = hatch_entities.iter()
-                        .filter(|e| matches!(e, RawEntity::Hatch { solid_fill: true, .. }))
+                    let solid_count = hatch_entities
+                        .iter()
+                        .filter(|e| {
+                            matches!(
+                                e,
+                                RawEntity::Hatch {
+                                    solid_fill: true,
+                                    ..
+                                }
+                            )
+                        })
                         .count();
                     let pattern_count = hatch_entities.len() - solid_count;
-                    
+
                     report.hatch_stats.parsed_count = hatch_entities.len();
                     report.hatch_stats.solid_fill_count = solid_count;
                     report.hatch_stats.pattern_fill_count = pattern_count;
-                    
+
                     // 将 HATCH 实体添加到结果中
                     entities.extend(hatch_entities);
                 }
@@ -1126,7 +1143,8 @@ impl DxfParser {
                 }
             }
         } else {
-            report.hatch_parse_error = Some("HATCH 解析已禁用（配置选项 ignore_hatch=true）".to_string());
+            report.hatch_parse_error =
+                Some("HATCH 解析已禁用（配置选项 ignore_hatch=true）".to_string());
         }
 
         // 更新进度：完成
@@ -1219,12 +1237,13 @@ impl DxfParser {
         use std::io::Cursor;
 
         let mut cursor = Cursor::new(bytes);
-        let drawing = Drawing::load(&mut cursor)
-            .map_err(|e| CadError::dxf_parse_with_source(
+        let drawing = Drawing::load(&mut cursor).map_err(|e| {
+            CadError::dxf_parse_with_source(
                 PathBuf::from("<bytes>"),
                 DxfParseReason::EncodingError("DXF 字节解析失败".to_string()),
                 e,
-            ))?;
+            )
+        })?;
 
         self.extract_entities(&drawing)
     }
@@ -1241,15 +1260,26 @@ impl DxfParser {
     /// # P11 锐评落实：rayon 并行化
     /// - 块定义解析使用并行迭代器
     /// - 大文件实体解析使用并行迭代器（>1000 实体时自动启用）
-    fn extract_entities_with_report(&self, drawing: &Drawing, report: &mut DxfParseReport) -> Result<Vec<RawEntity>, CadError> {
+    fn extract_entities_with_report(
+        &self,
+        drawing: &Drawing,
+        report: &mut DxfParseReport,
+    ) -> Result<Vec<RawEntity>, CadError> {
+        // 解析单位转换比例（如果尚未设置）
+        if report.unit_scale == 0.0 {
+            report.drawing_units = self.parse_insunits(drawing, &mut report.unit_scale);
+        }
+
         // 获取单位转换比例
         let scale = report.unit_scale;
 
         // 1. 解析块定义（并行化）
-        let block_definitions: HashMap<String, BlockDefinition> = drawing.blocks()
+        let block_definitions: HashMap<String, BlockDefinition> = drawing
+            .blocks()
             .par_bridge()
             .filter_map(|block| {
-                let block_entities: Vec<RawEntity> = block.entities
+                let block_entities: Vec<RawEntity> = block
+                    .entities
                     .iter()
                     .filter_map(|entity| self.convert_entity(entity).ok().flatten())
                     .collect();
@@ -1271,7 +1301,7 @@ impl DxfParser {
         // 更新进度：解析实体
         self.send_progress(ParseProgress {
             stage: ParseStage::ParsingEntities,
-            total_bytes: 0,  // 未知
+            total_bytes: 0, // 未知
             entities_parsed: 0,
             stage_progress: 0.0,
             ..Default::default()
@@ -1280,7 +1310,7 @@ impl DxfParser {
         // 2. 解析 ENTITIES 段
         let entities_vec: Vec<_> = drawing.entities().collect();
         let total_entity_count = entities_vec.len();
-        
+
         // P11 锐评落实：并行化策略优化
         // 注意：实体转换本身是轻量操作（主要是字段拷贝），并行化的 overhead 可能比收益还大
         // 真正的耗时大户是几何处理（端点吸附、交点计算），已在 TopoService 中并行化
@@ -1288,7 +1318,7 @@ impl DxfParser {
         // - parallel::snap_endpoints_parallel 并行端点吸附
         // - Bentley-Ottmann 算法并行交点计算
         // 此处保持串行处理，避免过度优化
-        let is_large_file = entities_vec.len() > 500;  // P11 修复：提高阈值到 500
+        let is_large_file = entities_vec.len() > 500; // P11 修复：提高阈值到 500
 
         // 统计信息需要串行收集，所以先收集数据再统计
         let mut layer_distribution: HashMap<String, usize> = HashMap::new();
@@ -1297,7 +1327,9 @@ impl DxfParser {
 
         // 预处理：统计图层和类型分布（用于报告）
         for entity in &entities_vec {
-            *layer_distribution.entry(entity.common.layer.clone()).or_insert(0) += 1;
+            *layer_distribution
+                .entry(entity.common.layer.clone())
+                .or_insert(0) += 1;
             let entity_type_name = match &entity.specific {
                 EntityType::Line(_) => "LINE",
                 EntityType::Polyline(_) => "POLYLINE",
@@ -1309,11 +1341,29 @@ impl DxfParser {
                 EntityType::Text(_) => "TEXT",
                 EntityType::MText(_) => "MTEXT",
                 EntityType::Insert(_) => "INSERT",
+                EntityType::ModelPoint(_) => "POINT",
+                EntityType::Image(_) => "IMAGE",
+                EntityType::Attribute(_) => "ATTRIB",
+                EntityType::AttributeDefinition(_) => "ATTDEF",
+                EntityType::Solid(_) => "SOLID",
+                EntityType::Trace(_) => "TRACE",
+                EntityType::Wipeout(_) => "WIPEOUT",
+                EntityType::Leader(_) => "LEADER",
+                EntityType::Ray(_) => "RAY",
+                EntityType::XLine(_) => "XLINE",
+                EntityType::MLine(_) => "MLINE",
+                EntityType::PdfUnderlay(_) => "PDF_UNDERLAY",
+                EntityType::DwfUnderlay(_) => "DWF_UNDERLAY",
+                EntityType::DgnUnderlay(_) => "DGN_UNDERLAY",
+                EntityType::Face(_) => "3DFACE",
+                EntityType::Region(_) => "REGION",
                 // P0-1: HATCH 和 P0-2: DIMENSION 暂时归类为 OTHER
                 // 待后续实现完整解析
                 _ => "OTHER",
             };
-            *entity_type_distribution.entry(entity_type_name.to_string()).or_insert(0) += 1;
+            *entity_type_distribution
+                .entry(entity_type_name.to_string())
+                .or_insert(0) += 1;
             if matches!(&entity.specific, EntityType::Insert(_)) {
                 block_references_count += 1;
             }
@@ -1330,7 +1380,8 @@ impl DxfParser {
             // 并行处理实体（注意：实体转换是轻量操作，并行化效果有限）
             // 在并行迭代中定期发送进度更新
             let progress_tx = &self.progress_tx;
-            let entities: Vec<RawEntity> = entities_vec.par_iter()
+            let entities: Vec<RawEntity> = entities_vec
+                .par_iter()
                 .enumerate()
                 .flat_map(|(idx, entity)| {
                     // 每 100 个实体发送一次进度
@@ -1353,7 +1404,8 @@ impl DxfParser {
             entities
         } else {
             // 串行处理实体
-            entities_vec.iter()
+            entities_vec
+                .iter()
                 .flat_map(|entity| self.process_entity(entity, &block_definitions, scale))
                 .collect()
         };
@@ -1368,7 +1420,7 @@ impl DxfParser {
             ..Default::default()
         });
 
-        let output_entity_count = entities.len();  // P11 修复：定义输出数量
+        let output_entity_count = entities.len(); // P11 修复：定义输出数量
 
         // P6: 统计错误恢复信息（P11 修复：精确统计）
         // 使用输入/输出对比来估算损坏实体数量
@@ -1382,7 +1434,7 @@ impl DxfParser {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 self.process_entity_impl(entity, &block_definitions, scale)
             }));
-            
+
             match result {
                 Ok(entities) => {
                     if entities.is_empty() && !self.should_filter_entity(entity) {
@@ -1407,7 +1459,11 @@ impl DxfParser {
 
             tracing::warn!(
                 "检测到 {} 个损坏实体（恢复：{}，跳过：{}，总输入：{}, 总输出：{}）",
-                damaged_count, recovered_count, damaged_count, total_entity_count, output_entity_count
+                damaged_count,
+                recovered_count,
+                damaged_count,
+                total_entity_count,
+                output_entity_count
             );
         }
 
@@ -1432,8 +1488,12 @@ impl DxfParser {
             ..Default::default()
         });
 
-        tracing::info!("从 DXF 中提取了 {} 个实体（块定义：{}，块引用：{}）",
-            entities.len(), report.block_definitions_count, report.block_references_count);
+        tracing::info!(
+            "从 DXF 中提取了 {} 个实体（块定义：{}，块引用：{}）",
+            entities.len(),
+            report.block_definitions_count,
+            report.block_references_count
+        );
         Ok(entities)
     }
 
@@ -1445,20 +1505,25 @@ impl DxfParser {
                 return true;
             }
         }
-        
+
         // 颜色/线宽过滤
         if !self.should_include_entity(entity) {
             return true;
         }
-        
+
         false
     }
 
     /// 处理单个实体（并行化辅助函数）
     /// 返回 Vec 而非 Option，因为 INSERT 展开会产生多个实体
-    /// 
+    ///
     /// P6 增强：实现错误恢复解析 - 跳过损坏实体继续解析
-    fn process_entity(&self, entity: &dxf::entities::Entity, block_definitions: &HashMap<String, BlockDefinition>, scale: f64) -> Vec<RawEntity> {
+    fn process_entity(
+        &self,
+        entity: &dxf::entities::Entity,
+        block_definitions: &HashMap<String, BlockDefinition>,
+        scale: f64,
+    ) -> Vec<RawEntity> {
         // P6: 使用 catch_unwind 捕获 panic，防止单个实体损坏导致整个解析失败
         let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             self.process_entity_impl(entity, block_definitions, scale)
@@ -1481,12 +1546,27 @@ impl DxfParser {
                     EntityType::Text(_) => "TEXT",
                     EntityType::MText(_) => "MTEXT",
                     EntityType::Insert(_) => "INSERT",
+                    EntityType::ModelPoint(_) => "POINT",
+                    EntityType::Image(_) => "IMAGE",
+                    EntityType::Attribute(_) => "ATTRIB",
+                    EntityType::AttributeDefinition(_) => "ATTDEF",
+                    EntityType::Solid(_) => "SOLID",
+                    EntityType::Trace(_) => "TRACE",
+                    EntityType::Wipeout(_) => "WIPEOUT",
+                    EntityType::Leader(_) => "LEADER",
+                    EntityType::Ray(_) => "RAY",
+                    EntityType::XLine(_) => "XLINE",
+                    EntityType::MLine(_) => "MLINE",
+                    EntityType::Face(_) => "3DFACE",
+                    EntityType::Region(_) => "REGION",
                     _ => "OTHER",
                 };
 
                 tracing::warn!(
                     "捕获实体解析 panic，已跳过：handle={}, layer={}, type={}",
-                    handle, layer, entity_type
+                    handle,
+                    layer,
+                    entity_type
                 );
 
                 // 注意：这里无法直接更新 report，因为 process_entity 是纯函数
@@ -1498,7 +1578,12 @@ impl DxfParser {
 
     /// 实体解析实现（内部函数）
     /// P6: 将实际解析逻辑分离到此函数，便于错误恢复处理
-    fn process_entity_impl(&self, entity: &dxf::entities::Entity, block_definitions: &HashMap<String, BlockDefinition>, scale: f64) -> Vec<RawEntity> {
+    fn process_entity_impl(
+        &self,
+        entity: &dxf::entities::Entity,
+        block_definitions: &HashMap<String, BlockDefinition>,
+        scale: f64,
+    ) -> Vec<RawEntity> {
         // 图层过滤
         if let Some(ref layers) = self.layer_filter {
             if !layers.is_empty() && !layers.contains(&entity.common.layer) {
@@ -1524,6 +1609,7 @@ impl DxfParser {
             color: color_index.clone(),
             lineweight: lineweight_enum_to_mm(entity.common.lineweight_enum_value),
             line_type: Some(entity.common.line_type_name.clone()).filter(|s| !s.is_empty()),
+            line_style: LineStyle::from_dxf_name(&entity.common.line_type_name),
             handle: Some(format!("{:?}", entity.common.handle)),
             material,
             width: None,
@@ -1545,7 +1631,11 @@ impl DxfParser {
                 const MIN_LINE_LENGTH: f64 = 1e-4; // 0.1mm
                 let length = ((end[0] - start[0]).powi(2) + (end[1] - start[1]).powi(2)).sqrt();
                 if length < MIN_LINE_LENGTH {
-                    tracing::debug!("过滤零长度线段：handle={:?}, length={:.6}", entity.common.handle, length);
+                    tracing::debug!(
+                        "过滤零长度线段：handle={:?}, length={:.6}",
+                        entity.common.handle,
+                        length
+                    );
                     return vec![];
                 }
 
@@ -1560,7 +1650,7 @@ impl DxfParser {
             EntityType::Polyline(polyline) => {
                 // P11 修复：处理 POLYLINE 的 bulge 并过滤共线点
                 let vertices: Vec<_> = polyline.vertices().collect();
-                
+
                 if vertices.is_empty() {
                     tracing::debug!("多段线顶点为空：handle={:?}", entity.common.handle);
                     return vec![];
@@ -1571,14 +1661,18 @@ impl DxfParser {
                     let x = v.location.x * scale;
                     let y = v.location.y * scale;
                     if x.is_nan() || y.is_nan() || x.is_infinite() || y.is_infinite() {
-                        tracing::warn!("多段线包含无效坐标：handle={:?}, point_index={}", entity.common.handle, i);
+                        tracing::warn!(
+                            "多段线包含无效坐标：handle={:?}, point_index={}",
+                            entity.common.handle,
+                            i
+                        );
                         return vec![];
                     }
                 }
 
                 // P11 新增：处理 bulge（与 LwPolyline 相同的逻辑）
                 let mut points: Polyline = Vec::new();
-                
+
                 for i in 0..vertices.len() {
                     let v1 = &vertices[i];
                     let v2 = if i + 1 < vertices.len() {
@@ -1596,11 +1690,12 @@ impl DxfParser {
 
                     // 检查 bulge（POLYLINE 的 bulge 存储在顶点上）
                     let bulge = v1.bulge;
-                    
+
                     if bulge.abs() > BULGE_EPSILON {
                         // 使用 bulge_to_arc_points 离散化圆弧
-                        let arc_points = bulge_to_arc_points(p1, p2, bulge, self.config.arc_tolerance_mm);
-                        
+                        let arc_points =
+                            bulge_to_arc_points(p1, p2, bulge, self.config.arc_tolerance_mm);
+
                         if points.is_empty() {
                             points.extend_from_slice(&arc_points);
                         } else {
@@ -1617,12 +1712,17 @@ impl DxfParser {
 
                 // P6: 验证最终点数
                 if points.len() < 2 {
-                    tracing::debug!("多段线离散后点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                    tracing::debug!(
+                        "多段线离散后点数不足：handle={:?}, count={}",
+                        entity.common.handle,
+                        points.len()
+                    );
                     return vec![];
                 }
 
                 // P11 新增：过滤共线冗余顶点
-                let filtered_points = filter_collinear_points(&points, self.adaptive_tolerance.angle_tolerance());
+                let filtered_points =
+                    filter_collinear_points(&points, self.adaptive_tolerance.angle_tolerance());
 
                 vec![RawEntity::Polyline {
                     points: filtered_points,
@@ -1644,7 +1744,11 @@ impl DxfParser {
                 // P6: 检查顶点数据有效性
                 for (i, v) in vertices.iter().enumerate() {
                     if v.x.is_nan() || v.y.is_nan() || v.x.is_infinite() || v.y.is_infinite() {
-                        tracing::warn!("轻多段线顶点坐标无效：handle={:?}, vertex_index={}", entity.common.handle, i);
+                        tracing::warn!(
+                            "轻多段线顶点坐标无效：handle={:?}, vertex_index={}",
+                            entity.common.handle,
+                            i
+                        );
                         return vec![];
                     }
                 }
@@ -1669,8 +1773,9 @@ impl DxfParser {
                     // 只在当前顶点有 bulge 时处理圆弧
                     if v1.bulge.abs() > BULGE_EPSILON {
                         // 使用 bulge_to_arc_points 离散化圆弧
-                        let arc_points = bulge_to_arc_points(p1, p2, v1.bulge, self.config.arc_tolerance_mm);
-                        
+                        let arc_points =
+                            bulge_to_arc_points(p1, p2, v1.bulge, self.config.arc_tolerance_mm);
+
                         // 第一段添加所有点，后续段只添加中间点和终点（避免重复）
                         if points.is_empty() {
                             points.extend_from_slice(&arc_points);
@@ -1689,12 +1794,30 @@ impl DxfParser {
 
                 // P6: 验证最终点数
                 if points.len() < 2 {
-                    tracing::debug!("轻多段线离散后点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                    tracing::debug!(
+                        "轻多段线离散后点数不足：handle={:?}, count={}",
+                        entity.common.handle,
+                        points.len()
+                    );
                     return vec![];
                 }
 
-                // P11 新增：过滤共线冗余顶点
-                let filtered_points = filter_collinear_points(&points, self.adaptive_tolerance.angle_tolerance());
+                // P11 修复：先过滤零长度边（重复点），再过滤共线冗余顶点
+                let filtered_points = filter_zero_length_edges(points);
+                let filtered_points = filter_collinear_points(
+                    &filtered_points,
+                    self.adaptive_tolerance.angle_tolerance(),
+                );
+
+                // 再次验证点数
+                if filtered_points.len() < 2 {
+                    tracing::debug!(
+                        "轻多段线过滤后点数不足：handle={:?}, count={}",
+                        entity.common.handle,
+                        filtered_points.len()
+                    );
+                    return vec![];
+                }
 
                 vec![RawEntity::Polyline {
                     points: filtered_points,
@@ -1707,7 +1830,11 @@ impl DxfParser {
             EntityType::Arc(arc) => {
                 // P6: 检查圆弧半径有效性
                 if arc.radius <= 0.0 || arc.radius.is_nan() || arc.radius.is_infinite() {
-                    tracing::warn!("圆弧半径无效：handle={:?}, radius={}", entity.common.handle, arc.radius);
+                    tracing::warn!(
+                        "圆弧半径无效：handle={:?}, radius={}",
+                        entity.common.handle,
+                        arc.radius
+                    );
                     return vec![];
                 }
 
@@ -1724,7 +1851,11 @@ impl DxfParser {
             EntityType::Circle(circle) => {
                 // P6: 检查圆半径有效性
                 if circle.radius <= 0.0 || circle.radius.is_nan() || circle.radius.is_infinite() {
-                    tracing::warn!("圆半径无效：handle={:?}, radius={}", entity.common.handle, circle.radius);
+                    tracing::warn!(
+                        "圆半径无效：handle={:?}, radius={}",
+                        entity.common.handle,
+                        circle.radius
+                    );
                     return vec![];
                 }
 
@@ -1739,7 +1870,11 @@ impl DxfParser {
             EntityType::Spline(spline) => {
                 let points = self.discretize_spline_with_scale(spline, scale);
                 if points.len() < 2 {
-                    tracing::debug!("样条曲线离散后点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                    tracing::debug!(
+                        "样条曲线离散后点数不足：handle={:?}, count={}",
+                        entity.common.handle,
+                        points.len()
+                    );
                     return vec![];
                 }
                 vec![RawEntity::Polyline {
@@ -1753,18 +1888,27 @@ impl DxfParser {
             EntityType::Ellipse(ellipse) => {
                 // P6: 检查椭圆轴长有效性
                 // 注意：dxf crate 中椭圆使用 major_axis（向量）和 minor_axis_ratio（比率）
-                let major_axis_len = (ellipse.major_axis.x.powi(2) + ellipse.major_axis.y.powi(2)).sqrt();
+                let major_axis_len =
+                    (ellipse.major_axis.x.powi(2) + ellipse.major_axis.y.powi(2)).sqrt();
                 let minor_axis_len = major_axis_len * ellipse.minor_axis_ratio;
-                
+
                 if major_axis_len <= 0.0 || minor_axis_len <= 0.0 {
-                    tracing::warn!("椭圆轴长无效：handle={:?}, major={}, minor={}", 
-                        entity.common.handle, major_axis_len, minor_axis_len);
+                    tracing::warn!(
+                        "椭圆轴长无效：handle={:?}, major={}, minor={}",
+                        entity.common.handle,
+                        major_axis_len,
+                        minor_axis_len
+                    );
                     return vec![];
                 }
 
                 let points = self.discretize_ellipse_with_scale(ellipse, scale);
                 if points.len() < 2 {
-                    tracing::debug!("椭圆离散后点数不足：handle={:?}, count={}", entity.common.handle, points.len());
+                    tracing::debug!(
+                        "椭圆离散后点数不足：handle={:?}, count={}",
+                        entity.common.handle,
+                        points.len()
+                    );
                     return vec![];
                 }
                 vec![RawEntity::Polyline {
@@ -1779,7 +1923,11 @@ impl DxfParser {
                 if !self.config.ignore_text {
                     // P6: 检查文字高度有效性
                     if text.text_height <= 0.0 || text.text_height.is_nan() {
-                        tracing::warn!("文字高度无效：handle={:?}, height={}", entity.common.handle, text.text_height);
+                        tracing::warn!(
+                            "文字高度无效：handle={:?}, height={}",
+                            entity.common.handle,
+                            text.text_height
+                        );
                         return vec![];
                     }
 
@@ -1804,7 +1952,11 @@ impl DxfParser {
                 if !self.config.ignore_text {
                     // P6: 检查文字高度有效性
                     if mtext.initial_text_height <= 0.0 || mtext.initial_text_height.is_nan() {
-                        tracing::warn!("多行文字高度无效：handle={:?}, height={}", entity.common.handle, mtext.initial_text_height);
+                        tracing::warn!(
+                            "多行文字高度无效：handle={:?}, height={}",
+                            entity.common.handle,
+                            mtext.initial_text_height
+                        );
                         return vec![];
                     }
 
@@ -1813,7 +1965,10 @@ impl DxfParser {
                     let cleaned_text = clean_mtext_content(&mtext.text);
 
                     vec![RawEntity::Text {
-                        position: [mtext.insertion_point.x * scale, mtext.insertion_point.y * scale],
+                        position: [
+                            mtext.insertion_point.x * scale,
+                            mtext.insertion_point.y * scale,
+                        ],
                         content: cleaned_text,
                         height: mtext.initial_text_height * scale,
                         rotation: 0.0,
@@ -1831,9 +1986,21 @@ impl DxfParser {
             EntityType::Insert(insert) => {
                 // P6: 检查块引用缩放因子有效性
                 let block_scale = [
-                    if insert.x_scale_factor.is_nan() || insert.x_scale_factor.is_infinite() { 1.0 } else { insert.x_scale_factor },
-                    if insert.y_scale_factor.is_nan() || insert.y_scale_factor.is_infinite() { 1.0 } else { insert.y_scale_factor },
-                    if insert.z_scale_factor.is_nan() || insert.z_scale_factor.is_infinite() { 1.0 } else { insert.z_scale_factor },
+                    if insert.x_scale_factor.is_nan() || insert.x_scale_factor.is_infinite() {
+                        1.0
+                    } else {
+                        insert.x_scale_factor
+                    },
+                    if insert.y_scale_factor.is_nan() || insert.y_scale_factor.is_infinite() {
+                        1.0
+                    } else {
+                        insert.y_scale_factor
+                    },
+                    if insert.z_scale_factor.is_nan() || insert.z_scale_factor.is_infinite() {
+                        1.0
+                    } else {
+                        insert.z_scale_factor
+                    },
                 ];
 
                 // 处理块引用
@@ -1843,20 +2010,15 @@ impl DxfParser {
 
                     // 递归展开块定义中的实体（支持嵌套块）
                     let mut visited = std::collections::HashSet::new();
-                    let expanded = resolve_block_references(
-                        block_def,
-                        block_definitions,
-                        &mut visited,
-                    );
+                    let expanded =
+                        resolve_block_references(block_def, block_definitions, &mut visited);
 
                     // 应用变换到所有展开的实体
-                    expanded.iter()
-                        .map(|block_entity| transform_entity(
-                            block_entity,
-                            block_scale,
-                            rotation,
-                            insertion_point,
-                        ))
+                    expanded
+                        .iter()
+                        .map(|block_entity| {
+                            transform_entity(block_entity, block_scale, rotation, insertion_point)
+                        })
                         .collect()
                 } else {
                     tracing::warn!("块引用 '{}' 未找到对应的块定义", insert.name);
@@ -1873,7 +2035,10 @@ impl DxfParser {
                     // 注意：由于 dxf 0.6.0 的限制，无法直接访问 Hatch 实体数据
                     // 这里使用低层级组码解析器来提取 HATCH 数据
                     // 需要在 parse_file 级别使用 HatchParser 单独解析
-                    tracing::debug!("检测到 HATCH 实体（ProxyEntity），将在文件级别解析 - handle={:?}", entity.common.handle);
+                    tracing::debug!(
+                        "检测到 HATCH 实体（ProxyEntity），将在文件级别解析 - handle={:?}",
+                        entity.common.handle
+                    );
                 }
                 vec![]
             }
@@ -1894,6 +2059,248 @@ impl DxfParser {
             }
             EntityType::OrdinateDimension(ref dim) => {
                 self.parse_ordinate_dimension_entity(dim, scale, metadata, semantic)
+            }
+
+            // POINT 实体 - 测量标记、参考点
+            EntityType::ModelPoint(point) => {
+                vec![RawEntity::Point {
+                    position: [point.location.x * scale, point.location.y * scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // IMAGE 实体 - 光栅图像参考
+            EntityType::Image(image) => {
+                let size = [image.image_size.x * scale, image.image_size.y * scale];
+                vec![RawEntity::Image {
+                    image_def: image.image_def_reference.clone(),
+                    position: [image.location.x * scale, image.location.y * scale],
+                    size,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // ATTRIB 实体 - 块属性值
+            EntityType::Attribute(attr) => {
+                vec![RawEntity::Attribute {
+                    tag: attr.attribute_tag.clone(),
+                    value: attr.value.clone(),
+                    position: [attr.location.x * scale, attr.location.y * scale],
+                    height: attr.text_height * scale,
+                    rotation: attr.rotation,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // ATTDEF 实体 - 属性定义（块属性模板）
+            EntityType::AttributeDefinition(attr_def) => {
+                vec![RawEntity::AttributeDefinition {
+                    tag: attr_def.text_tag.clone(),
+                    default_value: attr_def.value.clone(),
+                    prompt: attr_def.prompt.clone(),
+                    position: [attr_def.location.x * scale, attr_def.location.y * scale],
+                    height: attr_def.text_height * scale,
+                    rotation: attr_def.rotation,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // LEADER 实体 - 引线标注（带箭头的注释线）
+            EntityType::Leader(leader) => {
+                let points: Vec<Point2> = leader
+                    .vertices
+                    .iter()
+                    .map(|v| [v.x * scale, v.y * scale])
+                    .collect();
+                if points.len() < 2 {
+                    tracing::debug!("LEADER 顶点不足 2 个：handle={:?}", entity.common.handle);
+                    return vec![];
+                }
+                vec![RawEntity::Leader {
+                    points,
+                    annotation_text: None, // 文字关联在单独的 MText/Text 上
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // RAY 实体 - 射线（从起点向一个方向无限延伸）
+            EntityType::Ray(ray) => {
+                let dir = &ray.unit_direction_vector;
+                // 用长线段表示射线（10000 单位长度）
+                vec![RawEntity::Ray {
+                    start: [ray.start_point.x * scale, ray.start_point.y * scale],
+                    direction: [dir.x * scale, dir.y * scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // XLINE 实体 - 构造线（双向无限延伸）
+            EntityType::XLine(xline) => {
+                let dir = &xline.unit_direction_vector;
+                vec![RawEntity::Ray {
+                    start: [xline.first_point.x * scale, xline.first_point.y * scale],
+                    direction: [dir.x * scale, dir.y * scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // MLINE 实体 - 多线（建筑图纸中常用于表示墙体）
+            EntityType::MLine(mline) => {
+                let points: Vec<Point2> = mline
+                    .vertices
+                    .iter()
+                    .map(|v| [v.x * scale, v.y * scale])
+                    .collect();
+                if points.len() < 2 {
+                    tracing::debug!("MLINE 顶点不足 2 个：handle={:?}", entity.common.handle);
+                    return vec![];
+                }
+                vec![RawEntity::MLine {
+                    center_line: points,
+                    closed: mline.flags & 1 != 0,
+                    style_name: mline.style_name.clone(),
+                    scale_factor: mline.scale_factor,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // SOLID 2D 实体 - 填充四边形（室内图纸中常用于填充区域）
+            EntityType::Solid(solid) => {
+                let corners = [
+                    [solid.first_corner.x * scale, solid.first_corner.y * scale],
+                    [solid.second_corner.x * scale, solid.second_corner.y * scale],
+                    [solid.third_corner.x * scale, solid.third_corner.y * scale],
+                    [solid.fourth_corner.x * scale, solid.fourth_corner.y * scale],
+                ];
+                // 过滤掉零面积退化 SOLID（某些 CAD 用 SOLID 作为点标记）
+                let has_area = (corners[1][0] - corners[0][0]).abs() > 1e-6
+                    || (corners[1][1] - corners[0][1]).abs() > 1e-6;
+                if has_area {
+                    vec![RawEntity::Polyline {
+                        points: corners.to_vec(),
+                        closed: true,
+                        metadata: metadata.clone(),
+                        semantic: semantic.clone(),
+                    }]
+                } else {
+                    vec![]
+                }
+            }
+
+            // TRACE 实体 - 带线宽的填充四边形（类似 SOLID）
+            EntityType::Trace(trace) => {
+                let corners = [
+                    [trace.first_corner.x * scale, trace.first_corner.y * scale],
+                    [trace.second_corner.x * scale, trace.second_corner.y * scale],
+                    [trace.third_corner.x * scale, trace.third_corner.y * scale],
+                    [trace.fourth_corner.x * scale, trace.fourth_corner.y * scale],
+                ];
+                vec![RawEntity::Polyline {
+                    points: corners.to_vec(),
+                    closed: true,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // WIPEOUT 实体 - 遮罩（室内图纸中用于隐藏背景）
+            EntityType::Wipeout(wo) => {
+                // Wipeout 使用 location + u_vector + v_vector + image_size 定义矩形区域
+                let origin = [wo.location.x * scale, wo.location.y * scale];
+                let u = [wo.u_vector.x * scale, wo.u_vector.y * scale];
+                let v = [wo.v_vector.x * scale, wo.v_vector.y * scale];
+                // 构建四边形顶点（从原点沿 u/v 向量扩展）
+                let points = vec![
+                    origin,
+                    [origin[0] + u[0], origin[1] + u[1]],
+                    [origin[0] + u[0] + v[0], origin[1] + u[1] + v[1]],
+                    [origin[0] + v[0], origin[1] + v[1]],
+                ];
+                vec![RawEntity::Polyline {
+                    points,
+                    closed: true,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // Underlay 实体 - PDF/DWF/DGN 外部参照（建筑图纸中常用作底图）
+            EntityType::PdfUnderlay(underlay) => {
+                vec![RawEntity::Image {
+                    image_def: "pdf_underlay".to_string(),
+                    position: [
+                        underlay.insertion_point.x * scale,
+                        underlay.insertion_point.y * scale,
+                    ],
+                    size: [underlay.x_scale, underlay.y_scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+            EntityType::DwfUnderlay(underlay) => {
+                vec![RawEntity::Image {
+                    image_def: "dwf_underlay".to_string(),
+                    position: [
+                        underlay.insertion_point.x * scale,
+                        underlay.insertion_point.y * scale,
+                    ],
+                    size: [underlay.x_scale, underlay.y_scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+            EntityType::DgnUnderlay(underlay) => {
+                vec![RawEntity::Image {
+                    image_def: "dgn_underlay".to_string(),
+                    position: [
+                        underlay.insertion_point.x * scale,
+                        underlay.insertion_point.y * scale,
+                    ],
+                    size: [underlay.x_scale, underlay.y_scale],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }]
+            }
+
+            // 3DFACE 实体 - 三维面（投影到 XY 平面）
+            // 常用于 3D 建筑模型中的墙面、地面等，投影到 2D 后作为四边形处理
+            EntityType::Face(face) => {
+                // 提取四个顶点，只保留 XY 坐标进行投影
+                let mut points = Vec::new();
+                // 3DFACE 最多有四个顶点，如果第四个顶点和第一个顶点相同，则是三角形
+                points.push([face.first_corner.x * scale, face.first_corner.y * scale]);
+                points.push([face.second_corner.x * scale, face.second_corner.y * scale]);
+                points.push([face.third_corner.x * scale, face.third_corner.y * scale]);
+                if face.fourth_corner.x != face.first_corner.x || face.fourth_corner.y != face.first_corner.y {
+                    points.push([face.fourth_corner.x * scale, face.fourth_corner.y * scale]);
+                }
+                // 闭合多边形
+                if !points.is_empty() {
+                    vec![RawEntity::Polyline {
+                        points,
+                        closed: true,
+                        metadata: metadata.clone(),
+                        semantic: semantic.clone(),
+                    }]
+                } else {
+                    vec![]
+                }
+            }
+
+            // REGION 实体 - 面域（封闭二维区域）
+            // 注意：REGION 的几何数据保存在 ACIS 实体数据中，完整解析非常复杂
+            // 当前策略：记录实体但不提取几何，避免破坏解析流程，未来可扩展
+            EntityType::Region(_) => {
+                tracing::debug!("检测到 REGION 实体，暂不支持几何提取：handle={:?}", entity.common.handle);
+                vec![]
             }
 
             // 其他未支持的实体类型
@@ -1917,9 +2324,10 @@ impl DxfParser {
                 RawEntity::Line { start, end, .. } => {
                     vec![start[0].abs(), start[1].abs(), end[0].abs(), end[1].abs()]
                 }
-                RawEntity::Polyline { points, .. } => {
-                    points.iter().flat_map(|v| vec![v[0].abs(), v[1].abs()]).collect()
-                }
+                RawEntity::Polyline { points, .. } => points
+                    .iter()
+                    .flat_map(|v| vec![v[0].abs(), v[1].abs()])
+                    .collect(),
                 RawEntity::Arc { center, radius, .. } => {
                     vec![(center[0] + radius).abs(), (center[1] + radius).abs()]
                 }
@@ -1948,7 +2356,9 @@ impl DxfParser {
                 ));
             }
             // 如果单位是英寸（scale=25.4），但坐标值 > 1000（25 米），可能单位设置错误
-            else if (unit_str.contains("英寸") || unit_str.contains("inch")) && max_coord > 10000.0 {
+            else if (unit_str.contains("英寸") || unit_str.contains("inch"))
+                && max_coord > 10000.0
+            {
                 report.unit_mismatch_detected = true;
                 report.warnings.push(format!(
                     "单位不匹配：图纸单位为英寸，但坐标值较大（最大：{:.1}），请确认单位设置",
@@ -1963,7 +2373,7 @@ impl DxfParser {
     // ========================================================================
     // 注意：dxf 0.6.0 crate 没有暴露 Hatch 类型，需要使用低层级 API 解析
     // 实现方案：使用 dxf::iterators 遍历实体组码，手动解析 HATCH 数据
-    // 
+    //
     // HATCH 实体组码说明：
     // - 组码 2: 图案名称
     // - 组码 70: 实体填充标志（1=实体填充，0=图案填充）
@@ -1982,7 +2392,7 @@ impl DxfParser {
     // P0-2: DIMENSION 尺寸标注解析支持（自行实现）
     // ========================================================================
     // 注意：dxf 0.6.0 crate 有 Dimension 类型，但需要使用低层级 API 解析
-    // 
+    //
     // DIMENSION 实体组码说明：
     // - 组码 2: 块名称
     // - 组码 3: 样式名称
@@ -2009,7 +2419,7 @@ impl DxfParser {
         start_angle: f64,
         end_angle: f64,
         ccw: bool,
-        tolerance: f64
+        tolerance: f64,
     ) -> Vec<Point2> {
         // 计算弧长
         let mut sweep_angle = end_angle - start_angle;
@@ -2019,18 +2429,19 @@ impl DxfParser {
         if !ccw {
             sweep_angle = 360.0 - sweep_angle;
         }
-        
+
         let sweep_rad = sweep_angle.to_radians();
         let arc_length = radius * sweep_rad;
-        
+
         // 根据容差计算采样点数
         // 弦高误差公式：h = r * (1 - cos(theta/2))
         // 近似：theta ≈ 2 * sqrt(2h/r)
-        let num_segments = ((arc_length / (2.0 * (2.0 * tolerance * radius).sqrt())).ceil() as usize).max(4);
-        
+        let num_segments =
+            ((arc_length / (2.0 * (2.0 * tolerance * radius).sqrt())).ceil() as usize).max(4);
+
         let start_rad = start_angle.to_radians();
         let angle_step = if ccw { sweep_rad } else { -sweep_rad } / num_segments as f64;
-        
+
         (0..=num_segments)
             .map(|i| {
                 let angle = start_rad + i as f64 * angle_step;
@@ -2043,7 +2454,7 @@ impl DxfParser {
     }
 
     /// 离散化椭圆弧为多段线
-    #[allow(dead_code)]
+    #[allow(dead_code, clippy::too_many_arguments)]
     fn discretize_ellipse_arc(
         &self,
         center: Point2,
@@ -2052,11 +2463,11 @@ impl DxfParser {
         start_angle: f64,
         end_angle: f64,
         ccw: bool,
-        tolerance: f64
+        tolerance: f64,
     ) -> Vec<Point2> {
         let major_radius = (major_axis[0].powi(2) + major_axis[1].powi(2)).sqrt();
         let minor_radius = major_radius * minor_axis_ratio;
-        
+
         // 计算椭圆弧的参数角度
         let mut sweep_angle = end_angle - start_angle;
         if sweep_angle <= 0.0 {
@@ -2065,32 +2476,33 @@ impl DxfParser {
         if !ccw {
             sweep_angle = 360.0 - sweep_angle;
         }
-        
+
         // 使用近似公式计算采样点数
         let avg_radius = (major_radius + minor_radius) / 2.0;
         let sweep_rad = sweep_angle.to_radians();
         let arc_length = avg_radius * sweep_rad;
-        let num_segments = ((arc_length / (2.0 * (2.0 * tolerance * avg_radius).sqrt())).ceil() as usize).max(8);
-        
+        let num_segments =
+            ((arc_length / (2.0 * (2.0 * tolerance * avg_radius).sqrt())).ceil() as usize).max(8);
+
         let start_rad = start_angle.to_radians();
         let angle_step = if ccw { sweep_rad } else { -sweep_rad } / num_segments as f64;
-        
+
         // 计算主轴方向
         let major_angle = major_axis[1].atan2(major_axis[0]);
-        
+
         (0..=num_segments)
             .map(|i| {
                 let param_angle = start_rad + i as f64 * angle_step;
                 let cos_a = param_angle.cos();
                 let sin_a = param_angle.sin();
-                
+
                 // 旋转到主轴方向
                 let x = major_radius * cos_a;
                 let y = minor_radius * sin_a;
-                
+
                 let cos_m = major_angle.cos();
                 let sin_m = major_angle.sin();
-                
+
                 [
                     center[0] + x * cos_m - y * sin_m,
                     center[1] + x * sin_m + y * cos_m,
@@ -2118,7 +2530,7 @@ impl DxfParser {
         // 尝试访问 Hatch 实体（dxf 0.6.0 中通过 specific 访问）
         // 注意：dxf 0.6.0 的 Hatch 实体在 generated.rs 中定义
         // 这里使用类型名称匹配来识别 Hatch 实体
-        
+
         // 从实体中提取 HATCH 数据
         let boundary_paths = self.parse_hatch_boundaries(entity, scale);
         let pattern = self.parse_hatch_pattern(entity);
@@ -2126,7 +2538,10 @@ impl DxfParser {
 
         // 如果没有有效的边界，返回空
         if boundary_paths.is_empty() {
-            tracing::warn!("HATCH 实体没有有效的边界：handle={:?}", entity.common.handle);
+            tracing::warn!(
+                "HATCH 实体没有有效的边界：handle={:?}",
+                entity.common.handle
+            );
             return vec![];
         }
 
@@ -2136,8 +2551,8 @@ impl DxfParser {
             solid_fill,
             metadata,
             semantic,
-            scale: 1.0,    // P0-NEW-14 修复：默认 scale
-            angle: 0.0,    // P0-NEW-14 修复：默认 angle
+            scale: 1.0, // P0-NEW-14 修复：默认 scale
+            angle: 0.0, // P0-NEW-14 修复：默认 angle
         }]
     }
 
@@ -2150,7 +2565,7 @@ impl DxfParser {
     ) -> Vec<HatchBoundaryPath> {
         // 注意：dxf 0.6.0 没有直接暴露 Hatch 类型的边界数据
         // 这里使用通配符匹配来尝试访问边界数据
-        
+
         // 尝试通过类型名称访问 Hatch 实体
         let type_name = format!("{:?}", entity.specific);
         if !type_name.contains("Hatch") {
@@ -2160,10 +2575,10 @@ impl DxfParser {
         // 使用反射式访问尝试获取边界数据
         // 由于 dxf 0.6.0 的限制，这里使用简化的实现
         // 完整实现需要访问 dxf::Drawing 的原始组码数据
-        
+
         // TODO: 使用 dxf::Drawing::iter() 访问原始组码来解析边界
         // 组码 91 = 边界数量，92 = 边界类型，后续是边界数据
-        
+
         vec![]
     }
 
@@ -2172,9 +2587,11 @@ impl DxfParser {
     fn parse_hatch_pattern(&self, _entity: &dxf::entities::Entity) -> HatchPattern {
         // 尝试从实体中提取图案名称
         // 组码 2 = 图案名称
-        
+
         // 默认返回 ANSI31（最常用的建筑填充图案）
-        HatchPattern::Predefined { name: "ANSI31".to_string() }
+        HatchPattern::Predefined {
+            name: "ANSI31".to_string(),
+        }
     }
 
     /// 检查 HATCH 是否为实体填充
@@ -2200,15 +2617,15 @@ impl DxfParser {
 
         // 提取定义点
         let mut definition_points = Vec::new();
-        
+
         // definition_point_1 来自 dimension_base
         let pt1 = &dim.dimension_base.definition_point_1;
         definition_points.push([pt1.x * scale, pt1.y * scale]);
-        
+
         // definition_point_2 和 definition_point_3
         let pt2 = &dim.definition_point_2;
         definition_points.push([pt2.x * scale, pt2.y * scale]);
-        
+
         let pt3 = &dim.definition_point_3;
         definition_points.push([pt3.x * scale, pt3.y * scale]);
 
@@ -2246,11 +2663,11 @@ impl DxfParser {
         tracing::debug!("解析 RadialDimension 实体：handle={:?}", metadata.handle);
 
         let mut definition_points = Vec::new();
-        
+
         // definition_point_1 来自 dimension_base
         let pt1 = &dim.dimension_base.definition_point_1;
         definition_points.push([pt1.x * scale, pt1.y * scale]);
-        
+
         // definition_point_2（必需字段）
         let pt2 = &dim.definition_point_2;
         definition_points.push([pt2.x * scale, pt2.y * scale]);
@@ -2288,11 +2705,11 @@ impl DxfParser {
         tracing::debug!("解析 DiameterDimension 实体：handle={:?}", metadata.handle);
 
         let mut definition_points = Vec::new();
-        
+
         // definition_point_1 来自 dimension_base
         let pt1 = &dim.dimension_base.definition_point_1;
         definition_points.push([pt1.x * scale, pt1.y * scale]);
-        
+
         // definition_point_2（必需字段）
         let pt2 = &dim.definition_point_2;
         definition_points.push([pt2.x * scale, pt2.y * scale]);
@@ -2327,18 +2744,21 @@ impl DxfParser {
         metadata: EntityMetadata,
         _semantic: Option<BoundarySemantic>,
     ) -> Vec<RawEntity> {
-        tracing::debug!("解析 AngularThreePointDimension 实体：handle={:?}", metadata.handle);
+        tracing::debug!(
+            "解析 AngularThreePointDimension 实体：handle={:?}",
+            metadata.handle
+        );
 
         let mut definition_points = Vec::new();
-        
+
         // definition_point_1 来自 dimension_base
         let pt1 = &dim.dimension_base.definition_point_1;
         definition_points.push([pt1.x * scale, pt1.y * scale]);
-        
+
         // definition_point_2 和 definition_point_3
         let pt2 = &dim.definition_point_2;
         definition_points.push([pt2.x * scale, pt2.y * scale]);
-        
+
         let pt3 = &dim.definition_point_3;
         definition_points.push([pt3.x * scale, pt3.y * scale]);
 
@@ -2375,15 +2795,15 @@ impl DxfParser {
         tracing::debug!("解析 OrdinateDimension 实体：handle={:?}", metadata.handle);
 
         let mut definition_points = Vec::new();
-        
+
         // definition_point_1 来自 dimension_base
         let pt1 = &dim.dimension_base.definition_point_1;
         definition_points.push([pt1.x * scale, pt1.y * scale]);
-        
+
         // definition_point_2 和 definition_point_3（必需字段）
         let pt2 = &dim.definition_point_2;
         definition_points.push([pt2.x * scale, pt2.y * scale]);
-        
+
         let pt3 = &dim.definition_point_3;
         definition_points.push([pt3.x * scale, pt3.y * scale]);
 
@@ -2412,11 +2832,13 @@ impl DxfParser {
     /// 转换 dxf::enums::DimensionType 到 common_types::DimensionType
     fn convert_dimension_type(&self, dim_type: &dxf::enums::DimensionType) -> DimensionType {
         use dxf::enums::DimensionType as DxfDimensionType;
-        
+
         match dim_type {
             DxfDimensionType::RotatedHorizontalOrVertical => DimensionType::Linear,
             DxfDimensionType::Aligned => DimensionType::Aligned,
-            DxfDimensionType::Angular | DxfDimensionType::AngularThreePoint => DimensionType::Angular,
+            DxfDimensionType::Angular | DxfDimensionType::AngularThreePoint => {
+                DimensionType::Angular
+            }
             DxfDimensionType::Diameter => DimensionType::Diameter,
             DxfDimensionType::Radius => DimensionType::Radial,
             DxfDimensionType::Ordinate => DimensionType::Ordinate,
@@ -2438,7 +2860,7 @@ impl DxfParser {
 
         // P0-2 修复：添加 NURBS 构建失败的诊断日志
         let nurbs_result = self.build_nurbs_curve(spline);
-        
+
         if let Some(nurbs_curve) = nurbs_result {
             // 使用曲率自适应采样
             points = self.adaptive_nurbs_sampling_with_scale(&nurbs_curve, self.tolerance, scale);
@@ -2449,7 +2871,11 @@ impl DxfParser {
                     "NURBS 自适应采样点数不足 ({}), 使用等参数采样",
                     points.len()
                 );
-                points = self.uniform_nurbs_sampling_with_scale(&nurbs_curve, spline.control_points.len(), scale);
+                points = self.uniform_nurbs_sampling_with_scale(
+                    &nurbs_curve,
+                    spline.control_points.len(),
+                    scale,
+                );
             }
         } else {
             // P0-2 修复：改进 fallback 机制，使用 B 样条近似而非线性插值
@@ -2458,7 +2884,7 @@ impl DxfParser {
                 degree = spline.degree_of_curve,
                 "NURBS 构建失败，使用 B 样条近似 fallback（非简单线性插值）",
             );
-            
+
             // 使用改进的 B 样条 fallback
             let num_segments = (spline.control_points.len() * 20).max(50);
             for i in 0..=num_segments {
@@ -2474,12 +2900,21 @@ impl DxfParser {
 
     /// 等参数采样 NURBS 曲线（作为 fallback）
     #[allow(dead_code)] // 预留用于未来 NURBS 优化
-    fn uniform_nurbs_sampling(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, num_control_points: usize) -> Polyline {
+    fn uniform_nurbs_sampling(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        num_control_points: usize,
+    ) -> Polyline {
         self.uniform_nurbs_sampling_with_scale(curve, num_control_points, 1.0)
     }
 
     /// 等参数采样 NURBS 曲线（带单位缩放）
-    fn uniform_nurbs_sampling_with_scale(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, num_control_points: usize, scale: f64) -> Polyline {
+    fn uniform_nurbs_sampling_with_scale(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        num_control_points: usize,
+        scale: f64,
+    ) -> Polyline {
         let mut points = Vec::new();
         let (t_start, t_end) = curve.knots_domain();
         let num_segments = self.estimate_nurbs_segments(curve, num_control_points);
@@ -2511,12 +2946,21 @@ impl DxfParser {
     /// 使用递归细分，基于弦高误差控制采样密度
     /// 在高曲率区域自动增加采样点，在平坦区域减少采样点
     #[allow(dead_code)] // 预留用于未来 NURBS 优化
-    fn adaptive_nurbs_sampling(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, tolerance: f64) -> Polyline {
+    fn adaptive_nurbs_sampling(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        tolerance: f64,
+    ) -> Polyline {
         self.adaptive_nurbs_sampling_with_scale(curve, tolerance, 1.0)
     }
 
     /// 曲率自适应采样 NURBS 曲线（带单位缩放）
-    fn adaptive_nurbs_sampling_with_scale(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, tolerance: f64, scale: f64) -> Polyline {
+    fn adaptive_nurbs_sampling_with_scale(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        tolerance: f64,
+        scale: f64,
+    ) -> Polyline {
         let (t_start, t_end) = curve.knots_domain();
         let mut points = Vec::new();
 
@@ -2531,9 +2975,12 @@ impl DxfParser {
 
         // 添加终点
         let end_pt = curve.point_at(t_end);
-        if end_pt.len() >= 2 && points.last().is_none_or(|p| {
-            (p[0] - end_pt[0] * scale).abs() > tolerance || (p[1] - end_pt[1] * scale).abs() > tolerance
-        }) {
+        if end_pt.len() >= 2
+            && points.last().is_none_or(|p| {
+                (p[0] - end_pt[0] * scale).abs() > tolerance
+                    || (p[1] - end_pt[1] * scale).abs() > tolerance
+            })
+        {
             points.push([end_pt[0] * scale, end_pt[1] * scale]);
         }
 
@@ -2569,6 +3016,7 @@ impl DxfParser {
     /// 使用基于容差和曲线长度的动态最大深度，而非固定值 20
     /// 对于复杂 NURBS（如自由曲面墙），20 层可能不够
     /// 对于简单曲线，过深的递归是浪费
+    #[allow(clippy::too_many_arguments)]
     fn subdivide_curve_with_scale(
         &self,
         curve: &NurbsCurve<f64, nalgebra::Const<2>>,
@@ -2659,7 +3107,7 @@ impl DxfParser {
         let p1 = curve.point_at(t1);
 
         if p0.len() < 2 || p1.len() < 2 {
-            return 20;  //  fallback
+            return 20; //  fallback
         }
 
         let chord_length = ((p1[0] - p0[0]).powi(2) + (p1[1] - p0[1]).powi(2)).sqrt();
@@ -2672,7 +3120,7 @@ impl DxfParser {
         let required_depth = if initial_error > tolerance {
             (initial_error / tolerance).log2().ceil() as usize
         } else {
-            0  // 不需要细分
+            0 // 不需要细分
         };
 
         // 限制范围：8-28
@@ -2705,7 +3153,10 @@ impl DxfParser {
     }
 
     /// 构建 NURBS 曲线（P11 修复版：正确处理权重）
-    fn build_nurbs_curve(&self, spline: &dxf::entities::Spline) -> Option<NurbsCurve<f64, nalgebra::Const<2>>> {
+    fn build_nurbs_curve(
+        &self,
+        spline: &dxf::entities::Spline,
+    ) -> Option<NurbsCurve<f64, nalgebra::Const<2>>> {
         use nalgebra::Point2;
 
         if spline.control_points.is_empty() {
@@ -2721,15 +3172,13 @@ impl DxfParser {
         // 有理 B 样条：P_w = P * w
         // dxf 0.6 crate 的 Spline 结构有 weight_values 字段（通过组码 41 访问）
         // 权重信息用于精确表示圆弧等有理 B 样条曲线
-        let control_points: Vec<_> = spline.control_points
+        let control_points: Vec<_> = spline
+            .control_points
             .iter()
             .enumerate()
             .map(|(i, cp)| {
                 // ✅ P11 修复：从 weight_values 获取权重
-                let weight = spline.weight_values
-                    .get(i)
-                    .copied()
-                    .unwrap_or(1.0);
+                let weight = spline.weight_values.get(i).copied().unwrap_or(1.0);
 
                 // 有理 B 样条：P_w = P * w
                 // 注意：curvo 库的 NurbsCurve 期望非齐次坐标
@@ -2743,13 +3192,21 @@ impl DxfParser {
 
         // 验证 NURBS 数据有效性
         if control_points.len() < degree + 1 {
-            tracing::warn!("SPLINE 控制点不足：控制点数={}, degree={}", control_points.len(), degree);
+            tracing::warn!(
+                "SPLINE 控制点不足：控制点数={}, degree={}",
+                control_points.len(),
+                degree
+            );
             return None;
         }
 
         if spline.knot_values.len() != control_points.len() + degree + 1 {
-            tracing::warn!("SPLINE 节点向量不匹配：knots={}, control_points={}, degree={}",
-                          spline.knot_values.len(), control_points.len(), degree);
+            tracing::warn!(
+                "SPLINE 节点向量不匹配：knots={}, control_points={}, degree={}",
+                spline.knot_values.len(),
+                control_points.len(),
+                degree
+            );
             return None;
         }
 
@@ -2771,7 +3228,11 @@ impl DxfParser {
     }
 
     /// 估算 NURBS 曲线离散化段数（基于弧长和曲率）
-    fn estimate_nurbs_segments(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, num_control_points: usize) -> usize {
+    fn estimate_nurbs_segments(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        num_control_points: usize,
+    ) -> usize {
         // 1. 估算弧长（使用自适应采样积分）
         let arc_length = self.estimate_nurbs_arc_length(curve, num_control_points);
 
@@ -2798,9 +3259,13 @@ impl DxfParser {
     }
 
     /// 估算 NURBS 曲线的弧长（使用自适应采样积分）
-    fn estimate_nurbs_arc_length(&self, curve: &NurbsCurve<f64, nalgebra::Const<2>>, num_control_points: usize) -> f64 {
+    fn estimate_nurbs_arc_length(
+        &self,
+        curve: &NurbsCurve<f64, nalgebra::Const<2>>,
+        num_control_points: usize,
+    ) -> f64 {
         let (t_start, t_end) = curve.knots_domain();
-        
+
         // 基于曲线复杂度动态调整采样点数
         // 控制点越多，需要更多采样点来捕捉细节
         // 每个控制点至少采样 5 次，至少 20 点，最多 200 点
@@ -2838,7 +3303,7 @@ impl DxfParser {
             return None;
         }
 
-        let n = spline.control_points.len() - 1;  // 控制点索引 0..=n
+        let n = spline.control_points.len() - 1; // 控制点索引 0..=n
         let degree = spline.degree_of_curve as usize;
 
         if spline.knot_values.is_empty() {
@@ -2868,13 +3333,7 @@ impl DxfParser {
     /// N_i,0(t) = 1 如果 u_i ≤ t < u_{i+1}，否则 0
     /// N_i,p(t) = (t - u_i)/(u_{i+p} - u_i) * N_i,p-1(t)
     ///          + (u_{i+p+1} - t)/(u_{i+p+1} - u_{i+1}) * N_{i+1},p-1(t)
-    fn compute_b_spline_basis(
-        &self,
-        i: usize,
-        p: usize,
-        t: f64,
-        knots: &[f64],
-    ) -> f64 {
+    fn compute_b_spline_basis(&self, i: usize, p: usize, t: f64, knots: &[f64]) -> f64 {
         if p == 0 {
             // 0 次基函数
             if i >= knots.len() - 1 {
@@ -2915,14 +3374,15 @@ impl DxfParser {
     }
 
     /// 线性插值 fallback（仅用于极端情况）
-    fn evaluate_spline_linear_fallback(&self, spline: &dxf::entities::Spline, t: f64) -> Option<Point2> {
+    fn evaluate_spline_linear_fallback(
+        &self,
+        spline: &dxf::entities::Spline,
+        t: f64,
+    ) -> Option<Point2> {
         if spline.control_points.len() == 2 {
             let p0 = &spline.control_points[0];
             let p1 = &spline.control_points[1];
-            return Some([
-                p0.x + (p1.x - p0.x) * t,
-                p0.y + (p1.y - p0.y) * t,
-            ]);
+            return Some([p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t]);
         }
 
         // 多控制点：使用分段线性插值
@@ -2946,12 +3406,17 @@ impl DxfParser {
     }
 
     /// 离散化椭圆为多段线（带单位缩放）
-    fn discretize_ellipse_with_scale(&self, ellipse: &dxf::entities::Ellipse, scale: f64) -> Polyline {
+    fn discretize_ellipse_with_scale(
+        &self,
+        ellipse: &dxf::entities::Ellipse,
+        scale: f64,
+    ) -> Polyline {
         let mut points = Vec::new();
 
         // major_axis 是 Vector 类型，需要手动计算其长度
         let major_vec = ellipse.major_axis.clone();
-        let a = (major_vec.x * major_vec.x + major_vec.y * major_vec.y + major_vec.z * major_vec.z).sqrt();
+        let a = (major_vec.x * major_vec.x + major_vec.y * major_vec.y + major_vec.z * major_vec.z)
+            .sqrt();
         let b = a * ellipse.minor_axis_ratio;
 
         // 使用弦高误差控制离散化
@@ -2962,7 +3427,8 @@ impl DxfParser {
         // 使用长半轴作为参考半径（保守估计）
         let reference_radius = a.max(b);
         let num_segments = if reference_radius > tolerance {
-            let angle_per_segment = 2.0 * ((reference_radius - tolerance) / reference_radius).acos();
+            let angle_per_segment =
+                2.0 * ((reference_radius - tolerance) / reference_radius).acos();
             (2.0 * std::f64::consts::PI / angle_per_segment).ceil() as usize
         } else {
             32 // 如果半径太小，使用默认段数
@@ -2988,8 +3454,10 @@ impl DxfParser {
             let cos_a = angle.cos();
             let sin_a = angle.sin();
 
-            let x = (ellipse.center.x + major_dir[0] * a * cos_a + minor_dir[0] * b * sin_a) * scale;
-            let y = (ellipse.center.y + major_dir[1] * a * cos_a + minor_dir[1] * b * sin_a) * scale;
+            let x =
+                (ellipse.center.x + major_dir[0] * a * cos_a + minor_dir[0] * b * sin_a) * scale;
+            let y =
+                (ellipse.center.y + major_dir[1] * a * cos_a + minor_dir[1] * b * sin_a) * scale;
 
             points.push([x, y]);
         }
@@ -3084,14 +3552,14 @@ mod tests {
         let p2 = [10.0, 0.0];
         let bulge = 1.0;
         let points = bulge_to_arc_points(p1, p2, bulge, 0.1);
-        
+
         // 验证起点和终点
         assert!(points.len() >= 2);
         assert!((points[0][0] - p1[0]).abs() < 1e-6);
         assert!((points[0][1] - p1[1]).abs() < 1e-6);
         assert!((points[points.len() - 1][0] - p2[0]).abs() < 0.2);
         assert!((points[points.len() - 1][1] - p2[1]).abs() < 0.2);
-        
+
         // bulge > 0 时圆弧应该有中间点
         if points.len() > 2 {
             let mid_point = points[points.len() / 2];
@@ -3107,7 +3575,7 @@ mod tests {
         let p2 = [10.0, 0.0];
         let bulge = 0.0;
         let points = bulge_to_arc_points(p1, p2, bulge, 0.1);
-        
+
         assert_eq!(points.len(), 2);
         assert_eq!(points[0], p1);
         assert_eq!(points[1], p2);
@@ -3120,7 +3588,7 @@ mod tests {
         let p2 = [10.0, 0.0];
         let bulge = -0.5;
         let points = bulge_to_arc_points(p1, p2, bulge, 0.1);
-        
+
         assert!(points.len() >= 2);
         // bulge < 0 时圆弧应该有中间点
         if points.len() > 2 {
@@ -3146,9 +3614,229 @@ fn identify_semantic(layer: &str) -> Option<BoundarySemantic> {
         Some(BoundarySemantic::Window)
     } else if is_opening_layer(layer) {
         Some(BoundarySemantic::Opening)
+    } else if is_indoor_fixture(layer) {
+        // 细分室内设备类型
+        let upper = layer.to_uppercase();
+        if upper.contains("TOILET")
+            || upper.contains("卫生")
+            || upper.contains("BATH")
+            || upper.contains("SHOWER")
+            || upper.contains("淋浴")
+            || upper.contains("WASH")
+            || upper.contains("洗手")
+            || upper.contains("WC")
+            || upper.contains("马桶")
+            || upper.contains("SINK")
+            || upper.contains("面盆")
+            || upper.contains("浴缸")
+            || upper.contains("A-PLMB")
+            || upper.contains("A-PLUM")
+            || upper.contains("给排水")
+        {
+            Some(BoundarySemantic::BathroomFixture)
+        } else if upper.contains("KITCHEN")
+            || upper.contains("厨房")
+            || upper.contains("COOK")
+            || upper.contains("灶")
+            || upper.contains("STOVE")
+            || upper.contains("REFRIG")
+            || upper.contains("冰箱")
+            || upper.contains("CABINET")
+            || upper.contains("橱柜")
+            || upper.contains("A-CASE")
+            || upper.contains("A-MILL")
+        {
+            Some(BoundarySemantic::KitchenFixture)
+        } else if upper.contains("HVAC")
+            || upper.contains("暖通")
+            || upper.contains("空调")
+            || upper.contains("DUCT")
+            || upper.contains("风管")
+            || upper.contains("VENT")
+            || upper.contains("A-MECH")
+            || upper.contains("MECH-")
+            || upper.contains("MEP-")
+        {
+            Some(BoundarySemantic::Hvac)
+        } else if upper.contains("ELEC")
+            || upper.contains("电气")
+            || upper.contains("LIGHT")
+            || upper.contains("照明")
+            || upper.contains("LAMP")
+            || upper.contains("灯")
+            || upper.contains("SWITCH")
+            || upper.contains("开关")
+            || upper.contains("OUTLET")
+            || upper.contains("插座")
+            || upper.contains("A-ELEC")
+            || upper.contains("E-")
+            || upper.contains("L-")
+        {
+            Some(BoundarySemantic::Electrical)
+        } else {
+            Some(BoundarySemantic::Furniture)
+        }
     } else {
         None
     }
+}
+
+/// 判断是否为室内家具/设备图层（用于过滤和分类）
+pub fn is_indoor_fixture(layer: &str) -> bool {
+    let upper = layer.to_uppercase();
+
+    // 卫浴设备
+    let bathroom_keywords = [
+        "TOILET",
+        "卫生",
+        "BATH",
+        "SHOWER",
+        "淋浴",
+        "WASH",
+        "洗手",
+        "WC",
+        "马桶",
+        "SINK",
+        "面盆",
+        "浴缸",
+        "URINAL",
+        "小便",
+        "A-PLMB",
+        "A-PLUM",
+        "给排水",
+    ];
+    if bathroom_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // 厨房设备
+    let kitchen_keywords = [
+        "KITCHEN",
+        "厨房",
+        "COOK",
+        "灶",
+        "STOVE",
+        "RANGE",
+        "REFRIG",
+        "冰箱",
+        "MICROWAVE",
+        "微波炉",
+        "OVEN",
+        "洗碗",
+        "CABINET",
+        "橱柜",
+        "COUNTERTOP",
+        "台面",
+        "SINK-K",
+        "A-CASE",
+        "A-MILL",
+    ];
+    if kitchen_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // 卧室家具
+    let bedroom_keywords = [
+        "BED",
+        "床",
+        "MATTRESS",
+        "床垫",
+        "WARDROBE",
+        "衣柜",
+        "CLOSET",
+        "衣帽",
+        "DRESSER",
+        "床头柜",
+        "NIGHTSTAND",
+    ];
+    if bedroom_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // 客厅家具
+    let living_keywords = [
+        "SOFA",
+        "沙发",
+        "CHAIR",
+        "椅子",
+        "TABLE",
+        "桌",
+        "DESK",
+        "书桌",
+        "TV",
+        "电视",
+        "COFFEE",
+        "茶几",
+        "SHELF",
+        "书架",
+        "STOOL",
+        "凳",
+        "BENCH",
+        "长凳",
+        "CABINET-F",
+        "储物",
+    ];
+    if living_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // 空调/暖通
+    let hvac_keywords = [
+        "HVAC",
+        "暖通",
+        "AC-",
+        "AIR-COND",
+        "空调",
+        "DUCT",
+        "风管",
+        "VENT",
+        "风口",
+        "DIFFUSER",
+        "散流器",
+        "FAN-COIL",
+        "风机盘管",
+        "RADIATOR",
+        "暖气",
+        "A-MECH",
+        "MECH-",
+        "MEP-",
+    ];
+    if hvac_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // 电气/照明
+    let electrical_keywords = [
+        "ELEC",
+        "电气",
+        "LIGHT",
+        "照明",
+        "LAMP",
+        "灯",
+        "SWITCH",
+        "开关",
+        "OUTLET",
+        "插座",
+        "POWER",
+        "电源",
+        "FIRE-ALARM",
+        "烟感",
+        "SPRINKLER",
+        "喷淋",
+        "A-ELEC",
+        "E-",
+        "L-",
+    ];
+    if electrical_keywords.iter().any(|k| upper.contains(k)) {
+        return true;
+    }
+
+    // AIA 家具标准模式
+    if upper.starts_with("A-FURN") || upper.starts_with("FF&E") {
+        return true;
+    }
+
+    false
 }
 
 /// 判断是否为门图层（专门用于区分门）
@@ -3156,7 +3844,17 @@ fn is_door_only(layer: &str) -> bool {
     let upper = layer.to_uppercase();
 
     // 门关键词
-    let door_keywords = ["DOOR", "门", "DOORS", "入户门", "室内门", "防火门", "单开门", "双开门", "推拉门"];
+    let door_keywords = [
+        "DOOR",
+        "门",
+        "DOORS",
+        "入户门",
+        "室内门",
+        "防火门",
+        "单开门",
+        "双开门",
+        "推拉门",
+    ];
     if door_keywords.iter().any(|k| upper.contains(k)) {
         return true;
     }
@@ -3179,7 +3877,17 @@ fn is_window_only(layer: &str) -> bool {
     let upper = layer.to_uppercase();
 
     // 窗关键词
-    let window_keywords = ["WINDOW", "窗", "WINDOWS", "GLAZ", "GLASS", "采光窗", "天窗", "落地窗", "百叶窗"];
+    let window_keywords = [
+        "WINDOW",
+        "窗",
+        "WINDOWS",
+        "GLAZ",
+        "GLASS",
+        "采光窗",
+        "天窗",
+        "落地窗",
+        "百叶窗",
+    ];
     if window_keywords.iter().any(|k| upper.contains(k)) {
         return true;
     }
@@ -3190,9 +3898,13 @@ fn is_window_only(layer: &str) -> bool {
     }
 
     // 窗模式匹配
-    if upper.contains("WINDOW-") || upper.contains("WINDOW_") ||
-       upper.contains("GLAZ-") || upper.contains("GLASS-") ||
-       upper.contains("GLASS_") || upper.starts_with("W-") {
+    if upper.contains("WINDOW-")
+        || upper.contains("WINDOW_")
+        || upper.contains("GLAZ-")
+        || upper.contains("GLASS-")
+        || upper.contains("GLASS_")
+        || upper.starts_with("W-")
+    {
         return true;
     }
 
@@ -3223,26 +3935,40 @@ fn is_wall_layer(layer: &str) -> bool {
 
     // 基础关键词匹配 - 墙/结构/柱/梁
     let basic_keywords = [
-        "WALL", "墙", "WALLS", "墙体", "内墙", "外墙", "剪力墙", "隔墙",
-        "STRUCT", "结构", "COLUMN", "柱", "BEAM", "梁", "STRUC",
+        "WALL",
+        "墙",
+        "WALLS",
+        "墙体",
+        "内墙",
+        "外墙",
+        "剪力墙",
+        "隔墙",
+        "STRUCT",
+        "结构",
+        "COLUMN",
+        "柱",
+        "BEAM",
+        "梁",
+        "STRUC",
     ];
     if basic_keywords.iter().any(|k| upper.contains(k)) {
         return true;
     }
 
     // AIA 标准模式：A-WALL-*, S-WALL-*, S-STRC-*
-    if upper.starts_with("A-WALL") || upper.starts_with("S-WALL") || 
-       upper.starts_with("S-STRC") || upper.starts_with("A-COLS") {
+    if upper.starts_with("A-WALL")
+        || upper.starts_with("S-WALL")
+        || upper.starts_with("S-STRC")
+        || upper.starts_with("A-COLS")
+    {
         return true;
     }
 
     // 常见变体模式
     let patterns = [
-        "WALL-", "WALL_", "-WALL", "_WALL",
-        "WALLS-", "WALLS_", "-WALLS", "_WALLS",
-        "STRUCT-", "STRUCT_", "-STRUCT", "_STRUCT",
-        "COLUMN-", "COLUMN_", "-COLUMN", "_COLUMN",
-        "BEAM-", "BEAM_", "-BEAM", "_BEAM",
+        "WALL-", "WALL_", "-WALL", "_WALL", "WALLS-", "WALLS_", "-WALLS", "_WALLS", "STRUCT-",
+        "STRUCT_", "-STRUCT", "_STRUCT", "COLUMN-", "COLUMN_", "-COLUMN", "_COLUMN", "BEAM-",
+        "BEAM_", "-BEAM", "_BEAM",
     ];
     patterns.iter().any(|p| upper.contains(p))
 }
@@ -3260,12 +3986,12 @@ fn is_wall_layer(layer: &str) -> bool {
 /// - 其他：未指定 (unspecified)
 fn map_material_from_color(color_index: Option<&str>) -> Option<String> {
     match color_index {
-        Some("1") => Some("concrete".to_string()),   // 红色=混凝土
-        Some("2") => Some("brick".to_string()),      // 黄色=砖墙
-        Some("3") => Some("wood".to_string()),       // 绿色=木材
-        Some("4") => Some("gypsum".to_string()),     // 青色=石膏板
-        Some("5") => Some("glass".to_string()),      // 蓝色=玻璃
-        Some("6") => Some("metal".to_string()),      // 洋红=金属
+        Some("1") => Some("concrete".to_string()), // 红色=混凝土
+        Some("2") => Some("brick".to_string()),    // 黄色=砖墙
+        Some("3") => Some("wood".to_string()),     // 绿色=木材
+        Some("4") => Some("gypsum".to_string()),   // 青色=石膏板
+        Some("5") => Some("glass".to_string()),    // 蓝色=玻璃
+        Some("6") => Some("metal".to_string()),    // 洋红=金属
         Some("7") => Some("default_wall".to_string()), // 黑色/白色=默认墙体
         _ => None,
     }
@@ -3296,7 +4022,11 @@ fn map_material_from_layer(layer: &str) -> Option<String> {
     }
 
     // 金属
-    if upper.contains("METAL") || upper.contains("STEEL") || upper.contains("钢") || upper.contains("金属") {
+    if upper.contains("METAL")
+        || upper.contains("STEEL")
+        || upper.contains("钢")
+        || upper.contains("金属")
+    {
         return Some("metal".to_string());
     }
 
@@ -3311,16 +4041,83 @@ fn map_material_from_layer(layer: &str) -> Option<String> {
 /// 判断是否为家具图层
 fn is_furniture_layer(layer: &str) -> bool {
     let upper = layer.to_uppercase();
-    
+
     // 基础关键词
-    let basic_keywords = ["FURN", "家具", "FF&E", "EQUIP", "设备", "洁具", "橱柜"];
+    let basic_keywords = [
+        "FURN",
+        "家具",
+        "FF&E",
+        "EQUIP",
+        "设备",
+        "洁具",
+        "橱柜",
+        // 合并 indoor fixture 关键词
+        "BED",
+        "床",
+        "SOFA",
+        "沙发",
+        "CHAIR",
+        "椅子",
+        "TABLE",
+        "桌",
+        "DESK",
+        "书桌",
+        "TV",
+        "电视",
+        "TOILET",
+        "卫生",
+        "BATH",
+        "淋浴",
+        "KITCHEN",
+        "厨房",
+        "灶",
+        "STOVE",
+        "SINK",
+        "面盆",
+        "马桶",
+        "WARDROBE",
+        "衣柜",
+        "CLOSET",
+        "CABINET",
+        "橱柜",
+        "SHELF",
+        "书架",
+        "HVAC",
+        "暖通",
+        "空调",
+        "LIGHT",
+        "照明",
+        "LAMP",
+        "灯",
+        "ELEC",
+        "电气",
+        "SWITCH",
+        "开关",
+        "OUTLET",
+        "插座",
+        "WC",
+        "浴缸",
+        "URINAL",
+        "小便",
+        "洗手",
+        "REFRIG",
+        "冰箱",
+        "微波炉",
+        "洗碗",
+        "COOK",
+    ];
     if basic_keywords.iter().any(|k| upper.contains(k)) {
         return true;
     }
-    
+
     // 模式匹配
-    let patterns = ["A-FURN", "FURN-", "FURN_", "EQUIP-", "EQUIP_"];
-    patterns.iter().any(|p| upper.contains(p) || upper.starts_with(p))
+    let patterns = [
+        "A-FURN", "FURN-", "FURN_", "EQUIP-", "EQUIP_", "A-PLMB", "A-PLUM", "A-CASE", "A-MILL",
+        "A-MECH", "A-ELEC", "MECH-", "MEP-", "E-", "L-",
+    ];
+    patterns
+        .iter()
+        .any(|p| upper.contains(p) || upper.starts_with(p))
 }
 
 /// 判断是否为标注图层
@@ -3328,14 +4125,37 @@ fn is_dimension_layer(layer: &str) -> bool {
     let upper = layer.to_uppercase();
 
     // 基础关键词
-    let basic_keywords = ["DIM", "标注", "DIMS", "ANNOT", "注释", "标高", "轴号"];
+    let basic_keywords = [
+        "DIM",
+        "标注",
+        "DIMS",
+        "ANNOT",
+        "注释",
+        "标高",
+        "轴号",
+        "MEASURE",
+        "测量",
+        "TEXT-DIM",
+        "标注文字",
+    ];
     if basic_keywords.iter().any(|k| upper.contains(k)) {
         return true;
     }
 
     // 模式匹配
-    let patterns = ["A-DIM", "DIM-", "DIM_", "ANNOT-", "ANNOT_"];
-    patterns.iter().any(|p| upper.contains(p) || upper.starts_with(p))
+    let patterns = [
+        "A-DIM",
+        "DIM-",
+        "DIM_",
+        "ANNOT-",
+        "ANNOT_",
+        "A-ANNO",
+        "ANNO-",
+        "A-ANNO-DIM",
+    ];
+    patterns
+        .iter()
+        .any(|p| upper.contains(p) || upper.starts_with(p))
 }
 
 /// 变换实体（应用缩放、旋转、平移）
@@ -3350,7 +4170,13 @@ fn transform_entity(
     let sin_rot = rotation_rad.sin();
 
     /// 变换 2D 点
-    fn transform_point(point: Point2, scale: [f64; 3], cos_rot: f64, sin_rot: f64, translation: Point2) -> Point2 {
+    fn transform_point(
+        point: Point2,
+        scale: [f64; 3],
+        cos_rot: f64,
+        sin_rot: f64,
+        translation: Point2,
+    ) -> Point2 {
         // 1. 缩放
         let scaled = [point[0] * scale[0], point[1] * scale[1]];
         // 2. 旋转（绕原点）
@@ -3363,25 +4189,39 @@ fn transform_entity(
     }
 
     match entity {
-        RawEntity::Line { start, end, metadata, semantic } => {
-            RawEntity::Line {
-                start: transform_point(*start, scale, cos_rot, sin_rot, translation),
-                end: transform_point(*end, scale, cos_rot, sin_rot, translation),
-                metadata: metadata.clone(),
-                semantic: semantic.clone(),
-            }
-        }
-        RawEntity::Polyline { points, closed, metadata, semantic } => {
-            RawEntity::Polyline {
-                points: points.iter()
-                    .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
-                    .collect(),
-                closed: *closed,
-                metadata: metadata.clone(),
-                semantic: semantic.clone(),
-            }
-        }
-        RawEntity::Arc { center, radius, start_angle, end_angle, metadata, semantic } => {
+        RawEntity::Line {
+            start,
+            end,
+            metadata,
+            semantic,
+        } => RawEntity::Line {
+            start: transform_point(*start, scale, cos_rot, sin_rot, translation),
+            end: transform_point(*end, scale, cos_rot, sin_rot, translation),
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::Polyline {
+            points,
+            closed,
+            metadata,
+            semantic,
+        } => RawEntity::Polyline {
+            points: points
+                .iter()
+                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                .collect(),
+            closed: *closed,
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::Arc {
+            center,
+            radius,
+            start_angle,
+            end_angle,
+            metadata,
+            semantic,
+        } => {
             // 圆弧：变换中心点，缩放半径，旋转角度
             let new_center = transform_point(*center, scale, cos_rot, sin_rot, translation);
             let avg_scale = (scale[0] + scale[1]) / 2.0;
@@ -3394,7 +4234,12 @@ fn transform_entity(
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::Circle { center, radius, metadata, semantic } => {
+        RawEntity::Circle {
+            center,
+            radius,
+            metadata,
+            semantic,
+        } => {
             let new_center = transform_point(*center, scale, cos_rot, sin_rot, translation);
             let avg_scale = (scale[0] + scale[1]) / 2.0;
             RawEntity::Circle {
@@ -3404,12 +4249,19 @@ fn transform_entity(
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::Text { position, content, height, metadata, semantic, .. } => {
+        RawEntity::Text {
+            position,
+            content,
+            height,
+            metadata,
+            semantic,
+            ..
+        } => {
             RawEntity::Text {
                 position: transform_point(*position, scale, cos_rot, sin_rot, translation),
                 content: content.clone(),
                 height: height * avg_scale(scale),
-                rotation: 0.0,  // 简化处理，忽略旋转
+                rotation: 0.0, // 简化处理，忽略旋转
                 style_name: None,
                 align_left: None,
                 align_right: None,
@@ -3417,9 +4269,14 @@ fn transform_entity(
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::Path { commands, metadata, semantic } => {
-            let new_commands: Vec<_> = commands.iter().map(|cmd| {
-                match cmd {
+        RawEntity::Path {
+            commands,
+            metadata,
+            semantic,
+        } => {
+            let new_commands: Vec<_> = commands
+                .iter()
+                .map(|cmd| match cmd {
                     PathCommand::MoveTo { x, y } => {
                         let p = transform_point([*x, *y], scale, cos_rot, sin_rot, translation);
                         PathCommand::MoveTo { x: p[0], y: p[1] }
@@ -3428,7 +4285,15 @@ fn transform_entity(
                         let p = transform_point([*x, *y], scale, cos_rot, sin_rot, translation);
                         PathCommand::LineTo { x: p[0], y: p[1] }
                     }
-                    PathCommand::ArcTo { rx, ry, x_axis_rotation, large_arc, sweep, x, y } => {
+                    PathCommand::ArcTo {
+                        rx,
+                        ry,
+                        x_axis_rotation,
+                        large_arc,
+                        sweep,
+                        x,
+                        y,
+                    } => {
                         let p = transform_point([*x, *y], scale, cos_rot, sin_rot, translation);
                         PathCommand::ArcTo {
                             rx: rx * scale[0],
@@ -3441,52 +4306,89 @@ fn transform_entity(
                         }
                     }
                     PathCommand::Close => PathCommand::Close,
-                }
-            }).collect();
+                })
+                .collect();
             RawEntity::Path {
                 commands: new_commands,
                 metadata: metadata.clone(),
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::BlockReference { block_name, insertion_point, scale: _, rotation: _, metadata, semantic } => {
+        RawEntity::BlockReference {
+            block_name,
+            insertion_point,
+            scale: _,
+            rotation: _,
+            metadata,
+            semantic,
+        } => {
             // 嵌套块引用：变换插入点
             RawEntity::BlockReference {
                 block_name: block_name.clone(),
-                insertion_point: transform_point(*insertion_point, scale, cos_rot, sin_rot, translation),
+                insertion_point: transform_point(
+                    *insertion_point,
+                    scale,
+                    cos_rot,
+                    sin_rot,
+                    translation,
+                ),
                 scale,
                 rotation: rotation_deg,
                 metadata: metadata.clone(),
                 semantic: semantic.clone(),
             }
         }
-        RawEntity::Dimension { dimension_type, measurement, text, definition_points, metadata, semantic } => {
-            RawEntity::Dimension {
-                dimension_type: dimension_type.clone(),
-                measurement: *measurement * avg_scale(scale),
-                text: text.clone(),
-                definition_points: definition_points.iter()
-                    .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
-                    .collect(),
-                metadata: metadata.clone(),
-                semantic: semantic.clone(),
-            }
-        }
-        RawEntity::Hatch { boundary_paths, pattern, solid_fill, metadata, semantic, .. } => {
+        RawEntity::Dimension {
+            dimension_type,
+            measurement,
+            text,
+            definition_points,
+            metadata,
+            semantic,
+        } => RawEntity::Dimension {
+            dimension_type: dimension_type.clone(),
+            measurement: *measurement * avg_scale(scale),
+            text: text.clone(),
+            definition_points: definition_points
+                .iter()
+                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                .collect(),
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::Hatch {
+            boundary_paths,
+            pattern,
+            solid_fill,
+            metadata,
+            semantic,
+            ..
+        } => {
             // 变换 HATCH 边界路径
-            let transformed_boundaries: Vec<_> = boundary_paths.iter().map(|path| {
-                match path {
-                    common_types::HatchBoundaryPath::Polyline { points, closed, bulges } => {
-                        common_types::HatchBoundaryPath::Polyline {
-                            points: points.iter()
-                                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
-                                .collect(),
-                            closed: *closed,
-                            bulges: bulges.clone(),
-                        }
-                    }
-                    common_types::HatchBoundaryPath::Arc { center, radius, start_angle, end_angle, ccw } => {
-                        let new_center = transform_point(*center, scale, cos_rot, sin_rot, translation);
+            let transformed_boundaries: Vec<_> = boundary_paths
+                .iter()
+                .map(|path| match path {
+                    common_types::HatchBoundaryPath::Polyline {
+                        points,
+                        closed,
+                        bulges,
+                    } => common_types::HatchBoundaryPath::Polyline {
+                        points: points
+                            .iter()
+                            .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                            .collect(),
+                        closed: *closed,
+                        bulges: bulges.clone(),
+                    },
+                    common_types::HatchBoundaryPath::Arc {
+                        center,
+                        radius,
+                        start_angle,
+                        end_angle,
+                        ccw,
+                    } => {
+                        let new_center =
+                            transform_point(*center, scale, cos_rot, sin_rot, translation);
                         let avg_s = avg_scale(scale);
                         common_types::HatchBoundaryPath::Arc {
                             center: new_center,
@@ -3496,9 +4398,19 @@ fn transform_entity(
                             ccw: *ccw,
                         }
                     }
-                    common_types::HatchBoundaryPath::EllipseArc { center, major_axis, minor_axis_ratio, start_angle, end_angle, ccw, extrusion_direction } => {
-                        let new_center = transform_point(*center, scale, cos_rot, sin_rot, translation);
-                        let new_major = transform_point(*major_axis, scale, cos_rot, sin_rot, translation);
+                    common_types::HatchBoundaryPath::EllipseArc {
+                        center,
+                        major_axis,
+                        minor_axis_ratio,
+                        start_angle,
+                        end_angle,
+                        ccw,
+                        extrusion_direction,
+                    } => {
+                        let new_center =
+                            transform_point(*center, scale, cos_rot, sin_rot, translation);
+                        let new_major =
+                            transform_point(*major_axis, scale, cos_rot, sin_rot, translation);
                         common_types::HatchBoundaryPath::EllipseArc {
                             center: new_center,
                             major_axis: new_major,
@@ -3509,22 +4421,30 @@ fn transform_entity(
                             extrusion_direction: *extrusion_direction,
                         }
                     }
-                    common_types::HatchBoundaryPath::Spline { control_points, knots, degree, weights, fit_points, flags } => {
-                        common_types::HatchBoundaryPath::Spline {
-                            control_points: control_points.iter()
+                    common_types::HatchBoundaryPath::Spline {
+                        control_points,
+                        knots,
+                        degree,
+                        weights,
+                        fit_points,
+                        flags,
+                    } => common_types::HatchBoundaryPath::Spline {
+                        control_points: control_points
+                            .iter()
+                            .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                            .collect(),
+                        knots: knots.clone(),
+                        degree: *degree,
+                        weights: weights.clone(),
+                        fit_points: fit_points.clone().map(|fp| {
+                            fp.iter()
                                 .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
-                                .collect(),
-                            knots: knots.clone(),
-                            degree: *degree,
-                            weights: weights.clone(),
-                            fit_points: fit_points.clone().map(|fp| fp.iter()
-                                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
-                                .collect()),
-                            flags: *flags,
-                        }
-                    }
-                }
-            }).collect();
+                                .collect()
+                        }),
+                        flags: *flags,
+                    },
+                })
+                .collect();
 
             // ✅ P0-NEW-14 修复：计算平均缩放比例
             let avg_scale = (scale[0] + scale[1]) / 2.0;
@@ -3536,7 +4456,7 @@ fn transform_entity(
                 metadata: metadata.clone(),
                 semantic: semantic.clone(),
                 scale: avg_scale,    // P0-NEW-14 修复：传递平均 scale
-                angle: rotation_deg,       // P0-NEW-14 修复：传递旋转角度
+                angle: rotation_deg, // P0-NEW-14 修复：传递旋转角度
             }
         }
         RawEntity::XRef { .. } => {
@@ -3544,6 +4464,112 @@ fn transform_entity(
             // 目前仅做类型标记，不进行几何处理
             todo!("XREF 外部参照变换 - 需要后续实现外部文件加载和坐标变换")
         }
+        RawEntity::Point {
+            position,
+            metadata,
+            semantic,
+        } => RawEntity::Point {
+            position: transform_point(*position, scale, cos_rot, sin_rot, translation),
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::Image {
+            image_def,
+            position,
+            size,
+            metadata,
+            semantic,
+        } => RawEntity::Image {
+            image_def: image_def.clone(),
+            position: transform_point(*position, scale, cos_rot, sin_rot, translation),
+            size: [size[0] * scale[0], size[1] * scale[1]],
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::Attribute {
+            tag,
+            value,
+            position,
+            height,
+            rotation,
+            metadata,
+            semantic,
+        } => RawEntity::Attribute {
+            tag: tag.clone(),
+            value: value.clone(),
+            position: transform_point(*position, scale, cos_rot, sin_rot, translation),
+            height: *height * avg_scale(scale),
+            rotation: *rotation + rotation_deg,
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        RawEntity::AttributeDefinition {
+            tag,
+            default_value,
+            prompt,
+            position,
+            height,
+            rotation,
+            metadata,
+            semantic,
+        } => RawEntity::AttributeDefinition {
+            tag: tag.clone(),
+            default_value: default_value.clone(),
+            prompt: prompt.clone(),
+            position: transform_point(*position, scale, cos_rot, sin_rot, translation),
+            height: *height * avg_scale(scale),
+            rotation: *rotation + rotation_deg,
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        // LEADER 实体 - 变换所有顶点
+        RawEntity::Leader {
+            points,
+            annotation_text,
+            metadata,
+            semantic,
+        } => RawEntity::Leader {
+            points: points
+                .iter()
+                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                .collect(),
+            annotation_text: annotation_text.clone(),
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        // RAY 实体 - 变换起点和方向
+        RawEntity::Ray {
+            start,
+            direction,
+            metadata,
+            semantic,
+        } => RawEntity::Ray {
+            start: transform_point(*start, scale, cos_rot, sin_rot, translation),
+            direction: transform_point(*direction, scale, cos_rot, sin_rot, [0.0, 0.0]),
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        // MLINE 实体 - 变换所有中心线顶点
+        RawEntity::MLine {
+            center_line,
+            closed,
+            style_name,
+            scale_factor,
+            metadata,
+            semantic,
+        } => RawEntity::MLine {
+            center_line: center_line
+                .iter()
+                .map(|p| transform_point(*p, scale, cos_rot, sin_rot, translation))
+                .collect(),
+            closed: *closed,
+            style_name: style_name.clone(),
+            scale_factor: *scale_factor,
+            metadata: metadata.clone(),
+            semantic: semantic.clone(),
+        },
+        // Triangle 不用于 2D DXF，直接透传
+        RawEntity::Triangle { .. } => entity.clone(),
     }
 }
 
@@ -3583,19 +4609,23 @@ fn resolve_block_references(
     for entity in &block_def.entities {
         match entity {
             // 遇到嵌套块引用，递归展开
-            RawEntity::BlockReference { block_name, insertion_point, scale, rotation, metadata: _, semantic: _ } => {
+            RawEntity::BlockReference {
+                block_name,
+                insertion_point,
+                scale,
+                rotation,
+                metadata: _,
+                semantic: _,
+            } => {
                 if let Some(nested_def) = block_definitions.get(block_name) {
                     // 递归展开嵌套块
-                    let nested_entities = resolve_block_references(nested_def, block_definitions, visited);
+                    let nested_entities =
+                        resolve_block_references(nested_def, block_definitions, visited);
 
                     // 应用嵌套块的变换
                     for nested_entity in &nested_entities {
-                        let transformed = transform_entity(
-                            nested_entity,
-                            *scale,
-                            *rotation,
-                            *insertion_point,
-                        );
+                        let transformed =
+                            transform_entity(nested_entity, *scale, *rotation, *insertion_point);
                         entities.push(transformed);
                     }
                 } else {
@@ -3643,20 +4673,19 @@ fn filter_zero_length_edges(points: Polyline) -> Polyline {
 
         if edge_length >= MIN_EDGE_LENGTH {
             filtered.push(*curr);
-        } else {
-            tracing::trace!("过滤零长度边：length={:.6}", edge_length);
         }
+        // else: 过滤零长度边
     }
-
-    // 如果是闭合多段线，检查首尾点
-    // （这个检查应该在调用处根据 closed 标志处理）
 
     filtered
 }
 
 impl DxfParser {
     /// 将 DXF 实体转换为 RawEntity（用于块定义解析）
-    fn convert_entity(&self, entity: &dxf::entities::Entity) -> Result<Option<RawEntity>, CadError> {
+    fn convert_entity(
+        &self,
+        entity: &dxf::entities::Entity,
+    ) -> Result<Option<RawEntity>, CadError> {
         // 创建元数据
         let color_index = entity.common.color.index().map(|i| i.to_string());
         let layer_name = entity.common.layer.clone();
@@ -3668,6 +4697,7 @@ impl DxfParser {
             color: color_index.clone(),
             lineweight: lineweight_enum_to_mm(entity.common.lineweight_enum_value),
             line_type: Some(entity.common.line_type_name.clone()).filter(|s| !s.is_empty()),
+            line_style: LineStyle::from_dxf_name(&entity.common.line_type_name),
             handle: Some(format!("{:?}", entity.common.handle)),
             material,
             width: None,
@@ -3679,15 +4709,19 @@ impl DxfParser {
             EntityType::Line(line) => {
                 let start = [line.p1.x, line.p1.y];
                 let end = [line.p2.x, line.p2.y];
-                
+
                 // 过滤零长度线段（使用更严格的容差）
                 const MIN_LINE_LENGTH: f64 = 1e-4; // 0.1mm
                 let length = ((end[0] - start[0]).powi(2) + (end[1] - start[1]).powi(2)).sqrt();
                 if length < MIN_LINE_LENGTH {
-                    tracing::debug!("过滤零长度线段：handle={:?}, length={:.6}", entity.common.handle, length);
+                    tracing::debug!(
+                        "过滤零长度线段：handle={:?}, length={:.6}",
+                        entity.common.handle,
+                        length
+                    );
                     return Ok(None);
                 }
-                
+
                 Ok(Some(RawEntity::Line {
                     start,
                     end,
@@ -3696,7 +4730,8 @@ impl DxfParser {
                 }))
             }
             EntityType::Polyline(polyline) => {
-                let points: Polyline = polyline.vertices()
+                let points: Polyline = polyline
+                    .vertices()
                     .map(|v| [v.location.x, v.location.y])
                     .collect();
                 if points.len() >= 2 {
@@ -3733,7 +4768,8 @@ impl DxfParser {
 
                         let p1 = [v1.x, v1.y];
                         let p2 = [v2.x, v2.y];
-                        let arc_points = bulge_to_arc_points(p1, p2, v1.bulge, self.config.arc_tolerance_mm);
+                        let arc_points =
+                            bulge_to_arc_points(p1, p2, v1.bulge, self.config.arc_tolerance_mm);
 
                         if arc_points.len() > 2 {
                             points.extend_from_slice(&arc_points[1..]);
@@ -3746,7 +4782,8 @@ impl DxfParser {
                     if last_v.bulge.abs() > BULGE_EPSILON {
                         let p1 = [last_v.x, last_v.y];
                         let p2 = [vertices[0].x, vertices[0].y];
-                        let arc_points = bulge_to_arc_points(p1, p2, last_v.bulge, self.config.arc_tolerance_mm);
+                        let arc_points =
+                            bulge_to_arc_points(p1, p2, last_v.bulge, self.config.arc_tolerance_mm);
                         if arc_points.len() > 2 {
                             points.extend_from_slice(&arc_points[1..]);
                         }
@@ -3763,12 +4800,17 @@ impl DxfParser {
                         if lwpolyline.is_closed() && filtered_points.len() >= 2 {
                             let first = filtered_points[0];
                             let last = *filtered_points.last().unwrap();
-                            let distance = ((first[0] - last[0]).powi(2) + (first[1] - last[1]).powi(2)).sqrt();
+                            let distance = ((first[0] - last[0]).powi(2)
+                                + (first[1] - last[1]).powi(2))
+                            .sqrt();
 
                             if distance < self.tolerance {
                                 final_points.pop(); // 移除重复的终点
-                                tracing::debug!("移除闭合多段线重复终点：handle={:?}, distance={:.6}",
-                                    entity.common.handle, distance);
+                                tracing::debug!(
+                                    "移除闭合多段线重复终点：handle={:?}, distance={:.6}",
+                                    entity.common.handle,
+                                    distance
+                                );
                             }
                         }
 
@@ -3793,24 +4835,20 @@ impl DxfParser {
                     Ok(None)
                 }
             }
-            EntityType::Arc(arc) => {
-                Ok(Some(RawEntity::Arc {
-                    center: [arc.center.x, arc.center.y],
-                    radius: arc.radius,
-                    start_angle: arc.start_angle.to_degrees(),
-                    end_angle: arc.end_angle.to_degrees(),
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }))
-            }
-            EntityType::Circle(circle) => {
-                Ok(Some(RawEntity::Circle {
-                    center: [circle.center.x, circle.center.y],
-                    radius: circle.radius,
-                    metadata: metadata.clone(),
-                    semantic: semantic.clone(),
-                }))
-            }
+            EntityType::Arc(arc) => Ok(Some(RawEntity::Arc {
+                center: [arc.center.x, arc.center.y],
+                radius: arc.radius,
+                start_angle: arc.start_angle.to_degrees(),
+                end_angle: arc.end_angle.to_degrees(),
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            EntityType::Circle(circle) => Ok(Some(RawEntity::Circle {
+                center: [circle.center.x, circle.center.y],
+                radius: circle.radius,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
             EntityType::Spline(spline) => {
                 let points = self.discretize_spline(spline);
                 if points.len() >= 2 {
@@ -3879,14 +4917,306 @@ impl DxfParser {
                     block_name: insert.name.clone(),
                     insertion_point: [insert.location.x, insert.location.y],
                     scale: [
-                        if insert.x_scale_factor != 0.0 { insert.x_scale_factor } else { 1.0 },
-                        if insert.y_scale_factor != 0.0 { insert.y_scale_factor } else { 1.0 },
-                        if insert.z_scale_factor != 0.0 { insert.z_scale_factor } else { 1.0 },
+                        if insert.x_scale_factor != 0.0 {
+                            insert.x_scale_factor
+                        } else {
+                            1.0
+                        },
+                        if insert.y_scale_factor != 0.0 {
+                            insert.y_scale_factor
+                        } else {
+                            1.0
+                        },
+                        if insert.z_scale_factor != 0.0 {
+                            insert.z_scale_factor
+                        } else {
+                            1.0
+                        },
                     ],
                     rotation: insert.rotation,
                     metadata: metadata.clone(),
                     semantic: semantic.clone(),
                 }))
+            }
+            // Dimension 类型（标注）
+            EntityType::RotatedDimension(ref dim) => {
+                let mut def_points = Vec::new();
+                let pt1 = &dim.dimension_base.definition_point_1;
+                def_points.push([pt1.x, pt1.y]);
+                let pt2 = &dim.definition_point_2;
+                def_points.push([pt2.x, pt2.y]);
+                let pt3 = &dim.definition_point_3;
+                def_points.push([pt3.x, pt3.y]);
+                let measurement = dim.dimension_base.actual_measurement;
+                let text = if dim.dimension_base.text.is_empty() {
+                    None
+                } else {
+                    Some(dim.dimension_base.text.clone())
+                };
+                Ok(Some(RawEntity::Dimension {
+                    dimension_type: DimensionType::Linear,
+                    measurement,
+                    text,
+                    definition_points: def_points,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            EntityType::RadialDimension(ref dim) => {
+                let mut def_points = Vec::new();
+                let pt1 = &dim.dimension_base.definition_point_1;
+                def_points.push([pt1.x, pt1.y]);
+                let pt2 = &dim.definition_point_2;
+                def_points.push([pt2.x, pt2.y]);
+                let measurement = dim.dimension_base.actual_measurement;
+                let text = if dim.dimension_base.text.is_empty() {
+                    None
+                } else {
+                    Some(dim.dimension_base.text.clone())
+                };
+                Ok(Some(RawEntity::Dimension {
+                    dimension_type: DimensionType::Radial,
+                    measurement,
+                    text,
+                    definition_points: def_points,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            EntityType::DiameterDimension(ref dim) => {
+                let mut def_points = Vec::new();
+                let pt1 = &dim.dimension_base.definition_point_1;
+                def_points.push([pt1.x, pt1.y]);
+                let pt2 = &dim.definition_point_2;
+                def_points.push([pt2.x, pt2.y]);
+                let measurement = dim.dimension_base.actual_measurement;
+                let text = if dim.dimension_base.text.is_empty() {
+                    None
+                } else {
+                    Some(dim.dimension_base.text.clone())
+                };
+                Ok(Some(RawEntity::Dimension {
+                    dimension_type: DimensionType::Diameter,
+                    measurement,
+                    text,
+                    definition_points: def_points,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            EntityType::AngularThreePointDimension(ref dim) => {
+                let mut def_points = Vec::new();
+                let pt1 = &dim.dimension_base.definition_point_1;
+                def_points.push([pt1.x, pt1.y]);
+                let pt2 = &dim.definition_point_2;
+                def_points.push([pt2.x, pt2.y]);
+                let pt3 = &dim.definition_point_3;
+                def_points.push([pt3.x, pt3.y]);
+                let measurement = dim.dimension_base.actual_measurement;
+                let text = if dim.dimension_base.text.is_empty() {
+                    None
+                } else {
+                    Some(dim.dimension_base.text.clone())
+                };
+                Ok(Some(RawEntity::Dimension {
+                    dimension_type: DimensionType::Angular,
+                    measurement,
+                    text,
+                    definition_points: def_points,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            EntityType::OrdinateDimension(ref dim) => {
+                let mut def_points = Vec::new();
+                let pt1 = &dim.dimension_base.definition_point_1;
+                def_points.push([pt1.x, pt1.y]);
+                let pt2 = &dim.definition_point_2;
+                def_points.push([pt2.x, pt2.y]);
+                let pt3 = &dim.definition_point_3;
+                def_points.push([pt3.x, pt3.y]);
+                let measurement = dim.dimension_base.actual_measurement;
+                let text = if dim.dimension_base.text.is_empty() {
+                    None
+                } else {
+                    Some(dim.dimension_base.text.clone())
+                };
+                Ok(Some(RawEntity::Dimension {
+                    dimension_type: DimensionType::Ordinate,
+                    measurement,
+                    text,
+                    definition_points: def_points,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // POINT 测量点
+            EntityType::ModelPoint(point) => Ok(Some(RawEntity::Point {
+                position: [point.location.x, point.location.y],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            // IMAGE 嵌入图像
+            EntityType::Image(image) => Ok(Some(RawEntity::Image {
+                image_def: image.image_def_reference.clone(),
+                position: [image.location.x, image.location.y],
+                size: [image.image_size.x, image.image_size.y],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            // ATTRIB 块属性值
+            EntityType::Attribute(attr) => Ok(Some(RawEntity::Attribute {
+                tag: attr.attribute_tag.clone(),
+                value: attr.value.clone(),
+                position: [attr.location.x, attr.location.y],
+                height: attr.text_height,
+                rotation: attr.rotation,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            // ATTDEF 属性定义
+            EntityType::AttributeDefinition(attr_def) => Ok(Some(RawEntity::AttributeDefinition {
+                tag: attr_def.text_tag.clone(),
+                default_value: attr_def.value.clone(),
+                prompt: attr_def.prompt.clone(),
+                position: [attr_def.location.x, attr_def.location.y],
+                height: attr_def.text_height,
+                rotation: attr_def.rotation,
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            // LEADER 引线标注
+            EntityType::Leader(leader) => {
+                let points: Vec<Point2> = leader.vertices.iter().map(|v| [v.x, v.y]).collect();
+                if points.len() < 2 {
+                    return Ok(None);
+                }
+                Ok(Some(RawEntity::Leader {
+                    points,
+                    annotation_text: None,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // RAY 射线
+            EntityType::Ray(ray) => {
+                let dir = &ray.unit_direction_vector;
+                Ok(Some(RawEntity::Ray {
+                    start: [ray.start_point.x, ray.start_point.y],
+                    direction: [dir.x, dir.y],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // XLINE 构造线
+            EntityType::XLine(xline) => {
+                let dir = &xline.unit_direction_vector;
+                Ok(Some(RawEntity::Ray {
+                    start: [xline.first_point.x, xline.first_point.y],
+                    direction: [dir.x, dir.y],
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // MLINE 多线（建筑图纸中常用于表示墙体）
+            EntityType::MLine(mline) => {
+                let points: Vec<Point2> = mline.vertices.iter().map(|v| [v.x, v.y]).collect();
+                if points.len() < 2 {
+                    return Ok(None);
+                }
+                Ok(Some(RawEntity::MLine {
+                    center_line: points,
+                    closed: mline.flags & 1 != 0,
+                    style_name: mline.style_name.clone(),
+                    scale_factor: mline.scale_factor,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // SOLID 实体 - 填充四边形（室内图纸中常用于表示家具表面）
+            EntityType::Solid(solid) => {
+                let corners = [
+                    [solid.first_corner.x, solid.first_corner.y],
+                    [solid.second_corner.x, solid.second_corner.y],
+                    [solid.third_corner.x, solid.third_corner.y],
+                    [solid.fourth_corner.x, solid.fourth_corner.y],
+                ];
+                let has_area = (corners[1][0] - corners[0][0]).abs() > 1e-6
+                    || (corners[1][1] - corners[0][1]).abs() > 1e-6;
+                if has_area {
+                    Ok(Some(RawEntity::Polyline {
+                        points: corners.to_vec(),
+                        closed: true,
+                        metadata: metadata.clone(),
+                        semantic: semantic.clone(),
+                    }))
+                } else {
+                    Ok(None)
+                }
+            }
+            // TRACE 实体 - 带线宽的填充四边形
+            EntityType::Trace(trace) => {
+                let corners = [
+                    [trace.first_corner.x, trace.first_corner.y],
+                    [trace.second_corner.x, trace.second_corner.y],
+                    [trace.third_corner.x, trace.third_corner.y],
+                    [trace.fourth_corner.x, trace.fourth_corner.y],
+                ];
+                Ok(Some(RawEntity::Polyline {
+                    points: corners.to_vec(),
+                    closed: true,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // WIPEOUT 实体 - 遮罩（室内图纸中用于隐藏背景）
+            EntityType::Wipeout(wo) => {
+                let origin = [wo.location.x, wo.location.y];
+                let u = [wo.u_vector.x, wo.u_vector.y];
+                let v = [wo.v_vector.x, wo.v_vector.y];
+                let points = vec![
+                    origin,
+                    [origin[0] + u[0], origin[1] + u[1]],
+                    [origin[0] + u[0] + v[0], origin[1] + u[1] + v[1]],
+                    [origin[0] + v[0], origin[1] + v[1]],
+                ];
+                Ok(Some(RawEntity::Polyline {
+                    points,
+                    closed: true,
+                    metadata: metadata.clone(),
+                    semantic: semantic.clone(),
+                }))
+            }
+            // Underlay 实体 - PDF/DWF/DGN 外部参照
+            EntityType::PdfUnderlay(underlay) => Ok(Some(RawEntity::Image {
+                image_def: "pdf_underlay".to_string(),
+                position: [underlay.insertion_point.x, underlay.insertion_point.y],
+                size: [underlay.x_scale, underlay.y_scale],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            EntityType::DwfUnderlay(underlay) => Ok(Some(RawEntity::Image {
+                image_def: "dwf_underlay".to_string(),
+                position: [underlay.insertion_point.x, underlay.insertion_point.y],
+                size: [underlay.x_scale, underlay.y_scale],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            EntityType::DgnUnderlay(underlay) => Ok(Some(RawEntity::Image {
+                image_def: "dgn_underlay".to_string(),
+                position: [underlay.insertion_point.x, underlay.insertion_point.y],
+                size: [underlay.x_scale, underlay.y_scale],
+                metadata: metadata.clone(),
+                semantic: semantic.clone(),
+            })),
+            // PROXY 实体 - 自定义对象（通常来自第三方插件）
+            EntityType::ProxyEntity(proxy) => {
+                tracing::debug!(
+                    "跳过 ProxyEntity：class_id={:?}, entity_class_id={:?}",
+                    proxy.proxy_entity_class_id,
+                    proxy.application_entity_class_id
+                );
+                Ok(None)
             }
             _ => {
                 tracing::debug!("跳过未支持的实体类型：{:?}", entity.specific);
@@ -3910,15 +5240,17 @@ impl DxfParser {
     /// 4. 计算凸包边界
     /// 5. 推断座椅类型和声学属性
     pub fn detect_seat_zones(&self, path: impl AsRef<Path>) -> Result<Vec<SeatZone>, CadError> {
-        let drawing = Drawing::load_file(path.as_ref())
-            .map_err(|e| CadError::dxf_parse_with_source(
+        let drawing = Drawing::load_file(path.as_ref()).map_err(|e| {
+            CadError::dxf_parse_with_source(
                 path.as_ref().to_path_buf(),
                 DxfParseReason::FileNotFound,
-                e
-            ))?;
+                e,
+            )
+        })?;
 
         // 1. 收集所有 INSERT 实体
-        let inserts: Vec<&Insert> = drawing.entities()
+        let inserts: Vec<&Insert> = drawing
+            .entities()
             .filter_map(|e| {
                 if let EntityType::Insert(ref ins) = e.specific {
                     Some(ins)
@@ -3931,7 +5263,8 @@ impl DxfParser {
         // 2. 按块名分组
         let mut block_groups: HashMap<String, Vec<&Insert>> = HashMap::new();
         for insert in inserts {
-            block_groups.entry(insert.name.clone())
+            block_groups
+                .entry(insert.name.clone())
                 .or_default()
                 .push(insert);
         }
@@ -3942,7 +5275,8 @@ impl DxfParser {
 
         for (block_name, inserts) in block_groups {
             // 关键词匹配
-            let is_seat_block = seat_keywords.iter()
+            let is_seat_block = seat_keywords
+                .iter()
                 .any(|k| block_name.to_uppercase().contains(k));
 
             if !is_seat_block {
@@ -4008,8 +5342,9 @@ impl DxfParser {
         // 找到最下方的点（y 最小，x 最小）
         let mut min_idx = 0;
         for i in 1..points.len() {
-            if points[i][1] < points[min_idx][1] 
-                || (points[i][1] == points[min_idx][1] && points[i][0] < points[min_idx][0]) {
+            if points[i][1] < points[min_idx][1]
+                || (points[i][1] == points[min_idx][1] && points[i][0] < points[min_idx][0])
+            {
                 min_idx = i;
             }
         }
@@ -4018,7 +5353,8 @@ impl DxfParser {
 
         // 按极角排序
         points[1..].sort_by(|a, b| {
-            let cross = (a[0] - pivot[0]) * (b[1] - pivot[1]) - (a[1] - pivot[1]) * (b[0] - pivot[0]);
+            let cross =
+                (a[0] - pivot[0]) * (b[1] - pivot[1]) - (a[1] - pivot[1]) * (b[0] - pivot[0]);
             if cross.abs() < 1e-10 {
                 // 共线，按距离排序
                 let dist_a = (a[0] - pivot[0]).powi(2) + (a[1] - pivot[1]).powi(2);
@@ -4037,7 +5373,7 @@ impl DxfParser {
             while filtered.len() > 1 {
                 let top = filtered[filtered.len() - 1];
                 let cross = (top[0] - pivot[0]) * (point[1] - pivot[1])
-                          - (top[1] - pivot[1]) * (point[0] - pivot[0]);
+                    - (top[1] - pivot[1]) * (point[0] - pivot[0]);
                 if cross.abs() < 1e-10 {
                     filtered.pop();
                 } else {
@@ -4053,8 +5389,8 @@ impl DxfParser {
             while hull.len() > 1 {
                 let top: Point2 = hull[hull.len() - 1];
                 let second: Point2 = hull[hull.len() - 2];
-                let cross = (top[0] - second[0]) * (p[1] - second[1]) 
-                          - (top[1] - second[1]) * (p[0] - second[0]);
+                let cross = (top[0] - second[0]) * (p[1] - second[1])
+                    - (top[1] - second[1]) * (p[0] - second[0]);
                 if cross <= 0.0 {
                     hull.pop();
                 } else {
@@ -4078,7 +5414,7 @@ impl DxfParser {
         let mut distances = Vec::new();
 
         for i in 0..sample_size {
-            for j in (i+1)..sample_size {
+            for j in (i + 1)..sample_size {
                 let d = distance_2d(
                     [inserts[i].location.x, inserts[i].location.y],
                     [inserts[j].location.x, inserts[j].location.y],
@@ -4099,13 +5435,13 @@ impl DxfParser {
 
         // 推断类型（单位：mm）
         if avg_distance < 550.0 {
-            SeatType::Auditorium  // 礼堂排椅（间距小）
+            SeatType::Auditorium // 礼堂排椅（间距小）
         } else if avg_distance < 800.0 {
-            SeatType::Single  // 单人椅
+            SeatType::Single // 单人椅
         } else if avg_distance < 1200.0 {
-            SeatType::Double  // 双人椅
+            SeatType::Double // 双人椅
         } else {
-            SeatType::Bench  // 长凳
+            SeatType::Bench // 长凳
         }
     }
 
@@ -4113,19 +5449,19 @@ impl DxfParser {
     fn infer_acoustic_properties(&self, seat_type: SeatType) -> AcousticProps {
         match seat_type {
             SeatType::Auditorium => AcousticProps {
-                absorption_coefficient: 0.70,  // 礼堂椅（布艺）
+                absorption_coefficient: 0.70, // 礼堂椅（布艺）
                 scattering_coefficient: 0.15,
             },
             SeatType::Single => AcousticProps {
-                absorption_coefficient: 0.30,  // 单人椅（硬面）
+                absorption_coefficient: 0.30, // 单人椅（硬面）
                 scattering_coefficient: 0.10,
             },
             SeatType::Double => AcousticProps {
-                absorption_coefficient: 0.50,  // 双人椅（软垫）
+                absorption_coefficient: 0.50, // 双人椅（软垫）
                 scattering_coefficient: 0.12,
             },
             SeatType::Bench => AcousticProps {
-                absorption_coefficient: 0.25,  // 长凳（硬面）
+                absorption_coefficient: 0.25, // 长凳（硬面）
                 scattering_coefficient: 0.08,
             },
             SeatType::Unknown => AcousticProps::default(),
@@ -4144,9 +5480,7 @@ impl DxfParser {
                     Some([z_min, z_max])
                 }
                 EntityType::Polyline(polyline) => {
-                    let z_values: Vec<f64> = polyline.vertices()
-                        .map(|v| v.location.z)
-                        .collect();
+                    let z_values: Vec<f64> = polyline.vertices().map(|v| v.location.z).collect();
                     if z_values.is_empty() {
                         None
                     } else {
@@ -4160,12 +5494,8 @@ impl DxfParser {
                     // LWPOLYLINE 通常是 2D 的，检查标高
                     Some([0.0, 0.0])
                 }
-                EntityType::Circle(circle) => {
-                    Some([circle.center.z, circle.center.z])
-                }
-                EntityType::Arc(arc) => {
-                    Some([arc.center.z, arc.center.z])
-                }
+                EntityType::Circle(circle) => Some([circle.center.z, circle.center.z]),
+                EntityType::Arc(arc) => Some([arc.center.z, arc.center.z]),
                 _ => None,
             };
 
@@ -4206,23 +5536,19 @@ impl DxfParser {
             );
 
             // 2. 使用更大容差进行初始离散化
-            let simplified_tolerance = self.config.arc_tolerance_mm *
-                (control_point_count as f64 / self.config.max_spline_control_points as f64);
+            let simplified_tolerance = self.config.arc_tolerance_mm
+                * (control_point_count as f64 / self.config.max_spline_control_points as f64);
 
             let points = self.discretize_spline_with_tolerance(spline, simplified_tolerance);
 
             // 3. 使用 Douglas-Peucker 算法进一步简化
-            let coords: Vec<Coord<f64>> = points
-                .iter()
-                .map(|p| Coord { x: p[0], y: p[1] })
-                .collect();
+            let coords: Vec<Coord<f64>> =
+                points.iter().map(|p| Coord { x: p[0], y: p[1] }).collect();
 
             let line_string = LineString::new(coords);
             let simplified = line_string.simplify_vw(&self.config.arc_tolerance_mm);
 
-            simplified.0.iter()
-                .map(|c| [c.x, c.y])
-                .collect()
+            simplified.0.iter().map(|c| [c.x, c.y]).collect()
         } else {
             // 正常离散化
             self.discretize_spline_with_tolerance(spline, self.config.arc_tolerance_mm)
@@ -4230,7 +5556,11 @@ impl DxfParser {
     }
 
     /// 使用容差离散化 SPLINE（正确的 NURBS 离散化）
-    fn discretize_spline_with_tolerance(&self, spline: &dxf::entities::Spline, tolerance: f64) -> Polyline {
+    fn discretize_spline_with_tolerance(
+        &self,
+        spline: &dxf::entities::Spline,
+        tolerance: f64,
+    ) -> Polyline {
         // 尝试构建 NURBS 曲线
         if let Some(curve) = self.build_nurbs_curve(spline) {
             // P11 修复：使用自适应采样 + 验证
@@ -4242,7 +5572,7 @@ impl DxfParser {
             } else {
                 // P11 修复：如果弦高误差超标，使用自适应重新采样
                 tracing::warn!("SPLINE 弦高误差超标，使用自适应重新采样");
-                self.adaptive_resample_spline(&curve, tolerance, 3)  // 最多 3 次迭代
+                self.adaptive_resample_spline(&curve, tolerance, 3) // 最多 3 次迭代
             }
         } else {
             // Fallback: 如果 NURBS 构建失败，使用线性插值
@@ -4261,7 +5591,7 @@ impl DxfParser {
         spline: &dxf::entities::Spline,
         tolerance: f64,
     ) -> bool {
-        const SAMPLE_COUNT: usize = 10;  // P11 修复：增加采样点数量（原 5 个）
+        const SAMPLE_COUNT: usize = 10; // P11 修复：增加采样点数量（原 5 个）
 
         if discrete_points.len() < 2 {
             return true;
@@ -4275,7 +5605,7 @@ impl DxfParser {
 
         let mut max_error = 0.0;
         let mut error_count = 0;
-        const MAX_ERROR_SEGMENTS: usize = 3;  // 最多记录的超差段数
+        const MAX_ERROR_SEGMENTS: usize = 3; // 最多记录的超差段数
 
         for i in 0..discrete_points.len() - 1 {
             let p1 = discrete_points[i];
@@ -4345,7 +5675,8 @@ impl DxfParser {
             // 验证当前采样的弦高误差
             // 由于无法直接访问 validate_chord_height_error（需要 spline），
             // 这里使用简化的验证：检查线段长度是否足够小
-            let max_segment_length = points.windows(2)
+            let max_segment_length = points
+                .windows(2)
                 .map(|w| {
                     let dx = w[1][0] - w[0][0];
                     let dy = w[1][1] - w[0][1];
@@ -4423,7 +5754,8 @@ impl DxfParser {
 
     /// Fallback: 线性插值离散化 SPLINE（当 NURBS 构建失败时使用）
     fn discretize_spline_fallback(&self, spline: &dxf::entities::Spline) -> Polyline {
-        let control_points: Vec<[f64; 2]> = spline.control_points
+        let control_points: Vec<[f64; 2]> = spline
+            .control_points
             .iter()
             .map(|cp| [cp.x, cp.y])
             .collect();
@@ -4447,8 +5779,10 @@ impl DxfParser {
             let next_idx = (idx + 1).min(control_points.len() - 1);
             let local_t = (t * (control_points.len() - 1) as f64) - idx as f64;
 
-            let x = control_points[idx][0] * (1.0 - local_t) + control_points[next_idx][0] * local_t;
-            let y = control_points[idx][1] * (1.0 - local_t) + control_points[next_idx][1] * local_t;
+            let x =
+                control_points[idx][0] * (1.0 - local_t) + control_points[next_idx][0] * local_t;
+            let y =
+                control_points[idx][1] * (1.0 - local_t) + control_points[next_idx][1] * local_t;
             points.push([x, y]);
         }
 
@@ -4480,6 +5814,25 @@ fn distance_2d(p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// - `\W...;` - 文字宽度比例
 /// - `\A...;` - 对齐方式
 ///
+/// 清理 MText 格式代码，提取纯文本
+///
+/// DXF MText 格式代码参考：
+/// - `\X` / `\C` (非颜色) - 自动换行（替换为空格）
+/// - `\P` / `\px` - 段落分隔（替换为换行）
+/// - `\~` - 不间断空格
+/// - `\f...;` / `\F...;` - 字体切换（跳过）
+/// - `\H...;` / `\h...;` - 高度变化（跳过）
+/// - `\W...;` / `\w...;` - 宽度因子（跳过）
+/// - `\Q...;` / `\q...;` - 倾斜角度（跳过）
+/// - `\A...;` / `\a...;` - 对齐方式（跳过）
+/// - `\T...;` / `\t...;` - 字间距（跳过）
+/// - `\Cn;` - 颜色代码（跳过，n=1..256）
+/// - `\S` - 堆叠/分数（跳过格式，保留数字内容）
+/// - `\L` / `\l` - 下划线开/关
+/// - `\O` / `\o` - 上划线开/关
+/// - `\D` - 度符号 (°)
+/// - `\{` / `\}` - 转义括号（跳过）
+///
 /// 此函数移除所有格式代码，保留纯文本内容
 fn clean_mtext_content(raw: &str) -> String {
     let mut result = String::with_capacity(raw.len());
@@ -4488,13 +5841,43 @@ fn clean_mtext_content(raw: &str) -> String {
     while let Some(c) = chars.next() {
         match c {
             '\\' => {
-                // 处理转义序列
                 if let Some(&next) = chars.peek() {
                     match next {
                         'X' => {
                             // \X 自动换行 - 替换为空格
                             chars.next();
                             result.push(' ');
+                        }
+                        'C' => {
+                            // \C 需要区分：\Cn; 是颜色代码，\C 单独是自动换行
+                            chars.next(); // 消耗 'C'
+                                          // 查看 C 后面是否紧跟数字
+                            if let Some(&next2) = chars.peek() {
+                                if next2.is_ascii_digit() {
+                                    // 颜色代码 \Cn;
+                                    let mut valid_color = true;
+                                    while let Some(&ch) = chars.peek() {
+                                        chars.next();
+                                        if ch == ';' {
+                                            break;
+                                        }
+                                        if !ch.is_ascii_digit() {
+                                            // 不是纯数字颜色代码，按换行处理
+                                            result.push(' ');
+                                            valid_color = false;
+                                            break;
+                                        }
+                                    }
+                                    if !valid_color {
+                                        continue;
+                                    }
+                                } else {
+                                    // \C 后面不是数字，视为自动换行
+                                    result.push(' ');
+                                }
+                            } else {
+                                result.push(' ');
+                            }
                         }
                         'P' => {
                             // \P 段落分隔 - 替换为换行
@@ -4506,9 +5889,22 @@ fn clean_mtext_content(raw: &str) -> String {
                             chars.next();
                             result.push(' ');
                         }
+                        'D' => {
+                            // \D 度符号
+                            chars.next();
+                            result.push('°');
+                        }
+                        'L' | 'l' => {
+                            // \L 下划线开, \l 下划线关
+                            chars.next();
+                        }
+                        'O' | 'o' => {
+                            // \O 上划线开, \o 上划线关
+                            chars.next();
+                        }
                         '{' => {
-                            // 可能是字体切换 {\f...}
-                            // 跳过整个 {...} 块
+                            // 字体切换 {\f...} 或其他嵌套格式
+                            chars.next();
                             let mut brace_count = 1;
                             while let Some(&ch) = chars.peek() {
                                 chars.next();
@@ -4522,10 +5918,9 @@ fn clean_mtext_content(raw: &str) -> String {
                                 }
                             }
                         }
-                        'Q' | 'H' | 'W' | 'A' => {
-                            // \Q...; \H...; \W...; \A...; 格式控制
+                        'Q' | 'H' | 'W' | 'A' | 'T' => {
+                            // \Q...; \H...; \W...; \A...; \T...; 格式控制
                             chars.next();
-                            // 跳过直到分号
                             while let Some(&ch) = chars.peek() {
                                 if ch == ';' {
                                     chars.next();
@@ -4534,8 +5929,61 @@ fn clean_mtext_content(raw: &str) -> String {
                                 chars.next();
                             }
                         }
+                        'F' => {
+                            // \F...; 字体文件名
+                            chars.next();
+                            while let Some(&ch) = chars.peek() {
+                                if ch == ';' {
+                                    chars.next();
+                                    break;
+                                }
+                                chars.next();
+                            }
+                        }
+                        'c' | 'f' | 'h' | 'w' | 'q' | 'a' | 't' => {
+                            // 小写变体，同样跳过直到分号
+                            chars.next();
+                            while let Some(&ch) = chars.peek() {
+                                if ch == ';' {
+                                    chars.next();
+                                    break;
+                                }
+                                chars.next();
+                            }
+                        }
+                        'S' => {
+                            // \S 堆叠/分数: \S1/2; 或 \S1#2; 或 \S1^2;
+                            // 跳过分隔符 (#, /, ^) 和分号，保留数字
+                            chars.next();
+                            while let Some(&ch) = chars.peek() {
+                                chars.next();
+                                if ch == ';' {
+                                    break;
+                                }
+                                // 保留数字和小数点，跳过堆叠分隔符
+                                if ch != '#' && ch != '/' && ch != '^' {
+                                    result.push(ch);
+                                }
+                            }
+                        }
+                        '0'..='9' => {
+                            // \Cn; 颜色代码，n 为数字
+                            chars.next(); // 消耗第一个数字
+                            while let Some(&ch) = chars.peek() {
+                                if ch == ';' {
+                                    chars.next();
+                                    break;
+                                }
+                                if ch.is_ascii_digit() {
+                                    chars.next();
+                                } else {
+                                    // 非数字非分号，不是有效的颜色代码，回退处理
+                                    break;
+                                }
+                            }
+                        }
                         _ => {
-                            // 未知转义，保留原样
+                            // 未知转义，跳过反斜杠保留内容
                             result.push(c);
                         }
                     }
@@ -4544,8 +5992,7 @@ fn clean_mtext_content(raw: &str) -> String {
                 }
             }
             '{' | '}' => {
-                // 跳过独立的括号（可能是残留的格式代码）
-                // 但保留可能的文本内容
+                // 跳过独立的括号（残留格式代码）
             }
             _ => {
                 result.push(c);
@@ -4635,7 +6082,10 @@ impl LayerManager {
                 let arch_layers: Vec<String> = all_layers
                     .iter()
                     .filter(|l| {
-                        is_wall_layer(l) || is_door_only(l) || is_window_only(l) || is_opening_layer(l)
+                        is_wall_layer(l)
+                            || is_door_only(l)
+                            || is_window_only(l)
+                            || is_opening_layer(l)
                     })
                     .cloned()
                     .collect();
@@ -4707,7 +6157,7 @@ impl Default for LayerManager {
 }
 
 /// P1-3 修复：重构图层过滤逻辑
-/// 
+///
 /// P11 修复：统一图层过滤逻辑（向后兼容包装函数）
 ///
 /// ## 返回
@@ -4719,7 +6169,10 @@ impl Default for LayerManager {
 /// 2. 过滤模式（根据预设模式过滤）
 /// 3. 自定义规则（如果配置了自定义分组）
 pub fn should_keep_layer(layer: &str, config: &DxfConfig) -> bool {
-    matches!(evaluate_layer_filter(layer, config), LayerFilterResult::Keep)
+    matches!(
+        evaluate_layer_filter(layer, config),
+        LayerFilterResult::Keep
+    )
 }
 
 /// P1-3 新增：判断是否为门窗图层（合并 door 和 window 检查）
@@ -4735,10 +6188,13 @@ fn is_architectural_layer(layer: &str) -> bool {
 /// P1-3 新增：自定义图层组匹配
 fn matches_custom_layer_group(layer: &str, config: &DxfConfig) -> bool {
     if config.custom_layer_groups.is_empty() {
-        return true;  // 没有自定义规则，保留所有
+        return true; // 没有自定义规则，保留所有
     }
-    
-    config.custom_layer_groups.iter().any(|(pattern, _)| layer.contains(pattern))
+
+    config
+        .custom_layer_groups
+        .iter()
+        .any(|(pattern, _)| layer.contains(pattern))
 }
 
 // ============================================================================
@@ -4761,8 +6217,8 @@ impl DxfParseReport {
 
         // 因子 1：实体解析成功率（权重 40%）
         if self.parse_stats.total_entities > 0 {
-            let success_rate = self.parse_stats.valid_entities as f64 
-                / self.parse_stats.total_entities as f64;
+            let success_rate =
+                self.parse_stats.valid_entities as f64 / self.parse_stats.total_entities as f64;
             score -= (1.0 - success_rate) * 0.4;
         }
 
@@ -4796,8 +6252,8 @@ impl DxfParseReport {
 
     /// 添加解析问题
     pub fn add_issue(&mut self, issue: ParseIssue) {
-        if issue.severity == ParseIssueSeverity::Error 
-            || issue.severity == ParseIssueSeverity::Critical 
+        if issue.severity == ParseIssueSeverity::Error
+            || issue.severity == ParseIssueSeverity::Critical
         {
             self.parse_stats.error_count += 1;
         } else if issue.severity == ParseIssueSeverity::Warning {
@@ -4809,13 +6265,22 @@ impl DxfParseReport {
     /// 生成质量问题报告文本
     pub fn generate_quality_report(&self) -> String {
         let mut report = String::new();
-        
-        report.push_str(&format!("解析质量评分：{:.1}%\n", self.quality_score * 100.0));
+
+        report.push_str(&format!(
+            "解析质量评分：{:.1}%\n",
+            self.quality_score * 100.0
+        ));
         report.push_str(&format!("总实体数：{}\n", self.parse_stats.total_entities));
         report.push_str(&format!("有效实体：{}\n", self.parse_stats.valid_entities));
-        report.push_str(&format!("跳过实体：{}\n", self.parse_stats.skipped_entities));
-        report.push_str(&format!("解析时间：{:.2}ms\n", self.parse_stats.parse_time_ms));
-        
+        report.push_str(&format!(
+            "跳过实体：{}\n",
+            self.parse_stats.skipped_entities
+        ));
+        report.push_str(&format!(
+            "解析时间：{:.2}ms\n",
+            self.parse_stats.parse_time_ms
+        ));
+
         if !self.issues.is_empty() {
             report.push_str("\n问题列表:\n");
             for issue in &self.issues {
@@ -4825,7 +6290,10 @@ impl DxfParseReport {
                     ParseIssueSeverity::Error => "❌",
                     ParseIssueSeverity::Critical => "🔴",
                 };
-                report.push_str(&format!("  {} [{}] {}\n", severity_str, issue.code, issue.message));
+                report.push_str(&format!(
+                    "  {} [{}] {}\n",
+                    severity_str, issue.code, issue.message
+                ));
                 if let Some(suggestion) = &issue.suggestion {
                     report.push_str(&format!("     建议：{}\n", suggestion));
                 }

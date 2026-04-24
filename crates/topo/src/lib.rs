@@ -94,20 +94,24 @@
 //! assert_eq!(graph.faces().count(), 2); // 1 个外轮廓 + 1 个孔洞
 //! ```
 
-pub mod service;
+pub mod bentley_ottmann; // P1-3 新增：Bentley-Ottmann 扫描线算法
 pub mod graph_builder;
-pub mod loop_extractor;
 pub mod halfedge;
-pub mod spatial_index;  // P1-3 新增：分层空间索引渲染
-pub mod bentley_ottmann;  // P1-3 新增：Bentley-Ottmann 扫描线算法
-pub mod parallel;  // P1-4 新增：并行化处理
-pub mod union_find;  // P11-3 新增：并查集数据结构
+pub mod loop_extractor;
+pub mod parallel; // P1-4 新增：并行化处理
+pub mod service;
+pub mod spatial_index; // P1-3 新增：分层空间索引渲染
+pub mod union_find; // P11-3 新增：并查集数据结构
 
-pub use service::TopoService;
+pub use bentley_ottmann::{brute_force_intersections, BentleyOttmann, Intersection, Segment};
 pub use graph_builder::GraphBuilder;
+pub use halfedge::{Face, FaceId, Halfedge, HalfedgeGraph, HalfedgeId, Vertex, VertexId};
 pub use loop_extractor::LoopExtractor;
-pub use halfedge::{HalfedgeGraph, Halfedge, HalfedgeId, Vertex, VertexId, Face, FaceId};
-pub use spatial_index::{SpatialIndex, SpatialIndexConfig, SpatialIndexStats, RenderEntity, ViewportCuller};
-pub use bentley_ottmann::{BentleyOttmann, Segment, Intersection, brute_force_intersections};
-pub use parallel::{snap_endpoints_parallel, process_geometries_parallel, find_intersections_parallel};
+pub use parallel::{
+    find_intersections_parallel, process_geometries_parallel, snap_endpoints_parallel,
+};
+pub use service::TopoService;
+pub use spatial_index::{
+    RenderEntity, SpatialIndex, SpatialIndexConfig, SpatialIndexStats, ViewportCuller,
+};
 pub use union_find::UnionFind;

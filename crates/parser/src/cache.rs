@@ -40,16 +40,16 @@
 //! let (entities2, report2) = cached_parser.parse_file_with_report("file.dxf")?;
 //! ```
 
-use crate::{DxfConfig, DxfParseReport};
 use crate::parser_trait::DxfParserTrait;
-use common_types::{RawEntity, CadError};
-use std::path::{Path, PathBuf};
-use std::sync::{Arc, RwLock};
-use std::time::{Duration, Instant};
+use crate::{DxfConfig, DxfParseReport};
+use common_types::{CadError, RawEntity};
 use dashmap::DashMap;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::io::Read;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
+use std::time::{Duration, Instant};
 
 /// 缓存条目
 #[derive(Debug, Clone)]
@@ -82,7 +82,7 @@ impl CacheEntry {
         let now = Instant::now();
         // 估算大小：每个实体约 200 字节
         let size_bytes = entities.len() * 200 + report.layer_distribution.len() * 50;
-        
+
         // 计算实体哈希（用于增量对比）
         let entities_hash = compute_entities_hash(&entities);
 
@@ -107,7 +107,7 @@ impl CacheEntry {
         if self.file_hash != current_hash && current_hash != 0 {
             return true;
         }
-        
+
         // 备用：检查文件修改时间
         if let Some(cached_mtime) = self.file_modified {
             if let Ok(metadata) = std::fs::metadata(path) {
@@ -118,7 +118,7 @@ impl CacheEntry {
         }
         false
     }
-    
+
     /// 检查实体是否发生变化（用于增量解析）
     #[allow(dead_code)] // 预留用于未来增量解析功能
     pub fn entities_changed(&self, new_hash: u64) -> bool {
@@ -128,41 +128,39 @@ impl CacheEntry {
 
 /// 计算文件内容的快速哈希
 fn compute_file_hash(path: &Path) -> Result<u64, CadError> {
-    let mut file = std::fs::File::open(path)
-        .map_err(|e| CadError::dxf_parse_with_source(
-            path,
-            common_types::DxfParseReason::FileNotFound,
-            e,
-        ))?;
-    
+    let mut file = std::fs::File::open(path).map_err(|e| {
+        CadError::dxf_parse_with_source(path, common_types::DxfParseReason::FileNotFound, e)
+    })?;
+
     let mut hasher = DefaultHasher::new();
     let mut buffer = [0u8; 8192];
-    
+
     loop {
-        let bytes_read = file.read(&mut buffer)
-            .map_err(|e| CadError::dxf_parse_with_source(
+        let bytes_read = file.read(&mut buffer).map_err(|e| {
+            CadError::dxf_parse_with_source(
                 path,
                 common_types::DxfParseReason::EncodingError("读取文件失败".to_string()),
                 e,
-            ))?;
-        
+            )
+        })?;
+
         if bytes_read == 0 {
             break;
         }
-        
+
         hasher.write(&buffer[..bytes_read]);
     }
-    
+
     Ok(hasher.finish())
 }
 
 /// 计算实体列表的哈希（用于增量对比）
 fn compute_entities_hash(entities: &[RawEntity]) -> u64 {
     let mut hasher = DefaultHasher::new();
-    
+
     // 哈希实体数量
     entities.len().hash(&mut hasher);
-    
+
     // 哈希前 100 个实体的关键信息（性能考虑）
     for entity in entities.iter().take(100) {
         // 只哈希实体的基本特征，而非完整数据
@@ -180,7 +178,13 @@ fn compute_entities_hash(entities: &[RawEntity]) -> u64 {
                 points.len().hash(&mut hasher);
                 closed.hash(&mut hasher);
             }
-            RawEntity::Arc { center, radius, start_angle, end_angle, .. } => {
+            RawEntity::Arc {
+                center,
+                radius,
+                start_angle,
+                end_angle,
+                ..
+            } => {
                 "Arc".hash(&mut hasher);
                 center[0].to_bits().hash(&mut hasher);
                 center[1].to_bits().hash(&mut hasher);
@@ -194,7 +198,9 @@ fn compute_entities_hash(entities: &[RawEntity]) -> u64 {
                 center[1].to_bits().hash(&mut hasher);
                 radius.to_bits().hash(&mut hasher);
             }
-            RawEntity::Text { content, position, .. } => {
+            RawEntity::Text {
+                content, position, ..
+            } => {
                 "Text".hash(&mut hasher);
                 content.hash(&mut hasher);
                 position[0].to_bits().hash(&mut hasher);
@@ -204,18 +210,30 @@ fn compute_entities_hash(entities: &[RawEntity]) -> u64 {
                 "Path".hash(&mut hasher);
                 commands.len().hash(&mut hasher);
             }
-            RawEntity::BlockReference { block_name, insertion_point, .. } => {
+            RawEntity::BlockReference {
+                block_name,
+                insertion_point,
+                ..
+            } => {
                 "BlockReference".hash(&mut hasher);
                 block_name.hash(&mut hasher);
                 insertion_point[0].to_bits().hash(&mut hasher);
                 insertion_point[1].to_bits().hash(&mut hasher);
             }
-            RawEntity::Dimension { definition_points, measurement, .. } => {
+            RawEntity::Dimension {
+                definition_points,
+                measurement,
+                ..
+            } => {
                 "Dimension".hash(&mut hasher);
                 definition_points.len().hash(&mut hasher);
                 measurement.to_bits().hash(&mut hasher);
             }
-            RawEntity::Hatch { boundary_paths, pattern, .. } => {
+            RawEntity::Hatch {
+                boundary_paths,
+                pattern,
+                ..
+            } => {
                 "Hatch".hash(&mut hasher);
                 boundary_paths.len().hash(&mut hasher);
                 // 哈希填充图案类型
@@ -233,13 +251,100 @@ fn compute_entities_hash(entities: &[RawEntity]) -> u64 {
                     }
                 }
             }
-            RawEntity::XRef { file_path, insertion_point, .. } => {
+            RawEntity::XRef {
+                file_path,
+                insertion_point,
+                ..
+            } => {
                 // P1-1: XREF 外部参照支持 - 待完整实现
                 // 仅哈希基本特征，不进行完整几何处理
                 "XRef".hash(&mut hasher);
                 file_path.hash(&mut hasher);
                 insertion_point[0].to_bits().hash(&mut hasher);
                 insertion_point[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::Point { position, .. } => {
+                "Point".hash(&mut hasher);
+                position[0].to_bits().hash(&mut hasher);
+                position[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::Image {
+                image_def,
+                position,
+                ..
+            } => {
+                "Image".hash(&mut hasher);
+                image_def.hash(&mut hasher);
+                position[0].to_bits().hash(&mut hasher);
+                position[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::Attribute {
+                tag,
+                value,
+                position,
+                ..
+            } => {
+                "Attribute".hash(&mut hasher);
+                tag.hash(&mut hasher);
+                value.hash(&mut hasher);
+                position[0].to_bits().hash(&mut hasher);
+                position[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::AttributeDefinition {
+                tag,
+                default_value,
+                position,
+                ..
+            } => {
+                "AttributeDefinition".hash(&mut hasher);
+                tag.hash(&mut hasher);
+                default_value.hash(&mut hasher);
+                position[0].to_bits().hash(&mut hasher);
+                position[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::Leader {
+                points,
+                annotation_text,
+                ..
+            } => {
+                "Leader".hash(&mut hasher);
+                points.len().hash(&mut hasher);
+                if let Some(text) = annotation_text {
+                    text.hash(&mut hasher);
+                }
+            }
+            RawEntity::Ray {
+                start, direction, ..
+            } => {
+                "Ray".hash(&mut hasher);
+                start[0].to_bits().hash(&mut hasher);
+                start[1].to_bits().hash(&mut hasher);
+                direction[0].to_bits().hash(&mut hasher);
+                direction[1].to_bits().hash(&mut hasher);
+            }
+            RawEntity::MLine {
+                center_line,
+                style_name,
+                closed,
+                ..
+            } => {
+                "MLine".hash(&mut hasher);
+                center_line.len().hash(&mut hasher);
+                closed.hash(&mut hasher);
+                style_name.hash(&mut hasher);
+            }
+            RawEntity::Triangle {
+                vertices, normal, ..
+            } => {
+                "Triangle".hash(&mut hasher);
+                for v in vertices {
+                    v[0].to_bits().hash(&mut hasher);
+                    v[1].to_bits().hash(&mut hasher);
+                    v[2].to_bits().hash(&mut hasher);
+                }
+                normal[0].to_bits().hash(&mut hasher);
+                normal[1].to_bits().hash(&mut hasher);
+                normal[2].to_bits().hash(&mut hasher);
             }
         }
     }
@@ -440,13 +545,19 @@ impl<P: DxfParserTrait> DxfCache<P> {
     ) -> Result<(Vec<RawEntity>, DxfParseReport, bool), CadError> {
         let path = path.as_ref();
         let (entities, report) = self.get_or_parse(path)?;
-        
+
         // 检查是否从缓存返回
-        let from_cache = self.cache.get(&path.to_path_buf())
+        let from_cache = self
+            .cache
+            .get(&path.to_path_buf())
             .map(|entry| !entry.is_stale(path, entry.value().file_hash))
             .unwrap_or(false);
-        
-        Ok((Arc::unwrap_or_clone(entities), Arc::unwrap_or_clone(report), !from_cache))
+
+        Ok((
+            Arc::unwrap_or_clone(entities),
+            Arc::unwrap_or_clone(report),
+            !from_cache,
+        ))
     }
 
     /// 后台预解析 - 在后台线程中解析文件并更新缓存
@@ -471,10 +582,9 @@ impl<P: DxfParserTrait> DxfCache<P> {
         tokio::spawn(async move {
             // 在后台线程中执行解析
             let path_clone = path.clone();
-            let result = tokio::task::spawn_blocking(move || {
-                inner.parse_file_with_report(&path_clone)
-            })
-            .await;
+            let result =
+                tokio::task::spawn_blocking(move || inner.parse_file_with_report(&path_clone))
+                    .await;
 
             match result {
                 Ok(Ok((entities, report))) => {
@@ -505,25 +615,26 @@ impl<P: DxfParserTrait> DxfCache<P> {
     /// 获取缓存条目的详细信息
     pub fn get_cache_info(&self, path: impl AsRef<Path>) -> Option<CacheEntryInfo> {
         let path = path.as_ref().to_path_buf();
-        self.cache.get(&path).map(|entry| {
-            CacheEntryInfo {
-                entities_count: entry.entities.len(),
-                created_at: entry.created_at.elapsed().as_secs(),
-                last_accessed: entry.last_accessed.elapsed().as_secs(),
-                size_bytes: entry.size_bytes,
-                file_hash: entry.file_hash,
-                entities_hash: entry.entities_hash,
-            }
+        self.cache.get(&path).map(|entry| CacheEntryInfo {
+            entities_count: entry.entities.len(),
+            created_at: entry.created_at.elapsed().as_secs(),
+            last_accessed: entry.last_accessed.elapsed().as_secs(),
+            size_bytes: entry.size_bytes,
+            file_hash: entry.file_hash,
+            entities_hash: entry.entities_hash,
         })
     }
 
     /// 强制刷新缓存 - 无论文件是否变化都重新解析
-    pub fn refresh_cache(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    pub fn refresh_cache(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let path = path.as_ref();
-        
+
         // 移除旧缓存
         self.remove(path);
-        
+
         // 重新解析
         let (entities, report) = self.get_or_parse(path)?;
         Ok((Arc::unwrap_or_clone(entities), Arc::unwrap_or_clone(report)))
@@ -561,7 +672,12 @@ impl<P: DxfParserTrait> DxfCache<P> {
         }
 
         if let Some(max_mb) = self.config.max_memory_mb {
-            let current_mb: f64 = self.cache.iter().map(|e| e.value().size_bytes).sum::<usize>() as f64 / (1024.0 * 1024.0);
+            let current_mb: f64 = self
+                .cache
+                .iter()
+                .map(|e| e.value().size_bytes)
+                .sum::<usize>() as f64
+                / (1024.0 * 1024.0);
             if current_mb > max_mb {
                 return true;
             }
@@ -607,14 +723,16 @@ impl<P: DxfParserTrait> DxfCache<P> {
         path: &Path,
     ) -> Result<(Arc<Vec<RawEntity>>, Arc<DxfParseReport>), CadError> {
         let path_buf = path.to_path_buf();
-        
+
         // 计算当前文件哈希
         let current_file_hash = compute_file_hash(path).unwrap_or(0);
 
         // 检查缓存
         if let Some(mut entry) = self.cache.get_mut(&path_buf) {
             // 检查是否过期或失效（使用文件哈希检测）
-            if self.is_expired(&entry) || (self.config.check_file_modified && entry.is_stale(path, current_file_hash)) {
+            if self.is_expired(&entry)
+                || (self.config.check_file_modified && entry.is_stale(path, current_file_hash))
+            {
                 drop(entry);
                 self.cache.remove(&path_buf);
             } else {
@@ -631,7 +749,8 @@ impl<P: DxfParserTrait> DxfCache<P> {
         let (entities, report) = self.inner.parse_file_with_report(path)?;
 
         // 获取文件修改时间
-        let file_modified = self.config
+        let file_modified = self
+            .config
             .check_file_modified
             .then(|| std::fs::metadata(path).ok()?.modified().ok())
             .flatten();
@@ -655,22 +774,34 @@ impl<P: DxfParserTrait> DxfCache<P> {
 
 #[async_trait::async_trait]
 impl<P: DxfParserTrait + 'static> DxfParserTrait for DxfCache<P> {
-    fn parse_file_with_report(&self, path: impl AsRef<Path>) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_file_with_report(
+        &self,
+        path: impl AsRef<Path>,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let (entities, report) = self.get_or_parse(path.as_ref())?;
         Ok((Arc::unwrap_or_clone(entities), Arc::unwrap_or_clone(report)))
     }
 
-    async fn parse_file_async(&self, path: impl AsRef<Path> + Send) -> Result<Vec<RawEntity>, CadError> {
+    async fn parse_file_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<Vec<RawEntity>, CadError> {
         let (entities, _report) = self.get_or_parse(path.as_ref())?;
         Ok(Arc::unwrap_or_clone(entities))
     }
 
-    async fn parse_file_with_report_async(&self, path: impl AsRef<Path> + Send) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    async fn parse_file_with_report_async(
+        &self,
+        path: impl AsRef<Path> + Send,
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         let (entities, report) = self.get_or_parse(path.as_ref())?;
         Ok((Arc::unwrap_or_clone(entities), Arc::unwrap_or_clone(report)))
     }
 
-    fn parse_bytes_with_report(&self, bytes: &[u8]) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
+    fn parse_bytes_with_report(
+        &self,
+        bytes: &[u8],
+    ) -> Result<(Vec<RawEntity>, DxfParseReport), CadError> {
         // 字节解析不缓存（没有路径作为 key）
         self.inner.parse_bytes_with_report(bytes)
     }

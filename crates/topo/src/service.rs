@@ -3,13 +3,16 @@
 use std::sync::Arc;
 use std::time::Instant;
 
-use common_types::{Point2, Polyline, ClosedLoop, SceneState, CadError, Service, ServiceHealth, ServiceVersion, ServiceMetrics, GeometryConstructionReason, LengthUnit};
+use crate::graph_builder::GraphBuilder;
+use crate::halfedge::HalfedgeGraph;
+use crate::loop_extractor::LoopExtractor;
+use common_types::geometry::ToleranceConfig;
 use common_types::request::Request;
 use common_types::response::Response;
-use common_types::geometry::ToleranceConfig;
-use crate::graph_builder::GraphBuilder;
-use crate::loop_extractor::LoopExtractor;
-use crate::halfedge::HalfedgeGraph;
+use common_types::{
+    CadError, ClosedLoop, GeometryConstructionReason, LengthUnit, Point2, Polyline, SceneState,
+    Service, ServiceHealth, ServiceMetrics, ServiceVersion,
+};
 
 /// 拓扑配置
 #[derive(Debug, Clone, Default)]
@@ -51,7 +54,7 @@ impl TopoConfig {
         Self {
             tolerance: ToleranceConfig::default(),
             layer_filter: None,
-            algorithm: TopoAlgorithm::Halfedge,  // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
+            algorithm: TopoAlgorithm::Halfedge, // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
             skip_intersection_check: false,
             enable_parallel: false,
             parallel_threshold: 1000,
@@ -63,7 +66,7 @@ impl TopoConfig {
         Self {
             tolerance: ToleranceConfig::default(),
             layer_filter: None,
-            algorithm: TopoAlgorithm::Halfedge,  // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
+            algorithm: TopoAlgorithm::Halfedge, // ✅ P2-1 修复：默认使用 Halfedge（支持嵌套孔洞）
             skip_intersection_check: false,
             enable_parallel: true,
             parallel_threshold: 1000, // 1000 线段以上启用并行
@@ -150,74 +153,70 @@ impl TopoService {
     /// 当 Halfedge 验证失败时，fallback 到传统邻接表遍历方案。
     pub fn build_topology(&self, polylines: &[Polyline]) -> Result<TopologyResult, CadError> {
         let start_time = Instant::now();
-        
+
         let tol = self.config.tolerance.snap_tolerance;
-        let units = self.config.tolerance.units.clone().unwrap_or(LengthUnit::Mm);
+        let units = self.config.tolerance.units.unwrap_or(LengthUnit::Mm);
 
-        // 统计线段总数（Polyline = Vec<Point2>）
         let total_segments: usize = polylines.iter().map(|p| p.len() - 1).sum();
-        
-        // 判断是否启用并行处理（P11 锐评落实）
-        let use_parallel = self.config.enable_parallel 
-            && total_segments > self.config.parallel_threshold;
+        let total_points: usize = polylines.iter().map(|p| p.len()).sum();
 
-        tracing::info!(
-            "TopoService::build_topology - {} segments, parallel={}, algorithm={:?}",
-            total_segments,
-            use_parallel,
-            self.config.algorithm
-        );
+        // 超大文件保护：超过 100M 点时拒绝处理（避免 OOM）
+        if total_points > 100_000_000 {
+            return Err(CadError::GeometryConstructionError {
+                reason: GeometryConstructionReason::InvalidPoint {
+                    x: 0.0,
+                    y: 0.0,
+                    reason: format!(
+                        "输入规模过大：{} 点，{} 线段（上限：100M 点）",
+                        total_points, total_segments
+                    ),
+                },
+                operation: "topo_build_too_large".to_string(),
+                details: None,
+            });
+        }
 
-        // 1. 构建图（端点吸附）- 使用单位转换
-        // P11 锐评落实：支持自适应容差
+        let use_parallel =
+            self.config.enable_parallel && total_segments > self.config.parallel_threshold;
+
         let mut graph_builder = GraphBuilder::new(tol, units);
 
-        // 如果配置了自适应容差，启用自适应模式
         if self.config.tolerance.units.is_some() {
             graph_builder.set_adaptive_tolerance(true);
         }
 
-        // P11 锐评落实：支持并行端点吸附
         if use_parallel {
-            tracing::info!("启用并行端点吸附（segments={} > threshold={})", total_segments, self.config.parallel_threshold);
-            // 使用 parallel 模块的并行函数（简化版本：仅处理点）
             let all_points: Vec<Point2> = polylines.iter().flatten().copied().collect();
-            let snapped_points = crate::parallel::snap_endpoints_parallel(&all_points, tol);
-            graph_builder.set_points(snapped_points);
+            let (snapped_points, snap_index) =
+                crate::parallel::snap_endpoints_parallel(&all_points, tol);
+            graph_builder.set_points_with_mapping(snapped_points, snap_index);
+            graph_builder.build_edges_from_polylines(polylines);
         } else {
             graph_builder.snap_and_build(polylines);
         }
 
-        // 2. 检测并处理重叠线段（新增 P1-4 任务）
+        // 2. 检测并处理重叠线段
         graph_builder.detect_and_merge_overlapping_segments();
 
-        // 3. 计算交点并切分（核心：处理墙体交叉）
-        // P11 性能优化：支持跳过交点检测，适用于已清理的 DXF 文件
-        // P11 锐评落实：支持 Bentley-Ottmann 算法
+        // 3. 计算交点并切分
         if !self.config.skip_intersection_check {
             if use_parallel {
-                // 使用 Bentley-Ottmann 算法（O((n+k) log n) 复杂度）
                 graph_builder.compute_intersections_bentley_ottmann();
             } else {
                 graph_builder.compute_intersections_and_split();
             }
-        } else {
-            tracing::info!("跳过交点检测（根据配置 skip_intersection_check=true）");
         }
 
         // 4. 提取闭合环
         let extractor = LoopExtractor::new(tol);
-        let loops = extractor.extract_loops(
-            graph_builder.points(),
-            graph_builder.edges(),
-        );
+        let loops = extractor.extract_loops(graph_builder.points(), graph_builder.edges());
 
         // 5. 分类外轮廓和孔洞 - P11 锐评落实：Halfedge 用于存储已提取的环，传统方案负责分类
         let (outer, holes) = self.classify_loops_with_halfedge(&loops);
 
         // 6. 构建 Halfedge 图（始终构建，用于后续拓扑查询）
         let halfedge_graph = Some(HalfedgeGraph::from_loops(
-            &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>()
+            &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>(),
         ));
 
         let elapsed = start_time.elapsed();
@@ -253,19 +252,25 @@ impl TopoService {
     /// 2. 构建嵌套层级关系（射线法）
     /// 3. 使用 extract_outer_and_holes 分类（支持嵌套孔洞、岛中岛）
     /// 4. 如果 Halfedge 验证失败，fallback 到传统方案（基于面积和包含测试）
-    fn classify_loops_with_halfedge(&self, loops: &[ClosedLoop]) -> (Option<ClosedLoop>, Vec<ClosedLoop>) {
+    fn classify_loops_with_halfedge(
+        &self,
+        loops: &[ClosedLoop],
+    ) -> (Option<ClosedLoop>, Vec<ClosedLoop>) {
         match self.config.algorithm {
             TopoAlgorithm::Halfedge => {
                 // 尝试使用 Halfedge 存储并分类
                 let mut halfedge_graph = HalfedgeGraph::from_loops(
-                    &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>()
+                    &loops.iter().map(|l| l.points.clone()).collect::<Vec<_>>(),
                 );
 
                 // ✅ P2-1 新增：构建嵌套层级关系（支持孔中孔、岛中岛）
                 if halfedge_graph.build_nesting_hierarchy().is_ok() {
                     // 验证嵌套层级
                     if halfedge_graph.validate_nesting().is_ok() {
-                        tracing::info!("Halfedge 嵌套层级构建成功，面数={}", halfedge_graph.faces.len());
+                        tracing::info!(
+                            "Halfedge 嵌套层级构建成功，面数={}",
+                            halfedge_graph.faces.len()
+                        );
                     } else {
                         tracing::warn!("Halfedge 嵌套层级验证失败，继续使用基础分类");
                     }
@@ -277,8 +282,11 @@ impl TopoService {
                 if halfedge_graph.validate().is_ok() {
                     let (outer, holes) = halfedge_graph.extract_outer_and_holes();
                     if outer.is_some() || !holes.is_empty() {
-                        tracing::info!("Halfedge 分类成功：outer={}, holes={}",
-                                      outer.is_some() as usize, holes.len());
+                        tracing::info!(
+                            "Halfedge 分类成功：outer={}, holes={}",
+                            outer.is_some() as usize,
+                            holes.len()
+                        );
                         return (outer, holes);
                     }
                 }
@@ -327,7 +335,10 @@ impl TopoService {
         });
 
         // 最大正面积为外轮廓
-        let outer = sorted.iter().find(|l| l.signed_area > 0.0).map(|l| (*l).clone());
+        let outer = sorted
+            .iter()
+            .find(|l| l.signed_area > 0.0)
+            .map(|l| (*l).clone());
 
         // 孔洞判定：负面积且被外轮廓包含
         let holes: Vec<ClosedLoop> = sorted
@@ -370,7 +381,10 @@ impl Service for TopoService {
     type Data = TopologyResult;
     type Error = CadError;
 
-    async fn process(&self, request: Request<Self::Payload>) -> std::result::Result<Response<Self::Data>, Self::Error> {
+    async fn process(
+        &self,
+        request: Request<Self::Payload>,
+    ) -> std::result::Result<Response<Self::Data>, Self::Error> {
         let start = Instant::now();
 
         // 真正的处理入口：解析几何数据并构建拓扑
@@ -392,11 +406,7 @@ impl Service for TopoService {
         self.metrics.record_request(result.is_ok(), latency);
 
         let data = result?;
-        Ok(Response::success(
-            request.id,
-            data,
-            latency as u64,
-        ))
+        Ok(Response::success(request.id, data, latency as u64))
     }
 
     fn health_check(&self) -> ServiceHealth {
@@ -424,7 +434,9 @@ pub struct TopoRequest {
 
 impl TopoRequest {
     pub fn new(geometry_json: impl Into<String>) -> Self {
-        Self { geometry_json: geometry_json.into() }
+        Self {
+            geometry_json: geometry_json.into(),
+        }
     }
 }
 
@@ -444,25 +456,25 @@ fn point_in_polygon(point: &Point2, polygon: &[Point2]) -> bool {
     let x = point[0];
     let y = point[1];
     let mut inside = false;
-    
+
     let n = polygon.len();
     if n < 3 {
         return false;
     }
-    
+
     let mut j = n - 1;
     for i in 0..n {
         let xi = polygon[i][0];
         let yi = polygon[i][1];
         let xj = polygon[j][0];
         let yj = polygon[j][1];
-        
+
         if ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
             inside = !inside;
         }
         j = i;
     }
-    
+
     inside
 }
 
@@ -501,7 +513,7 @@ mod tests {
         ];
 
         let result = service.build_topology(&polylines);
-        
+
         // 如果失败，输出调试信息
         match &result {
             Ok(r) => {
@@ -513,7 +525,7 @@ mod tests {
                 eprintln!("Error: {:?}", e);
             }
         }
-        
+
         let result = result.unwrap();
         assert!(result.outer.is_some(), "应该提取到外轮廓");
         if let Some(outer) = &result.outer {
@@ -527,5 +539,40 @@ mod tests {
         let result = service.build_topology(&[]).unwrap();
         assert!(result.outer.is_none());
         assert!(result.holes.is_empty());
+    }
+
+    #[test]
+    fn test_topo_service_parallel() {
+        // 测试并行 snap 路径
+        let config = TopoConfig::optimized();
+        let service = TopoService::with_config(&config);
+
+        // 生成足够多的多段线以触发并行路径（> 1000 线段）
+        let mut polylines = Vec::new();
+        for i in 0..100 {
+            let x = i as f64 * 10.0;
+            polylines.push(vec![[x, 0.0], [x + 5.0, 0.0]]);
+            polylines.push(vec![[x, 5.0], [x + 5.0, 5.0]]);
+            polylines.push(vec![[x, 0.0], [x, 5.0]]);
+        }
+
+        let result = service.build_topology(&polylines);
+        match &result {
+            Ok(r) => {
+                eprintln!(
+                    "Parallel: Points={}, Edges={}, Loops={}",
+                    r.points.len(),
+                    r.edges.len(),
+                    r.all_loops.len()
+                );
+            }
+            Err(e) => {
+                eprintln!("Error: {:?}", e);
+            }
+        }
+        assert!(result.is_ok(), "并行路径应该成功");
+        let r = result.unwrap();
+        assert!(!r.points.is_empty(), "应该有顶点");
+        assert!(!r.edges.is_empty(), "应该有边");
     }
 }

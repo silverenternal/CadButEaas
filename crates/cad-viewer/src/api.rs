@@ -1,5 +1,6 @@
 //! HTTP API 客户端 - 与后端 orchestrator 交互（P11 落实版：WebSocket 实时交互）
 
+use futures::{SinkExt, StreamExt};
 use interact::Edge;
 use log::info;
 use reqwest::multipart;
@@ -7,11 +8,11 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use futures::{SinkExt, StreamExt};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 // WebSocket 类型别名
-type WsStream = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
+type WsStream =
+    tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
 /// API 客户端
 #[derive(Clone)]
@@ -119,22 +120,23 @@ impl ApiClient {
         }
 
         // 将 http:// 替换为 ws://
-        let ws_url = self.base_url
+        let ws_url = self
+            .base_url
             .replace("http://", "ws://")
             .replace("https://", "wss://");
-        
+
         let ws_endpoint = format!("{}/ws", ws_url);
-        
+
         info!("正在连接 WebSocket: {}", ws_endpoint);
 
         match connect_async(&ws_endpoint).await {
             Ok((ws_stream, _)) => {
                 let mut conn = self.ws_connection.lock().await;
                 *conn = Some(ws_stream);
-                
+
                 let mut connected = self.ws_connected.lock().await;
                 *connected = true;
-                
+
                 info!("WebSocket 连接成功");
                 Ok(())
             }
@@ -146,13 +148,14 @@ impl ApiClient {
     }
 
     /// 断开 WebSocket 连接（P11 新增）
+    #[allow(dead_code)]
     pub async fn disconnect_websocket(&self) -> Result<(), String> {
         let mut conn = self.ws_connection.lock().await;
         *conn = None;
-        
+
         let mut connected = self.ws_connected.lock().await;
         *connected = false;
-        
+
         info!("WebSocket 已断开");
         Ok(())
     }
@@ -166,23 +169,21 @@ impl ApiClient {
     /// 通过 WebSocket 发送边选择事件（P11 新增：实时交互）
     pub async fn ws_select_edge(&self, edge_id: usize) -> Result<WsTraceResult, String> {
         let mut conn_guard = self.ws_connection.lock().await;
-        let conn_opt: &mut Option<WsStream> = &mut *conn_guard;
-        
+        let conn_opt: &mut Option<WsStream> = &mut conn_guard;
+
         if let Some(conn) = conn_opt {
             // 发送选择消息
             let select_msg = serde_json::json!({
                 "type": "select_edge",
                 "edge_id": edge_id
             });
-            
-            conn.send(Message::Text(select_msg.to_string())).await
+
+            conn.send(Message::Text(select_msg.to_string()))
+                .await
                 .map_err(|e| format!("发送消息失败：{}", e))?;
-            
+
             // 等待响应（超时 5 秒）
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(5),
-                conn.next()
-            ).await {
+            match tokio::time::timeout(std::time::Duration::from_secs(5), conn.next()).await {
                 Ok(Some(Ok(Message::Text(text)))) => {
                     // 解析响应
                     if let Ok(response) = serde_json::from_str::<WsMessage>(&text) {
@@ -190,10 +191,8 @@ impl ApiClient {
                             WsMessage::TraceResult { edges, loop_closed } => {
                                 Ok(WsTraceResult { edges, loop_closed })
                             }
-                            WsMessage::Error { message } => {
-                                Err(message)
-                            }
-                            _ => Err("意外的响应类型".to_string())
+                            WsMessage::Error { message } => Err(message),
+                            _ => Err("意外的响应类型".to_string()),
                         }
                     } else {
                         Err("解析响应失败".to_string())
@@ -202,7 +201,7 @@ impl ApiClient {
                 Ok(Some(Err(e))) => Err(format!("接收错误：{}", e)),
                 Ok(None) => Err("连接已关闭".to_string()),
                 Err(_) => Err("响应超时（5 秒）".to_string()),
-                _ => Err("未知错误".to_string())
+                _ => Err("未知错误".to_string()),
             }
         } else {
             Err("WebSocket 未连接".to_string())
@@ -212,34 +211,28 @@ impl ApiClient {
     /// 通过 WebSocket 发送缺口检测（P11 新增）
     pub async fn ws_detect_gaps(&self, tolerance: f64) -> Result<WsGapDetectionResult, String> {
         let mut conn_guard = self.ws_connection.lock().await;
-        let conn_opt: &mut Option<WsStream> = &mut *conn_guard;
-        
+        let conn_opt: &mut Option<WsStream> = &mut conn_guard;
+
         if let Some(conn) = conn_opt {
             // 发送检测消息
             let detect_msg = serde_json::json!({
                 "type": "detect_gaps",
                 "tolerance": tolerance
             });
-            
-            conn.send(Message::Text(detect_msg.to_string())).await
+
+            conn.send(Message::Text(detect_msg.to_string()))
+                .await
                 .map_err(|e| format!("发送消息失败：{}", e))?;
-            
+
             // 等待响应（超时 10 秒）
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(10),
-                conn.next()
-            ).await {
+            match tokio::time::timeout(std::time::Duration::from_secs(10), conn.next()).await {
                 Ok(Some(Ok(Message::Text(text)))) => {
                     // 解析响应
                     if let Ok(response) = serde_json::from_str::<WsMessage>(&text) {
                         match response {
-                            WsMessage::GapsDetected { gaps } => {
-                                Ok(WsGapDetectionResult { gaps })
-                            }
-                            WsMessage::Error { message } => {
-                                Err(message)
-                            }
-                            _ => Err("意外的响应类型".to_string())
+                            WsMessage::GapsDetected { gaps } => Ok(WsGapDetectionResult { gaps }),
+                            WsMessage::Error { message } => Err(message),
+                            _ => Err("意外的响应类型".to_string()),
                         }
                     } else {
                         Err("解析响应失败".to_string())
@@ -248,7 +241,7 @@ impl ApiClient {
                 Ok(Some(Err(e))) => Err(format!("接收错误：{}", e)),
                 Ok(None) => Err("连接已关闭".to_string()),
                 Err(_) => Err("响应超时（10 秒）".to_string()),
-                _ => Err("未知错误".to_string())
+                _ => Err("未知错误".to_string()),
             }
         } else {
             Err("WebSocket 未连接".to_string())
@@ -256,18 +249,20 @@ impl ApiClient {
     }
 
     /// 发送 WebSocket 心跳（P11 新增：保持连接）
+    #[allow(dead_code)]
     pub async fn ws_ping(&self) -> Result<(), String> {
         let mut conn_guard = self.ws_connection.lock().await;
-        let conn_opt: &mut Option<WsStream> = &mut *conn_guard;
-        
+        let conn_opt: &mut Option<WsStream> = &mut conn_guard;
+
         if let Some(conn) = conn_opt {
             let ping_msg = serde_json::json!({
                 "type": "ping"
             });
-            
-            conn.send(Message::Text(ping_msg.to_string())).await
+
+            conn.send(Message::Text(ping_msg.to_string()))
+                .await
                 .map_err(|e| format!("发送心跳失败：{}", e))?;
-            
+
             Ok(())
         } else {
             Err("WebSocket 未连接".to_string())
@@ -275,9 +270,9 @@ impl ApiClient {
     }
 
     /// 加载文件 - 调用后端 /process 接口（渐进式渲染）
-    /// 
+    ///
     /// # 渐进式渲染流程
-    /// 
+    ///
     /// 1. **阶段 1（快速）**：解析 DXF → 提取原始边 → 立即返回（~1 秒）
     /// 2. **阶段 2（后台）**：后端构建拓扑 → 完成后通过 WebSocket 推送更新
     pub async fn load_file(&mut self, path: &str) -> Result<Vec<Edge>, String> {
@@ -288,19 +283,20 @@ impl ApiClient {
             .await
             .map_err(|e| format!("读取文件失败：{}", e))?;
 
-        let file_name = path.split('\\').next_back().or_else(|| path.split('/').next_back())
+        let file_name = path
+            .split('\\')
+            .next_back()
+            .or_else(|| path.split('/').next_back())
             .unwrap_or("unknown");
 
-        let part = multipart::Part::bytes(file_content)
-            .file_name(file_name.to_string());
+        let part = multipart::Part::bytes(file_content).file_name(file_name.to_string());
 
-        let form = multipart::Form::new()
-            .part("file", part);
+        let form = multipart::Form::new().part("file", part);
 
         // 渐进式渲染：阶段 1 只需 1-2 秒，超时设为 10 秒
         let response = tokio::time::timeout(
-            std::time::Duration::from_secs(10),  // 10 秒超时（阶段 1 快速渲染）
-            self.client.post(&url).multipart(form).send()
+            std::time::Duration::from_secs(10), // 10 秒超时（阶段 1 快速渲染）
+            self.client.post(&url).multipart(form).send(),
         )
         .await
         .map_err(|_| "请求超时（10 秒），文件可能无法解析")?
@@ -322,9 +318,7 @@ impl ApiClient {
                 info!("阶段 1 完成（有警告）：{}", result.message);
                 Ok(result.edges.unwrap_or_default())
             }
-            orchestrator::api::ProcessStatus::Failed => {
-                Err(result.message)
-            }
+            orchestrator::api::ProcessStatus::Failed => Err(result.message),
         }
     }
 
@@ -334,7 +328,10 @@ impl ApiClient {
 
         let response = tokio::time::timeout(
             std::time::Duration::from_secs(10),
-            self.client.post(&url).json(&AutoTraceRequest { edge_id }).send()
+            self.client
+                .post(&url)
+                .json(&AutoTraceRequest { edge_id })
+                .send(),
         )
         .await
         .map_err(|_| "自动追踪超时（10 秒）")?
@@ -355,7 +352,10 @@ impl ApiClient {
 
         let response = tokio::time::timeout(
             std::time::Duration::from_secs(10),
-            self.client.post(&url).json(&LassoRequest { polygon }).send()
+            self.client
+                .post(&url)
+                .json(&LassoRequest { polygon })
+                .send(),
         )
         .await
         .map_err(|_| "圈选超时（10 秒）")?
@@ -375,7 +375,10 @@ impl ApiClient {
 
         let response = tokio::time::timeout(
             std::time::Duration::from_secs(15),
-            self.client.post(&url).json(&GapDetectionRequest { tolerance }).send()
+            self.client
+                .post(&url)
+                .json(&GapDetectionRequest { tolerance })
+                .send(),
         )
         .await
         .map_err(|_| "缺口检测超时（15 秒）")?
@@ -390,17 +393,25 @@ impl ApiClient {
     }
 
     /// 导出场景 - 调用后端 /export 接口
-    pub async fn export_scene(&mut self, path: &str, edges: &[Edge], format: &str) -> Result<(), String> {
+    pub async fn export_scene(
+        &mut self,
+        path: &str,
+        edges: &[Edge],
+        format: &str,
+    ) -> Result<(), String> {
         let url = format!("{}/export", self.base_url);
 
         // 直接发送 JSON 对象，让后端解析
         let form = multipart::Form::new()
             .text("path", path.to_string())
             .text("format", format.to_string())
-            .text("edges", serde_json::to_string(edges)
-                .map_err(|e| format!("序列化边数据失败：{}", e))?);
+            .text(
+                "edges",
+                serde_json::to_string(edges).map_err(|e| format!("序列化边数据失败：{}", e))?,
+            );
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .multipart(form)
             .send()
@@ -422,14 +433,20 @@ impl ApiClient {
 
     /// 本地导出场景（不依赖后端）
     #[allow(dead_code)] // 预留用于未来功能
-    pub async fn export_scene_local(&self, path: &str, edges: &[Edge], format: &str) -> Result<(), String> {
+    pub async fn export_scene_local(
+        &self,
+        path: &str,
+        edges: &[Edge],
+        format: &str,
+    ) -> Result<(), String> {
         // 根据格式序列化边数据
         let content: Vec<u8> = match format {
             "json" => serde_json::to_string_pretty(edges)
                 .map_err(|e| format!("序列化 JSON 失败：{}", e))?
                 .into_bytes(),
-            "bincode" => bincode::serialize(edges)
-                .map_err(|e| format!("序列化 bincode 失败：{}", e))?,
+            "bincode" => {
+                bincode::serialize(edges).map_err(|e| format!("序列化 bincode 失败：{}", e))?
+            }
             _ => return Err(format!("不支持的导出格式：{}", format)),
         };
 
@@ -466,7 +483,10 @@ pub enum WsMessage {
     EdgeSelected { edge_id: usize },
     /// 追踪结果
     #[serde(rename = "trace_result")]
-    TraceResult { edges: Vec<usize>, loop_closed: bool },
+    TraceResult {
+        edges: Vec<usize>,
+        loop_closed: bool,
+    },
     /// 缺口检测结果
     #[serde(rename = "gaps_detected")]
     GapsDetected { gaps: Vec<WsGapInfoResponse> },
