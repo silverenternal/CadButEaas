@@ -14,6 +14,9 @@
 //! # 处理 PDF 文件
 //! cad process input.pdf --profile scanned --output scene.json
 //!
+//! # 处理 PNG/JPG/BMP/TIFF/WebP 光栅图片
+//! cad process input.png --profile photo_sketch --output scene.json
+//!
 //! # 启动 HTTP 服务
 //! cad serve --port 3000
 //! ```
@@ -21,9 +24,11 @@
 use clap::{Parser, Subcommand};
 use common_types::{CadError, LengthUnit};
 use config::CadConfig;
+use orchestrator::pipeline::{RasterProcessingOptions, ScaleCalibration};
 use orchestrator::service::{OrchestratorConfig, OrchestratorService};
 use std::fs;
 use std::path::PathBuf;
+use vectorize::RasterStrategy;
 
 /// CAD 几何处理系统命令行工具
 #[derive(Parser)]
@@ -37,10 +42,11 @@ struct Cli {
 }
 
 #[derive(Subcommand)]
+#[allow(clippy::large_enum_variant)]
 enum Commands {
-    /// 处理 CAD/PDF 文件并导出场景
+    /// 处理 CAD/PDF/光栅图片文件并导出场景
     Process {
-        /// 输入文件路径（DXF/PDF）
+        /// 输入文件路径（DXF/PDF/PNG/JPG/BMP/TIFF/WebP）
         #[arg(index = 1)]
         input: PathBuf,
 
@@ -48,7 +54,7 @@ enum Commands {
         #[arg(short, long, default_value = "scene.json")]
         output: PathBuf,
 
-        /// 使用预设配置（architectural/mechanical/scanned/quick）
+        /// 使用预设配置（architectural/mechanical/scanned/photo_sketch/quick）
         #[arg(short, long)]
         profile: Option<String>,
 
@@ -67,6 +73,30 @@ enum Commands {
         /// 闭合性检查容差（mm，覆盖配置文件）
         #[arg(long)]
         closure_tolerance: Option<f64>,
+
+        /// 光栅矢量化策略（auto/clean_line_art/scanned_plan/photo_perspective/hand_sketch/low_contrast）
+        #[arg(long)]
+        raster_strategy: Option<String>,
+
+        /// 覆盖图片 DPI，格式为 300 或 300,300
+        #[arg(long)]
+        dpi_override: Option<String>,
+
+        /// 用户校准距离的像素长度
+        #[arg(long)]
+        known_distance_px: Option<f64>,
+
+        /// 用户校准距离的毫米长度
+        #[arg(long)]
+        known_distance_mm: Option<f64>,
+
+        /// 返回/保存光栅调试中间图
+        #[arg(long)]
+        debug_artifacts: bool,
+
+        /// 光栅质量反馈最大尝试次数
+        #[arg(long)]
+        max_retries: Option<usize>,
 
         /// 静默模式（减少输出）
         #[arg(short, long)]
@@ -115,6 +145,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             snap_tolerance,
             min_line_length,
             closure_tolerance,
+            raster_strategy,
+            dpi_override,
+            known_distance_px,
+            known_distance_mm,
+            debug_artifacts,
+            max_retries,
             quiet,
         } => {
             process_file(
@@ -125,6 +161,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 snap_tolerance,
                 min_line_length,
                 closure_tolerance,
+                raster_strategy,
+                dpi_override,
+                known_distance_px,
+                known_distance_mm,
+                debug_artifacts,
+                max_retries,
                 quiet,
             )
             .await?;
@@ -156,6 +198,12 @@ async fn process_file(
     snap_tolerance: Option<f64>,
     min_line_length: Option<f64>,
     closure_tolerance: Option<f64>,
+    raster_strategy: Option<String>,
+    dpi_override: Option<String>,
+    known_distance_px: Option<f64>,
+    known_distance_mm: Option<f64>,
+    debug_artifacts: bool,
+    max_retries: Option<usize>,
     quiet: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if !quiet {
@@ -186,17 +234,38 @@ async fn process_file(
     }
 
     // 创建编排服务
-    let service = OrchestratorService::new(OrchestratorConfig {
-        listen_addr: "127.0.0.1:0".to_string(), // 临时端口
-        enable_api: false,
-    });
+    let service = OrchestratorService::with_config(
+        OrchestratorConfig {
+            listen_addr: "127.0.0.1:0".to_string(), // 临时端口
+            enable_api: false,
+        },
+        Some(config.clone()),
+    );
 
     // 处理文件
     if !quiet {
         println!("正在处理文件...");
     }
 
-    let result = service.process_file(&input).await;
+    let raster_options = build_raster_options(
+        &config,
+        raster_strategy,
+        dpi_override,
+        known_distance_px,
+        known_distance_mm,
+        debug_artifacts,
+        max_retries,
+    )?;
+
+    let result = if is_raster_path(&input) {
+        service
+            .pipeline()
+            .process_raster_file_with_options(&input, raster_options)
+            .await
+            .map(|result| result.scene)
+    } else {
+        service.process_file(&input).await
+    };
 
     match result {
         Ok(scene) => {
@@ -319,6 +388,74 @@ fn apply_overrides(
     Ok(config)
 }
 
+fn build_raster_options(
+    config: &CadConfig,
+    raster_strategy: Option<String>,
+    dpi_override: Option<String>,
+    known_distance_px: Option<f64>,
+    known_distance_mm: Option<f64>,
+    debug_artifacts: bool,
+    max_retries: Option<usize>,
+) -> Result<RasterProcessingOptions, Box<dyn std::error::Error>> {
+    let strategy_text = raster_strategy.unwrap_or_else(|| config.raster.strategy.clone());
+    let strategy = strategy_text.parse::<RasterStrategy>().map_err(|e| {
+        format!(
+            "{}；可选 auto/clean_line_art/scanned_plan/photo_perspective/hand_sketch/low_contrast",
+            e
+        )
+    })?;
+
+    let dpi_override = match dpi_override {
+        Some(value) => parse_cli_pair(&value),
+        None => config.raster.dpi_override,
+    };
+
+    let scale_calibration = match (known_distance_px, known_distance_mm) {
+        (Some(px), Some(mm)) if px > 0.0 && mm > 0.0 => Some(ScaleCalibration {
+            known_distance_px: px,
+            known_distance_mm: mm,
+            points_px: None,
+        }),
+        (Some(_), None) | (None, Some(_)) => {
+            return Err("known_distance_px 和 known_distance_mm 必须同时提供".into());
+        }
+        _ => None,
+    };
+
+    Ok(RasterProcessingOptions {
+        strategy: Some(strategy),
+        dpi_override,
+        scale_calibration,
+        debug_artifacts: debug_artifacts || config.raster.debug_artifacts,
+        semantic_mode: Some(config.raster.semantic_mode.clone()),
+        ocr_backend: Some(config.raster.ocr_backend.clone()),
+        max_retries: Some(max_retries.unwrap_or(config.raster.max_retries)),
+    })
+}
+
+fn parse_cli_pair(value: &str) -> Option<(f64, f64)> {
+    let normalized = value.replace(['x', ';'], ",");
+    let mut parts = normalized.split(',').map(str::trim);
+    let x = parts.next()?.parse::<f64>().ok()?;
+    let y = parts
+        .next()
+        .and_then(|part| part.parse::<f64>().ok())
+        .unwrap_or(x);
+    Some((x, y))
+}
+
+fn is_raster_path(path: &std::path::Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| {
+            matches!(
+                ext.to_ascii_lowercase().as_str(),
+                "png" | "jpg" | "jpeg" | "bmp" | "tiff" | "tif" | "webp"
+            )
+        })
+        .unwrap_or(false)
+}
+
 /// 列出可用的预设配置
 fn list_profiles() {
     println!("可用的预设配置：");
@@ -326,9 +463,16 @@ fn list_profiles() {
     println!("  architectural   - 建筑图纸预设（AutoCAD 导出的建筑平面图）");
     println!("  mechanical      - 机械图纸预设（高精度机械图纸）");
     println!("  scanned         - 扫描图纸预设（线条清晰的扫描版图纸）");
+    println!("  photo_sketch    - 照片/手绘草图预设（PNG/JPG/BMP/TIFF/WebP 光栅图纸）");
+    println!("  raster_clean    - 干净光栅线稿预设");
+    println!("  raster_scan     - 扫描光栅图纸预设");
+    println!("  raster_photo    - 拍照图纸预设");
+    println!("  raster_sketch   - 手绘草图预设");
+    println!("  raster_semantic - 光栅语义解析预设");
     println!("  quick           - 快速原型预设（低精度要求，快速处理）");
     println!();
     println!("使用方式：cad process input.dxf --profile <预设名称>");
+    println!("光栅示例：cad process input.png --profile photo_sketch --output scene.json");
     println!();
     println!("查看详情：cad show-profile <预设名称>");
 }
@@ -389,6 +533,20 @@ fn show_profile(name: &str) -> Result<(), Box<dyn std::error::Error>> {
         "  auto_validate           = {}",
         config.export.auto_validate
     );
+    println!();
+
+    println!("[raster]");
+    println!("  strategy                = {}", config.raster.strategy);
+    println!("  max_retries             = {}", config.raster.max_retries);
+    println!(
+        "  debug_artifacts         = {}",
+        config.raster.debug_artifacts
+    );
+    println!(
+        "  semantic_mode           = {}",
+        config.raster.semantic_mode
+    );
+    println!("  ocr_backend             = {}", config.raster.ocr_backend);
 
     Ok(())
 }

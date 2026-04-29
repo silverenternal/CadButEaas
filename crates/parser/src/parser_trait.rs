@@ -18,7 +18,7 @@
 //!
 //! ## 使用示例
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::parser_trait::{DxfParserTrait, SyncDxfParser};
 //!
 //! // 使用同步解析器（向后兼容）

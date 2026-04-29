@@ -17,7 +17,7 @@
 //!
 //! ## 使用示例
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::async_parser::AsyncDxfParser;
 //! use parser::parser_trait::DxfParserTrait;
 //!

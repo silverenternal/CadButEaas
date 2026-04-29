@@ -1623,7 +1623,7 @@ impl CadError {
         }
 
         // 按优先级排序（高优先级在前）
-        suggestions.sort_by(|a, b| b.priority.cmp(&a.priority));
+        suggestions.sort_by_key(|b| std::cmp::Reverse(b.priority));
         suggestions
     }
 }

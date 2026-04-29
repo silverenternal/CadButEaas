@@ -305,7 +305,7 @@ impl ValidatorService {
             summary.warning_count += 1;
         }
 
-        recovery_suggestions.sort_by(|a, b| b.priority.cmp(&a.priority));
+        recovery_suggestions.sort_by_key(|s| std::cmp::Reverse(s.priority));
 
         Ok(ValidationReport {
             passed: summary.error_count == 0,

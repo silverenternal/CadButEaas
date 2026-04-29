@@ -416,6 +416,7 @@ fn test_scene_state_validation() {
         boundaries: vec![],
         sources: vec![],
         edges: vec![],
+        raster_metadata: None,
         units: common_types::LengthUnit::M,
         coordinate_system: common_types::CoordinateSystem::default(),
         seat_zones: vec![],

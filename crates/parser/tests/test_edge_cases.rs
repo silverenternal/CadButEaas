@@ -256,9 +256,8 @@ fn test_concurrent_parsing() {
             let parser = DxfParser::new();
             let dxf = format!("0\nSECTION\n2\nENTITIES\n0\nLINE\n10\n{}.0\n20\n0.0\n30\n0.0\n11\n{}.0\n21\n10.0\n31\n0.0\n0\nENDSEC\n0\nEOF\n", i_copy, i_copy + 5);
             let result = parser.parse_bytes(dxf.as_bytes());
-            match &result {
-                Err(e) => eprintln!("Thread {} parse error: {:?}", i_copy, e),
-                Ok(_) => {}
+            if let Err(e) = &result {
+                eprintln!("Thread {} parse error: {:?}", i_copy, e);
             }
             assert!(result.is_ok());
 

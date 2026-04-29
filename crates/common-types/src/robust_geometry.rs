@@ -599,10 +599,9 @@ mod tests {
         let c = [0.5, 0.5 + 1e-10];
 
         // 应该能正确判断方向（可能由于精度问题返回 Collinear，但不会崩溃）
-        let _orientation = orient2d(a, b, c);
+        let _ = orient2d(a, b, c);
         // 不强制要求非共线，因为这是一个边缘情况
-        // 关键是算法不会崩溃或返回错误结果
-        assert!(true); // 测试通过，不崩溃即可
+        // 关键是算法不会崩溃。
     }
 
     #[test]

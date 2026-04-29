@@ -32,7 +32,7 @@ fn generate_polylines(n: usize) -> Vec<Vec<Point2>> {
         let x = col as f64 * 10.0;
         let y = row as f64 * 10.0;
         // 交替生成水平线和垂直线，形成真实交叉
-        if (row + col) % 2 == 0 {
+        if ((row + col) & 1) == 0 {
             polylines.push(vec![[x, y], [x + 5.0, y]]);
         } else {
             polylines.push(vec![[x, y], [x, y + 5.0]]);

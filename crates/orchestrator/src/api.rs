@@ -8,7 +8,7 @@
 //! 5. 添加超时控制
 //! 6. 集成 InteractSvc 交互服务
 
-use crate::pipeline::ProcessingPipeline;
+use crate::pipeline::{ProcessingPipeline, RasterProcessingOptions, ScaleCalibration};
 use axum::{
     extract::{
         ws::{Message, WebSocket},
@@ -28,6 +28,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
+use vectorize::{RasterStrategy, RasterVectorizationReport, SemanticCandidate};
 
 // ============================================================================
 // P0-4 新增：HATCH 实体定义
@@ -169,6 +170,8 @@ pub struct HealthResponse {
 /// 处理请求响应
 #[derive(Serialize, Deserialize)]
 pub struct ProcessResponse {
+    #[serde(default = "default_process_schema_version")]
+    pub schema_version: String,
     pub job_id: String,
     pub status: ProcessStatus,
     pub message: String,
@@ -180,6 +183,14 @@ pub struct ProcessResponse {
     /// P0-4 新增：HATCH 数据（可选，用于前端直接获取）
     #[serde(default)]
     pub hatches: Option<Vec<HatchEntity>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raster_report: Option<RasterVectorizationReport>,
+    #[serde(default)]
+    pub semantic_candidates: Vec<SemanticCandidate>,
+}
+
+fn default_process_schema_version() -> String {
+    "process-response-1.1".to_string()
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -349,6 +360,8 @@ pub struct ProfileDetailResponse {
     pub topology: TopologyConfig,
     pub validator: ValidatorConfig,
     pub export: ExportConfig,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vectorize: Option<VectorizeProfileConfig>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -396,6 +409,16 @@ pub struct ExportConfig {
     pub auto_validate: bool,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct VectorizeProfileConfig {
+    pub adaptive_threshold: bool,
+    pub skeletonize: bool,
+    pub text_separation: bool,
+    pub quality_assessment: bool,
+    pub denoise: bool,
+    pub enhance_contrast: bool,
+}
+
 /// 创建 API 路由（不带状态，状态在 service.rs 中添加）
 pub fn create_router() -> Router<ApiState> {
     // 创建路由
@@ -404,6 +427,8 @@ pub fn create_router() -> Router<ApiState> {
         .route("/health", get(health_handler))
         .route("/process", post(process_handler_v1))
         .route("/process", options(options_handler))
+        .route("/process/raster", post(process_raster_handler))
+        .route("/process/raster", options(options_handler))
         // 配置 API（P11 锐评落实）
         .route("/config/profiles", get(list_profiles_handler))
         .route("/config/profile/{name}", get(get_profile_handler))
@@ -500,6 +525,26 @@ async fn list_profiles_handler(State(_state): State<ApiState>) -> Json<ProfileLi
             name: "photo_sketch".to_string(),
             description: "照片/手绘预设 - 适用于光栅图片矢量化，强预处理".to_string(),
         },
+        ProfileInfo {
+            name: "raster_clean".to_string(),
+            description: "干净光栅线稿预设".to_string(),
+        },
+        ProfileInfo {
+            name: "raster_scan".to_string(),
+            description: "扫描光栅图纸预设".to_string(),
+        },
+        ProfileInfo {
+            name: "raster_photo".to_string(),
+            description: "拍照光栅图纸预设".to_string(),
+        },
+        ProfileInfo {
+            name: "raster_sketch".to_string(),
+            description: "手绘草图光栅预设".to_string(),
+        },
+        ProfileInfo {
+            name: "raster_semantic".to_string(),
+            description: "光栅语义解析预设".to_string(),
+        },
     ];
 
     Json(ProfileListResponse { profiles })
@@ -536,6 +581,7 @@ async fn get_profile_handler(
                 json_indent: 2,
                 auto_validate: true,
             },
+            vectorize: None,
         })),
         "mechanical" => Ok(Json(ProfileDetailResponse {
             name: "mechanical".to_string(),
@@ -561,6 +607,7 @@ async fn get_profile_handler(
                 json_indent: 2,
                 auto_validate: true,
             },
+            vectorize: None,
         })),
         "scanned" => Ok(Json(ProfileDetailResponse {
             name: "scanned".to_string(),
@@ -586,6 +633,7 @@ async fn get_profile_handler(
                 json_indent: 2,
                 auto_validate: true,
             },
+            vectorize: None,
         })),
         "quick" => Ok(Json(ProfileDetailResponse {
             name: "quick".to_string(),
@@ -611,6 +659,7 @@ async fn get_profile_handler(
                 json_indent: 0,
                 auto_validate: false,
             },
+            vectorize: None,
         })),
         "photo_sketch" => Ok(Json(ProfileDetailResponse {
             name: "photo_sketch".to_string(),
@@ -636,8 +685,58 @@ async fn get_profile_handler(
                 json_indent: 2,
                 auto_validate: true,
             },
+            vectorize: Some(VectorizeProfileConfig {
+                adaptive_threshold: true,
+                skeletonize: true,
+                text_separation: true,
+                quality_assessment: true,
+                denoise: true,
+                enhance_contrast: true,
+            }),
         })),
+        name if name.starts_with("raster_") => {
+            let config = config::CadConfig::from_profile_file(name)
+                .or_else(|_| config::CadConfig::from_profile(name))
+                .map_err(|_| StatusCode::NOT_FOUND)?;
+            Ok(Json(profile_detail_from_config(name, config)))
+        }
         _ => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+fn profile_detail_from_config(name: &str, config: config::CadConfig) -> ProfileDetailResponse {
+    ProfileDetailResponse {
+        name: name.to_string(),
+        description: format!("{} 光栅预设", name),
+        topology: TopologyConfig {
+            snap_tolerance_mm: config.topology.snap_tolerance_mm,
+            min_line_length_mm: config.topology.min_line_length_mm,
+            merge_angle_tolerance_deg: config.topology.merge_angle_tolerance_deg,
+            max_gap_bridge_length_mm: config.topology.max_gap_bridge_length_mm,
+            algorithm: config.topology.algorithm,
+            skip_intersection_check: config.topology.skip_intersection_check,
+            enable_parallel: config.topology.enable_parallel,
+            parallel_threshold: config.topology.parallel_threshold,
+        },
+        validator: ValidatorConfig {
+            closure_tolerance_mm: config.validator.closure_tolerance_mm,
+            min_area_m2: config.validator.min_area_m2,
+            min_edge_length_mm: config.validator.min_edge_length_mm,
+            min_angle_deg: config.validator.min_angle_deg,
+        },
+        export: ExportConfig {
+            format: config.export.format,
+            json_indent: config.export.json_indent as u8,
+            auto_validate: config.export.auto_validate,
+        },
+        vectorize: Some(VectorizeProfileConfig {
+            adaptive_threshold: true,
+            skeletonize: true,
+            text_separation: true,
+            quality_assessment: true,
+            denoise: true,
+            enhance_contrast: true,
+        }),
     }
 }
 
@@ -691,6 +790,7 @@ async fn process_handler_v1(
                     MAX_UPLOAD_SIZE_MB
                 );
                 return Ok(Json(ProcessResponse {
+                    schema_version: default_process_schema_version(),
                     job_id: uuid_simple(),
                     status: ProcessStatus::Failed,
                     message: format!("文件过大，最大支持 {} MB", MAX_UPLOAD_SIZE_MB),
@@ -702,6 +802,8 @@ async fn process_handler_v1(
                     )],
                     edges: None,
                     hatches: None, // P0-4 修复：添加 hatches 字段
+                    raster_report: None,
+                    semantic_candidates: Vec::new(),
                 }));
             }
 
@@ -722,16 +824,19 @@ async fn process_handler_v1(
     if detected_type == FileType::Unknown {
         tracing::warn!("⚠️ 无法识别文件类型，文件名：{:?}", file_name);
         return Ok(Json(ProcessResponse {
+            schema_version: default_process_schema_version(),
             job_id: uuid_simple(),
             status: ProcessStatus::Failed,
             message: "不支持的文件格式".to_string(),
             result: None,
             errors: vec![format!(
-                "无法识别文件类型，请上传 DXF 或 PDF 文件（文件名：{:?}）",
+                "无法识别文件类型，请上传 DXF、PDF 或 PNG/JPG/BMP/TIFF/WebP 文件（文件名：{:?}）",
                 file_name
             )],
             edges: None,
             hatches: None, // P0-4 修复：添加 hatches 字段
+            raster_report: None,
+            semantic_candidates: Vec::new(),
         }));
     }
 
@@ -789,64 +894,14 @@ async fn process_handler_v1(
                     StatusCode::INTERNAL_SERVER_ERROR
                 })?
         }
-        FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff => {
+        FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff | FileType::WebP => {
             // 光栅图片直接走矢量化管线，不走 Parser
             tracing::info!("  光栅图片矢量化处理...");
-            return match state.pipeline.process_raster_file(&temp_path).await {
-                Ok(process_result) => {
-                    let topo_edges = scene_to_edges(&process_result.scene);
-                    let new_interact = InteractionService::new(topo_edges.clone());
-                    *state.interact.lock().await = new_interact;
-
-                    Ok(Json(ProcessResponse {
-                        job_id: uuid_simple(),
-                        status: ProcessStatus::Completed,
-                        message: format!("光栅矢量化完成，提取 {} 条边", topo_edges.len()),
-                        result: Some(ProcessResult {
-                            scene_summary: SceneSummary {
-                                outer_boundaries: process_result
-                                    .scene
-                                    .outer
-                                    .as_ref()
-                                    .map_or(0, |_| 1),
-                                holes: process_result.scene.holes.len(),
-                                total_points: process_result
-                                    .scene
-                                    .outer
-                                    .as_ref()
-                                    .map_or(0, |o| o.points.len())
-                                    + process_result
-                                        .scene
-                                        .holes
-                                        .iter()
-                                        .map(|h| h.points.len())
-                                        .sum::<usize>(),
-                            },
-                            validation_summary: ValidationSummary {
-                                error_count: process_result.validation.summary.error_count,
-                                warning_count: process_result.validation.summary.warning_count,
-                                passed: process_result.validation.passed,
-                            },
-                            output_size: process_result.output_bytes.len(),
-                        }),
-                        errors: vec![],
-                        edges: Some(topo_edges),
-                        hatches: None,
-                    }))
-                }
-                Err(e) => {
-                    tracing::error!("❌ 光栅矢量化失败：{}", e);
-                    Ok(Json(ProcessResponse {
-                        job_id: uuid_simple(),
-                        status: ProcessStatus::Failed,
-                        message: format!("矢量化失败：{}", e),
-                        result: None,
-                        errors: vec![e.to_string()],
-                        edges: None,
-                        hatches: None,
-                    }))
-                }
-            };
+            let response =
+                process_raster_temp_file(&state, &temp_path, RasterProcessingOptions::default())
+                    .await;
+            let _ = std::fs::remove_file(&temp_path);
+            return Ok(Json(response));
         }
         FileType::Unknown => {
             // 已经在上面处理过，这里不会到达
@@ -913,6 +968,7 @@ async fn process_handler_v1(
 
     // 立即返回阶段 1 的结果
     Ok(Json(ProcessResponse {
+        schema_version: default_process_schema_version(),
         job_id: job_id.clone(),
         status: ProcessStatus::Completed,
         message: format!(
@@ -935,6 +991,8 @@ async fn process_handler_v1(
         errors: vec![],
         edges: Some(edges),
         hatches: Some(hatches), // P0-4 新增：返回 HATCH 数据
+        raster_report: None,
+        semantic_candidates: Vec::new(),
     }))
 }
 
@@ -947,6 +1005,7 @@ enum FileType {
     Jpeg,
     Bmp,
     Tiff,
+    WebP,
     Unknown,
 }
 
@@ -956,7 +1015,7 @@ impl FileType {
     fn is_raster(self) -> bool {
         matches!(
             self,
-            FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff
+            FileType::Png | FileType::Jpeg | FileType::Bmp | FileType::Tiff | FileType::WebP
         )
     }
 }
@@ -978,6 +1037,7 @@ fn detect_file_type(data: &[u8], file_name: Option<&str>) -> FileType {
             "jpg" | "jpeg" => return FileType::Jpeg,
             "bmp" => return FileType::Bmp,
             "tif" | "tiff" => return FileType::Tiff,
+            "webp" => return FileType::WebP,
             _ => {}
         }
     }
@@ -1003,6 +1063,10 @@ fn detect_file_type(data: &[u8], file_name: Option<&str>) -> FileType {
         // TIFF BE: 4D 4D 00 2A
         if data.starts_with(&[0x4D, 0x4D, 0x00, 0x2A]) {
             return FileType::Tiff;
+        }
+        // WebP: RIFF .... WEBP
+        if data.len() >= 12 && data.starts_with(b"RIFF") && &data[8..12] == b"WEBP" {
+            return FileType::WebP;
         }
     }
 
@@ -1034,6 +1098,24 @@ fn uuid_simple() -> String {
     format!("job-{}", Uuid::new_v4().to_string().replace('-', ""))
 }
 
+fn parse_bool(value: &str) -> bool {
+    matches!(
+        value.trim().to_ascii_lowercase().as_str(),
+        "1" | "true" | "yes" | "on"
+    )
+}
+
+fn parse_pair(value: &str) -> Option<(f64, f64)> {
+    let normalized = value.replace(['x', ';'], ",");
+    let mut parts = normalized.split(',').map(str::trim);
+    let x = parts.next()?.parse::<f64>().ok()?;
+    let y = parts
+        .next()
+        .and_then(|part| part.parse::<f64>().ok())
+        .unwrap_or(x);
+    Some((x, y))
+}
+
 /// 将 FileType 转换为文件扩展名
 fn file_type_extension(file_type: &FileType) -> &'static str {
     match file_type {
@@ -1043,7 +1125,249 @@ fn file_type_extension(file_type: &FileType) -> &'static str {
         FileType::Jpeg => "jpg",
         FileType::Bmp => "bmp",
         FileType::Tiff => "tiff",
+        FileType::WebP => "webp",
         FileType::Unknown => "unknown",
+    }
+}
+
+async fn process_raster_handler(
+    State(state): State<ApiState>,
+    mut multipart: Multipart,
+) -> Result<Json<ProcessResponse>, StatusCode> {
+    use std::fs::File;
+    use std::io::Write;
+    use std::path::PathBuf;
+
+    let mut file_data: Option<Vec<u8>> = None;
+    let mut file_name: Option<String> = None;
+    let mut options = RasterProcessingOptions::default();
+
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        tracing::error!("❌ 解析 multipart 表单失败：{}", e);
+        StatusCode::BAD_REQUEST
+    })? {
+        let name = field.name().unwrap_or("unknown").to_string();
+        match name.as_str() {
+            "file" => {
+                file_name = field.file_name().map(String::from);
+                let bytes = field.bytes().await.map_err(|e| {
+                    tracing::error!("❌ 读取文件数据失败：{}", e);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })?;
+
+                if bytes.len() > MAX_UPLOAD_SIZE_MB * 1024 * 1024 {
+                    return Ok(Json(ProcessResponse {
+                        schema_version: default_process_schema_version(),
+                        job_id: uuid_simple(),
+                        status: ProcessStatus::Failed,
+                        message: format!("文件过大，最大支持 {} MB", MAX_UPLOAD_SIZE_MB),
+                        result: None,
+                        errors: vec![format!(
+                            "文件大小 {:.2} MB 超过限制 {} MB",
+                            bytes.len() as f64 / (1024.0 * 1024.0),
+                            MAX_UPLOAD_SIZE_MB
+                        )],
+                        edges: None,
+                        hatches: None,
+                        raster_report: None,
+                        semantic_candidates: Vec::new(),
+                    }));
+                }
+
+                file_data = Some(bytes.to_vec());
+            }
+            "strategy" | "raster_strategy" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                options.strategy = value.parse::<RasterStrategy>().ok();
+            }
+            "dpi_override" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                options.dpi_override = parse_pair(&value);
+            }
+            "dpi_x" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                if let Ok(dpi_x) = value.parse::<f64>() {
+                    let (_, dpi_y) = options.dpi_override.unwrap_or((dpi_x, dpi_x));
+                    options.dpi_override = Some((dpi_x, dpi_y));
+                }
+            }
+            "dpi_y" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                if let Ok(dpi_y) = value.parse::<f64>() {
+                    let (dpi_x, _) = options.dpi_override.unwrap_or((dpi_y, dpi_y));
+                    options.dpi_override = Some((dpi_x, dpi_y));
+                }
+            }
+            "known_distance_px" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                if let Ok(px) = value.parse::<f64>() {
+                    let known_mm = options
+                        .scale_calibration
+                        .as_ref()
+                        .map(|c| c.known_distance_mm)
+                        .unwrap_or(0.0);
+                    options.scale_calibration = Some(ScaleCalibration {
+                        known_distance_px: px,
+                        known_distance_mm: known_mm,
+                        points_px: None,
+                    });
+                }
+            }
+            "known_distance_mm" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                if let Ok(mm) = value.parse::<f64>() {
+                    let known_px = options
+                        .scale_calibration
+                        .as_ref()
+                        .map(|c| c.known_distance_px)
+                        .unwrap_or(0.0);
+                    options.scale_calibration = Some(ScaleCalibration {
+                        known_distance_px: known_px,
+                        known_distance_mm: mm,
+                        points_px: None,
+                    });
+                }
+            }
+            "debug_artifacts" | "debug" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                options.debug_artifacts = parse_bool(&value);
+            }
+            "semantic_mode" => {
+                options.semantic_mode =
+                    Some(field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?);
+            }
+            "ocr_backend" => {
+                options.ocr_backend =
+                    Some(field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?);
+            }
+            "max_retries" => {
+                let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                options.max_retries = value.parse::<usize>().ok();
+            }
+            _ => {}
+        }
+    }
+
+    let file_data = file_data.ok_or_else(|| {
+        tracing::warn!("⚠️ /process/raster 请求中未找到文件字段");
+        StatusCode::BAD_REQUEST
+    })?;
+
+    let detected_type = detect_file_type(&file_data, file_name.as_deref());
+    if !detected_type.is_raster() {
+        return Ok(Json(ProcessResponse {
+            schema_version: default_process_schema_version(),
+            job_id: uuid_simple(),
+            status: ProcessStatus::Failed,
+            message: "不支持的光栅图片格式".to_string(),
+            result: None,
+            errors: vec![format!(
+                "/process/raster 仅支持 PNG/JPG/BMP/TIFF/WebP，检测到：{:?}",
+                detected_type
+            )],
+            edges: None,
+            hatches: None,
+            raster_report: None,
+            semantic_candidates: Vec::new(),
+        }));
+    }
+
+    let temp_file_name = format!(
+        "cad_raster_{}_{}.{}",
+        std::process::id(),
+        uuid_simple(),
+        file_type_extension(&detected_type)
+    );
+    let temp_path: PathBuf = std::env::temp_dir().join(temp_file_name);
+
+    let mut temp_file = File::create(&temp_path).map_err(|e| {
+        tracing::error!("❌ 创建临时文件失败：{}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    temp_file.write_all(&file_data).map_err(|e| {
+        tracing::error!("❌ 写入临时文件失败：{}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+    drop(temp_file);
+
+    let response = process_raster_temp_file(&state, &temp_path, options).await;
+    let _ = std::fs::remove_file(&temp_path);
+
+    Ok(Json(response))
+}
+
+async fn process_raster_temp_file(
+    state: &ApiState,
+    temp_path: &std::path::Path,
+    options: RasterProcessingOptions,
+) -> ProcessResponse {
+    match state
+        .pipeline
+        .process_raster_file_with_options(temp_path, options)
+        .await
+    {
+        Ok(process_result) => {
+            let topo_edges = scene_to_edges(&process_result.scene);
+            let mut new_interact = InteractionService::new(topo_edges.clone());
+            new_interact.set_scene_state(process_result.scene.clone());
+            new_interact.get_state_mut().topology_ready = true;
+            *state.interact.lock().await = new_interact;
+
+            ProcessResponse {
+                schema_version: default_process_schema_version(),
+                job_id: uuid_simple(),
+                status: ProcessStatus::Completed,
+                message: format!("光栅矢量化完成，提取 {} 条边", topo_edges.len()),
+                result: Some(ProcessResult {
+                    scene_summary: SceneSummary {
+                        outer_boundaries: process_result.scene.outer.as_ref().map_or(0, |_| 1),
+                        holes: process_result.scene.holes.len(),
+                        total_points: process_result
+                            .scene
+                            .outer
+                            .as_ref()
+                            .map_or(0, |o| o.points.len())
+                            + process_result
+                                .scene
+                                .holes
+                                .iter()
+                                .map(|h| h.points.len())
+                                .sum::<usize>(),
+                    },
+                    validation_summary: ValidationSummary {
+                        error_count: process_result.validation.summary.error_count,
+                        warning_count: process_result.validation.summary.warning_count,
+                        passed: process_result.validation.passed,
+                    },
+                    output_size: process_result.output_bytes.len(),
+                }),
+                errors: vec![],
+                edges: Some(topo_edges),
+                hatches: None,
+                raster_report: process_result.raster_report,
+                semantic_candidates: process_result.semantic_candidates,
+            }
+        }
+        Err(e) => {
+            tracing::error!("❌ 光栅矢量化失败：{}", e);
+            ProcessResponse {
+                schema_version: default_process_schema_version(),
+                job_id: uuid_simple(),
+                status: ProcessStatus::Failed,
+                message: format!("矢量化失败：{}", e),
+                result: None,
+                errors: vec![e.to_string()],
+                edges: None,
+                hatches: None,
+                raster_report: Some(RasterVectorizationReport::failed(
+                    0,
+                    0,
+                    "raster_pipeline_failed",
+                    e.to_string(),
+                )),
+                semantic_candidates: Vec::new(),
+            }
+        }
     }
 }
 
@@ -1565,9 +1889,38 @@ fn entities_to_hatches(entities: &[common_types::RawEntity]) -> Vec<HatchEntity>
 #[cfg(test)]
 mod tests {
     use super::*;
-    use axum::body::Body;
+    use axum::body::{to_bytes, Body};
     use http::Request;
+    use image::DynamicImage;
+    use std::io::Cursor;
     use tower::util::ServiceExt;
+    use vectorize::test_data::{generate_test_image, DrawingType, QualityConfig};
+
+    fn make_test_png() -> Vec<u8> {
+        let img = generate_test_image(
+            DrawingType::Architectural,
+            &QualityConfig::default(),
+            256,
+            256,
+        );
+        let mut cursor = Cursor::new(Vec::new());
+        DynamicImage::ImageLuma8(img)
+            .write_to(&mut cursor, image::ImageFormat::Png)
+            .unwrap();
+        cursor.into_inner()
+    }
+
+    fn multipart_png_body(boundary: &str, png: &[u8]) -> Vec<u8> {
+        let mut body = Vec::new();
+        body.extend_from_slice(format!("--{}\r\n", boundary).as_bytes());
+        body.extend_from_slice(
+            b"Content-Disposition: form-data; name=\"file\"; filename=\"square.png\"\r\n",
+        );
+        body.extend_from_slice(b"Content-Type: image/png\r\n\r\n");
+        body.extend_from_slice(png);
+        body.extend_from_slice(format!("\r\n--{}--\r\n", boundary).as_bytes());
+        body
+    }
 
     #[tokio::test]
     async fn test_health_endpoint() {
@@ -1662,6 +2015,54 @@ mod tests {
         assert_eq!(detect_file_type(data, Some("photo.jpg")), FileType::Jpeg);
         assert_eq!(detect_file_type(data, Some("scan.bmp")), FileType::Bmp);
         assert_eq!(detect_file_type(data, Some("image.tiff")), FileType::Tiff);
+    }
+
+    #[test]
+    fn test_detect_file_type_webp_magic() {
+        let mut data = vec![0u8; 12];
+        data[0..4].copy_from_slice(b"RIFF");
+        data[8..12].copy_from_slice(b"WEBP");
+        assert_eq!(detect_file_type(&data, None), FileType::WebP);
+    }
+
+    #[tokio::test]
+    async fn test_process_raster_endpoint_upload_png() {
+        use interact::InteractionService;
+        use std::sync::Arc;
+        use tokio::sync::Mutex;
+
+        let state = ApiState {
+            pipeline: ProcessingPipeline::new(),
+            interact: Arc::new(Mutex::new(InteractionService::new(vec![]))),
+        };
+        let app = create_router().with_state(state);
+        let boundary = "CADBOUNDARY";
+        let body = multipart_png_body(boundary, &make_test_png());
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method("POST")
+                    .uri("/process/raster")
+                    .header(
+                        "content-type",
+                        format!("multipart/form-data; boundary={}", boundary),
+                    )
+                    .body(Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), 200);
+        let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+        let payload: ProcessResponse = serde_json::from_slice(&body).unwrap();
+        assert_eq!(payload.status, ProcessStatus::Completed);
+        assert!(payload.result.is_some());
+        assert!(payload
+            .edges
+            .as_ref()
+            .is_some_and(|edges| !edges.is_empty()));
     }
 }
 

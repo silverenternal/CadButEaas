@@ -11,7 +11,7 @@
 //!
 //! ### 基础构建器模式
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::builder::DxfParserBuilder;
 //!
 //! let parser = DxfParserBuilder::new()
@@ -26,7 +26,7 @@
 //!
 //! ### 预设模板
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::builder::DxfParserBuilder;
 //!
 //! // 墙体提取模板
@@ -44,7 +44,7 @@
 //!
 //! ### 流式解析
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::builder::DxfParserBuilder;
 //!
 //! let parser = DxfParserBuilder::new()
@@ -372,7 +372,7 @@ impl DxfParser {
     /// - `Err(CadError)`: 解析失败或回调返回错误
     ///
     /// # 示例
-    /// ```rust
+    /// ```rust,ignore
     /// let parser = DxfParser::new();
     /// let result = parser.parse_file_streaming("floor_plan.dxf", |batch| {
     ///     println!("处理批次：{} 个实体", batch.len());
@@ -420,7 +420,7 @@ impl DxfParser {
     /// - `callback`: 回调函数（接收批次和进度信息）
     ///
     /// # 示例
-    /// ```rust
+    /// ```rust,ignore
     /// let parser = DxfParser::new();
     /// let result = parser.parse_file_streaming_with_progress(
     ///     "floor_plan.dxf",

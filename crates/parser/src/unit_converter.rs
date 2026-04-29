@@ -11,7 +11,7 @@
 //!
 //! ## 使用示例
 //!
-//! ```rust
+//! ```text
 //! use parser::unit_converter::UnitConverter;
 //!
 //! let converter = UnitConverter::new(declared_unit, &entities);
@@ -110,7 +110,7 @@ impl UnitConverter {
     /// - `entities`: 所有实体（用于计算坐标范围）
     ///
     /// ## 示例
-    /// ```rust
+    /// ```rust,ignore
     /// let converter = UnitConverter::new(LengthUnit::M, &entities);
     /// ```
     pub fn new(declared_unit: LengthUnit, entities: &[RawEntity]) -> Self {

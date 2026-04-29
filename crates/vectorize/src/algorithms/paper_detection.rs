@@ -11,9 +11,11 @@
 //! 5. 如果近似四边形，检测四个角点进行裁剪
 //! 6. 如果检测失败，返回原图（安全 fallback）
 
-use image::GrayImage;
-use common_types::Point2;
 use crate::algorithms::douglas_peucker;
+use common_types::Point2;
+use image::GrayImage;
+
+type ComponentBBoxes = Vec<(u32, u32, u32, u32)>;
 
 /// 检测结果 - 纸张区域
 #[derive(Debug, Clone)]
@@ -38,7 +40,13 @@ pub fn detect_and_crop(gray: &GrayImage) -> GrayImage {
         Some(region) => {
             // 如果置信度足够高，进行裁剪
             if region.confidence > 0.5 {
-                crop_to_bbox(gray, region.bbox.0, region.bbox.1, region.bbox.2, region.bbox.3)
+                crop_to_bbox(
+                    gray,
+                    region.bbox.0,
+                    region.bbox.1,
+                    region.bbox.2,
+                    region.bbox.3,
+                )
             } else {
                 gray.clone()
             }
@@ -134,7 +142,7 @@ pub fn detect_paper(gray: &GrayImage) -> Option<PaperRegion> {
 }
 
 /// 查找连通分量（两遍算法）
-fn find_connected_components(binary: &GrayImage) -> (Vec<usize>, Vec<(u32, u32, u32, u32)>) {
+fn find_connected_components(binary: &GrayImage) -> (Vec<usize>, ComponentBBoxes) {
     let (width, height) = binary.dimensions();
     let mut labels = vec![0u32; (width * height) as usize];
     let mut next_label = 1u32;
@@ -366,13 +374,7 @@ fn calculate_bbox_confidence(area_ratio: f64, width: f64, height: f64) -> f64 {
 }
 
 /// 裁剪图像到指定 bounding box
-fn crop_to_bbox(
-    image: &GrayImage,
-    xmin: u32,
-    ymin: u32,
-    xmax: u32,
-    ymax: u32,
-) -> GrayImage {
+fn crop_to_bbox(image: &GrayImage, xmin: u32, ymin: u32, xmax: u32, ymax: u32) -> GrayImage {
     let new_width = xmax - xmin + 1;
     let new_height = ymax - ymin + 1;
 
@@ -390,7 +392,11 @@ fn crop_to_bbox(
     // 添加轻微的边缘padding，避免裁掉线条
     // 如果padding超出范围就保持原样
     const PADDING: u32 = 2;
-    if xmin >= PADDING && ymin >= PADDING && xmax + PADDING < image.width() && ymax + PADDING < image.height() {
+    if xmin >= PADDING
+        && ymin >= PADDING
+        && xmax + PADDING < image.width()
+        && ymax + PADDING < image.height()
+    {
         // 已经在上面分配了正确大小，如果要padding需要重新分配
         // 简化起见，这里不处理，用户可以后续再处理
     }
@@ -436,7 +442,7 @@ mod tests {
         let mut img = GrayImage::new(100, 100);
         for y in 0..100 {
             for x in 0..100 {
-                if x < 10 || x >= 90 || y < 10 || y >= 90 {
+                if !(10..90).contains(&x) || !(10..90).contains(&y) {
                     img.put_pixel(x, y, Luma([0])); // 黑色背景边框
                 } else {
                     img.put_pixel(x, y, Luma([255])); // 白色纸张
@@ -469,12 +475,7 @@ mod tests {
 
     #[test]
     fn test_order_corners() {
-        let corners = [
-            [10.0, 10.0],
-            [90.0, 10.0],
-            [90.0, 90.0],
-            [10.0, 90.0],
-        ];
+        let corners = [[10.0, 10.0], [90.0, 10.0], [90.0, 90.0], [10.0, 90.0]];
         let ordered = order_corners(&corners);
         // 顺序应该不变，已经正确
         assert!((ordered[0][0] - 10.0).abs() < 0.1);

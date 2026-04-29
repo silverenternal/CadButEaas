@@ -11,7 +11,9 @@ accelerator-api = { path = "../accelerator-api" }
 accelerator-cpu = { path = "../accelerator-cpu" }
 accelerator-registry = { path = "../accelerator-registry", optional = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 image = { workspace = true }
+base64 = "0.22"
 thiserror = { workspace = true }
 rstar = { workspace = true }
 approx = { workspace = true }
@@ -23,6 +25,8 @@ log = "0.4"
 # OpenCV 支持（需要系统安装 OpenCV 4.x）
 opencv = { workspace = true, optional = true }
 pollster = "0.4.0"
+fastrand = "2.4.1"
+regex = "1.10"
 
 [features]
 # P11 v5.0 修复：OpenCV 默认禁用，避免 CI/CD 环境配置问题

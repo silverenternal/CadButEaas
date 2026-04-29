@@ -64,6 +64,8 @@ type BucketKey = (i64, i64);
 /// 分桶值（点索引列表）
 type BucketValue = Vec<usize>;
 
+type ExactDedupChunk = (Vec<(i64, i64)>, Vec<Point2>, Vec<usize>);
+
 // ============================================================================
 // P1-4: 并行端点吸附
 // ============================================================================
@@ -856,7 +858,7 @@ pub(crate) fn exact_dedup_parallel(points: &[Point2]) -> (Vec<Point2>, Vec<usize
 
     // 第一步：并行分块去重
     let chunk_size = points.len().div_ceil(rayon::current_num_threads());
-    let chunk_results: Vec<(Vec<(i64, i64)>, Vec<Point2>, Vec<usize>)> = points
+    let chunk_results: Vec<ExactDedupChunk> = points
         .par_chunks(chunk_size.max(1))
         .map(|chunk| {
             let mut local_map: std::collections::HashMap<(i64, i64), usize> =
@@ -949,9 +951,9 @@ mod tests {
             .map(|i| [(i as f64 * 0.1) % 10000.0, (i as f64 * 0.07) % 10000.0])
             .collect();
         // Each unique point appears exactly twice
-        for i in 0..unique_count {
-            points.push(base[i]);
-            points.push(base[i]);
+        for point in base.iter().take(unique_count) {
+            points.push(*point);
+            points.push(*point);
         }
 
         println!("\n=== 2.37M 点精确去重时间分解 ===");

@@ -37,8 +37,7 @@
 //! index.insert(0, entity);
 //!
 //! // 视口查询
-//! let viewport = ([0.0, 0.0], [100.0, 100.0]);
-//! let visible: Vec<_> = index.query_viewport(viewport).collect();
+//! let visible = index.query_viewport([0.0, 0.0], [100.0, 100.0]);
 //! ```
 
 use common_types::{orient2d, Orientation, Point2};

@@ -15,10 +15,7 @@ use log::debug;
 /// 2. 将接近主峰角度的线段旋转对齐到精确角度
 ///
 /// 容差：角度偏差小于 `tolerance_deg` 才会被校正
-pub fn orthogonality_correction(
-    polylines: &mut [Polyline],
-    tolerance_deg: f64,
-) {
+pub fn orthogonality_correction(polylines: &mut [Polyline], tolerance_deg: f64) {
     let tolerance_rad = tolerance_deg.to_radians();
 
     // 统计所有线段的角度直方图
@@ -175,7 +172,7 @@ fn find_peaks(histogram: &[usize; 180], window: usize) -> Vec<(usize, usize)> {
     }
 
     // 按票数降序排序
-    peaks.sort_by(|a, b| b.1.cmp(&a.1));
+    peaks.sort_by_key(|p| std::cmp::Reverse(p.1));
     peaks
 }
 
@@ -238,11 +235,7 @@ pub fn parallel_uniform_spacing(
 }
 
 /// 对一组平行线进行均匀间距校正
-fn correct_group_parallel_spacing(
-    group: &[usize],
-    polylines: &mut [Polyline],
-    tolerance: f64,
-) {
+fn correct_group_parallel_spacing(group: &[usize], polylines: &mut [Polyline], tolerance: f64) {
     // 计算每条线的平均位置（沿垂直方向）
     // 对于平行线，我们将它们投影到垂直方向，排序
     let mut positions: Vec<(f64, usize)> = group
@@ -433,11 +426,7 @@ fn collect_endpoints(polylines: &[Polyline]) -> Vec<EndpointInfo> {
 /// 尝试闭合开放的轮廓
 /// 找出接近的端点可以连接形成闭合房间轮廓
 /// 对于建筑图纸，墙线应该闭合形成房间
-pub fn close_open_contours(
-    polylines: &mut Vec<Polyline>,
-    max_gap: f64,
-    max_angle_deg: f64,
-) {
+pub fn close_open_contours(polylines: &mut Vec<Polyline>, max_gap: f64, max_angle_deg: f64) {
     let max_angle = max_angle_deg.to_radians();
     let endpoints = collect_endpoints(polylines);
 
@@ -464,7 +453,9 @@ pub fn close_open_contours(
             }
 
             // 闭合轮廓：两个端点方向应该接近相反（指向对方）
-            let angle_cos = (ep_a.direction[0] * ep_b.direction[0] + ep_a.direction[1] * ep_b.direction[1]).abs();
+            let angle_cos = (ep_a.direction[0] * ep_b.direction[0]
+                + ep_a.direction[1] * ep_b.direction[1])
+                .abs();
             // cos 接近 1 说明方向相反
             if (angle_cos - 1.0).abs() < max_angle.sin() {
                 union_find.union(ep_a.polyline_idx, ep_b.polyline_idx);
@@ -477,12 +468,15 @@ pub fn close_open_contours(
         return;
     }
 
-    debug!("close_open_contours: 尝试连接 {} 对端点闭合轮廓", connections.len());
+    debug!(
+        "close_open_contours: 尝试连接 {} 对端点闭合轮廓",
+        connections.len()
+    );
 
     // 合并连接的多段线，闭合轮廓
     // 需要特殊处理可变借用，我们从后往前处理保证索引不失效
     let mut sorted_connections = connections;
-    sorted_connections.sort_by(|a, b| b.0.cmp(&a.0));
+    sorted_connections.sort_by_key(|c| std::cmp::Reverse(c.0));
 
     for (idx_a, idx_b) in sorted_connections {
         if polylines[idx_a].len() >= 2 && polylines[idx_b].len() >= 2 {
@@ -594,7 +588,7 @@ mod tests {
     fn test_orthogonality_correction() {
         // 两条近似正交线段，稍微有点偏差
         let mut polylines = vec![
-            vec![[0.0, 1.0], [100.0, 2.0]], // 近似水平 (0.57 度，接近 0)
+            vec![[0.0, 1.0], [100.0, 2.0]],   // 近似水平 (0.57 度，接近 0)
             vec![[50.0, 0.0], [51.0, 100.0]], // 近似垂直，89.4 度接近 90
         ];
 
@@ -614,7 +608,7 @@ mod tests {
         // 三条近似平行水平线，间距不均匀
         // 间距 10 和 18 → 平均 14 → 误差 (10-14)= -4, (18-14)= +4 → 相对误差 4/14 ≈ 0.28 > 0.15 → 需要校正
         let mut polylines = vec![
-            vec![[0.0, 0.0], [100.0, 0.5]], // y ~ 0.25
+            vec![[0.0, 0.0], [100.0, 0.5]],   // y ~ 0.25
             vec![[0.0, 10.0], [100.0, 10.3]], // y ~ 10.15
             vec![[0.0, 28.0], [100.0, 27.8]], // y ~ 27.9
         ];

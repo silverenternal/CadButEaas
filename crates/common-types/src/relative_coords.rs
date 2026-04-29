@@ -550,6 +550,7 @@ impl RelativeSceneState {
             boundaries: Vec::new(), // 需要时从 edges 重建
             sources: Vec::new(),
             edges,
+            raster_metadata: None,
             units: LengthUnit::Mm,
             coordinate_system: CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(),
@@ -852,6 +853,7 @@ mod tests {
                 layer: Some("WALL".into()),
                 color_index: None,
             }],
+            raster_metadata: None,
             units: crate::scene::LengthUnit::M,
             coordinate_system: crate::scene::CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(),

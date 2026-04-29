@@ -7,6 +7,17 @@
 
 ## 📊 当前状态
 
+### 🔥 焚诀循环（2026-04-29 — PNG/JPG 光栅图纸几何语义提取）
+
+| 优化项 | 状态 | 说明 |
+|--------|------|------|
+| raster-loader 光栅加载层 | ✅ | 支持 PNG/JPG/BMP/TIFF/WebP 等格式检测、加载、DPI 元数据、大小限制与预处理模块 |
+| ProcessingPipeline 光栅入口 | ✅ | 新增 `process_raster_file` / `process_raster_bytes`，光栅图片直接进入 Vectorize → Topo → Validator → Export |
+| HTTP API 光栅集成 | ✅ | `/process` 自动识别光栅图片，新增专用 `/process/raster` 上传端点 |
+| `photo_sketch` 预设 | ✅ | API、配置层、CLI 文案均支持照片/手绘草图场景 |
+| CLI 光栅处理 | ✅ | `cad process input.png --profile photo_sketch` 通过 pipeline 自动路由光栅处理 |
+| 测试覆盖 | ✅ | 新增 raster-loader 有效/无效/大文件/一致性测试、orchestrator 光栅端到端测试、API 上传测试 |
+
 ### ✅ 已完成 (v0.1.0)
 
 | 模块 | 状态 | 测试 | 说明 |

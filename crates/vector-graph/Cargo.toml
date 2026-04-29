@@ -1,0 +1,31 @@
+[package]
+name = "vector-graph"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+common-types = { path = "../common-types" }
+vectorize = { path = "../vectorize" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+petgraph = "0.6"
+geo = { workspace = true }
+nalgebra = { workspace = true }
+rand = "0.8"
+log = "0.4"
+
+# PyTorch Rust bindings (tch 0.23 兼容 libtorch 2.10)
+tch = { version = "0.23", optional = true }
+
+[features]
+# 启用 PyTorch 支持（需要系统安装 libtorch）
+default = []
+pytorch = ["dep:tch"]
+
+[[bin]]
+name = "train_gnn"
+path = "src/bin/train_gnn.rs"
+required-features = ["pytorch"]

@@ -1,0 +1,511 @@
+{
+  "project": "CadButEaas - Raster Drawing Intelligence",
+  "vision": "从无集合语义的光栅图纸（PNG/JPG/BMP等）中提取高精度几何信息与语义信息，达到工业级CAD矢量化能力",
+  "strategy": "Vector-First 架构：传统CV矢量化 → 图表示构建 → GNN语义识别 → 混合精度验证",
+  "milestones": [
+    {
+      "id": "M0",
+      "name": "光栅矢量化基准能力构建",
+      "deadline": "2026-05-15",
+      "status": "completed",
+      "priority": "critical",
+      "tasks": [
+        {
+          "id": "T001",
+          "name": "增强 raster-loader：多格式支持 + EXIF/色彩空间处理",
+          "description": "支持TIFF/WebP/PBM/GIF/ICO/Farbfeld/XBM/HDR/TGA，处理扫描图纸的色彩畸变、对比度归一化",
+          "assignee": "vectorize-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "2d",
+          "dependencies": [],
+          "acceptance_criteria": [
+            "✓ crates/raster-loader 支持14种格式 (PNG, JPG, BMP, TIFF, WebP, PBM, PGM, PPM, GIF, ICO, Farbfeld, XBM, HDR, TGA)",
+            "✓ 自动对比度/二值化预处理 pipeline 可用",
+            "✓ 预处理支持：阴影去除、中值去噪、对比度拉伸、边缘锐化",
+            "✓ EXIF DPI 自动提取"
+          ]
+        },
+        {
+          "id": "T002",
+          "name": "矢量化算法重构：模块化 pipeline 设计",
+          "description": "将 vectorize crate 重构为可插拔的多阶段 pipeline",
+          "assignee": "vectorize-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T001"],
+          "module": "crates/vectorize",
+          "acceptance_criteria": [
+            "✓ Pipeline: Preprocess → Threshold → Skeletonize → Trace → Fit → Refine",
+            "✓ 每个阶段为独立 trait，可替换算法实现",
+            "✓ 支持多种矢量化策略：传统CV / 深度学习辅助 / 混合"
+          ]
+        },
+        {
+          "id": "T003",
+          "name": "实现 Zhang-Suen 骨架化 + 亚像素精度",
+          "description": "当前细化算法的精度增强版本，支持亚像素定位",
+          "assignee": "vectorize-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "2d",
+          "dependencies": ["T002"],
+          "acceptance_criteria": [
+            "✓ Zhang-Suen 骨架化算法，保证 1px 宽度骨架",
+            "✓ 启用去毛刺后处理 (de-spur)，无毛刺",
+            "✓ 亚像素精度边缘定位 (质心法 refine_subpixel)",
+            "✓ 保留T型交叉、X型交叉拓扑结构",
+            "✓ 支持 Guo-Hall 算法备选"
+          ]
+        },
+        {
+          "id": "T004",
+          "name": "智能轨迹追踪算法：图遍历 + 交点分类",
+          "description": "从骨架构建拓扑图，区分端点/L型/T型/X型交点",
+          "assignee": "vectorize-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T003"],
+          "acceptance_criteria": [
+            "✓ 自动检测交点类型（端点/L/T/X/多化合价）",
+            "✓ 基于广度优先的 strokes 提取",
+            "✓ 亚像素交点定位（质心法）",
+            "✓ 支持闭环（closed loop）检测"
+          ]
+        },
+        {
+          "id": "T005",
+          "name": "基元拟合引擎：直线 + 圆弧 + 贝塞尔曲线",
+          "description": "支持多种几何基元拟合，自动选择最优拟合类型",
+          "assignee": "vectorize-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T004"],
+          "acceptance_criteria": [
+            "直线：Theil-Sen + RANSAC 鲁棒拟合",
+            "圆弧：Kåsa 算法 + Levenberg-Marquardt 优化",
+            "三次贝塞尔：端点切向约束拟合",
+            "AIC/BIC 自动选择基元类型"
+          ]
+        },
+        {
+          "id": "T006",
+          "name": "基准测试集：200张各类工程图纸",
+          "description": "构建涵盖建筑/机械/电子各领域的矢量化测试集",
+          "assignee": "qa-team",
+          "status": "completed",
+          "priority": "medium",
+          "estimation": "2d",
+          "dependencies": [],
+          "acceptance_criteria": [
+            "50张建筑平面图",
+            "50张机械零件图",
+            "50张电路图",
+            "50张手绘图/低质量扫描件",
+            "每张有 ground truth SVG 标注"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "name": "图神经网络语义识别引擎",
+      "deadline": "2026-05-30",
+      "status": "completed",
+      "priority": "critical",
+      "tasks": [
+        {
+          "id": "T101",
+          "name": "Vector-Graph 表示层：几何特征描述子设计",
+          "description": "将矢量化结果转化为 GNN 可处理的图数据结构",
+          "assignee": "gnn-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T005"],
+          "module": "crates/vector-graph",
+          "acceptance_criteria": [
+            "节点特征：长度、方向、曲率、端点类型、线宽",
+            "边特征：连接关系、夹角、平行度、距离、共线性",
+            "GraphML 格式导出用于 PyTorch 训练"
+          ]
+        },
+        {
+          "id": "T102",
+          "name": "GNN 推理集成：tch-rs (PyTorch Rust bindings)",
+          "description": "集成 tch-rs 运行预训练的图注意力网络",
+          "assignee": "gnn-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "2d",
+          "dependencies": ["T101"],
+          "acceptance_criteria": [
+            "tch-rs 依赖正确配置 ✓",
+            "TorchScript 模型加载与推理 ✓",
+            "CPU/GPU 自动切换 ✓"
+          ]
+        },
+        {
+          "id": "T103",
+          "name": "实现 VectorGraphNET 注意力机制",
+          "description": "移植 VectorGraphNET (2024) 的图注意力 transformer 到 Rust",
+          "assignee": "gnn-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "4d",
+          "dependencies": ["T102"],
+          "acceptance_criteria": [
+            "2层 Graph Attention Transformer ✓",
+            "支持 hierarchical label definition (3-level: Geometry/Domain/Semantic) ✓",
+            "线级别语义分类器（准确率待训练验证）"
+          ]
+        },
+        {
+          "id": "T104",
+          "name": "语义标签体系：CAD图纸标准语义",
+          "description": "定义建筑/机械图纸的标准语义类型",
+          "assignee": "domain-expert",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "1d",
+          "dependencies": [],
+          "acceptance_criteria": [
+            "3-level 层次化标签: GeometryType (5类)、DomainType (4类)、SemanticType (13类) ✓",
+            "建筑语义：墙、门、窗、家具、管道、尺寸标注、文字 ✓",
+            "机械语义：轮廓线、虚线、剖面线、基准、公差 ✓"
+          ]
+        },
+        {
+          "id": "T105",
+          "name": "小样本训练：合成数据增强 + 迁移学习",
+          "description": "使用现有DXF批量生成合成训练数据",
+          "assignee": "ml-team",
+          "status": "completed",
+          "priority": "medium",
+          "estimation": "3d",
+          "dependencies": ["T104"],
+          "acceptance_criteria": [
+            "✓ 从 dxfs/ 目录生成合成训练样本（API已实现）",
+            "✓ 添加噪声、模糊、旋转等数据增强",
+            "✓ PyTorch Geometric 兼容格式导出",
+            "✓ 小样本基准数据集生成函数"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "name": "高级特征：虚线/中心线识别 + 尺寸文本提取",
+      "deadline": "2026-06-15",
+      "status": "completed",
+      "priority": "high",
+      "tasks": [
+        {
+          "id": "T201",
+          "name": "虚线模式识别：周期性检测 + 间隔分类",
+          "description": "识别工程图纸中的虚线、点划线、双点划线等线型",
+          "assignee": "feature-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T005"],
+          "acceptance_criteria": [
+            "✓ 自相关方法（变异系数）检测周期性",
+            "✓ 支持 5 种线型分类：实线、虚线、中心线、隐藏线、剖面线",
+            "✓ Union-Find 共线分组，断线自动连接",
+            "✓ 子像素端点距离检测，置信度评分"
+          ]
+        },
+        {
+          "id": "T202",
+          "name": "OCR 集成：文本检测 + 文本识别 + 空间关联",
+          "description": "集成 Tesseract 或 PaddleOCR，识别尺寸标注、技术要求",
+          "assignee": "feature-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T201"],
+          "module": "crates/vectorize/src/algorithms/ocr.rs",
+          "acceptance_criteria": [
+            "✓ 文本区域检测（基于连通分量的启发式检测）",
+            "✓ OCR 后端 trait 抽象，支持 HeuristicOCR 纯 Rust 实现",
+            "✓ 文本与几何图元的空间关联（基于字符高度搜索半径）"
+          ]
+        },
+        {
+          "id": "T203",
+          "name": "VLM 辅助理解：尺寸标注解析",
+          "description": "使用 Vision-Language Model 理解复杂的尺寸标注、公差符号",
+          "assignee": "vlm-team",
+          "status": "completed",
+          "priority": "medium",
+          "estimation": "4d",
+          "dependencies": ["T202"],
+          "module": "crates/vectorize/src/algorithms/vlm.rs",
+          "acceptance_criteria": [
+            "✓ VLM 后端 trait 抽象，支持 HeuristicVLM 纯 Rust 规则实现",
+            "✓ 尺寸标注格式解析 (100 ± 0.5, M20-6H, Ra3.2 等)",
+            "✓ 公差符号识别与含义映射（6 种公差类型、14 种形位公差）"
+          ]
+        },
+        {
+          "id": "T204",
+          "name": "符号库与模板匹配：常见CAD符号识别",
+          "description": "基于形状上下文的符号识别：粗糙度、形位公差、焊接符号等",
+          "assignee": "feature-team",
+          "status": "completed",
+          "priority": "medium",
+          "estimation": "3d",
+          "dependencies": ["T201"],
+          "module": "crates/vectorize/src/algorithms/symbols.rs",
+          "acceptance_criteria": [
+            "✓ 20+ 机械符号类型定义（粗糙度、形位公差、焊接符号等）",
+            "✓ 形状上下文匹配算法实现（简化 Hausdorff 距离）",
+            "✓ 旋转/缩放不变性配置支持"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "name": "拓扑重建与验证",
+      "deadline": "2026-06-30",
+      "status": "completed",
+      "priority": "high",
+      "tasks": [
+        {
+          "id": "T301",
+          "name": "半结构化拓扑缝合：从 strokes 到闭合环",
+          "description": "矢量化的 strokes → 拓扑关系 → 闭合区域识别",
+          "assignee": "topo-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "3d",
+          "dependencies": ["T005"],
+          "module": "crates/vectorize/src/algorithms/topology_stitch.rs",
+          "acceptance_criteria": [
+            "✓ 端点吸附容差自适应",
+            "✓ 正确的环遍历（顺时针/逆时针）",
+            "✓ 孔洞嵌套关系正确",
+            "✓ 8个单元测试覆盖核心功能"
+          ]
+        },
+        {
+          "id": "T302",
+          "name": "Halfedge 网格从矢量化结果构建",
+          "description": "矢量化输出直接生成 Halfedge 结构，无缝对接现有拓扑模块",
+          "assignee": "topo-team",
+          "status": "completed",
+          "priority": "high",
+          "estimation": "2d",
+          "dependencies": ["T301"],
+          "module": "crates/vectorize/src/algorithms/halfedge_convert.rs",
+          "acceptance_criteria": [
+            "✓ vectorize output → HalfedgeMesh 转换",
+            "✓ 面枚举正确",
+            "✓ 与现有 topo crate API 兼容",
+            "✓ 8个单元测试覆盖转换逻辑"
+          ]
+        },
+        {
+          "id": "T303",
+          "name": "矢量化质量评估指标体系",
+          "description": "建立多维度的矢量化质量评分",
+          "assignee": "qa-team",
+          "status": "completed",
+          "priority": "medium",
+          "estimation": "2d",
+          "dependencies": ["T006"],
+          "module": "crates/vectorize/src/algorithms/quality_eval.rs",
+          "acceptance_criteria": [
+            "✓ 几何精度：Chamfer/Hausdorff 距离",
+            "✓ 拓扑正确性：同构检查",
+            "✓ 语义准确率：混淆矩阵",
+            "✓ 综合评分 0-100",
+            "✓ 13个单元测试覆盖所有指标类型"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "name": "产品化：API、演示、性能优化",
+      "deadline": "2026-07-15",
+      "status": "pending",
+      "priority": "medium",
+      "tasks": [
+        {
+          "id": "T401",
+          "name": "矢量化 HTTP API 端点",
+          "description": "orchestrator 新增 /vectorize 端点，支持上传图片返回 SVG/DXF",
+          "assignee": "backend-team",
+          "status": "pending",
+          "priority": "high",
+          "estimation": "2d",
+          "dependencies": ["T005", "T302"],
+          "acceptance_criteria": [
+            "POST /vectorize 接收 PNG/JPG 上传",
+            "返回：SVG 矢量、JSON 几何、质量评分",
+            "支持精度参数调整"
+          ]
+        },
+        {
+          "id": "T402",
+          "name": "交互式矢量化校正工具",
+          "description": "cad-viewer 中支持人工修正矢量化结果",
+          "assignee": "gui-team",
+          "status": "pending",
+          "priority": "medium",
+          "estimation": "3d",
+          "dependencies": ["T401"],
+          "acceptance_criteria": [
+            "矢量化结果可视化叠加在原图",
+            "点击修正错误的线条",
+            "语义标签手动调整"
+          ]
+        },
+        {
+          "id": "T403",
+          "name": "性能优化：SIMD + 并行处理",
+          "description": "矢量化 pipeline 关键路径 SIMD 优化，rayon 多线程",
+          "assignee": "perf-team",
+          "status": "pending",
+          "priority": "medium",
+          "estimation": "3d",
+          "dependencies": ["T002"],
+          "acceptance_criteria": [
+            "2000×2000 图像处理 < 500ms",
+            "SIMD 加速骨架化和边缘检测",
+            "分块并行处理大图像"
+          ]
+        },
+        {
+          "id": "T404",
+          "name": "CLI 矢量化命令：批量处理",
+          "description": "cad-cli 新增 vectorize 子命令，支持目录批量处理",
+          "assignee": "backend-team",
+          "status": "pending",
+          "priority": "medium",
+          "estimation": "1d",
+          "dependencies": ["T005"],
+          "acceptance_criteria": [
+            "cad-cli vectorize input.png output.svg",
+            "批量处理：--dir ./scans --out ./vectors",
+            "进度显示 + 错误汇总"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "name": "研究前沿：深度学习增强（可选）",
+      "deadline": "2026-08-30",
+      "status": "pending",
+      "priority": "low",
+      "tasks": [
+        {
+          "id": "T501",
+          "name": "Deep Vectorization 模型移植与集成",
+          "description": "将 ECCV 2020 Deep Vectorization 模型转为 ONNX 并在 Rust 中运行",
+          "assignee": "ml-team",
+          "status": "pending",
+          "priority": "low",
+          "estimation": "5d",
+          "dependencies": [],
+          "acceptance_criteria": [
+            "U-Net 清洗模型 ONNX 导出",
+            "Transformer 基元预测推理",
+            "与传统CV pipeline 混合模式"
+          ]
+        },
+        {
+          "id": "T502",
+          "name": "扩散模型超分辨率：低质量扫描件增强",
+          "description": "针对模糊、低分辨率扫描件的专用超分辨率增强",
+          "assignee": "ml-team",
+          "status": "pending",
+          "priority": "low",
+          "estimation": "5d",
+          "dependencies": [],
+          "acceptance_criteria": [
+            "Stable Diffusion / SRVGGNet 轻量化版本",
+            "端到端推理时间 < 2s",
+            "视觉效果提升可量化（PSNR/SSIM）"
+          ]
+        }
+      ]
+    }
+  ],
+  "tech_stack": {
+    "core_framework": "Rust 2021 Edition",
+    "computer_vision": [
+      "image crate - 基础图像处理",
+      "opencv crate - 可选加速",
+      "tch-rs - PyTorch Rust bindings (GNN推理)"
+    ],
+    "gnn_backend": "PyTorch + PyG (Python训练, Rust推理)",
+    "vlm_backend": "candle + Qwen2-VL-7B / ONNX Runtime",
+    "ocr": "Tesseract 5 / PaddleOCR",
+    "export_formats": ["SVG", "DXF R12", "GeoJSON", "Binary Scene"],
+    "evaluation_metrics": ["Chamfer Distance", "Hausdorff Distance", "IoU", "Topology Isomorphism Score"]
+  },
+  "key_dependencies": [
+    { "crate": "image", "version": "0.25" },
+    { "crate": "tch", "version": "0.15", "optional": true, "note": "GNN推理" },
+    { "crate": "ndarray", "version": "0.15" },
+    { "crate": "candle-core", "version": "0.5", "optional": true, "note": "VLM推理" },
+    { "crate": "leptess", "version": "0.14", "optional": true, "note": "OCR" }
+  ],
+  "success_criteria": {
+    "geometric_accuracy": "端点误差 < 0.5px @ 300DPI",
+    "topology_correctness": "环识别准确率 > 90%",
+    "semantic_accuracy": "线类型分类 wF1 > 85% (VectorGraphNET 水平)",
+    "performance": "A4幅面300DPI处理时间 < 2s (CPU) / < 500ms (GPU)",
+    "supported_formats": 10,
+    "test_coverage": "> 80% for vectorize and vector-graph crates"
+  },
+  "risks": [
+    {
+      "risk": "GNN训练数据不足",
+      "mitigation": "使用现有DXF库批量合成训练数据，结合数据增强",
+      "severity": "medium"
+    },
+    {
+      "risk": "tch-rs / candle 依赖过重，二进制体积膨胀",
+      "mitigation": "设计为可选 feature，纯 CV 模式下不依赖 ML 框架",
+      "severity": "medium"
+    },
+    {
+      "risk": "极低质量扫描件处理困难",
+      "mitigation": "分级策略：先做质量评估，低质量图走 VLM 辅助模式",
+      "severity": "low"
+    }
+  ],
+  "architecture_decisions": [
+    {
+      "decision": "采用 Vector-First 架构，而非 Pixel-First",
+      "reasoning": "VectorGraphNET 2024 证明：先矢量化再做图神经网络语义分析，效果更好、计算量更小",
+      "source": "VectorGraphNET (arXiv:2410.01336)"
+    },
+    {
+      "decision": "传统CV为主，深度学习为辅的混合策略",
+      "reasoning": "纯深度学习方法推理慢、可控性差、需要大量标注数据；传统CV在几何精度上有天然优势，DL用于语义增强",
+      "source": "eDOCr2 2025 混合架构的成功经验"
+    },
+    {
+      "decision": "模块化 pipeline 设计，每个算法阶段可替换",
+      "reasoning": "方便未来集成更好的算法（如 AdaVec 2025 的自适应参数化）",
+      "source": "系统可扩展性设计"
+    }
+  ],
+  "related_research": [
+    "Deep Vectorization of Technical Drawings (ECCV 2020)",
+    "VectorGraphNET: Graph Attention Networks for Technical Drawings (2024)",
+    "AdaVec: Efficient Image Vectorization with Adaptive Parameterization (CVPR 2025)",
+    "eDOCr2: Engineering Drawing OCR with VLMs (2025)",
+    "Deep Sketch Vectorization via Implicit Surface Extraction (SIGGRAPH 2024)"
+  ]
+}

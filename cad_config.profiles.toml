@@ -65,6 +65,13 @@ json_indent = 2
 # 导出前自动验证
 auto_validate = true
 
+[profile.architectural.raster]
+strategy = "clean_line_art"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
 
 # ============================================================================
 # 预设 2: 机械图纸（Mechanical Drawing）
@@ -112,6 +119,13 @@ min_angle_deg = 5.0
 format = "bincode"  # 二进制格式更适合机械仿真
 json_indent = 2
 auto_validate = true
+
+[profile.mechanical.raster]
+strategy = "clean_line_art"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "semantic"
+ocr_backend = "heuristic"
 
 
 # ============================================================================
@@ -162,6 +176,13 @@ format = "json"
 json_indent = 2
 auto_validate = true
 
+[profile.scanned.raster]
+strategy = "scanned_plan"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
 
 # ============================================================================
 # 预设 4: 复杂扫描图纸（Complex Scanned Document）
@@ -195,7 +216,271 @@ min_area_m2 = 5.0
 
 
 # ============================================================================
-# 预设 5: 快速原型（Quick Prototype）
+# 预设 5: 照片/手绘草图（Photo Sketch）
+# ============================================================================
+# 适用于：PNG/JPG/BMP/TIFF/WebP 光栅图纸、拍照图纸、手绘草图
+# 特点：容差更宽松，使用 Halfedge 拓扑和并行处理
+
+[profile.photo_sketch]
+description = "照片/手绘草图预设 - 适用于复杂光栅图片，强预处理"
+
+[profile.photo_sketch.parser.dxf]
+layer_whitelist = []
+entity_whitelist = ["LINE", "LWPOLYLINE"]
+arc_tolerance_mm = 0.5
+spline_tolerance_mm = 0.5
+ignore_text = true
+ignore_dimensions = true
+ignore_hatch = true
+
+[profile.photo_sketch.parser.pdf]
+vectorize_tolerance_px = 2.0
+edge_threshold = 0.12
+min_line_length_px = 3.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.photo_sketch.topology]
+snap_tolerance_mm = 2.0
+min_line_length_mm = 3.0
+merge_angle_tolerance_deg = 10.0
+max_gap_bridge_length_mm = 5.0
+algorithm = "halfedge"
+skip_intersection_check = false
+enable_parallel = true
+parallel_threshold = 2000
+
+[profile.photo_sketch.validator]
+closure_tolerance_mm = 2.0
+min_area_m2 = 2.0
+min_edge_length_mm = 20.0
+min_angle_deg = 30.0
+
+[profile.photo_sketch.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.photo_sketch.raster]
+strategy = "hand_sketch"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
+
+# ============================================================================
+# 光栅专用预设
+# ============================================================================
+
+[profile.raster_clean]
+description = "干净光栅线稿预设 - 适用于导出的黑白 PNG/JPG 图纸"
+
+[profile.raster_clean.parser.dxf]
+arc_tolerance_mm = 0.1
+spline_tolerance_mm = 0.1
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = true
+
+[profile.raster_clean.parser.pdf]
+vectorize_tolerance_px = 1.0
+edge_threshold = 0.08
+min_line_length_px = 4.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.raster_clean.topology]
+snap_tolerance_mm = 0.5
+min_line_length_mm = 1.0
+merge_angle_tolerance_deg = 5.0
+max_gap_bridge_length_mm = 2.0
+
+[profile.raster_clean.validator]
+closure_tolerance_mm = 0.5
+min_area_m2 = 0.1
+min_edge_length_mm = 1.0
+min_angle_deg = 5.0
+
+[profile.raster_clean.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.raster_clean.raster]
+strategy = "clean_line_art"
+debug_artifacts = false
+max_retries = 2
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
+[profile.raster_scan]
+description = "扫描光栅图纸预设"
+
+[profile.raster_scan.parser.dxf]
+arc_tolerance_mm = 0.5
+spline_tolerance_mm = 0.5
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = true
+
+[profile.raster_scan.parser.pdf]
+vectorize_tolerance_px = 2.0
+edge_threshold = 0.15
+min_line_length_px = 8.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.raster_scan.topology]
+snap_tolerance_mm = 2.0
+min_line_length_mm = 3.0
+merge_angle_tolerance_deg = 10.0
+max_gap_bridge_length_mm = 5.0
+
+[profile.raster_scan.validator]
+closure_tolerance_mm = 2.0
+min_area_m2 = 1.0
+min_edge_length_mm = 5.0
+min_angle_deg = 10.0
+
+[profile.raster_scan.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.raster_scan.raster]
+strategy = "scanned_plan"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
+[profile.raster_photo]
+description = "拍照图纸预设 - 启用裁剪和透视校正"
+
+[profile.raster_photo.parser.dxf]
+arc_tolerance_mm = 0.5
+spline_tolerance_mm = 0.5
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = true
+
+[profile.raster_photo.parser.pdf]
+vectorize_tolerance_px = 3.0
+edge_threshold = 0.12
+min_line_length_px = 6.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.raster_photo.topology]
+snap_tolerance_mm = 3.0
+min_line_length_mm = 4.0
+merge_angle_tolerance_deg = 12.0
+max_gap_bridge_length_mm = 6.0
+
+[profile.raster_photo.validator]
+closure_tolerance_mm = 3.0
+min_area_m2 = 1.0
+min_edge_length_mm = 5.0
+min_angle_deg = 10.0
+
+[profile.raster_photo.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.raster_photo.raster]
+strategy = "photo_perspective"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
+[profile.raster_sketch]
+description = "手绘草图预设"
+
+[profile.raster_sketch.parser.dxf]
+arc_tolerance_mm = 1.0
+spline_tolerance_mm = 1.0
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = true
+
+[profile.raster_sketch.parser.pdf]
+vectorize_tolerance_px = 4.0
+edge_threshold = 0.18
+min_line_length_px = 3.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.raster_sketch.topology]
+snap_tolerance_mm = 4.0
+min_line_length_mm = 3.0
+merge_angle_tolerance_deg = 15.0
+max_gap_bridge_length_mm = 8.0
+
+[profile.raster_sketch.validator]
+closure_tolerance_mm = 4.0
+min_area_m2 = 1.0
+min_edge_length_mm = 5.0
+min_angle_deg = 10.0
+
+[profile.raster_sketch.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.raster_sketch.raster]
+strategy = "hand_sketch"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"
+
+[profile.raster_semantic]
+description = "光栅语义解析预设 - 开启 OCR/符号/语义候选"
+
+[profile.raster_semantic.parser.dxf]
+arc_tolerance_mm = 0.5
+spline_tolerance_mm = 0.5
+ignore_text = false
+ignore_dimensions = false
+ignore_hatch = false
+
+[profile.raster_semantic.parser.pdf]
+vectorize_tolerance_px = 2.0
+edge_threshold = 0.12
+min_line_length_px = 4.0
+threshold = 128
+max_pixels = 30000000
+
+[profile.raster_semantic.topology]
+snap_tolerance_mm = 2.0
+min_line_length_mm = 3.0
+merge_angle_tolerance_deg = 10.0
+max_gap_bridge_length_mm = 5.0
+
+[profile.raster_semantic.validator]
+closure_tolerance_mm = 2.0
+min_area_m2 = 1.0
+min_edge_length_mm = 5.0
+min_angle_deg = 10.0
+
+[profile.raster_semantic.export]
+format = "json"
+json_indent = 2
+auto_validate = true
+
+[profile.raster_semantic.raster]
+strategy = "auto"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "semantic"
+ocr_backend = "heuristic"
+
+
+# ============================================================================
+# 预设 6: 快速原型（Quick Prototype）
 # ============================================================================
 # 适用于：快速预览、概念验证、低精度要求场景
 
@@ -229,6 +514,13 @@ min_angle_deg = 10.0
 format = "json"
 json_indent = 0  # 紧凑格式
 auto_validate = false  # 跳过验证以加速
+
+[profile.quick.raster]
+strategy = "auto"
+debug_artifacts = false
+max_retries = 1
+semantic_mode = "rule"
+ocr_backend = "heuristic"
 
 
 # ============================================================================
@@ -307,3 +599,10 @@ json_indent = 2
 
 # 导出前自动验证
 auto_validate = true
+
+[raster]
+strategy = "auto"
+debug_artifacts = false
+max_retries = 3
+semantic_mode = "rule"
+ocr_backend = "heuristic"

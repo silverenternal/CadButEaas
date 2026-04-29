@@ -20,12 +20,13 @@
 >   - ✅ 颜色/线宽过滤
 > - ✅ 矢量 PDF 文件（可直接提取路径/线段）
 > - ✅ 光栅 PDF 文件（扫描版/截图，自动矢量化 - 适用于线条清晰的图纸）
+> - ✅ 光栅图片文件（PNG/JPG/BMP/TIFF/WebP，自动矢量化）
 > - ✅ DWG 文件（AutoCAD 默认格式，R13-R2018 版本）
 > - ✅ SVG 文件（Web 端 CAD 交换格式，导入/导出双向支持）
 > - ✅ STL 文件（3D 制造/打印工作流，二进制/ASCII 双格式）
 >
-> **光栅 PDF 矢量化特性**：
-> - 支持扫描版 PDF 自动矢量化（图像预处理 + 边缘检测 + 线结构提取）
+> **光栅 PDF/图片矢量化特性**：
+> - 支持扫描版 PDF 和 PNG/JPG/BMP/TIFF/WebP 自动矢量化（图像预处理 + 边缘检测 + 线结构提取）
 > - 包含质量评估和错误报告
 > - 推荐图像尺寸 < 2000x2000 像素
 > - 最大支持 250 万像素（约 1581x1581）
@@ -68,7 +69,7 @@
 | `accelerator-cpu` | ✅ | 10 测试 | CPU 加速器实现 |
 | `accelerator-registry` | ✅ | 7 测试 | 加速器注册中心 |
 | `accelerator-wgpu` | ⚠️ | Stub (TODO) | wgpu 加速器（CPU fallback 已工作） |
-| `raster-loader` | ✅ | 3 测试 | 光栅图片加载（PNG/JPG/BMP/TIFF/WebP） |
+| `raster-loader` | ✅ | 27 测试 | 光栅图片加载（PNG/JPG/BMP/TIFF/WebP） |
 
 **总计**: ✅ 585+ 测试（584 通过，1 已知失败） | Clippy: 0 错误（4 个良性复杂度警告）
 
@@ -128,7 +129,14 @@ cargo run --package cad-cli -- process input.dxf --output scene.json
 # 处理 PDF 文件（矢量或光栅自动识别）
 cargo run --package cad-cli -- process input.pdf --output scene.json
 
-# 使用预设配置（architectural/mechanical/scanned/quick）
+# 处理光栅图片文件，可显式选择光栅策略和 DPI/尺度
+cargo run --package cad-cli -- process input.png \
+  --profile raster_semantic \
+  --raster-strategy auto \
+  --dpi-override 300,300 \
+  --output scene.json
+
+# 使用预设配置（architectural/mechanical/scanned/photo_sketch/raster_clean/raster_scan/raster_photo/raster_sketch/raster_semantic/quick）
 cargo run --package cad-cli -- process input.dxf --profile architectural
 
 # 自定义参数
@@ -167,6 +175,17 @@ curl -X POST http://localhost:3000/process -F "file=@file.dxf"
 
 # 处理 PDF 文件
 curl -X POST http://localhost:3000/process -F "file=@file.pdf"
+
+# 处理光栅图片文件
+curl -X POST http://localhost:3000/process -F "file=@drawing.png"
+
+# 专用光栅图片端点，返回 raster_report、semantic_candidates、尺度信息
+curl -X POST http://localhost:3000/process/raster \
+  -F "file=@drawing.png" \
+  -F "strategy=auto" \
+  -F "dpi_override=300,300" \
+  -F "max_retries=3" \
+  -F "debug_artifacts=false"
 
 # 声学分析（选区材料统计）
 curl -X POST http://localhost:3000/acoustic/analyze \
@@ -519,6 +538,8 @@ CAD/
 - `architectural`: 建筑图纸预设
 - `mechanical`: 机械图纸预设
 - `scanned`: 扫描图纸预设
+- `photo_sketch`: 照片/手绘光栅预设
+- `raster_clean`, `raster_scan`, `raster_photo`, `raster_sketch`, `raster_semantic`: 光栅专用预设
 - `quick`: 快速原型预设
 
 **API 端点**:
@@ -532,7 +553,7 @@ CAD/
 **功能**:
 - 支持多种光栅图片格式：PNG, JPG, BMP, TIFF, WebP
 - 自动检测文件格式
-- 提取图片元数据（尺寸、色彩空间）
+- 提取图片元数据（尺寸、PNG pHYs/JPEG JFIF 或 EXIF/TIFF resolution DPI）
 - 输出 `image::DynamicImage` 直接对接 VectorizeService
 
 **使用场景**:

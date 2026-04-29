@@ -16,6 +16,18 @@ pub use preprocessing::*;
 pub mod threshold;
 pub use threshold::*;
 
+// 骨架化算法
+pub mod skeleton;
+pub use skeleton::*;
+
+// 轨迹追踪
+pub mod tracing;
+pub use tracing::*;
+
+// 基元拟合引擎
+pub mod primitive_fitting;
+pub use primitive_fitting::*;
+
 // 线型识别
 pub mod line_type;
 pub use line_type::*;
@@ -40,6 +52,30 @@ pub use nurbs_adaptive::*;
 pub mod text_blob;
 pub use text_blob::*;
 
+// OCR 文本识别与空间关联
+pub mod ocr;
+pub use ocr::*;
+
+// VLM 尺寸标注解析
+pub mod vlm;
+pub use vlm::*;
+
+// CAD 符号库与模板匹配
+pub mod symbols;
+pub use symbols::*;
+
+// 拓扑缝合算法
+pub mod topology_stitch;
+pub use topology_stitch::*;
+
+// Halfedge 网格转换器
+pub mod halfedge_convert;
+pub use halfedge_convert::*;
+
+// 矢量化质量评估指标体系（几何/拓扑/语义）
+pub mod quality_eval;
+pub use quality_eval::*;
+
 // 自适应参数调整（基于图像质量）
 pub mod adaptive_params;
 pub use adaptive_params::*;
@@ -57,7 +93,7 @@ pub mod architectural_rules;
 pub use architectural_rules::*;
 
 use common_types::{Point2, Polyline};
-use image::{GrayImage, Luma};
+use image::GrayImage;
 use rayon::prelude::*;
 
 #[cfg(feature = "opencv")]
@@ -524,44 +560,6 @@ pub fn threshold(image: &GrayImage, thresh: u8) -> GrayImage {
     result
 }
 
-/// 骨架化 (Zhang-Suen 简化版)
-pub fn skeletonize(image: &GrayImage) -> GrayImage {
-    let mut result = image.clone();
-    let (width, height) = image.dimensions();
-
-    for _iteration in 0..3 {
-        for y in 1..(height - 1) {
-            for x in 1..(width - 1) {
-                if image.get_pixel(x, y)[0] == 0 {
-                    let neighbors = count_neighbors(&result, x as i32, y as i32);
-                    if neighbors == 2 {
-                        result.put_pixel(x, y, Luma([0]));
-                    }
-                }
-            }
-        }
-    }
-
-    result
-}
-
-fn count_neighbors(image: &GrayImage, x: i32, y: i32) -> u8 {
-    let mut count = 0;
-    for dy in -1i32..=1 {
-        for dx in -1i32..=1 {
-            if dx == 0 && dy == 0 {
-                continue;
-            }
-            let nx = x + dx;
-            let ny = y + dy;
-            if nx >= 0 && ny >= 0 && image.get_pixel(nx as u32, ny as u32)[0] == 0 {
-                count += 1;
-            }
-        }
-    }
-    count
-}
-
 /// 从边缘图像提取轮廓（迭代实现，避免栈溢出）
 pub fn extract_contours(image: &GrayImage, min_length: usize) -> Vec<Polyline> {
     let (width, height) = image.dimensions();
@@ -734,6 +732,7 @@ fn point_to_line_distance(point: Point2, line_start: Point2, line_end: Point2) -
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::Luma;
 
     #[test]
     fn test_threshold() {

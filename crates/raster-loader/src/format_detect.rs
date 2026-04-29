@@ -12,6 +12,24 @@ pub enum RasterFormat {
     Bmp,
     Tiff,
     WebP,
+    /// Netpbm Portable Bitmap (P1/P4 - 单色)
+    Pbm,
+    /// Netpbm Portable Graymap (P2/P5 - 灰度)
+    Pgm,
+    /// Netpbm Portable Pixmap (P3/P6 - 彩色)
+    Ppm,
+    /// Graphics Interchange Format
+    Gif,
+    /// Icon 格式 (ICO)
+    Ico,
+    /// Farbfeld 无损格式
+    Farbfeld,
+    /// X11 Bitmap
+    Xbm,
+    /// Radiance RGBE (HDR)
+    Hdr,
+    /// Targa (TGA)
+    Tga,
 }
 
 impl RasterFormat {
@@ -23,7 +41,24 @@ impl RasterFormat {
             RasterFormat::Bmp => "bmp",
             RasterFormat::Tiff => "tiff",
             RasterFormat::WebP => "webp",
+            RasterFormat::Pbm => "pbm",
+            RasterFormat::Pgm => "pgm",
+            RasterFormat::Ppm => "ppm",
+            RasterFormat::Gif => "gif",
+            RasterFormat::Ico => "ico",
+            RasterFormat::Farbfeld => "ff",
+            RasterFormat::Xbm => "xbm",
+            RasterFormat::Hdr => "hdr",
+            RasterFormat::Tga => "tga",
         }
+    }
+
+    /// 判断是否为 Netpbm 格式家族（PBM/PGM/PPM）
+    pub fn is_netpbm(&self) -> bool {
+        matches!(
+            self,
+            RasterFormat::Pbm | RasterFormat::Pgm | RasterFormat::Ppm
+        )
     }
 }
 
@@ -57,6 +92,15 @@ pub fn detect_raster_format(data: &[u8], filename: Option<&str>) -> Option<Raste
                 "bmp" => RasterFormat::Bmp,
                 "tif" | "tiff" => RasterFormat::Tiff,
                 "webp" => RasterFormat::WebP,
+                "pbm" => RasterFormat::Pbm,
+                "pgm" => RasterFormat::Pgm,
+                "ppm" => RasterFormat::Ppm,
+                "gif" => RasterFormat::Gif,
+                "ico" => RasterFormat::Ico,
+                "ff" => RasterFormat::Farbfeld,
+                "xbm" => RasterFormat::Xbm,
+                "hdr" | "pic" => RasterFormat::Hdr,
+                "tga" => RasterFormat::Tga,
                 _ => return detect_by_magic(data), // 扩展名不匹配，回退到魔数检测
             };
             return Some(format);
@@ -69,6 +113,20 @@ pub fn detect_raster_format(data: &[u8], filename: Option<&str>) -> Option<Raste
 
 /// 仅通过魔数检测格式
 fn detect_by_magic(data: &[u8]) -> Option<RasterFormat> {
+    // Netpbm 格式只需要 2 字节，先检查
+    if data.len() >= 2 {
+        match (data[0], data[1]) {
+            (b'P', b'1') => return Some(RasterFormat::Pbm),
+            (b'P', b'2') => return Some(RasterFormat::Pgm),
+            (b'P', b'3') => return Some(RasterFormat::Ppm),
+            (b'P', b'4') => return Some(RasterFormat::Pbm),
+            (b'P', b'5') => return Some(RasterFormat::Pgm),
+            (b'P', b'6') => return Some(RasterFormat::Ppm),
+            _ => {}
+        }
+    }
+
+    // 其他格式至少需要 4 字节
     if data.len() < 4 {
         return None;
     }
@@ -102,6 +160,33 @@ fn detect_by_magic(data: &[u8]) -> Option<RasterFormat> {
     if data.len() >= 12 && data.starts_with(b"RIFF") && &data[8..12] == b"WEBP" {
         return Some(RasterFormat::WebP);
     }
+
+    // GIF: GIF87a 或 GIF89a
+    if data.len() >= 6 && data.starts_with(b"GIF87") || data.starts_with(b"GIF89") {
+        return Some(RasterFormat::Gif);
+    }
+
+    // ICO: 00 00 01 00
+    if data.starts_with(&[0x00, 0x00, 0x01, 0x00]) {
+        return Some(RasterFormat::Ico);
+    }
+
+    // Farbfeld: farbfeld magic (8 bytes)
+    if data.len() >= 8 && data.starts_with(b"farbfeld") {
+        return Some(RasterFormat::Farbfeld);
+    }
+
+    // XBM: #define 前缀 (X11 Bitmap)
+    if data.len() >= 7 && data.starts_with(b"#define") {
+        return Some(RasterFormat::Xbm);
+    }
+
+    // Radiance RGBE (HDR): #?RADIANCE 或 #?RGBE
+    if data.len() >= 10 && (data.starts_with(b"#?RADIANCE") || data.starts_with(b"#?RGBE")) {
+        return Some(RasterFormat::Hdr);
+    }
+
+    // TGA: 没有标准魔数，但可以通过扩展名检测
 
     None
 }
@@ -191,5 +276,57 @@ mod tests {
     fn test_short_data_returns_none() {
         let data = [0x89];
         assert_eq!(detect_raster_format(&data, None), None);
+    }
+
+    #[test]
+    fn test_detect_netpbm_magic() {
+        // P1 (ASCII PBM)
+        assert_eq!(detect_raster_format(b"P1", None), Some(RasterFormat::Pbm));
+        // P2 (ASCII PGM)
+        assert_eq!(detect_raster_format(b"P2", None), Some(RasterFormat::Pgm));
+        // P3 (ASCII PPM)
+        assert_eq!(detect_raster_format(b"P3", None), Some(RasterFormat::Ppm));
+        // P4 (Binary PBM)
+        assert_eq!(detect_raster_format(b"P4", None), Some(RasterFormat::Pbm));
+        // P5 (Binary PGM)
+        assert_eq!(detect_raster_format(b"P5", None), Some(RasterFormat::Pgm));
+        // P6 (Binary PPM)
+        assert_eq!(detect_raster_format(b"P6", None), Some(RasterFormat::Ppm));
+    }
+
+    #[test]
+    fn test_detect_netpbm_by_extension() {
+        let data = b"not_an_image_header";
+        assert_eq!(
+            detect_raster_format(data, Some("test.pbm")),
+            Some(RasterFormat::Pbm)
+        );
+        assert_eq!(
+            detect_raster_format(data, Some("image.pgm")),
+            Some(RasterFormat::Pgm)
+        );
+        assert_eq!(
+            detect_raster_format(data, Some("photo.ppm")),
+            Some(RasterFormat::Ppm)
+        );
+    }
+
+    #[test]
+    fn test_is_netpbm() {
+        assert!(RasterFormat::Pbm.is_netpbm());
+        assert!(RasterFormat::Pgm.is_netpbm());
+        assert!(RasterFormat::Ppm.is_netpbm());
+        assert!(!RasterFormat::Png.is_netpbm());
+        assert!(!RasterFormat::Jpeg.is_netpbm());
+        assert!(!RasterFormat::Bmp.is_netpbm());
+        assert!(!RasterFormat::Tiff.is_netpbm());
+        assert!(!RasterFormat::WebP.is_netpbm());
+    }
+
+    #[test]
+    fn test_extension() {
+        assert_eq!(RasterFormat::Pbm.extension(), "pbm");
+        assert_eq!(RasterFormat::Pgm.extension(), "pgm");
+        assert_eq!(RasterFormat::Ppm.extension(), "ppm");
     }
 }

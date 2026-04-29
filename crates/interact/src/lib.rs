@@ -684,6 +684,7 @@ impl InteractionService {
                         color_index: None,
                     })
                     .collect(),
+                raster_metadata: None,
                 units: common_types::LengthUnit::M,
                 coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
                 seat_zones: vec![],

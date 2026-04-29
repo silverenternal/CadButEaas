@@ -312,6 +312,7 @@ impl TopoService {
             boundaries: Vec::new(), // 待用户标注
             sources: Vec::new(),
             edges: Vec::new(), // 由 Pipeline 填充
+            raster_metadata: None,
             units: common_types::LengthUnit::Mm,
             coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(), // 由 Parser 填充

@@ -18,6 +18,7 @@ members = [
     "crates/accelerator-cpu",
     "crates/accelerator-wgpu",
     "crates/raster-loader",
+    "crates/vector-graph",
 ]
 
 [workspace.package]

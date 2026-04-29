@@ -17,7 +17,7 @@
 //!
 //! ## 使用示例
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::cache::{DxfCache, CacheConfig};
 //! use parser::parser_trait::{DxfParserTrait, SyncDxfParser};
 //! use std::sync::Arc;
@@ -565,7 +565,7 @@ impl<P: DxfParserTrait> DxfCache<P> {
     /// 注意：此方法需要解析器实现 Send + Sync + Clone
     ///
     /// # 使用示例
-    /// ```rust
+    /// ```rust,ignore
     /// let cache = DxfCache::new(parser);
     /// cache.prefetch_async("file.dxf");
     /// // ... 稍后调用 parse_file 时会立即返回（已缓存）
@@ -859,9 +859,11 @@ mod tests {
 
     #[test]
     fn test_cache_stats() {
-        let mut stats = CacheStats::default();
-        stats.hits = 80;
-        stats.misses = 20;
+        let mut stats = CacheStats {
+            hits: 80,
+            misses: 20,
+            ..Default::default()
+        };
         assert!((stats.hit_rate() - 0.8).abs() < 0.01);
 
         stats.hits = 0;

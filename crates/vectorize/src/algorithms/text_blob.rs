@@ -57,8 +57,33 @@ impl BoundingBox {
     pub fn height(&self) -> u32 {
         self.y_max - self.y_min + 1
     }
-    pub fn area(&self) -> usize {
-        (self.width() as usize) * (self.height() as usize)
+    pub fn area(&self) -> u32 {
+        self.width() * self.height()
+    }
+    pub fn center(&self) -> Point2 {
+        [
+            (self.x_min + self.x_max) as f64 / 2.0,
+            (self.y_min + self.y_max) as f64 / 2.0,
+        ]
+    }
+    pub fn intersection_area(&self, other: &BoundingBox) -> u32 {
+        let x_min = self.x_min.max(other.x_min);
+        let y_min = self.y_min.max(other.y_min);
+        let x_max = self.x_max.min(other.x_max);
+        let y_max = self.y_max.min(other.y_max);
+        if x_max < x_min || y_max < y_min {
+            return 0;
+        }
+        (x_max - x_min + 1) * (y_max - y_min + 1)
+    }
+    pub fn iou(&self, other: &BoundingBox) -> f64 {
+        let inter = self.intersection_area(other) as f64;
+        let union = (self.area() + other.area()) as f64 - inter;
+        if union < 1e-10 {
+            0.0
+        } else {
+            inter / union
+        }
     }
 }
 

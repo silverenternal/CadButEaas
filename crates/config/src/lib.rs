@@ -34,6 +34,9 @@ pub struct CadConfig {
     pub validator: ValidatorConfig,
     /// 导出配置
     pub export: ExportConfig,
+    /// 光栅图纸增强解析配置
+    #[serde(default)]
+    pub raster: RasterConfig,
 }
 
 /// DXF 解析器配置
@@ -83,6 +86,40 @@ pub struct PdfConfig {
     /// 最大图像像素数限制（默认 30,000,000）
     #[serde(default = "default_max_pixels")]
     pub max_pixels: usize,
+}
+
+/// 光栅增强解析配置。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RasterConfig {
+    /// auto/clean_line_art/scanned_plan/photo_perspective/hand_sketch/low_contrast
+    #[serde(default = "default_raster_strategy")]
+    pub strategy: String,
+    #[serde(default)]
+    pub dpi_override: Option<(f64, f64)>,
+    #[serde(default)]
+    pub debug_artifacts: bool,
+    #[serde(default = "default_raster_max_retries")]
+    pub max_retries: usize,
+    #[serde(default = "default_semantic_mode")]
+    pub semantic_mode: String,
+    #[serde(default = "default_ocr_backend")]
+    pub ocr_backend: String,
+}
+
+fn default_raster_strategy() -> String {
+    "auto".to_string()
+}
+
+fn default_raster_max_retries() -> usize {
+    3
+}
+
+fn default_semantic_mode() -> String {
+    "rule".to_string()
+}
+
+fn default_ocr_backend() -> String {
+    "heuristic".to_string()
 }
 
 fn default_threshold() -> u8 {
@@ -197,6 +234,19 @@ impl Default for PdfConfig {
     }
 }
 
+impl Default for RasterConfig {
+    fn default() -> Self {
+        Self {
+            strategy: default_raster_strategy(),
+            dpi_override: None,
+            debug_artifacts: false,
+            max_retries: 3,
+            semantic_mode: default_semantic_mode(),
+            ocr_backend: default_ocr_backend(),
+        }
+    }
+}
+
 #[allow(clippy::derivable_impls)]
 impl Default for TopoConfig {
     fn default() -> Self {
@@ -307,6 +357,7 @@ impl CadConfig {
     /// - `architectural`: 建筑图纸预设
     /// - `mechanical`: 机械图纸预设
     /// - `scanned`: 扫描图纸预设（仅适用于线条清晰的图纸）
+    /// - `photo_sketch`: 照片/手绘草图预设（复杂光栅图片，强预处理）
     /// - `quick`: 快速原型预设
     ///
     /// ## 注意
@@ -319,12 +370,22 @@ impl CadConfig {
             "architectural" => Self::architectural_profile(),
             "mechanical" => Self::mechanical_profile(),
             "scanned" => Self::scanned_profile(),
+            "photo_sketch" => Self::photo_sketch_profile(),
+            "raster_clean" => Self::raster_profile("raster_clean", "clean_line_art", 2),
+            "raster_scan" => Self::raster_profile("raster_scan", "scanned_plan", 3),
+            "raster_photo" => Self::raster_profile("raster_photo", "photo_perspective", 3),
+            "raster_sketch" => Self::raster_profile("raster_sketch", "hand_sketch", 3),
+            "raster_semantic" => {
+                let mut cfg = Self::raster_profile("raster_semantic", "auto", 3);
+                cfg.raster.semantic_mode = "semantic".to_string();
+                cfg
+            }
             "quick" => Self::quick_profile(),
             _ => {
                 return Err(ConfigError::InvalidValue {
                     field: "profile".to_string(),
                     reason: format!(
-                        "未知的预设配置 '{}'，支持的预设：architectural, mechanical, scanned, quick",
+                        "未知的预设配置 '{}'，支持的预设：architectural, mechanical, scanned, photo_sketch, quick",
                         profile_name
                     ),
                 });
@@ -333,6 +394,18 @@ impl CadConfig {
 
         config.profile_name = Some(profile_name.to_string());
         Ok(config)
+    }
+
+    fn raster_profile(_name: &str, strategy: &str, max_retries: usize) -> Self {
+        let mut config = Self::scanned_profile();
+        config.parser.dxf.ignore_text = false;
+        config.parser.dxf.ignore_dimensions = false;
+        config.raster = RasterConfig {
+            strategy: strategy.to_string(),
+            max_retries,
+            ..Default::default()
+        };
+        config
     }
 
     /// 建筑图纸预设
@@ -390,6 +463,10 @@ impl CadConfig {
                 format: "json".to_string(),
                 json_indent: 2,
                 auto_validate: true,
+            },
+            raster: RasterConfig {
+                strategy: "clean_line_art".to_string(),
+                ..Default::default()
             },
             profile_name: None,
         }
@@ -453,6 +530,11 @@ impl CadConfig {
                 json_indent: 2,
                 auto_validate: true,
             },
+            raster: RasterConfig {
+                strategy: "clean_line_art".to_string(),
+                semantic_mode: "semantic".to_string(),
+                ..Default::default()
+            },
             profile_name: None,
         }
     }
@@ -500,6 +582,63 @@ impl CadConfig {
                 json_indent: 2,
                 auto_validate: true,
             },
+            raster: RasterConfig {
+                strategy: "scanned_plan".to_string(),
+                max_retries: 3,
+                ..Default::default()
+            },
+            profile_name: None,
+        }
+    }
+
+    /// 照片/手绘草图预设（复杂光栅图片，强预处理）
+    fn photo_sketch_profile() -> Self {
+        Self {
+            parser: ParserConfig {
+                dxf: DxfConfig {
+                    layer_whitelist: None,
+                    entity_whitelist: Some(vec!["LINE".to_string(), "LWPOLYLINE".to_string()]),
+                    arc_tolerance_mm: 0.5,
+                    spline_tolerance_mm: 0.5,
+                    ignore_text: true,
+                    ignore_dimensions: true,
+                    ignore_hatch: true,
+                    ..Default::default()
+                },
+                pdf: PdfConfig {
+                    vectorize_tolerance_px: 2.0,
+                    edge_threshold: 0.12,
+                    min_line_length_px: 3.0,
+                    threshold: 128,
+                    max_pixels: 30_000_000,
+                },
+            },
+            topology: TopoConfig {
+                snap_tolerance_mm: 2.0,
+                min_line_length_mm: 3.0,
+                merge_angle_tolerance_deg: 10.0,
+                max_gap_bridge_length_mm: 5.0,
+                algorithm: "halfedge".to_string(),
+                skip_intersection_check: false,
+                enable_parallel: true,
+                parallel_threshold: 2000,
+            },
+            validator: ValidatorConfig {
+                closure_tolerance_mm: 2.0,
+                min_area_m2: 2.0,
+                min_edge_length_mm: 20.0,
+                min_angle_deg: 30.0,
+            },
+            export: ExportConfig {
+                format: "json".to_string(),
+                json_indent: 2,
+                auto_validate: true,
+            },
+            raster: RasterConfig {
+                strategy: "hand_sketch".to_string(),
+                max_retries: 3,
+                ..Default::default()
+            },
             profile_name: None,
         }
     }
@@ -540,6 +679,11 @@ impl CadConfig {
                 format: "json".to_string(),
                 json_indent: 0,
                 auto_validate: false,
+            },
+            raster: RasterConfig {
+                strategy: "auto".to_string(),
+                max_retries: 1,
+                ..Default::default()
             },
             profile_name: None,
         }
@@ -742,6 +886,15 @@ mod tests {
         assert_eq!(config.profile_name, Some("scanned".to_string()));
         assert_eq!(config.topology.snap_tolerance_mm, 2.0);
         assert_eq!(config.parser.pdf.edge_threshold, 0.15);
+    }
+
+    #[test]
+    fn test_profile_photo_sketch() {
+        let config = CadConfig::from_profile("photo_sketch").unwrap();
+        assert_eq!(config.profile_name, Some("photo_sketch".to_string()));
+        assert_eq!(config.topology.algorithm, "halfedge");
+        assert!(config.topology.enable_parallel);
+        assert_eq!(config.parser.pdf.min_line_length_px, 3.0);
     }
 
     #[test]

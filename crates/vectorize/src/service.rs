@@ -9,13 +9,17 @@ use image::{DynamicImage, GenericImageView, GrayImage};
 use log::{debug, warn};
 
 use crate::algorithms::{
-    adaptive_params, detect_edges, detect_line_types_from_polylines, douglas_peucker,
-    extract_contours, fill_gaps, hough_assisted_gap_filling, architectural_rules,
-    paper_detection, perspective_correction, preprocessing, skeletonize, threshold,
-    threshold as threshold_algo,
+    adaptive_params, architectural_rules, detect_edges, detect_line_types_from_polylines,
+    douglas_peucker, extract_contours, fill_gaps, hough_assisted_gap_filling, paper_detection,
+    perspective_correction, preprocessing, skeletonize, threshold, threshold as threshold_algo,
+    FitData, OcrBackend, SkeletonConfig,
 };
-use crate::config::{PreprocessingConfig, VectorizeConfig};
+use crate::config::{PreprocessingConfig, RasterStrategy, VectorizeConfig};
 use crate::line_type::LineType;
+use crate::pipeline::{
+    strategy_for_kind, PrimitiveCandidate, RasterVectorizationOutput, SemanticCandidate,
+    SymbolCandidate, TextCandidate, VectorizationAttemptReport, VectorizePipelineBuilder,
+};
 use crate::quality::evaluate_image_quality;
 use accelerator_api::{AcceleratorOp, EdgeMap, Image as AcceleratorImage};
 
@@ -71,6 +75,110 @@ impl VectorizeService {
     /// 从 DynamicImage 矢量化（使用内部加速器）
     pub fn vectorize_image(&self, img: &DynamicImage) -> Result<Vec<Polyline>, CadError> {
         self.vectorize_image_with_config(img, &self.config)
+    }
+
+    /// 从 DynamicImage 矢量化并返回结构化报告。
+    pub fn vectorize_image_detailed(
+        &self,
+        img: &DynamicImage,
+        config: &VectorizeConfig,
+        debug_artifacts: bool,
+    ) -> Result<RasterVectorizationOutput, CadError> {
+        let gray = img.to_luma8();
+        let quality_score = evaluate_image_quality(&gray);
+        let (detected_kind, _) = crate::pipeline::detect_raster_kind(&gray, quality_score);
+
+        let mut configs = Vec::new();
+        if config.raster_strategy == RasterStrategy::Auto {
+            let detected_strategy = strategy_for_kind(detected_kind);
+            let mut detected_config = VectorizeConfig::preset(detected_strategy);
+            detected_config.max_pixels = config.max_pixels;
+            detected_config.max_retries = config.max_retries;
+            configs.push(detected_config);
+        } else {
+            configs.push(config.clone());
+        }
+
+        for fallback in [
+            RasterStrategy::CleanLineArt,
+            RasterStrategy::ScannedPlan,
+            RasterStrategy::LowContrast,
+            RasterStrategy::PhotoPerspective,
+            RasterStrategy::HandSketch,
+        ] {
+            if configs
+                .iter()
+                .all(|existing| existing.raster_strategy != fallback)
+            {
+                let mut fallback_config = VectorizeConfig::preset(fallback);
+                fallback_config.max_pixels = config.max_pixels;
+                fallback_config.max_retries = config.max_retries;
+                configs.push(fallback_config);
+            }
+        }
+
+        let max_attempts = config.max_retries.max(1).min(configs.len());
+        configs.truncate(max_attempts);
+
+        let mut attempts = Vec::new();
+        let mut best: Option<(RasterVectorizationOutput, f64)> = None;
+
+        for (idx, attempt_config) in configs.iter().enumerate() {
+            let pipeline = VectorizePipelineBuilder::from_config(attempt_config).build();
+            match pipeline.process_detailed(img, debug_artifacts && idx == 0) {
+                Ok(mut output) => {
+                    let score = attempt_score(
+                        output.report.quality_score,
+                        output.report.final_polyline_count,
+                        output.report.contour_count,
+                    );
+                    attempts.push(VectorizationAttemptReport {
+                        attempt_index: idx + 1,
+                        strategy: attempt_config.raster_strategy,
+                        threshold: attempt_config.threshold,
+                        snap_tolerance_px: attempt_config.snap_tolerance_px,
+                        min_line_length_px: attempt_config.min_line_length_px,
+                        quality_score: output.report.quality_score,
+                        polyline_count: output.report.final_polyline_count,
+                        score,
+                        error_code: None,
+                        message: None,
+                    });
+                    output.report.selected_strategy = attempt_config.raster_strategy;
+
+                    if best
+                        .as_ref()
+                        .is_none_or(|(_, best_score)| score > *best_score)
+                    {
+                        best = Some((output, score));
+                    }
+                }
+                Err(err) => {
+                    attempts.push(VectorizationAttemptReport {
+                        attempt_index: idx + 1,
+                        strategy: attempt_config.raster_strategy,
+                        threshold: attempt_config.threshold,
+                        snap_tolerance_px: attempt_config.snap_tolerance_px,
+                        min_line_length_px: attempt_config.min_line_length_px,
+                        quality_score,
+                        polyline_count: 0,
+                        score: 0.0,
+                        error_code: Some("pipeline_failed".to_string()),
+                        message: Some(err.to_string()),
+                    });
+                }
+            }
+        }
+
+        let (mut output, _) = best.ok_or_else(|| CadError::VectorizeFailed {
+            message: "所有光栅矢量化策略均失败".to_string(),
+        })?;
+        output.report.attempts = attempts;
+        output.report.primitive_candidates = primitive_candidates(&output.polylines);
+        output.report.text_candidates = text_candidates(&gray);
+        output.report.symbol_candidates = symbol_candidates(&gray);
+        output.report.semantic_candidates = semantic_candidates(&output.polylines);
+        Ok(output)
     }
 
     /// 从 DynamicImage 矢量化（使用指定配置）
@@ -254,12 +362,14 @@ impl VectorizeService {
                 if adapted_config.use_opencv {
                     skeletonize_opencv(&edges).unwrap_or_else(|_| skeletonize(&edges))
                 } else {
-                    skeletonize(&edges)
+                    let config = SkeletonConfig::default();
+                    skeletonize(&edges, &config)
                 }
             }
             #[cfg(not(feature = "opencv"))]
             {
-                skeletonize(&edges)
+                let config = SkeletonConfig::default();
+                skeletonize(&edges, &config)
             }
         } else {
             edges
@@ -280,25 +390,26 @@ impl VectorizeService {
 
         // 5.5. OpenCV 多边形简化（approxPolyDP）
         #[cfg(feature = "opencv")]
-        let contours = if adapted_config.use_opencv && adapted_config.opencv_approx_epsilon.is_some() {
-            let epsilon = adapted_config.opencv_approx_epsilon.unwrap_or(2.0);
-            match simplify_contours_opencv(&contours, epsilon) {
-                Ok(simplified) => {
-                    debug!(
-                        "OpenCV approxPolyDP 简化：{} -> {} 个轮廓",
-                        contours.len(),
-                        simplified.len()
-                    );
-                    simplified
+        let contours =
+            if adapted_config.use_opencv && adapted_config.opencv_approx_epsilon.is_some() {
+                let epsilon = adapted_config.opencv_approx_epsilon.unwrap_or(2.0);
+                match simplify_contours_opencv(&contours, epsilon) {
+                    Ok(simplified) => {
+                        debug!(
+                            "OpenCV approxPolyDP 简化：{} -> {} 个轮廓",
+                            contours.len(),
+                            simplified.len()
+                        );
+                        simplified
+                    }
+                    Err(e) => {
+                        warn!("OpenCV 多边形简化失败：{}, 使用原始轮廓", e);
+                        contours
+                    }
                 }
-                Err(e) => {
-                    warn!("OpenCV 多边形简化失败：{}, 使用原始轮廓", e);
-                    contours
-                }
-            }
-        } else {
-            contours
-        };
+            } else {
+                contours
+            };
 
         // 6. 简化和吸附
         let mut simplified = self.simplify_polylines(&contours, &adapted_config);
@@ -352,7 +463,11 @@ impl VectorizeService {
                 adapted_config.max_angle_dev_deg,
                 adapted_config.hough_threshold,
             );
-            debug!("霍夫辅助缺口填充: {} -> {} 条多段线", before, simplified.len());
+            debug!(
+                "霍夫辅助缺口填充: {} -> {} 条多段线",
+                before,
+                simplified.len()
+            );
         }
 
         // [新增] 10. 建筑规则几何校正（正交性/平行性校正）
@@ -360,13 +475,14 @@ impl VectorizeService {
             let before = simplified.len();
             architectural_rules::correct_all(
                 &mut simplified,
-                5.0,  // 5 度容差
-                0.15, // 15% 间距容差
+                5.0,                                    // 5 度容差
+                0.15,                                   // 15% 间距容差
                 adapted_config.snap_tolerance_px * 4.0, // 最大闭合间隙
             );
             debug!(
                 "建筑规则校正: {} -> {} 条多段线（正交化+平行均匀化+闭合）",
-                before, simplified.len()
+                before,
+                simplified.len()
             );
         }
 
@@ -541,6 +657,125 @@ fn edge_map_to_gray_image(edge_map: &EdgeMap) -> GrayImage {
     }
 
     result
+}
+
+fn attempt_score(quality_score: f64, polyline_count: usize, contour_count: usize) -> f64 {
+    let geometry_score = if polyline_count == 0 {
+        0.0
+    } else {
+        (polyline_count as f64).log10().min(2.0) * 15.0
+    };
+    let contour_penalty = if contour_count > 10_000 { 15.0 } else { 0.0 };
+    (quality_score + geometry_score - contour_penalty).clamp(0.0, 100.0)
+}
+
+fn primitive_candidates(polylines: &[Polyline]) -> Vec<PrimitiveCandidate> {
+    polylines
+        .iter()
+        .enumerate()
+        .take(256)
+        .filter_map(|(_, polyline)| {
+            crate::algorithms::fit_best_primitive(polyline, 2.0).map(|fit| {
+                let (primitive_type, start, end) = match &fit.data {
+                    FitData::Line(line) => ("line", line.start, line.end),
+                    FitData::Arc(arc) => {
+                        let start = [
+                            arc.center[0] + arc.radius * arc.start_angle.cos(),
+                            arc.center[1] + arc.radius * arc.start_angle.sin(),
+                        ];
+                        let end = [
+                            arc.center[0] + arc.radius * arc.end_angle.cos(),
+                            arc.center[1] + arc.radius * arc.end_angle.sin(),
+                        ];
+                        ("arc", start, end)
+                    }
+                    FitData::Bezier(bezier) => ("bezier", bezier.p0, bezier.p3),
+                };
+
+                PrimitiveCandidate {
+                    primitive_type: primitive_type.to_string(),
+                    start,
+                    end,
+                    rms_error: fit.rms_error,
+                    confidence: (1.0 / (1.0 + fit.rms_error)).clamp(0.0, 1.0),
+                }
+            })
+        })
+        .collect()
+}
+
+fn text_candidates(gray: &GrayImage) -> Vec<TextCandidate> {
+    let ocr = crate::algorithms::HeuristicOcrBackend::new();
+    ocr.recognize(gray)
+        .into_iter()
+        .map(|text| {
+            let accepted = text.confidence >= 0.5;
+            TextCandidate {
+                content: text.text,
+                confidence: text.confidence,
+                bbox: [
+                    text.bbox.x_min as f64,
+                    text.bbox.y_min as f64,
+                    text.bbox.x_max as f64,
+                    text.bbox.y_max as f64,
+                ],
+                rotation: text.orientation,
+                accepted,
+            }
+        })
+        .collect()
+}
+
+fn symbol_candidates(gray: &GrayImage) -> Vec<SymbolCandidate> {
+    let classifier = crate::algorithms::SymbolClassifier::new();
+    classifier
+        .classify(gray)
+        .into_iter()
+        .map(|symbol| SymbolCandidate {
+            symbol_type: symbol.symbol_type.to_string(),
+            confidence: symbol.confidence,
+            bbox: [
+                symbol.x as f64,
+                symbol.y as f64,
+                (symbol.x + symbol.width) as f64,
+                (symbol.y + symbol.height) as f64,
+            ],
+            rotation: symbol.rotation,
+        })
+        .collect()
+}
+
+fn semantic_candidates(polylines: &[Polyline]) -> Vec<SemanticCandidate> {
+    polylines
+        .iter()
+        .enumerate()
+        .filter_map(|(idx, polyline)| {
+            if polyline.len() < 2 {
+                return None;
+            }
+            let length = polyline
+                .windows(2)
+                .map(|segment| {
+                    let dx = segment[1][0] - segment[0][0];
+                    let dy = segment[1][1] - segment[0][1];
+                    (dx * dx + dy * dy).sqrt()
+                })
+                .sum::<f64>();
+            let semantic_type = if length > 80.0 {
+                "hard_wall"
+            } else if length > 25.0 {
+                "opening"
+            } else {
+                "detail_line"
+            };
+            Some(SemanticCandidate {
+                target_id: idx,
+                semantic_type: semantic_type.to_string(),
+                confidence: if length > 80.0 { 0.72 } else { 0.55 },
+                source: "rule".to_string(),
+            })
+        })
+        .collect()
 }
 
 impl Default for VectorizeService {

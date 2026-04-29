@@ -3,8 +3,10 @@
 //! 支持从文件或字节流加载 PNG/JPG/BMP/TIFF/WebP 格式，
 //! 输出 `image::DynamicImage` 直接对接 `VectorizeService`。
 
+use std::io::Cursor;
 use std::path::Path;
 
+use exif::Reader as ExifReader;
 use image::{DynamicImage, GenericImageView};
 use thiserror::Error;
 
@@ -43,6 +45,10 @@ pub struct RasterImageInfo {
     pub dpi_x: Option<f64>,
     /// 垂直 DPI（如果从 EXIF 提取到）
     pub dpi_y: Option<f64>,
+    /// DPI 来源（png_phys/tiff_resolution/jpeg_jfif/jpeg_exif）
+    pub dpi_source: Option<String>,
+    /// DPI 是否可用于毫米尺度恢复。
+    pub dpi_trusted: bool,
     /// 检测到的图片格式
     pub format: RasterFormat,
     /// 源文件路径（如果是从文件加载）
@@ -56,6 +62,8 @@ impl RasterImageInfo {
             height,
             dpi_x: None,
             dpi_y: None,
+            dpi_source: None,
+            dpi_trusted: false,
             format,
             source_path: None,
         }
@@ -164,10 +172,16 @@ impl RasterLoader {
             return Err(RasterError::InvalidDimensions { width, height });
         }
 
-        let info = RasterImageInfo::new(width, height, format);
+        let mut info = RasterImageInfo::new(width, height, format);
 
-        // DPI 信息需从 EXIF 提取（image crate 0.25 的 EXIF 支持有限）
-        // 当前版本不自动提取 DPI，使用者可通过 VectorizeConfig 手动设置
+        // 从格式元数据提取 DPI 信息
+        if let Some((dpi_x, dpi_y, source, trusted)) = extract_dpi(bytes, format) {
+            tracing::debug!("从 {} 提取到 DPI: {} x {}", source, dpi_x, dpi_y);
+            info.dpi_x = Some(dpi_x);
+            info.dpi_y = Some(dpi_y);
+            info.dpi_source = Some(source);
+            info.dpi_trusted = trusted;
+        }
 
         Ok((image, info))
     }
@@ -179,9 +193,333 @@ impl Default for RasterLoader {
     }
 }
 
+fn extract_dpi(bytes: &[u8], format: RasterFormat) -> Option<(f64, f64, String, bool)> {
+    match format {
+        RasterFormat::Png => extract_dpi_from_png_phys(bytes)
+            .map(|(x, y, trusted)| (x, y, "png_phys".to_string(), trusted)),
+        RasterFormat::Tiff => extract_dpi_from_tiff(bytes)
+            .map(|(x, y, trusted)| (x, y, "tiff_resolution".to_string(), trusted)),
+        RasterFormat::Jpeg => extract_dpi_from_jpeg_jfif(bytes)
+            .map(|(x, y, trusted)| (x, y, "jpeg_jfif".to_string(), trusted))
+            .or_else(|| {
+                extract_dpi_from_exif(bytes).map(|(x, y)| (x, y, "jpeg_exif".to_string(), true))
+            }),
+        _ => extract_dpi_from_exif(bytes).map(|(x, y)| (x, y, "exif".to_string(), true)),
+    }
+}
+
+fn extract_dpi_from_png_phys(bytes: &[u8]) -> Option<(f64, f64, bool)> {
+    const PNG_SIG: &[u8; 8] = b"\x89PNG\r\n\x1a\n";
+    if bytes.len() < 8 || &bytes[..8] != PNG_SIG {
+        return None;
+    }
+
+    let mut offset = 8usize;
+    while offset.checked_add(12)? <= bytes.len() {
+        let length = u32::from_be_bytes(bytes[offset..offset + 4].try_into().ok()?) as usize;
+        let chunk_type = &bytes[offset + 4..offset + 8];
+        let data_start = offset + 8;
+        let data_end = data_start.checked_add(length)?;
+        if data_end.checked_add(4)? > bytes.len() {
+            return None;
+        }
+
+        if chunk_type == b"pHYs" && length >= 9 {
+            let x_ppu = u32::from_be_bytes(bytes[data_start..data_start + 4].try_into().ok()?);
+            let y_ppu = u32::from_be_bytes(bytes[data_start + 4..data_start + 8].try_into().ok()?);
+            let unit = bytes[data_start + 8];
+            if unit == 1 && x_ppu > 0 && y_ppu > 0 {
+                return Some((x_ppu as f64 * 0.0254, y_ppu as f64 * 0.0254, true));
+            }
+            return None;
+        }
+
+        offset = data_end + 4;
+    }
+
+    None
+}
+
+fn extract_dpi_from_jpeg_jfif(bytes: &[u8]) -> Option<(f64, f64, bool)> {
+    if bytes.len() < 4 || !bytes.starts_with(&[0xFF, 0xD8]) {
+        return None;
+    }
+
+    let mut offset = 2usize;
+    while offset + 4 <= bytes.len() {
+        if bytes[offset] != 0xFF {
+            return None;
+        }
+        while offset < bytes.len() && bytes[offset] == 0xFF {
+            offset += 1;
+        }
+        if offset >= bytes.len() {
+            return None;
+        }
+        let marker = bytes[offset];
+        offset += 1;
+        if marker == 0xDA || marker == 0xD9 {
+            break;
+        }
+        if offset + 2 > bytes.len() {
+            return None;
+        }
+        let segment_len = u16::from_be_bytes([bytes[offset], bytes[offset + 1]]) as usize;
+        if segment_len < 2 || offset + segment_len > bytes.len() {
+            return None;
+        }
+        let data_start = offset + 2;
+        let data_end = offset + segment_len;
+        if marker == 0xE0
+            && data_end >= data_start + 14
+            && &bytes[data_start..data_start + 5] == b"JFIF\0"
+        {
+            let unit = bytes[data_start + 7];
+            let x_density = u16::from_be_bytes([bytes[data_start + 8], bytes[data_start + 9]]);
+            let y_density = u16::from_be_bytes([bytes[data_start + 10], bytes[data_start + 11]]);
+            if x_density == 0 || y_density == 0 {
+                return None;
+            }
+            return match unit {
+                1 => Some((x_density as f64, y_density as f64, true)),
+                2 => Some((x_density as f64 * 2.54, y_density as f64 * 2.54, true)),
+                _ => None,
+            };
+        }
+        offset = data_end;
+    }
+
+    None
+}
+
+fn extract_dpi_from_tiff(bytes: &[u8]) -> Option<(f64, f64, bool)> {
+    if bytes.len() < 8 {
+        return None;
+    }
+
+    let little = match &bytes[..2] {
+        b"II" => true,
+        b"MM" => false,
+        _ => return None,
+    };
+    if read_u16(bytes, 2, little)? != 42 {
+        return None;
+    }
+    let ifd_offset = read_u32(bytes, 4, little)? as usize;
+    let entry_count = read_u16(bytes, ifd_offset, little)? as usize;
+
+    let mut x_offset = None;
+    let mut y_offset = None;
+    let mut unit = 2u16;
+    for i in 0..entry_count {
+        let entry = ifd_offset + 2 + i * 12;
+        if entry + 12 > bytes.len() {
+            return None;
+        }
+        let tag = read_u16(bytes, entry, little)?;
+        let field_type = read_u16(bytes, entry + 2, little)?;
+        let count = read_u32(bytes, entry + 4, little)?;
+        let value = read_u32(bytes, entry + 8, little)?;
+        match tag {
+            282 if field_type == 5 && count == 1 => x_offset = Some(value as usize),
+            283 if field_type == 5 && count == 1 => y_offset = Some(value as usize),
+            296 if field_type == 3 && count == 1 => {
+                unit = if little {
+                    (value & 0xffff) as u16
+                } else {
+                    (value >> 16) as u16
+                };
+            }
+            _ => {}
+        }
+    }
+
+    let x = read_rational(bytes, x_offset?, little)?;
+    let y = read_rational(bytes, y_offset?, little)?;
+    if x <= 0.0 || y <= 0.0 {
+        return None;
+    }
+    match unit {
+        2 => Some((x, y, true)),
+        3 => Some((x * 2.54, y * 2.54, true)),
+        _ => Some((x, y, false)),
+    }
+}
+
+fn read_u16(bytes: &[u8], offset: usize, little: bool) -> Option<u16> {
+    let raw: [u8; 2] = bytes.get(offset..offset + 2)?.try_into().ok()?;
+    Some(if little {
+        u16::from_le_bytes(raw)
+    } else {
+        u16::from_be_bytes(raw)
+    })
+}
+
+fn read_u32(bytes: &[u8], offset: usize, little: bool) -> Option<u32> {
+    let raw: [u8; 4] = bytes.get(offset..offset + 4)?.try_into().ok()?;
+    Some(if little {
+        u32::from_le_bytes(raw)
+    } else {
+        u32::from_be_bytes(raw)
+    })
+}
+
+fn read_rational(bytes: &[u8], offset: usize, little: bool) -> Option<f64> {
+    let numerator = read_u32(bytes, offset, little)?;
+    let denominator = read_u32(bytes, offset + 4, little)?;
+    if denominator == 0 {
+        None
+    } else {
+        Some(numerator as f64 / denominator as f64)
+    }
+}
+
+/// 从 EXIF 数据提取 DPI 信息
+fn extract_dpi_from_exif(bytes: &[u8]) -> Option<(f64, f64)> {
+    let reader = ExifReader::new();
+    let mut cursor = Cursor::new(bytes);
+
+    let exif_data = match reader.read_from_container(&mut cursor) {
+        Ok(data) => data,
+        Err(_) => return None,
+    };
+
+    let mut x_res = None;
+    let mut y_res = None;
+    let mut unit = None;
+
+    for field in exif_data.fields() {
+        match field.tag {
+            exif::Tag::XResolution => {
+                if let exif::Value::Rational(ref r) = field.value {
+                    if !r.is_empty() {
+                        x_res = Some(r[0].to_f64());
+                    }
+                }
+            }
+            exif::Tag::YResolution => {
+                if let exif::Value::Rational(ref r) = field.value {
+                    if !r.is_empty() {
+                        y_res = Some(r[0].to_f64());
+                    }
+                }
+            }
+            exif::Tag::ResolutionUnit => {
+                if let exif::Value::Short(ref s) = field.value {
+                    if !s.is_empty() {
+                        unit = Some(s[0]);
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    match (x_res, y_res, unit) {
+        (Some(x), Some(y), Some(u)) => {
+            // 单位转换: 2=英寸, 3=厘米
+            let dpi_multiplier = match u {
+                2 => 1.0,  // 每英寸
+                3 => 2.54, // 每厘米 → 转英寸
+                _ => 1.0,  // 未知单位，默认英寸
+            };
+            Some((x * dpi_multiplier, y * dpi_multiplier))
+        }
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{DynamicImage, ImageBuffer, Rgba};
+    use std::io::Cursor;
+
+    fn make_test_png() -> Vec<u8> {
+        let img = ImageBuffer::from_fn(8, 8, |x, y| {
+            if x == y {
+                Rgba([0, 0, 0, 255])
+            } else {
+                Rgba([255, 255, 255, 255])
+            }
+        });
+        let mut cursor = Cursor::new(Vec::new());
+        DynamicImage::ImageRgba8(img)
+            .write_to(&mut cursor, image::ImageFormat::Png)
+            .unwrap();
+        cursor.into_inner()
+    }
+
+    fn make_png_phys_chunk(dpi: f64) -> Vec<u8> {
+        let ppm = (dpi / 0.0254).round() as u32;
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"\x89PNG\r\n\x1a\n");
+        bytes.extend_from_slice(&9u32.to_be_bytes());
+        bytes.extend_from_slice(b"pHYs");
+        bytes.extend_from_slice(&ppm.to_be_bytes());
+        bytes.extend_from_slice(&ppm.to_be_bytes());
+        bytes.push(1);
+        bytes.extend_from_slice(&0u32.to_be_bytes());
+        bytes
+    }
+
+    fn make_jpeg_jfif_header(dpi: u16) -> Vec<u8> {
+        vec![
+            0xFF,
+            0xD8,
+            0xFF,
+            0xE0,
+            0x00,
+            0x10,
+            b'J',
+            b'F',
+            b'I',
+            b'F',
+            0x00,
+            0x01,
+            0x02,
+            0x01,
+            (dpi >> 8) as u8,
+            dpi as u8,
+            (dpi >> 8) as u8,
+            dpi as u8,
+            0x00,
+            0x00,
+            0xFF,
+            0xD9,
+        ]
+    }
+
+    fn make_tiff_resolution(dpi: u32) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(b"II");
+        bytes.extend_from_slice(&42u16.to_le_bytes());
+        bytes.extend_from_slice(&8u32.to_le_bytes());
+        bytes.extend_from_slice(&3u16.to_le_bytes());
+
+        bytes.extend_from_slice(&282u16.to_le_bytes());
+        bytes.extend_from_slice(&5u16.to_le_bytes());
+        bytes.extend_from_slice(&1u32.to_le_bytes());
+        bytes.extend_from_slice(&50u32.to_le_bytes());
+
+        bytes.extend_from_slice(&283u16.to_le_bytes());
+        bytes.extend_from_slice(&5u16.to_le_bytes());
+        bytes.extend_from_slice(&1u32.to_le_bytes());
+        bytes.extend_from_slice(&58u32.to_le_bytes());
+
+        bytes.extend_from_slice(&296u16.to_le_bytes());
+        bytes.extend_from_slice(&3u16.to_le_bytes());
+        bytes.extend_from_slice(&1u32.to_le_bytes());
+        bytes.extend_from_slice(&2u16.to_le_bytes());
+        bytes.extend_from_slice(&0u16.to_le_bytes());
+
+        bytes.extend_from_slice(&0u32.to_le_bytes());
+        bytes.extend_from_slice(&dpi.to_le_bytes());
+        bytes.extend_from_slice(&1u32.to_le_bytes());
+        bytes.extend_from_slice(&dpi.to_le_bytes());
+        bytes.extend_from_slice(&1u32.to_le_bytes());
+        bytes
+    }
 
     #[test]
     fn test_loader_new_defaults() {
@@ -209,11 +547,104 @@ mod tests {
     }
 
     #[test]
+    fn test_from_bytes_valid_png() {
+        let png = make_test_png();
+        let (image, info) = RasterLoader::from_bytes(&png, Some("png")).unwrap();
+
+        assert_eq!(image.dimensions(), (8, 8));
+        assert_eq!(info.width, 8);
+        assert_eq!(info.height, 8);
+        assert_eq!(info.format, RasterFormat::Png);
+    }
+
+    #[test]
+    fn test_from_file_valid_png() {
+        let png = make_test_png();
+        let path = std::env::temp_dir().join(format!(
+            "raster_loader_test_{}_valid.png",
+            std::process::id()
+        ));
+        std::fs::write(&path, &png).unwrap();
+
+        let (image, info) = RasterLoader::from_file(&path).unwrap();
+        std::fs::remove_file(&path).ok();
+
+        assert_eq!(image.dimensions(), (8, 8));
+        assert_eq!(info.width, 8);
+        assert_eq!(info.height, 8);
+        assert_eq!(info.format, RasterFormat::Png);
+        assert_eq!(info.source_path, Some(path.display().to_string()));
+    }
+
+    #[test]
+    fn test_from_file_and_from_bytes_consistent() {
+        let png = make_test_png();
+        let path = std::env::temp_dir().join(format!(
+            "raster_loader_test_{}_consistent.png",
+            std::process::id()
+        ));
+        std::fs::write(&path, &png).unwrap();
+
+        let (_, file_info) = RasterLoader::from_file(&path).unwrap();
+        let (_, bytes_info) = RasterLoader::from_bytes(&png, Some("consistent.png")).unwrap();
+        std::fs::remove_file(&path).ok();
+
+        assert_eq!(file_info.width, bytes_info.width);
+        assert_eq!(file_info.height, bytes_info.height);
+        assert_eq!(file_info.format, bytes_info.format);
+    }
+
+    #[test]
+    fn test_from_file_too_large() {
+        let path = std::env::temp_dir().join(format!(
+            "raster_loader_test_{}_too_large.png",
+            std::process::id()
+        ));
+        let file = std::fs::File::create(&path).unwrap();
+        file.set_len((100 * 1024 * 1024 + 1) as u64).unwrap();
+        drop(file);
+
+        let result = RasterLoader::from_file(&path);
+        std::fs::remove_file(&path).ok();
+
+        assert!(matches!(result, Err(RasterError::FileTooLarge { .. })));
+    }
+
+    #[test]
     fn test_raster_image_info() {
         let info = RasterImageInfo::new(800, 600, RasterFormat::Png);
         assert_eq!(info.width, 800);
         assert_eq!(info.height, 600);
         assert_eq!(info.dpi_x, None);
+        assert_eq!(info.dpi_source, None);
+        assert!(!info.dpi_trusted);
         assert_eq!(info.format, RasterFormat::Png);
+    }
+
+    #[test]
+    fn test_png_phys_dpi_300() {
+        let bytes = make_png_phys_chunk(300.0);
+        let (x, y, trusted) = extract_dpi_from_png_phys(&bytes).unwrap();
+        assert!((x - 300.0).abs() < 0.05);
+        assert!((y - 300.0).abs() < 0.05);
+        assert!(trusted);
+    }
+
+    #[test]
+    fn test_jpeg_jfif_dpi_72() {
+        let bytes = make_jpeg_jfif_header(72);
+        let (x, y, trusted) = extract_dpi_from_jpeg_jfif(&bytes).unwrap();
+        assert_eq!(x, 72.0);
+        assert_eq!(y, 72.0);
+        assert!(trusted);
+    }
+
+    #[test]
+    fn test_tiff_resolution_dpi_96() {
+        let bytes = make_tiff_resolution(96);
+        let (x, y, trusted) = extract_dpi_from_tiff(&bytes).unwrap();
+        assert_eq!(x, 96.0);
+        assert_eq!(y, 96.0);
+        assert!(trusted);
     }
 }

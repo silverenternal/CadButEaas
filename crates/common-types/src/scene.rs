@@ -233,6 +233,9 @@ pub struct SceneState {
     /// 原始边数据（用于前端显示）
     #[serde(default)]
     pub edges: Vec<RawEdge>,
+    /// 光栅来源与尺度恢复元数据。
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raster_metadata: Option<RasterSceneMetadata>,
     /// 单位
     pub units: LengthUnit,
     /// 坐标系描述
@@ -248,6 +251,35 @@ pub struct SceneState {
     /// 渲染配置
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub render_config: Option<RenderConfig>,
+}
+
+/// 光栅场景元数据。
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct RasterSceneMetadata {
+    pub source_image: Option<SourceImageMetadata>,
+    pub dpi: Option<(f64, f64)>,
+    pub px_to_mm: Option<[f64; 2]>,
+    pub scale_confidence: ScaleConfidence,
+    pub calibration_source: Option<String>,
+}
+
+/// 光栅来源图片元数据。
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SourceImageMetadata {
+    pub width_px: u32,
+    pub height_px: u32,
+    pub format: String,
+    pub path: Option<String>,
+}
+
+/// 尺度可信度。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ScaleConfidence {
+    High,
+    Medium,
+    Low,
+    Unknown,
 }
 
 /// 原始边（用于前端显示）

@@ -186,23 +186,15 @@ fn test_dimension_definition_points_parse() {
 #[test]
 fn test_dimension_text_parse() {
     // 验证标注文字提取逻辑
-    let empty_text = "";
-    let non_empty_text = "100mm";
+    let empty_text = String::new();
+    let non_empty_text = "100mm".to_string();
 
     // 空文字应该返回 None
-    let text_option: Option<String> = if empty_text.is_empty() {
-        None
-    } else {
-        Some(empty_text.to_string())
-    };
+    let text_option: Option<String> = (!empty_text.is_empty()).then(|| empty_text.clone());
     assert!(text_option.is_none(), "空文字应该返回 None");
 
     // 非空文字应该返回 Some
-    let text_option: Option<String> = if non_empty_text.is_empty() {
-        None
-    } else {
-        Some(non_empty_text.to_string())
-    };
+    let text_option: Option<String> = (!non_empty_text.is_empty()).then(|| non_empty_text.clone());
     assert!(text_option.is_some(), "非空文字应该返回 Some");
     assert_eq!(text_option.unwrap(), "100mm", "文字内容应该正确");
 

@@ -329,6 +329,8 @@ impl ConfigurablePipeline {
             output_bytes: (*output_bytes_guard).clone(),
             text_annotations: (*text_annotations_guard).clone(),
             dimension_summary: (*dimension_summary_guard).clone(),
+            raster_report: None,
+            semantic_candidates: Vec::new(),
         })
     }
 

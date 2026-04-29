@@ -7,6 +7,58 @@ fn default_max_pixels() -> usize {
     30_000_000
 }
 
+fn default_max_retries() -> usize {
+    3
+}
+
+/// 光栅矢量化策略。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum RasterStrategy {
+    /// 根据图像质量和结构自动选择策略。
+    #[default]
+    Auto,
+    /// 干净的黑白线稿。
+    CleanLineArt,
+    /// 扫描图纸。
+    ScannedPlan,
+    /// 拍照图纸，通常需要裁剪和透视校正。
+    PhotoPerspective,
+    /// 手绘或偏斜草图。
+    HandSketch,
+    /// 低对比度图像。
+    LowContrast,
+}
+
+impl RasterStrategy {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            RasterStrategy::Auto => "auto",
+            RasterStrategy::CleanLineArt => "clean_line_art",
+            RasterStrategy::ScannedPlan => "scanned_plan",
+            RasterStrategy::PhotoPerspective => "photo_perspective",
+            RasterStrategy::HandSketch => "hand_sketch",
+            RasterStrategy::LowContrast => "low_contrast",
+        }
+    }
+}
+
+impl std::str::FromStr for RasterStrategy {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "auto" => Ok(Self::Auto),
+            "clean" | "clean_line_art" | "line_art" | "raster_clean" => Ok(Self::CleanLineArt),
+            "scan" | "scanned" | "scanned_plan" | "raster_scan" => Ok(Self::ScannedPlan),
+            "photo" | "photo_perspective" | "raster_photo" => Ok(Self::PhotoPerspective),
+            "sketch" | "hand_sketch" | "raster_sketch" => Ok(Self::HandSketch),
+            "low_contrast" | "lowcontrast" => Ok(Self::LowContrast),
+            other => Err(format!("未知光栅策略: {}", other)),
+        }
+    }
+}
+
 /// 矢量化配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct VectorizeConfig {
@@ -64,6 +116,12 @@ pub struct VectorizeConfig {
     pub architectural_correction: bool,
     /// 自适应参数调整（根据图像质量自动调整预处理参数）
     pub adaptive_params: bool,
+    /// 光栅图片策略。
+    #[serde(default)]
+    pub raster_strategy: RasterStrategy,
+    /// 质量反馈最大重试次数。
+    #[serde(default = "default_max_retries")]
+    pub max_retries: usize,
 }
 
 /// 图像预处理配置
@@ -127,11 +185,72 @@ impl Default for VectorizeConfig {
             hough_threshold: 50,
             architectural_correction: true,
             adaptive_params: true,
+            raster_strategy: RasterStrategy::Auto,
+            max_retries: 3,
         }
     }
 }
 
 impl VectorizeConfig {
+    /// 按策略生成一套保守预设。
+    pub fn preset(strategy: RasterStrategy) -> Self {
+        let mut config = Self {
+            raster_strategy: strategy,
+            ..Default::default()
+        };
+
+        match strategy {
+            RasterStrategy::Auto => {}
+            RasterStrategy::CleanLineArt => {
+                config.preprocessing.denoise = false;
+                config.preprocessing.enhance_contrast = false;
+                config.adaptive_threshold = true;
+                config.snap_tolerance_px = 1.5;
+                config.min_line_length_px = 5.0;
+                config.auto_crop_paper = false;
+                config.perspective_correction = false;
+            }
+            RasterStrategy::ScannedPlan => {
+                config.preprocessing.denoise = true;
+                config.preprocessing.denoise_method = "median".to_string();
+                config.preprocessing.denoise_strength = 3.0;
+                config.preprocessing.enhance_contrast = true;
+                config.snap_tolerance_px = 2.5;
+                config.min_line_length_px = 8.0;
+                config.auto_crop_paper = true;
+            }
+            RasterStrategy::PhotoPerspective => {
+                config.preprocessing.denoise = true;
+                config.preprocessing.denoise_method = "gaussian".to_string();
+                config.preprocessing.denoise_strength = 1.2;
+                config.preprocessing.enhance_contrast = true;
+                config.snap_tolerance_px = 3.0;
+                config.min_line_length_px = 6.0;
+                config.auto_crop_paper = true;
+                config.perspective_correction = true;
+            }
+            RasterStrategy::HandSketch => {
+                config.preprocessing.denoise = true;
+                config.preprocessing.denoise_method = "median".to_string();
+                config.preprocessing.denoise_strength = 5.0;
+                config.snap_tolerance_px = 4.0;
+                config.min_line_length_px = 3.0;
+                config.max_angle_dev_deg = 12.0;
+                config.hough_gap_filling = true;
+            }
+            RasterStrategy::LowContrast => {
+                config.preprocessing.enhance_contrast = true;
+                config.preprocessing.clahe_clip_limit = 4.0;
+                config.preprocessing.denoise = true;
+                config.threshold = 110;
+                config.snap_tolerance_px = 3.0;
+                config.min_line_length_px = 4.0;
+            }
+        }
+
+        config
+    }
+
     /// 创建边缘检测配置
     pub fn to_edge_detect_config(&self) -> EdgeDetectConfig {
         EdgeDetectConfig {

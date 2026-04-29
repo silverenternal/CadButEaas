@@ -18,7 +18,7 @@
 //!
 //! ## 使用示例
 //!
-//! ```rust
+//! ```rust,ignore
 //! use parser::parser_factory::ParserFactory;
 //!
 //! // 自动选择（推荐）

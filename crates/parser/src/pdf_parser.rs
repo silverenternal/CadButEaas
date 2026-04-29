@@ -290,6 +290,7 @@ impl PdfParser {
     /// - 图形状态：q/Q (save/restore)
     /// - 文字操作：BT/ET (begin/end text), Tm (text matrix), Td/TD (move text),
     ///   T* (next line), Tf (font/size), Tj (show text), TJ (show with positioning)
+    #[allow(clippy::collapsible_match)]
     fn parse_operators(content: &[u8]) -> Vec<RawEntity> {
         let mut entities = Vec::new();
         let content_str = String::from_utf8_lossy(content);

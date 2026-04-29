@@ -22,12 +22,24 @@
 //! ```
 
 pub mod algorithms;
+pub mod benchmark_data;
 pub mod config;
+pub mod pipeline;
 pub mod quality;
 pub mod service;
+pub mod test_data;
 
 pub use algorithms::*;
-pub use config::VectorizeConfig;
+pub use config::{RasterStrategy, VectorizeConfig};
+pub use pipeline::{
+    detect_raster_kind, strategy_for_kind, DebugArtifact, FitResult, FitStage, FitStageConfig,
+    ImageWithContext, PreprocessStage, PreprocessStageConfig, PrimitiveCandidate, RasterKind,
+    RasterVectorizationOutput, RasterVectorizationReport, RefineStage, RefineStageConfig,
+    SemanticCandidate, SkeletonResult, SkeletonizeStage, SkeletonizeStageConfig, Stage, StageError,
+    StageResult, StageStats, SymbolCandidate, TextCandidate, ThresholdStage, ThresholdStageConfig,
+    TraceResult, TraceStage, TraceStageConfig, VectorizationAttemptReport, VectorizationStrategy,
+    VectorizePipeline, VectorizePipelineBuilder,
+};
 pub use service::VectorizeService;
 
 #[cfg(feature = "registry")]

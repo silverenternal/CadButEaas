@@ -1,362 +1,514 @@
 {
-  "title": "PNG/JPG 光栅图纸几何语义提取",
-  "version": "v0.1.0",
-  "created": "2026-04-16",
+  "title": "强化无几何信息图片图纸解析能力",
+  "version": "v0.3.0",
+  "created": "2026-04-29",
   "status": "planning",
-  "description": "为 CAD 几何智能处理系统增加对 PNG/JPG/BMP/TIFF 等无几何语义光栅图片的几何语义提取能力，复用现有矢量化、拓扑构建、验证导出管线",
-  "architecture_decision": {
-    "core_principle": "解耦光栅加载层，复用矢量化+拓扑管线",
-    "rationale": "vectorize crate 已具备完整的 raster→polyline 能力（预处理→二值化→边缘检测→骨架化→轮廓提取→多边形简化→端点吸附→线型识别→圆弧拟合），只需新增光栅图片加载入口并将其接入 ProcessingPipeline 和 HTTP API",
-    "design_choices": [
-      "新增 raster-loader crate：统一负责 PNG/JPG/BMP/TIFF 加载、格式转换、DPI 提取，输出 DynamicImage",
-      "不修改 ParserService：Parser 专注于有几何语义的格式（DXF/DWG/PDF/SVG/STL），避免将光栅加载和几何解析混在一个服务中",
-      "复用 VectorizeService：raster-loader 的输出直接喂给 VectorizeService::vectorize_image()",
-      "复用 ProcessingPipeline 下游：polyline → Topo → Validator → Export 无需任何改动",
-      "API 层扩展：在 orch API 中新增 /process/raster 路由，复用 process_handler_v1 的渐进式渲染模式"
+  "goal": "把 PNG/JPG/BMP/TIFF/WebP 等无几何语义图片从当前可观测、可配置的基础光栅管线，提升到可稳定恢复尺度、工程图基元、尺寸文字、CAD 符号和建筑/机械语义的生产级图纸解析能力。",
+  "current_assessment": {
+    "already_available": [
+      "raster-loader 已支持光栅格式检测、图片解码、PNG pHYs/JPEG JFIF 或 EXIF/TIFF resolution DPI 提取。",
+      "orchestrator 已有 process_raster_file/process_raster_bytes/process_raster_file_with_options/process_raster_bytes_with_options 和 /process/raster 入口。",
+      "vectorize 已有 RasterVectorizationReport、阶段耗时、质量评分、策略重试、debug_artifacts、primitive/text/symbol/semantic candidates 的基础输出。",
+      "vectorize 已有预处理、阈值、骨架化、轮廓提取、缺口填充、透视校正、建筑规则、OCR、符号识别、primitive fitting、tracing、topology_stitch、quality_eval 等模块。",
+      "common-types 的 SceneState 已有 raster_metadata，可记录 source_image、dpi、px_to_mm、scale_confidence 和 calibration_source。",
+      "CLI/API 已有 raster_strategy、dpi_override、known_distance_px/known_distance_mm、debug_artifacts、max_retries 等入口。",
+      "已有合成光栅 golden 测试和 orchestrator 光栅语义端到端测试骨架。",
+      "已有 vector-graph crate、PyTorch/tch 可选 feature、train_gnn 训练入口，以及 checkpoints/model_best.ot、model_final.ot、checkpoint_epoch_*.ot 和 training_metrics.json；当前记录的同分布合成验证 best_val_accuracy 为 0.9375。"
+    ],
+    "main_gaps": [
+      "当前基础矢量化仍偏传统图像处理，真实拍照、褶皱、阴影、低对比、手绘和复杂扫描场景的召回/精度没有可靠门槛。",
+      "primitive fitting 候选尚未作为强类型 RawEntity/Scene primitives 进入主结果，圆弧、门洞弧、机械孔仍容易退化为折线。",
+      "tracing/junction/topology_stitch 的交点、端点类型和 stroke 信息没有充分驱动 topo 输入，T/X 交叉和断线桥接仍可能不稳定。",
+      "OCR 仍是启发式基线，无法可靠识别真实尺寸文字、公差、比例尺、标题栏和技术要求。",
+      "CAD 符号模板库和匹配策略较薄，缺少常用机械/建筑符号的真实模板、旋转尺度鲁棒性和几何屏蔽策略。",
+      "光栅语义候选目前主要是规则占位，缺少基于 CadGraph 特征、上下文和可选模型的高置信墙/门/窗/尺寸线分类。",
+      "已有训练权重尚未产品化接入光栅主流程；orchestrator 当前只用 vector_graph_rule 生成语义候选，没有加载 checkpoints/model_best.ot 做模型推理，也缺少真实图 OOD 评估、模型版本元数据和部署策略。",
+      "质量评分和失败建议还不够贴近用户动作，缺少按失败原因给出的自动降级、重跑参数和前端可视化诊断。",
+      "缺少带 ground truth 的真实图纸数据集、退化生成器、慢速真实图 ignored 测试和持续性能预算。"
+    ]
+  },
+  "success_metrics": {
+    "geometry": [
+      "合成干净线稿线段召回率 >= 0.94，精确率 >= 0.92。",
+      "扫描噪声/JPEG/低对比合成图线段召回率 >= 0.88，精确率 >= 0.85。",
+      "T/X/L 交点类型识别准确率 >= 0.90。",
+      "圆、圆弧、门洞弧基元拟合 F1 >= 0.85。",
+      "已知 DPI 或用户校准场景下坐标尺度误差 <= 1.0%。"
+    ],
+    "semantics": [
+      "基础墙/门/窗/开口语义分类 F1 >= 0.80。",
+      "已有 GNN 权重必须先复测同分布合成集和真实/退化光栅集；真实集指标低于规则基线时只能作为 candidate source，不得直接污染 accepted 语义。",
+      "尺寸文本检测召回率 >= 0.75，尺寸-几何关联准确率 >= 0.70。",
+      "符号检测输出 bbox、类型、旋转、置信度，常用模板 Top-1 准确率 >= 0.75。"
+    ],
+    "quality": [
+      "低质量图片必须返回 raster_report、failure_code 或 recommendations，不能静默输出空结果。",
+      "debug=false 时不产生额外 I/O，不返回大体积图像；debug=true 时可定位灰度、阈值、骨架、overlay 问题。",
+      "2MP 图片默认策略 P95 <= 3s，8MP 图片默认策略 P95 <= 12s，多策略重试受 max_retries 和预算限制。"
     ]
   },
   "phases": [
     {
-      "phase": "Phase 1: raster-loader crate（光栅加载层）",
+      "id": "P0",
+      "name": "把现有基础设施变成可量化基线",
       "priority": "P0",
-      "estimated_effort": "2-3 files",
-      "steps": [
+      "purpose": "当前已经能跑通和报告，但需要把指标、失败原因和真实样本固化下来，否则算法改动没有可靠反馈。",
+      "tasks": [
         {
-          "id": "1.1",
-          "title": "创建 crates/raster-loader/ crate 骨架",
-          "description": "新建 crate，依赖 image crate（workspace 已有）、thiserror、serde、tracing。提供 RasterImageInfo 元数据结构（宽/高/DPI/色彩空间/文件路径）",
-          "files_to_create": [
-            "crates/raster-loader/Cargo.toml",
-            "crates/raster-loader/src/lib.rs"
-          ],
-          "reuse": "workspace dependencies: image, thiserror, tracing"
-        },
-        {
-          "id": "1.2",
-          "title": "实现 RasterLoader 加载器",
-          "description": "实现 RasterLoader::from_file(path) → Result<DynamicImage> 和 RasterLoader::from_bytes(&[u8], hint_ext) → Result<DynamicImage>。利用 image::ImageReader 自动检测格式，支持 PNG/JPG/BMP/TIFF/WebP。提取 EXIF DPI（如有）用于后续 scale 计算",
-          "files_to_create": [
-            "crates/raster-loader/src/loader.rs"
-          ],
-          "key_design": "输出 DynamicImage 而非自定义像素类型，直接对接 VectorizeService::vectorize_image(&DynamicImage)"
-        },
-        {
-          "id": "1.3",
-          "title": "文件格式检测工具函数",
-          "description": "实现 detect_raster_format(data: &[u8], filename: Option<&str>) → Option<RasterFormat>，通过魔数检测：PNG (89 50 4E 47)、JPEG (FF D8 FF)、BMP (42 4D)、TIFF (49 49 2A 00 / 4D 4D 00 2A)、WebP (RIFF....WEBP)。复用 api.rs 中 detect_file_type 的模式",
-          "files_to_create": [
-            "crates/raster-loader/src/format_detect.rs"
-          ],
-          "reuse": "参考 crates/orchestrator/src/api.rs:862 的 detect_file_type 魔数检测模式"
-        },
-        {
-          "id": "1.4",
-          "title": "集成到 workspace Cargo.toml",
-          "description": "在根 Cargo.toml 的 [workspace.dependencies] 中添加 raster-loader 路径引用，在 crates/orchestrator/Cargo.toml 中添加依赖",
+          "id": "P0.1",
+          "title": "完善光栅质量评分分解",
+          "description": "把当前单一 quality_score 拆成 contrast、noise、edge_continuity、stroke_fragmentation、topology_closure、scale_confidence 等分项，并进入 RasterVectorizationReport。",
           "files_to_modify": [
-            "Cargo.toml",
-            "crates/orchestrator/Cargo.toml"
+            "crates/vectorize/src/quality.rs",
+            "crates/vectorize/src/algorithms/quality_eval.rs",
+            "crates/vectorize/src/pipeline.rs",
+            "crates/vectorize/src/service.rs"
+          ],
+          "acceptance_criteria": [
+            "report 中包含 quality_breakdown 字段。",
+            "每个失败建议能指向至少一个分项指标。",
+            "现有 raster_golden_tests 断言质量分项存在。"
+          ]
+        },
+        {
+          "id": "P0.2",
+          "title": "补齐真实光栅样本索引与 ignored 测试",
+          "description": "建立 small_ci 与 large_local 两级样本清单，真实图默认 ignored，显式命令可跑。",
+          "files_to_create": [
+            "crates/vectorize/tests/raster_real_world_tests.rs",
+            "testpdf/raster_cases/README.md"
+          ],
+          "files_to_modify": [
+            "crates/vectorize/src/benchmark_data.rs",
+            "README.md"
+          ],
+          "acceptance_criteria": [
+            "CI 小样本不依赖外部大文件。",
+            "真实样本测试默认 ignored。",
+            "失败输出 precision/recall/topology/scale 具体指标。"
+          ]
+        },
+        {
+          "id": "P0.3",
+          "title": "调试 overlay 和 artifact 存储策略",
+          "description": "在 debug=true 时生成 overlay，显示原图、二值、骨架、最终矢量、文字/符号 bbox；支持 response 内联小图或落盘目录。",
+          "files_to_modify": [
+            "crates/vectorize/src/pipeline.rs",
+            "crates/orchestrator/src/api.rs",
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "acceptance_criteria": [
+            "debug=false 时 report.debug_artifacts 为空。",
+            "debug=true 时至少包含 gray/binary/skeleton/overlay。",
+            "可通过 API 参数选择 inline 或 output_dir。"
           ]
         }
       ]
     },
     {
-      "phase": "Phase 2: ProcessingPipeline 集成",
+      "id": "P1",
+      "name": "提升几何恢复精度",
       "priority": "P0",
-      "estimated_effort": "1 file",
-      "steps": [
+      "purpose": "从轮廓折线升级为工程图可编辑基元，并让交点拓扑稳定进入 topo。",
+      "tasks": [
         {
-          "id": "2.1",
-          "title": "新增 process_raster_file 方法",
-          "description": "在 ProcessingPipeline 中新增 pub async fn process_raster_file(&self, path: impl AsRef<Path>) → Result<ProcessResult> 方法。流程：raster-loader → DynamicImage → VectorizeService → Polyline → Topo → Validator → Export。复用现有 process_file 的异步模式和 spawn_blocking",
+          "id": "P1.1",
+          "title": "让 tracing 结果驱动主输出",
+          "description": "将 detect_junctions/extract_strokes 的 endpoint、L/T/X junction、stroke graph 作为主几何候选，而不是只依赖 extract_contours。",
           "files_to_modify": [
+            "crates/vectorize/src/algorithms/tracing.rs",
+            "crates/vectorize/src/pipeline.rs",
+            "crates/vectorize/src/service.rs",
             "crates/orchestrator/src/pipeline.rs"
           ],
-          "code_flow": "path → RasterLoader::from_file() → vectorize.vectorize_image() → topo.build_scene() → validator.validate() → export.export() → ProcessResult",
-          "reuse": "复用 pipeline.rs 中 process_file 的异步模式、错误处理框架、指标收集"
+          "acceptance_criteria": [
+            "report 包含 junction_count、stroke_count、junction_type_counts。",
+            "T/X 交点测试中不错误合并、不丢失连接。",
+            "topo 输入可选择 polyline 或 stroke_graph 路径。"
+          ]
         },
         {
-          "id": "2.2",
-          "title": "新增 process_raster_bytes 方法",
-          "description": "对称实现 pub async fn process_raster_bytes(&self, bytes: &[u8], format_hint: Option<&str>) → Result<ProcessResult>。用于 API 层的字节流处理。复用 process_bytes 的模式",
+          "id": "P1.2",
+          "title": "primitive fitting 强类型接入",
+          "description": "将 Line/Arc/Circle/Bezier 拟合结果映射为 RawEntity 或新增 SceneState primitives，保留拟合误差和置信度。",
           "files_to_modify": [
-            "crates/orchestrator/src/pipeline.rs"
+            "crates/vectorize/src/algorithms/primitive_fitting.rs",
+            "crates/common-types/src/geometry.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/export/src/service.rs"
           ],
-          "reuse": "复用 pipeline.rs 中 process_bytes 的模式"
+          "acceptance_criteria": [
+            "圆弧/圆不只作为折线输出。",
+            "report.primitive_candidates 与主 scene primitives 可交叉引用。",
+            "DXF/JSON export 保持兼容。"
+          ]
         },
         {
-          "id": "2.3",
-          "title": "新增 process_raster_file_sync 私有辅助",
-          "description": "抽取同步处理逻辑为 fn process_raster_file_sync(vectorize: &VectorizeService, topo: &TopoService, validator: &ValidatorService, export: &ExportService, img: &DynamicImage) → Result<ProcessResult>，避免 async/sync 代码重复。参考 process_bytes_sync 的设计",
+          "id": "P1.3",
+          "title": "线宽与双线墙合并",
+          "description": "估计 stroke width，识别双线墙/平行墙线/填充墙体，支持输出墙中心线或墙体边界两种模式。",
           "files_to_modify": [
-            "crates/orchestrator/src/pipeline.rs"
+            "crates/vectorize/src/algorithms/architectural_rules.rs",
+            "crates/vector-graph/src/features.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/config/src/lib.rs"
           ],
-          "reuse": "直接复用 extract_polylines_from_entities 之后的所有下游逻辑"
-        }
-      ]
-    },
-    {
-      "phase": "Phase 3: HTTP API 集成",
-      "priority": "P0",
-      "estimated_effort": "1 file",
-      "steps": [
-        {
-          "id": "3.1",
-          "title": "扩展 detect_file_type 支持光栅格式",
-          "description": "在 api.rs 的 FileType 枚举中新增 Png/Jpeg/Bmp/Tiff 变体，更新 detect_file_type() 函数识别光栅图片魔数，更新 file_type_extension() 映射。保持 DXF/PDF 分支不变",
-          "files_to_modify": [
-            "crates/orchestrator/src/api.rs"
-          ],
-          "magic_bytes": {
-            "PNG": "89 50 4E 47",
-            "JPEG": "FF D8 FF",
-            "BMP": "42 4D",
-            "TIFF_LE": "49 49 2A 00",
-            "TIFF_BE": "4D 4D 00 2A"
-          }
+          "acceptance_criteria": [
+            "CadGraph node/edge feature 包含 line_width。",
+            "双线墙合并策略可配置。",
+            "建筑平面合成图墙体 F1 >= 0.80。"
+          ]
         },
         {
-          "id": "3.2",
-          "title": "扩展 process_handler_v1 支持光栅图片",
-          "description": "在现有的 process_handler_v1 中增加光栅图片分支。当检测到 PNG/JPG 等光栅格式时，直接调用 pipeline.process_raster_file(temp_path) 而非走 DXF 解析路径。渐进式渲染策略：光栅矢量化通常 < 2s，可同步返回完整结果（polyline + topology），无需分阶段",
+          "id": "P1.4",
+          "title": "断线桥接和交点吸附重构",
+          "description": "按方向、距离、线宽、局部拓扑和质量评分做桥接，不再只靠全局 snap_tolerance。",
           "files_to_modify": [
-            "crates/orchestrator/src/api.rs"
+            "crates/vectorize/src/algorithms/gap_filling.rs",
+            "crates/vectorize/src/algorithms/topology_stitch.rs",
+            "crates/vectorize/src/pipeline.rs"
           ],
-          "note": "光栅图片矢量化（含拓扑）通常 1-3 秒，建议直接返回完整 ProcessResult，不走 DXF 的两阶段模式"
-        },
-        {
-          "id": "3.3",
-          "title": "新增独立 POST /process/raster 路由（可选）",
-          "description": "提供一个专门处理光栅图片的端点，支持额外参数：threshold、skeletonize、text_separation 等矢量化配置。复用 process_handler_v1 的 multipart 解析模式，但返回完整的矢量化+拓扑结果",
-          "files_to_modify": [
-            "crates/orchestrator/src/api.rs"
-          ],
-          "optional": true,
-          "rationale": "提供细粒度控制适合光栅图片特有的矢量化参数"
-        },
-        {
-          "id": "3.4",
-          "title": "新增光栅图片预设配置",
-          "description": "在 api.rs 的 get_profile_handler 中新增 \"photo_sketch\"（照片/手绘草图）预设配置，针对复杂光栅图片优化参数：更高 snap_tolerance、更强的预处理、启用 text_separation",
-          "files_to_modify": [
-            "crates/orchestrator/src/api.rs"
-          ],
-          "profiles": [
-            {
-              "name": "photo_sketch",
-              "description": "照片/手绘草图预设 - 适用于复杂光栅图片，强预处理",
-              "vectorize": {
-                "adaptive_threshold": true,
-                "skeletonize": true,
-                "text_separation": true,
-                "quality_assessment": true,
-                "denoise": true,
-                "enhance_contrast": true
-              }
-            }
+          "acceptance_criteria": [
+            "report 记录每类 gap 的数量和修复数量。",
+            "桥接不会跨越文本 bbox 或符号 bbox。",
+            "断裂扫描图召回率提升，误连率有测试约束。"
           ]
         }
       ]
     },
     {
-      "phase": "Phase 4: CLI 入口（cad-cli）",
+      "id": "P2",
+      "name": "尺度恢复与校准闭环",
+      "priority": "P0",
+      "purpose": "让像素图纸进入 CAD 可用的毫米空间，并标明尺度可信度。",
+      "tasks": [
+        {
+          "id": "P2.1",
+          "title": "DPI 可信度模型",
+          "description": "为 EXIF/JFIF/PNG/TIFF DPI 增加异常检测，例如 72/96 默认值、超高/超低值、X/Y 不一致、缺失单位。",
+          "files_to_modify": [
+            "crates/raster-loader/src/loader.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/common-types/src/scene.rs"
+          ],
+          "acceptance_criteria": [
+            "raster_metadata.scale_confidence 不把默认 DPI 伪装成 high。",
+            "report.recommendations 能提示用户校准。",
+            "72/96/300 DPI 单元测试覆盖可信与不可信路径。"
+          ]
+        },
+        {
+          "id": "P2.2",
+          "title": "比例尺和尺寸文字反推尺度",
+          "description": "从 OCR/VLM/rule parser 中识别 1:100、SCALE、尺寸标注等线索，和用户校准/API DPI 形成优先级闭环。",
+          "files_to_modify": [
+            "crates/vectorize/src/algorithms/ocr.rs",
+            "crates/vectorize/src/algorithms/vlm.rs",
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "acceptance_criteria": [
+            "ScaleCalibrationSource 枚举包含 user、dpi、scale_text、dimension_text。",
+            "冲突尺度会返回 warning，不静默覆盖。",
+            "已知尺寸合成图尺度误差 <= 1%。"
+          ]
+        },
+        {
+          "id": "P2.3",
+          "title": "坐标系和裁剪/透视变换元数据",
+          "description": "保存 crop、resize、deskew、perspective transform 的矩阵链，保证 debug overlay 和输出坐标能反查原图坐标。",
+          "files_to_modify": [
+            "crates/vectorize/src/pipeline.rs",
+            "crates/common-types/src/scene.rs",
+            "crates/orchestrator/src/pipeline.rs"
+          ],
+          "acceptance_criteria": [
+            "report 包含 transform_chain。",
+            "text bbox、symbol bbox、raw_edges 都能映射到 scene 坐标。",
+            "裁剪/透视测试验证坐标误差。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "name": "文字、尺寸与符号语义",
       "priority": "P1",
-      "estimated_effort": "1 file",
-      "steps": [
+      "purpose": "从几何线条恢复工程图最关键的语义信息。",
+      "tasks": [
         {
-          "id": "4.1",
-          "title": "扩展 cad-cli 支持光栅图片",
-          "description": "在 crates/cad-cli/src/main.rs 中，当输入文件为 PNG/JPG/BMP/TIFF 时，自动选择 raster pipeline 而非 parser pipeline。输出与 DXF/PDF 处理相同的 JSON 结果",
+          "id": "P3.1",
+          "title": "接入真实 OCR 后端开关",
+          "description": "保留 HeuristicOCR 作为无依赖 fallback，新增 tesseract/onnx/paddleocr 任一后端 feature gate 或外部命令适配。",
           "files_to_modify": [
-            "crates/cad-cli/src/main.rs"
-          ],
-          "reuse": "复用已有的 CLI 参数解析和输出逻辑"
-        }
-      ]
-    },
-    {
-      "phase": "Phase 5: 测试与质量保障",
-      "priority": "P0",
-      "estimated_effort": "3-4 files",
-      "steps": [
-        {
-          "id": "5.1",
-          "title": "raster-loader 单元测试",
-          "description": "测试文件格式检测（PNG/JPG/BMP/TIFF 魔数）、有效/无效文件加载、大文件限制、from_file/from_bytes 一致性",
-          "files_to_create": [
-            "crates/raster-loader/src/loader.rs (#[cfg(test)])",
-            "crates/raster-loader/src/format_detect.rs (#[cfg(test)])"
-          ],
-          "test_count": "8-12 tests"
-        },
-        {
-          "id": "5.2",
-          "title": "集成测试：光栅图片端到端管线",
-          "description": "创建 crates/orchestrator/tests/test_raster_image_pipeline.rs。使用简单几何图形（正方形、圆形、直线）的测试 PNG，验证：矢量化提取 polyline → 拓扑构建 → 验证 → 导出全链路",
-          "files_to_create": [
-            "crates/orchestrator/tests/test_raster_image_pipeline.rs"
-          ],
-          "test_cases": [
-            "简单几何图形（正方形 + 圆形）PNG → 提取到 2 个闭合环",
-            "直线网格 PNG → 提取到多条线段 + 端点吸附",
-            "带文字标注的简单图纸 PNG → text_separation 过滤文字",
-            "低质量/噪声图片 → 质量评估拦截"
-          ]
-        },
-        {
-          "id": "5.3",
-          "title": "API 集成测试",
-          "description": "在 api.rs tests 中新增光栅图片上传测试，验证 /process 端点对 PNG 文件的处理",
-          "files_to_modify": [
+            "crates/vectorize/src/algorithms/ocr.rs",
+            "crates/vectorize/Cargo.toml",
+            "crates/config/src/lib.rs",
             "crates/orchestrator/src/api.rs"
           ],
-          "test_count": "2-3 tests"
+          "acceptance_criteria": [
+            "无 OCR 依赖时 CI 仍通过。",
+            "提供 OCR 后端时 text_candidates 有真实文本。",
+            "低置信 OCR 不进入确定 text_annotations，只进入 candidates。"
+          ]
         },
         {
-          "id": "5.4",
-          "title": "准备测试用光栅图片",
-          "description": "在 test_files/ 目录下创建或收集测试用 PNG/JPG 图片：简单几何图形、网格、带文字的扫描图纸缩略图。可以使用 image crate 在测试中动态生成",
-          "files_to_create": [
-            "test_files/test_square.png",
-            "test_files/test_grid.png",
-            "test_files/test_with_text.png"
+          "id": "P3.2",
+          "title": "尺寸标注解析与几何关联",
+          "description": "识别尺寸线、箭头、引线、文本，解析单位、公差、直径/半径/角度，并关联最近几何实体。",
+          "files_to_modify": [
+            "crates/vectorize/src/algorithms/ocr.rs",
+            "crates/vectorize/src/algorithms/vlm.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/common-types/src/geometry.rs"
+          ],
+          "acceptance_criteria": [
+            "dimension_summary 包含数量、单位、范围、低置信候选。",
+            "DimensionCandidate 带 associated_geometry_ids。",
+            "尺寸-几何关联准确率测试 >= 0.70。"
+          ]
+        },
+        {
+          "id": "P3.3",
+          "title": "扩展 CAD 符号模板库",
+          "description": "补充 datum、粗糙度、中心线、剖面线、焊接、形位公差、门窗符号模板，并支持旋转/尺度归一化。",
+          "files_to_modify": [
+            "crates/vectorize/src/algorithms/symbols.rs",
+            "crates/vectorize/src/pipeline.rs",
+            "crates/common-types/src/geometry.rs"
+          ],
+          "acceptance_criteria": [
+            "符号候选可序列化返回 bbox、type、rotation、confidence。",
+            "符号区域可作为 vectorize mask，避免线条污染。",
+            "至少 20 个模板有单元测试或快照测试。"
+          ]
+        },
+        {
+          "id": "P3.4",
+          "title": "文本/符号屏蔽策略",
+          "description": "在矢量化几何前后屏蔽或单独标注文本/符号区域，减少文字被当作墙线、轮廓线输出。",
+          "files_to_modify": [
+            "crates/vectorize/src/algorithms/text_blob.rs",
+            "crates/vectorize/src/pipeline.rs",
+            "crates/vectorize/src/service.rs"
+          ],
+          "acceptance_criteria": [
+            "report 记录 masked_text_regions 和 masked_symbol_regions。",
+            "文本密集图纸几何误检减少。",
+            "可配置 mask=off/candidates/strict。"
           ]
         }
       ]
     },
     {
-      "phase": "Phase 6: 文档更新",
-      "priority": "P2",
-      "estimated_effort": "2 files",
-      "steps": [
+      "id": "P4",
+      "name": "建筑与机械语义重建",
+      "priority": "P1",
+      "purpose": "把无语义像素线条转成可编辑 CAD 场景。",
+      "tasks": [
         {
-          "id": "6.1",
-          "title": "更新 README.md",
-          "description": "在支持格式列表中增加 PNG/JPG/BMP/TIFF，添加光栅图片处理的使用示例",
-          "files_to_modify": ["README.md"]
+          "id": "P4.0",
+          "title": "已训练 GNN 模型资产盘点与复测",
+          "description": "确认 checkpoints/model_best.ot 的训练配置、类别映射、输入特征维度和数据分布；用当前代码重新跑同分布合成验证、退化合成验证和少量真实图 ignored 验证，决定该模型是可接入、需重训还是仅作为实验基线。",
+          "files_to_modify": [
+            "crates/vector-graph/src/bin/train_gnn.rs",
+            "crates/vector-graph/src/gnn.rs",
+            "crates/vector-graph/src/training_data.rs",
+            "crates/orchestrator/tests/raster_semantic_pipeline_tests.rs",
+            "README.md"
+          ],
+          "acceptance_criteria": [
+            "report 或 README 记录 model_id、checkpoint_path、训练参数、类别映射、特征维度和训练数据来源。",
+            "复测输出 synthetic_val_accuracy、degraded_val_accuracy、real_ignored_accuracy 或 F1。",
+            "如果真实/退化集低于规则基线，配置默认保持 model disabled，并在 todo 中追加重训任务。"
+          ]
         },
         {
-          "id": "6.2",
-          "title": "更新 todo.md",
-          "description": "记录本轮焚诀循环的工作成果，更新路线图和完成度",
-          "files_to_modify": ["todo.md"]
+          "id": "P4.1",
+          "title": "建筑规则层升级",
+          "description": "基于平行线、开口缺口、门弧、窗短线、房间闭环等规则，为 RawEdge/BoundarySegment 赋 HardWall/Door/Window/Opening 标签。",
+          "files_to_modify": [
+            "crates/vectorize/src/algorithms/architectural_rules.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/common-types/src/scene.rs"
+          ],
+          "acceptance_criteria": [
+            "semantic_candidates 带 source=rule 和 confidence。",
+            "scene.boundaries 可按配置接收高置信语义。",
+            "墙门窗合成图 F1 >= 0.80。"
+          ]
+        },
+        {
+          "id": "P4.2",
+          "title": "vector-graph 特征与可选模型接入",
+          "description": "将 CadGraph::from_polylines、FeatureExtractor 和可选模型路径接入光栅 pipeline；无模型时使用规则 fallback。已有 checkpoints/model_best.ot 只能在 P4.0 复测通过后作为默认候选模型。",
+          "files_to_modify": [
+            "crates/vector-graph/src/graph.rs",
+            "crates/vector-graph/src/features.rs",
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/config/src/lib.rs"
+          ],
+          "acceptance_criteria": [
+            "未提供模型时不增加部署依赖。",
+            "提供模型路径时输出 SemanticType + confidence。",
+            "report 记录 graph_node_count、graph_edge_count、model_used、model_id 和 model_metric_snapshot。"
+          ]
+        },
+        {
+          "id": "P4.3",
+          "title": "语义置信度校准与冲突解决",
+          "description": "统一 rule、OCR、symbol、graph/model 的候选，解决同一边多标签冲突，输出 accepted/candidate 两层结果。",
+          "files_to_modify": [
+            "crates/orchestrator/src/pipeline.rs",
+            "crates/common-types/src/scene.rs",
+            "crates/common-types/src/geometry.rs"
+          ],
+          "acceptance_criteria": [
+            "低置信语义不污染确定输出。",
+            "冲突结果进入 report.semantic_conflicts。",
+            "API 响应保持向后兼容。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "name": "产品化 API、CLI 与前端诊断",
+      "priority": "P1",
+      "purpose": "让增强能力可被前端、CLI 和自动化流程稳定使用。",
+      "tasks": [
+        {
+          "id": "P5.1",
+          "title": "响应 schema 版本化与文档",
+          "description": "为 raster_report、semantic_candidates、debug_artifacts、raster_metadata 等字段提供 schema version、README 和 API 示例。",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs",
+            "README.md",
+            "API.md"
+          ],
+          "acceptance_criteria": [
+            "旧字段保持兼容。",
+            "新增字段有默认空值。",
+            "README 包含 /process/raster 完整 multipart 示例。"
+          ]
+        },
+        {
+          "id": "P5.2",
+          "title": "前端可视化诊断数据契约",
+          "description": "定义 overlay、quality_breakdown、attempts、recommendations 的前端消费格式，支持点击候选 bbox/边。",
+          "files_to_modify": [
+            "crates/orchestrator/src/api.rs",
+            "cad-web",
+            "README.md"
+          ],
+          "acceptance_criteria": [
+            "前端能显示每次策略尝试得分。",
+            "可开关 gray/binary/skeleton/overlay。",
+            "候选文本、符号、语义可高亮定位。"
+          ]
+        },
+        {
+          "id": "P5.3",
+          "title": "光栅 profile 完整化",
+          "description": "补齐 raster_clean/raster_scan/raster_photo/raster_sketch/raster_semantic 的配置、CLI 列表、API profile 详情和单元测试。",
+          "files_to_modify": [
+            "crates/config/src/lib.rs",
+            "cad_config.profiles.toml",
+            "crates/cad-cli/src/main.rs",
+            "crates/orchestrator/src/api.rs"
+          ],
+          "acceptance_criteria": [
+            "profile list 和 README 示例完整。",
+            "每个 profile 有关键参数测试。",
+            "unknown profile 错误提示包含可用 profile。"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P6",
+      "name": "性能预算与持续回归",
+      "priority": "P0",
+      "purpose": "多策略重试、OCR 和语义层会显著增加耗时，需要把预算变成测试约束。",
+      "tasks": [
+        {
+          "id": "P6.1",
+          "title": "2MP/8MP/30MP 性能预算",
+          "description": "对默认策略、semantic 策略、debug 策略分别建立耗时和内存预算。",
+          "files_to_modify": [
+            "crates/vectorize/tests/benchmarks.rs",
+            "tests/vectorize_benchmarks.rs"
+          ],
+          "acceptance_criteria": [
+            "默认 CI 只跑小预算测试。",
+            "大图测试默认 ignored。",
+            "report 每阶段耗时可用于定位超预算阶段。"
+          ]
+        },
+        {
+          "id": "P6.2",
+          "title": "退化生成器扩展",
+          "description": "从程序图元或 DXF/PDF 生成 ground truth 光栅，自动添加噪声、模糊、阴影、透视、旋转、压缩、低对比和手绘扰动。",
+          "files_to_modify": [
+            "crates/vectorize/src/benchmark_data.rs",
+            "crates/vectorize/tests/raster_golden_tests.rs"
+          ],
+          "acceptance_criteria": [
+            "每类退化至少 3 张 CI 小图。",
+            "large local set 可生成并复现。",
+            "ground truth 与图像一一对应。"
+          ]
+        },
+        {
+          "id": "P6.3",
+          "title": "失败样本最小化和快照",
+          "description": "对线上或手动发现的失败图片保存最小 debug bundle：输入缩略图、report、配置、期望指标。",
+          "files_to_create": [
+            "scripts/raster_debug_bundle.rs",
+            "docs/raster_failure_triage.md"
+          ],
+          "acceptance_criteria": [
+            "失败样本可一条命令复现。",
+            "bundle 不包含大体积原图时仍能定位关键阶段。",
+            "新增失败样本能转成 ignored 回归测试。"
+          ]
         }
       ]
     }
   ],
-  "dependency_graph": {
-    "1.1": [],
-    "1.2": ["1.1"],
-    "1.3": ["1.1"],
-    "1.4": ["1.2"],
-    "2.1": ["1.4"],
-    "2.2": ["2.1"],
-    "2.3": ["2.1"],
-    "3.1": ["2.1"],
-    "3.2": ["3.1"],
-    "3.3": ["3.2"],
-    "3.4": ["3.2"],
-    "4.1": ["2.1"],
-    "5.1": ["1.2"],
-    "5.2": ["2.1"],
-    "5.3": ["3.2"],
-    "5.4": ["5.2"],
-    "6.1": ["3.2", "4.1"],
-    "6.2": ["5.3"]
-  },
-  "key_files_summary": {
-    "new_files": [
-      {
-        "path": "crates/raster-loader/",
-        "description": "新增 crate，光栅图片加载层",
-        "files": [
-          "Cargo.toml",
-          "src/lib.rs",
-          "src/loader.rs",
-          "src/format_detect.rs"
-        ]
-      }
-    ],
-    "modified_files": [
-      {
-        "path": "Cargo.toml",
-        "change": "workspace.dependencies 添加 raster-loader"
-      },
-      {
-        "path": "crates/orchestrator/Cargo.toml",
-        "change": "dependencies 添加 raster-loader"
-      },
-      {
-        "path": "crates/orchestrator/src/pipeline.rs",
-        "change": "新增 process_raster_file / process_raster_bytes / process_raster_file_sync 方法"
-      },
-      {
-        "path": "crates/orchestrator/src/api.rs",
-        "change": "FileType 枚举扩展、detect_file_type 支持光栅格式、process_handler_v1 增加光栅分支"
-      },
-      {
-        "path": "crates/cad-cli/src/main.rs",
-        "change": "识别光栅格式并路由到 raster pipeline"
-      },
-      {
-        "path": "README.md",
-        "change": "支持格式列表和使用示例"
-      },
-      {
-        "path": "todo.md",
-        "change": "记录本轮工作成果"
-      }
-    ]
-  },
-  "architecture_notes": {
-    "data_flow": "PNG/JPG → raster-loader → image::DynamicImage → vectorize::VectorizeService → Vec<Polyline> → topo::TopoService → SceneState → validator::ValidatorService → ValidationReport → export::ExportService → bytes",
-    "reused_components": [
-      "vectorize::VectorizeService - 完整矢量化管线（预处理→二值化→边缘检测→骨架化→轮廓提取→简化→吸附）",
-      "topo::TopoService - 拓扑构建（端点吸附、交点切分、半边界/DFS 环提取）",
-      "validator::ValidatorService - 几何验证（闭合环、最小边长、自相交）",
-      "export::ExportService - 格式导出（JSON/Bincode）",
-      "ProcessingPipeline 异步模式 - tokio::spawn_blocking + rayon 并行",
-      "VectorizeConfig - 矢量化参数配置（threshold/skeletonize/text_separation 等）",
-      "CadConfig - 全局配置系统，通过 parser.pdf.* 字段复用矢量化配置"
-    ],
-    "not_changed": [
-      "ParserService - 不修改，保持专注解析有几何语义的格式",
-      "VectorizeService 核心算法 - 零改动，已有完整能力",
-      "TopoService / ValidatorService / ExportService - 零改动",
-      "accelerator-* crates - 零改动"
-    ],
-    "decoupling_rationale": "光栅加载（raster-loader）与几何解析（parser）解耦，原因：① 输入类型不同（像素 vs 几何实体）② 错误模型不同（解码失败 vs 解析失败）③ 扩展性（未来可独立支持网络图片 URL、base64 等）④ 避免 ParserService 职责膨胀"
-  },
-  "risk_and_mitigation": [
-    {
-      "risk": "大尺寸光栅图片导致内存溢出",
-      "mitigation": "VectorizeService 已有 max_pixels 限制（30M 像素，约 5477x5477），超过自动缩放。raster-loader 中增加文件大小限制检查（默认 100MB）"
-    },
-    {
-      "risk": "复杂/低质量光栅图片矢量化结果差",
-      "mitigation": "VectorizeService 已有 quality_assessment 机制（evaluate_image_quality），得分 < 60 分返回 VectorizeFailed 错误。用户可通过调整 VectorizeConfig 参数（阈值、预处理强度）改善"
-    },
-    {
-      "risk": "颜色图片（非灰度）处理",
-      "mitigation": "image::DynamicImage::to_luma8() 已有转换，VectorizeService.vectorize_image_with_config 第一行就是 img.to_luma8()。彩色图纸会丢失颜色语义，但线条结构可提取"
-    },
-    {
-      "risk": "DPI 信息缺失导致 scale 不准确",
-      "mitivation": "VectorizeConfig 已有 dpi_adaptive + reference_dpi 机制，无 EXIF DPI 时使用默认 300 DPI。输出结果单位为像素，用户需根据实际场景换算"
-    }
+  "recommended_execution_order": [
+    "P0.1",
+    "P0.2",
+    "P0.3",
+    "P1.1",
+    "P1.2",
+    "P2.1",
+    "P2.2",
+    "P1.3",
+    "P1.4",
+    "P3.1",
+    "P3.2",
+    "P3.3",
+    "P3.4",
+    "P4.0",
+    "P4.1",
+    "P4.2",
+    "P4.3",
+    "P5.1",
+    "P5.2",
+    "P5.3",
+    "P6.1",
+    "P6.2",
+    "P6.3"
   ],
-  "future_enhancements": [
-    "AI 辅助矢量化：集成 ML 模型（如线段/圆弧分类器）提升复杂图纸识别率",
-    "颜色语义提取：彩色 PNG 中不同颜色线条映射到不同图层/语义",
-    "Web UI 上传：cad-web 中增加光栅图片上传入口和预览功能",
-    "批量处理：支持多张光栅图片批量矢量化",
-    "wgpu 加速：利用已有的 accelerator-wgpu crate 加速光栅矢量化"
-  ],
-  "success_criteria": [
-    "PNG/JPG/BMP/TIFF 文件可通过 CLI 和 API 处理",
-    "简单几何图形（正方形、圆形、直线）PNG 能正确提取为 Polyline",
-    "提取的 Polyline 能正确参与拓扑构建",
-    "0 Clippy 警告，所有新测试通过",
-    "不破坏现有 DXF/PDF/SVG/STL 处理流程"
+  "definition_of_done": [
+    "todo 中每个任务完成后删除或标记 completed，并保留验证命令结果。",
+    "cargo fmt --all 通过。",
+    "cargo check --workspace --all-targets 通过。",
+    "cargo clippy --workspace --all-targets -- -D warnings 通过。",
+    "cargo test -p raster-loader 通过。",
+    "cargo test -p vectorize --test raster_golden_tests 通过。",
+    "cargo test -p orchestrator --test raster_semantic_pipeline_tests 通过。",
+    "cargo test --workspace -- --skip benchmark_real_dxf_step_timing --skip benchmark_serial_vs_parallel_topo 通过。",
+    "新增慢速真实图测试必须默认 ignored，并在 README 中提供显式运行命令。"
   ]
 }

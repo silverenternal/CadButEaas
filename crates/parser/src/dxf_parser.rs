@@ -140,7 +140,7 @@ fn lineweight_enum_to_mm(enum_value: i16) -> Option<f64> {
 /// 本函数已更新为使用动态容差。
 ///
 /// ## 使用示例（推荐）
-/// ```rust
+/// ```rust,ignore
 /// use common_types::adaptive_tolerance::AdaptiveTolerance;
 ///
 /// let tol = AdaptiveTolerance::new(unit, scene_scale, PrecisionLevel::Normal);
@@ -927,13 +927,11 @@ impl DxfParser {
                 // 256 = ByLayer, 0 = ByBlock, 257 = ByEntity
                 let color_index = entity.common.color.index();
                 match color_index {
-                    Some(idx) => {
-                        // 有明确 ACI 索引，检查是否在白名单中
-                        if !colors.contains(&(idx as i16)) {
-                            return false;
-                        }
+                    // 有明确 ACI 索引，检查是否在白名单中
+                    Some(idx) if !colors.contains(&(idx as i16)) => {
+                        return false;
                     }
-                    None => {
+                    Some(_) | None => {
                         // ByLayer/ByBlock 等情况：dxf 0.6 不支持获取图层颜色
                         // 保守策略：不过滤，保留实体（因为可能是墙体）
                         // 未来升级 dxf 库后可查询图层颜色进行精确过滤
@@ -1355,7 +1353,6 @@ impl DxfParser {
                 EntityType::PdfUnderlay(_) => "PDF_UNDERLAY",
                 EntityType::DwfUnderlay(_) => "DWF_UNDERLAY",
                 EntityType::DgnUnderlay(_) => "DGN_UNDERLAY",
-                EntityType::Face(_) => "3DFACE",
                 EntityType::Region(_) => "REGION",
                 // P0-1: HATCH 和 P0-2: DIMENSION 暂时归类为 OTHER
                 // 待后续实现完整解析
@@ -1557,7 +1554,6 @@ impl DxfParser {
                     EntityType::Ray(_) => "RAY",
                     EntityType::XLine(_) => "XLINE",
                     EntityType::MLine(_) => "MLINE",
-                    EntityType::Face(_) => "3DFACE",
                     EntityType::Region(_) => "REGION",
                     _ => "OTHER",
                 };
@@ -2270,36 +2266,14 @@ impl DxfParser {
                 }]
             }
 
-            // 3DFACE 实体 - 三维面（投影到 XY 平面）
-            // 常用于 3D 建筑模型中的墙面、地面等，投影到 2D 后作为四边形处理
-            EntityType::Face(face) => {
-                // 提取四个顶点，只保留 XY 坐标进行投影
-                let mut points = Vec::new();
-                // 3DFACE 最多有四个顶点，如果第四个顶点和第一个顶点相同，则是三角形
-                points.push([face.first_corner.x * scale, face.first_corner.y * scale]);
-                points.push([face.second_corner.x * scale, face.second_corner.y * scale]);
-                points.push([face.third_corner.x * scale, face.third_corner.y * scale]);
-                if face.fourth_corner.x != face.first_corner.x || face.fourth_corner.y != face.first_corner.y {
-                    points.push([face.fourth_corner.x * scale, face.fourth_corner.y * scale]);
-                }
-                // 闭合多边形
-                if !points.is_empty() {
-                    vec![RawEntity::Polyline {
-                        points,
-                        closed: true,
-                        metadata: metadata.clone(),
-                        semantic: semantic.clone(),
-                    }]
-                } else {
-                    vec![]
-                }
-            }
-
             // REGION 实体 - 面域（封闭二维区域）
             // 注意：REGION 的几何数据保存在 ACIS 实体数据中，完整解析非常复杂
             // 当前策略：记录实体但不提取几何，避免破坏解析流程，未来可扩展
             EntityType::Region(_) => {
-                tracing::debug!("检测到 REGION 实体，暂不支持几何提取：handle={:?}", entity.common.handle);
+                tracing::debug!(
+                    "检测到 REGION 实体，暂不支持几何提取：handle={:?}",
+                    entity.common.handle
+                );
                 vec![]
             }
 

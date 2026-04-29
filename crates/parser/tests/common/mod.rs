@@ -2,7 +2,7 @@
 //!
 //! 提供统一的测试文件路径处理
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// 获取项目根目录（workspace 根）
 ///
@@ -93,7 +93,7 @@ pub fn list_pdf_files() -> Vec<PathBuf> {
 ///
 /// 用于测试中避免硬编码文件名，支持动态适配测试数据
 #[allow(dead_code)]
-pub fn find_first_parseable_dxf(dxf_dir: &PathBuf, parser: &parser::DxfParser) -> Option<PathBuf> {
+pub fn find_first_parseable_dxf(dxf_dir: &Path, parser: &parser::DxfParser) -> Option<PathBuf> {
     if !dxf_dir.exists() {
         return None;
     }

@@ -9,6 +9,7 @@ license.workspace = true
 common-types = { path = "../common-types" }
 parser = { path = "../parser" }
 vectorize = { path = "../vectorize" }
+vector-graph = { path = "../vector-graph" }
 raster-loader = { path = "../raster-loader" }
 topo = { path = "../topo" }
 validator = { path = "../validator" }

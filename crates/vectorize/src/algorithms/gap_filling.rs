@@ -452,13 +452,16 @@ pub fn hough_assisted_gap_filling(
             let angle = angle_between(dir_start, dir_norm);
             if angle < max_angle || (std::f64::consts::PI - angle) < max_angle {
                 let proj = project_point_to_line(start, hough_line.start, dir_norm);
-                projected.push((proj, EndpointInfo {
-                    polyline_idx: poly_idx,
-                    is_start: true,
-                    point: start,
-                    direction: dir_start,
-                    segment_length: polyline_length(poly),
-                }));
+                projected.push((
+                    proj,
+                    EndpointInfo {
+                        polyline_idx: poly_idx,
+                        is_start: true,
+                        point: start,
+                        direction: dir_start,
+                        segment_length: polyline_length(poly),
+                    },
+                ));
             }
 
             // 终点
@@ -468,13 +471,16 @@ pub fn hough_assisted_gap_filling(
             let angle = angle_between(dir_end, dir_norm);
             if angle < max_angle || (std::f64::consts::PI - angle) < max_angle {
                 let proj = project_point_to_line(end, hough_line.start, dir_norm);
-                projected.push((proj, EndpointInfo {
-                    polyline_idx: poly_idx,
-                    is_start: false,
-                    point: end,
-                    direction: dir_end,
-                    segment_length: polyline_length(poly),
-                }));
+                projected.push((
+                    proj,
+                    EndpointInfo {
+                        polyline_idx: poly_idx,
+                        is_start: false,
+                        point: end,
+                        direction: dir_end,
+                        segment_length: polyline_length(poly),
+                    },
+                ));
             }
         }
 
@@ -500,7 +506,8 @@ pub fn hough_assisted_gap_filling(
             let to_b = [ep_b.point[0] - ep_a.point[0], ep_b.point[1] - ep_a.point[1]];
             let to_b_norm = normalize(to_b);
             let angle_a = angle_between(ep_a.direction, to_b_norm);
-            let to_a_norm = normalize([ep_a.point[0] - ep_b.point[0], ep_a.point[1] - ep_b.point[1]]);
+            let to_a_norm =
+                normalize([ep_a.point[0] - ep_b.point[0], ep_a.point[1] - ep_b.point[1]]);
             let angle_b = angle_between(ep_b.direction, to_a_norm);
 
             if angle_a > max_angle * 1.5 || angle_b > max_angle * 1.5 {

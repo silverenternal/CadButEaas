@@ -8,11 +8,11 @@
 
 use async_trait::async_trait;
 use common_types::{
-    CadError, DependencyHealth, HealthStatus, InternalErrorReason, Polyline, RawEntity, Request,
-    Response, SceneState, Service, ServiceHealth, ServiceMetrics, ServiceMetricsData,
-    ServiceVersion,
+    CadError, DependencyHealth, HealthStatus, InternalErrorReason, Polyline, RasterSceneMetadata,
+    RawEntity, Request, Response, ScaleConfidence, SceneState, Service, ServiceHealth,
+    ServiceMetrics, ServiceMetricsData, ServiceVersion, SourceImageMetadata,
 };
-use config::{CadConfig, ParserConfig as ConfigParserConfig};
+use config::CadConfig;
 use export::{service::ExportConfig as ExportServiceConfig, ExportService};
 use parser::{service::FileType, service::ParseResult, ParserService};
 use std::fmt::Debug;
@@ -24,7 +24,9 @@ use topo::{service::TopoConfig as TopoServiceConfig, TopoService};
 use validator::{
     service::ValidatorConfig as ValidatorServiceConfig, ValidationReport, ValidatorService,
 };
-use vectorize::{VectorizeConfig, VectorizeService};
+use vectorize::{
+    RasterStrategy, RasterVectorizationReport, SemanticCandidate, VectorizeConfig, VectorizeService,
+};
 
 /// 流水线请求
 #[derive(Debug, Clone)]
@@ -75,6 +77,35 @@ pub struct ProcessResult {
     pub output_bytes: Vec<u8>,
     pub text_annotations: Vec<common_types::TextAnnotation>,
     pub dimension_summary: common_types::DimensionSummary,
+    pub raster_report: Option<RasterVectorizationReport>,
+    pub semantic_candidates: Vec<SemanticCandidate>,
+}
+
+/// 光栅处理选项，供 API/CLI/测试共用。
+#[derive(Debug, Clone, Default)]
+pub struct RasterProcessingOptions {
+    pub strategy: Option<RasterStrategy>,
+    pub dpi_override: Option<(f64, f64)>,
+    pub scale_calibration: Option<ScaleCalibration>,
+    pub debug_artifacts: bool,
+    pub semantic_mode: Option<String>,
+    pub ocr_backend: Option<String>,
+    pub max_retries: Option<usize>,
+}
+
+/// 用户提供的尺度校准。
+#[derive(Debug, Clone)]
+pub struct ScaleCalibration {
+    pub known_distance_px: f64,
+    pub known_distance_mm: f64,
+    pub points_px: Option<([f64; 2], [f64; 2])>,
+}
+
+#[derive(Debug, Clone)]
+struct RasterCoordinateTransform {
+    px_to_mm: Option<[f64; 2]>,
+    confidence: ScaleConfidence,
+    source: Option<String>,
 }
 
 /// 处理流水线
@@ -137,7 +168,7 @@ impl ProcessingPipeline {
     /// ```
     pub fn new_with_config(config: &CadConfig) -> Self {
         // 转换配置
-        let vectorize_config = Self::convert_vectorize_config(&config.parser);
+        let vectorize_config = Self::convert_vectorize_config(config);
         let topo_config = Self::convert_topo_config(config);
         let validator_config = Self::convert_validator_config(config);
         let export_config = Self::convert_export_config(config);
@@ -159,7 +190,7 @@ impl ProcessingPipeline {
     }
 
     /// 创建 ParserService 并应用 DXF 配置
-    fn create_parser_service(parser_config: &ConfigParserConfig) -> ParserService {
+    fn create_parser_service(parser_config: &config::ParserConfig) -> ParserService {
         ParserService::new().with_dxf_filter(
             parser_config.dxf.ignore_text,
             parser_config.dxf.ignore_dimensions,
@@ -170,7 +201,13 @@ impl ProcessingPipeline {
     /// 转换矢量化配置
     ///
     /// P11 锐评 v2.0 修复：从 CadConfig 读取 threshold，移除硬编码
-    fn convert_vectorize_config(parser_config: &ConfigParserConfig) -> VectorizeConfig {
+    fn convert_vectorize_config(config: &CadConfig) -> VectorizeConfig {
+        let parser_config = &config.parser;
+        let raster_strategy = config
+            .raster
+            .strategy
+            .parse::<RasterStrategy>()
+            .unwrap_or(RasterStrategy::Auto);
         VectorizeConfig {
             threshold: parser_config.pdf.threshold,
             snap_tolerance_px: parser_config.pdf.vectorize_tolerance_px,
@@ -201,6 +238,8 @@ impl ProcessingPipeline {
             hough_threshold: 50,
             architectural_correction: true,
             adaptive_params: true,
+            raster_strategy,
+            max_retries: config.raster.max_retries.max(1),
         }
     }
 
@@ -365,7 +404,13 @@ impl ProcessingPipeline {
             .map(|s| s.to_lowercase());
         let is_raster = matches!(
             ext.as_deref(),
-            Some("png") | Some("jpg") | Some("jpeg") | Some("bmp") | Some("tiff") | Some("tif")
+            Some("png")
+                | Some("jpg")
+                | Some("jpeg")
+                | Some("bmp")
+                | Some("tiff")
+                | Some("tif")
+                | Some("webp")
         );
 
         let result = if is_raster {
@@ -533,6 +578,7 @@ impl ProcessingPipeline {
             boundaries: Vec::new(), // 待用户标注
             sources: Vec::new(),
             edges: Vec::new(), // 待填充
+            raster_metadata: None,
             units: common_types::LengthUnit::Mm,
             coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(),
@@ -656,6 +702,8 @@ impl ProcessingPipeline {
             output_bytes: export_result.bytes,
             text_annotations,
             dimension_summary,
+            raster_report: None,
+            semantic_candidates: Vec::new(),
         })
     }
 
@@ -745,29 +793,27 @@ impl ProcessingPipeline {
                     closed,
                     metadata,
                     ..
-                } => {
-                    if points.len() >= 2 {
-                        for i in 0..points.len() - 1 {
-                            extracted_edges.push(common_types::RawEdge {
-                                id: edge_id,
-                                start: points[i],
-                                end: points[i + 1],
-                                layer: metadata.layer.clone(),
-                                color_index: None,
-                            });
-                            edge_id += 1;
-                        }
-                        // 如果闭合，添加最后一条边
-                        if *closed {
-                            extracted_edges.push(common_types::RawEdge {
-                                id: edge_id,
-                                start: points[points.len() - 1],
-                                end: points[0],
-                                layer: metadata.layer.clone(),
-                                color_index: None,
-                            });
-                            edge_id += 1;
-                        }
+                } if points.len() >= 2 => {
+                    for i in 0..points.len() - 1 {
+                        extracted_edges.push(common_types::RawEdge {
+                            id: edge_id,
+                            start: points[i],
+                            end: points[i + 1],
+                            layer: metadata.layer.clone(),
+                            color_index: None,
+                        });
+                        edge_id += 1;
+                    }
+                    // 如果闭合，添加最后一条边
+                    if *closed {
+                        extracted_edges.push(common_types::RawEdge {
+                            id: edge_id,
+                            start: points[points.len() - 1],
+                            end: points[0],
+                            layer: metadata.layer.clone(),
+                            color_index: None,
+                        });
+                        edge_id += 1;
                     }
                 }
                 // Arc 离散化为线段（简化处理：只取弦）
@@ -891,6 +937,8 @@ impl ProcessingPipeline {
             output_bytes: export_result.bytes,
             text_annotations,
             dimension_summary,
+            raster_report: None,
+            semantic_candidates: Vec::new(),
         })
     }
 
@@ -1061,6 +1109,8 @@ impl ProcessingPipeline {
             output_bytes: export_result.bytes,
             text_annotations,
             dimension_summary,
+            raster_report: None,
+            semantic_candidates: Vec::new(),
         })
     }
 
@@ -1076,6 +1126,16 @@ impl ProcessingPipeline {
         &self,
         path: impl AsRef<Path>,
     ) -> Result<ProcessResult, CadError> {
+        self.process_raster_file_with_options(path, RasterProcessingOptions::default())
+            .await
+    }
+
+    /// 从光栅图片文件处理几何语义提取，并应用光栅专用选项。
+    pub async fn process_raster_file_with_options(
+        &self,
+        path: impl AsRef<Path>,
+        options: RasterProcessingOptions,
+    ) -> Result<ProcessResult, CadError> {
         let path = path.as_ref().to_path_buf();
         tracing::info!("开始处理光栅图片文件：{:?}", path);
 
@@ -1085,7 +1145,9 @@ impl ProcessingPipeline {
         let export = Arc::clone(&self.export);
 
         spawn_blocking(move || {
-            Self::process_raster_file_sync(&vectorize, &topo, &validator, &export, &path)
+            Self::process_raster_file_sync_with_options(
+                &vectorize, &topo, &validator, &export, &path, &options,
+            )
         })
         .await
         .unwrap_or_else(|e| {
@@ -1108,6 +1170,21 @@ impl ProcessingPipeline {
         bytes: &[u8],
         format_hint: Option<&str>,
     ) -> Result<ProcessResult, CadError> {
+        self.process_raster_bytes_with_options(
+            bytes,
+            format_hint,
+            RasterProcessingOptions::default(),
+        )
+        .await
+    }
+
+    /// 从字节数据光栅处理几何语义提取，并应用光栅专用选项。
+    pub async fn process_raster_bytes_with_options(
+        &self,
+        bytes: &[u8],
+        format_hint: Option<&str>,
+        options: RasterProcessingOptions,
+    ) -> Result<ProcessResult, CadError> {
         let bytes = bytes.to_vec();
         let format_hint = format_hint.map(String::from);
         tracing::info!("开始处理光栅字节数据，格式提示：{:?}", format_hint);
@@ -1118,13 +1195,14 @@ impl ProcessingPipeline {
         let export = Arc::clone(&self.export);
 
         spawn_blocking(move || {
-            Self::process_raster_bytes_sync(
+            Self::process_raster_bytes_sync_with_options(
                 &vectorize,
                 &topo,
                 &validator,
                 &export,
                 &bytes,
                 format_hint.as_deref(),
+                &options,
             )
         })
         .await
@@ -1146,6 +1224,24 @@ impl ProcessingPipeline {
         export: &ExportService,
         path: &Path,
     ) -> Result<ProcessResult, CadError> {
+        Self::process_raster_file_sync_with_options(
+            vectorize,
+            topo,
+            validator,
+            export,
+            path,
+            &RasterProcessingOptions::default(),
+        )
+    }
+
+    fn process_raster_file_sync_with_options(
+        vectorize: &VectorizeService,
+        topo: &TopoService,
+        validator: &ValidatorService,
+        export: &ExportService,
+        path: &Path,
+        options: &RasterProcessingOptions,
+    ) -> Result<ProcessResult, CadError> {
         // 1. 加载光栅图片
         let (image, info) = raster_loader::RasterLoader::from_file(path).map_err(|e| {
             CadError::VectorizeFailed {
@@ -1161,20 +1257,28 @@ impl ProcessingPipeline {
         );
 
         // 2. 矢量化 → 拓扑 → 验证 → 导出（复用通用逻辑）
-        Self::process_image_to_result(vectorize, topo, validator, export, &image)
+        Self::process_image_to_result(
+            vectorize,
+            topo,
+            validator,
+            export,
+            &image,
+            Some(&info),
+            options,
+        )
     }
 
-    /// 同步处理光栅字节数据（内部实现）
-    fn process_raster_bytes_sync(
+    fn process_raster_bytes_sync_with_options(
         vectorize: &VectorizeService,
         topo: &TopoService,
         validator: &ValidatorService,
         export: &ExportService,
         bytes: &[u8],
         format_hint: Option<&str>,
+        options: &RasterProcessingOptions,
     ) -> Result<ProcessResult, CadError> {
         // 1. 从字节加载光栅图片
-        let (image, _info) =
+        let (image, info) =
             raster_loader::RasterLoader::from_bytes(bytes, format_hint).map_err(|e| {
                 CadError::VectorizeFailed {
                     message: format!("光栅图片解码失败：{}", e),
@@ -1182,7 +1286,15 @@ impl ProcessingPipeline {
             })?;
 
         // 2. 矢量化 → 拓扑 → 验证 → 导出（复用通用逻辑）
-        Self::process_image_to_result(vectorize, topo, validator, export, &image)
+        Self::process_image_to_result(
+            vectorize,
+            topo,
+            validator,
+            export,
+            &image,
+            Some(&info),
+            options,
+        )
     }
 
     /// 通用图片处理核心：矢量化 → 拓扑 → 验证 → 导出
@@ -1192,13 +1304,34 @@ impl ProcessingPipeline {
         validator: &ValidatorService,
         export: &ExportService,
         image: &image::DynamicImage,
+        info: Option<&raster_loader::RasterImageInfo>,
+        options: &RasterProcessingOptions,
     ) -> Result<ProcessResult, CadError> {
         // 1. 矢量化
-        let polylines = vectorize.vectorize_image(image)?;
+        let mut config = vectorize.config().clone();
+        if let Some(strategy) = options.strategy {
+            config.raster_strategy = strategy;
+        }
+        if let Some(max_retries) = options.max_retries {
+            config.max_retries = max_retries;
+        }
+        let mut detailed =
+            vectorize.vectorize_image_detailed(image, &config, options.debug_artifacts)?;
+        let transform = raster_transform(info, options);
+        let polylines = transform_polylines(&detailed.polylines, &transform);
+        let graph_semantics = vector_graph_semantic_candidates(&polylines);
+        detailed.report.semantic_candidates.extend(graph_semantics);
         tracing::info!("矢量化完成：提取 {} 条多段线", polylines.len());
 
         // 2. 构建拓扑
-        let scene = topo.build_scene(&polylines)?;
+        let mut scene = topo.build_scene(&polylines)?;
+        scene.edges = Self::polylines_to_raw_edges(&polylines);
+        scene.raster_metadata = Some(raster_scene_metadata(info, &transform));
+        scene.units = if transform.px_to_mm.is_some() {
+            common_types::LengthUnit::Mm
+        } else {
+            common_types::LengthUnit::Unspecified
+        };
         tracing::info!(
             "拓扑构建完成：{} 个外轮廓，{} 个孔洞",
             scene.outer.as_ref().map_or(0, |_| 1),
@@ -1216,13 +1349,48 @@ impl ProcessingPipeline {
         // 4. 导出
         let export_result = export.export(&scene)?;
 
+        let text_annotations = detailed
+            .report
+            .text_candidates
+            .iter()
+            .filter(|candidate| candidate.accepted)
+            .map(|candidate| common_types::TextAnnotation {
+                position: [
+                    (candidate.bbox[0] + candidate.bbox[2]) * 0.5,
+                    (candidate.bbox[1] + candidate.bbox[3]) * 0.5,
+                ],
+                content: candidate.content.clone(),
+                height: (candidate.bbox[3] - candidate.bbox[1]).abs(),
+                rotation: candidate.rotation,
+            })
+            .collect::<Vec<_>>();
+        let dimension_summary = dimension_summary_from_text_candidates(&detailed.report);
+
         Ok(ProcessResult {
             scene,
             validation,
             output_bytes: export_result.bytes,
-            text_annotations: Vec::new(), // 光栅图片无文字标注
-            dimension_summary: common_types::DimensionSummary::default(),
+            text_annotations,
+            dimension_summary,
+            raster_report: Some(detailed.report.clone()),
+            semantic_candidates: detailed.report.semantic_candidates.clone(),
         })
+    }
+
+    fn polylines_to_raw_edges(polylines: &[Polyline]) -> Vec<common_types::RawEdge> {
+        let mut edges = Vec::new();
+        for polyline in polylines {
+            for segment in polyline.windows(2) {
+                edges.push(common_types::RawEdge {
+                    id: edges.len(),
+                    start: segment[0],
+                    end: segment[1],
+                    layer: None,
+                    color_index: None,
+                });
+            }
+        }
+        edges
     }
 
     /// 从解析结果中提取多段线（使用 rayon 并行化）
@@ -1834,6 +2002,159 @@ fn discretize_circle(center: Point2, radius: f64) -> Polyline {
     points
 }
 
+fn raster_transform(
+    info: Option<&raster_loader::RasterImageInfo>,
+    options: &RasterProcessingOptions,
+) -> RasterCoordinateTransform {
+    if let Some(calibration) = &options.scale_calibration {
+        let distance_px = calibration
+            .points_px
+            .map(|(a, b)| distance_2d(a, b))
+            .unwrap_or(calibration.known_distance_px);
+        if distance_px > 0.0 && calibration.known_distance_mm > 0.0 {
+            let scale = calibration.known_distance_mm / distance_px;
+            return RasterCoordinateTransform {
+                px_to_mm: Some([scale, scale]),
+                confidence: ScaleConfidence::High,
+                source: Some("user_calibration".to_string()),
+            };
+        }
+    }
+
+    if let Some((dpi_x, dpi_y)) = options.dpi_override {
+        if dpi_x > 0.0 && dpi_y > 0.0 {
+            return RasterCoordinateTransform {
+                px_to_mm: Some([25.4 / dpi_x, 25.4 / dpi_y]),
+                confidence: ScaleConfidence::High,
+                source: Some("dpi_override".to_string()),
+            };
+        }
+    }
+
+    if let Some(info) = info {
+        if let (Some(dpi_x), Some(dpi_y)) = (info.dpi_x, info.dpi_y) {
+            if dpi_x > 0.0 && dpi_y > 0.0 && info.dpi_trusted {
+                return RasterCoordinateTransform {
+                    px_to_mm: Some([25.4 / dpi_x, 25.4 / dpi_y]),
+                    confidence: ScaleConfidence::Medium,
+                    source: info.dpi_source.clone(),
+                };
+            }
+        }
+    }
+
+    RasterCoordinateTransform {
+        px_to_mm: None,
+        confidence: ScaleConfidence::Unknown,
+        source: None,
+    }
+}
+
+fn transform_polylines(
+    polylines: &[Polyline],
+    transform: &RasterCoordinateTransform,
+) -> Vec<Polyline> {
+    let Some([sx, sy]) = transform.px_to_mm else {
+        return polylines.to_vec();
+    };
+
+    polylines
+        .iter()
+        .map(|polyline| {
+            polyline
+                .iter()
+                .map(|point| [point[0] * sx, point[1] * sy])
+                .collect()
+        })
+        .collect()
+}
+
+fn raster_scene_metadata(
+    info: Option<&raster_loader::RasterImageInfo>,
+    transform: &RasterCoordinateTransform,
+) -> RasterSceneMetadata {
+    let dpi_from_transform = transform.px_to_mm.and_then(|[sx, sy]| {
+        if transform.source.as_deref() == Some("dpi_override") && sx > 0.0 && sy > 0.0 {
+            Some((25.4 / sx, 25.4 / sy))
+        } else {
+            None
+        }
+    });
+    RasterSceneMetadata {
+        source_image: info.map(|info| SourceImageMetadata {
+            width_px: info.width,
+            height_px: info.height,
+            format: format!("{:?}", info.format),
+            path: info.source_path.clone(),
+        }),
+        dpi: dpi_from_transform.or_else(|| info.and_then(|info| info.dpi_x.zip(info.dpi_y))),
+        px_to_mm: transform.px_to_mm,
+        scale_confidence: transform.confidence,
+        calibration_source: transform.source.clone(),
+    }
+}
+
+fn dimension_summary_from_text_candidates(
+    report: &RasterVectorizationReport,
+) -> common_types::DimensionSummary {
+    let mut summary = common_types::DimensionSummary::default();
+    for candidate in &report.text_candidates {
+        let normalized = candidate
+            .content
+            .trim()
+            .replace(',', "")
+            .replace("mm", "")
+            .replace("MM", "");
+        if let Ok(value) = normalized.parse::<f64>() {
+            summary.linear_count += 1;
+            summary.total_count += 1;
+            summary.max_measurement = Some(
+                summary
+                    .max_measurement
+                    .map_or(value, |existing| existing.max(value)),
+            );
+            summary.min_measurement = Some(
+                summary
+                    .min_measurement
+                    .map_or(value, |existing| existing.min(value)),
+            );
+        }
+    }
+    summary
+}
+
+fn vector_graph_semantic_candidates(polylines: &[Polyline]) -> Vec<SemanticCandidate> {
+    let graph = vector_graph::CadGraph::from_polylines(polylines, 2.0);
+    let node_count = graph.node_count().max(1) as f64;
+    let edge_count = graph.edge_count().max(1) as f64;
+    let connectivity = (edge_count / node_count).clamp(0.0, 2.0) / 2.0;
+
+    polylines
+        .iter()
+        .enumerate()
+        .take(256)
+        .map(|(idx, polyline)| {
+            let length = polyline
+                .windows(2)
+                .map(|segment| distance_2d(segment[0], segment[1]))
+                .sum::<f64>();
+            let semantic_type = if length > 120.0 {
+                "hard_wall"
+            } else if length > 40.0 {
+                "opening"
+            } else {
+                "detail_line"
+            };
+            SemanticCandidate {
+                target_id: idx,
+                semantic_type: semantic_type.to_string(),
+                confidence: (0.45 + connectivity * 0.35).clamp(0.0, 0.85),
+                source: "vector_graph_rule".to_string(),
+            }
+        })
+        .collect()
+}
+
 /// 流水线统计信息
 #[derive(Debug, Clone)]
 pub struct PipelineStats {
@@ -1907,6 +2228,7 @@ impl Service for ProcessingPipeline {
             boundaries: Vec::new(),
             sources: Vec::new(),
             edges: Vec::new(),
+            raster_metadata: None,
             units: common_types::LengthUnit::Mm,
             coordinate_system: common_types::CoordinateSystem::RightHandedYUp,
             seat_zones: Vec::new(),
@@ -2008,6 +2330,8 @@ impl Service for ProcessingPipeline {
                 output_bytes: export_result.bytes,
                 text_annotations,
                 dimension_summary,
+                raster_report: None,
+                semantic_candidates: Vec::new(),
             },
             latency as u64,
         ))

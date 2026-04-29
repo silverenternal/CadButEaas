@@ -250,23 +250,25 @@ pub(crate) fn hash_point(pt: Point2) -> (i64, i64) {
     ((pt[0] * 1e9).round() as i64, (pt[1] * 1e9).round() as i64)
 }
 
+type ClassifiedSegment = (i8, i64, i64, f64, f64, usize);
+type ClassifiedChunk = (usize, Vec<ClassifiedSegment>);
+
 /// 并行去重 + 分类（用于大规模重叠检测）
 /// 返回 (去重数量, 分类后的向量)
 fn parallel_dedup_and_classify(
     segments: &[(Point2, Point2)],
     overlap_tolerance: f64,
-) -> (usize, Vec<(i8, i64, i64, f64, f64, usize)>) {
+) -> (usize, Vec<ClassifiedSegment>) {
     let total = segments.len();
     let chunk_size = (total / rayon::current_num_threads()).max(10_000);
 
     // 每个线程独立去重 + 分类
-    let results: Vec<(usize, Vec<(i8, i64, i64, f64, f64, usize)>)> = segments
+    let results: Vec<ClassifiedChunk> = segments
         .par_chunks(chunk_size)
         .enumerate()
         .map(|(chunk_idx, chunk)| {
             let mut seen: HashSet<(i64, i64, i64, i64)> = HashSet::with_capacity(chunk.len());
-            let mut local: Vec<(i8, i64, i64, f64, f64, usize)> =
-                Vec::with_capacity(chunk.len() / 2);
+            let mut local: Vec<ClassifiedSegment> = Vec::with_capacity(chunk.len() / 2);
             let base_idx = chunk_idx * chunk_size;
 
             for (i, &(start, end)) in chunk.iter().enumerate() {

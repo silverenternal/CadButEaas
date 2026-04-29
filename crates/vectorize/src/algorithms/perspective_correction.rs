@@ -3,9 +3,9 @@
 //! 对拍照产生的透视变形图纸进行校正，将梯形变换为矩形。
 //! 基于四个角点计算单应性矩阵，然后进行逆透视变换得到校正图像。
 
-use image::{GrayImage, Luma};
-use common_types::Point2;
 use crate::paper_detection::PaperRegion;
+use common_types::Point2;
+use image::{GrayImage, Luma};
 
 /// 透视校正结果
 #[derive(Debug, Clone)]
@@ -120,11 +120,7 @@ fn compute_homography(src: &[Point2; 4], dst: &[Point2; 4]) -> [[f64; 3]; 3] {
     let h = solve_dlt(&a);
 
     // 重塑为 3x3 矩阵，归一化使得 h[8] = 1
-    let mut hom = [
-        [h[0], h[1], h[2]],
-        [h[3], h[4], h[5]],
-        [h[6], h[7], h[8]],
-    ];
+    let mut hom = [[h[0], h[1], h[2]], [h[3], h[4], h[5]], [h[6], h[7], h[8]]];
 
     // 归一化
     let scale = 1.0 / hom[2][2];
@@ -233,7 +229,12 @@ fn solve_linear_system(a: &[[f64; 9]; 9], b: &[f64; 9]) -> [f64; 9] {
 
 /// 应用逆透视变换
 /// 对于目标图像每个像素 (x', y')，计算其在原始图像中的坐标 (x, y)，然后插值
-fn warp_perspective(src: &GrayImage, homography: &[[f64; 3]; 3], dst_width: u32, dst_height: u32) -> GrayImage {
+fn warp_perspective(
+    src: &GrayImage,
+    homography: &[[f64; 3]; 3],
+    dst_width: u32,
+    dst_height: u32,
+) -> GrayImage {
     let mut dst = GrayImage::new(dst_width, dst_height);
     let (src_width, src_height) = src.dimensions();
 
@@ -303,18 +304,8 @@ mod tests {
     #[test]
     fn test_identity_homography() {
         // 单位变换应该输出相同图像
-        let src = [
-            [0.0, 0.0],
-            [100.0, 0.0],
-            [100.0, 100.0],
-            [0.0, 100.0],
-        ];
-        let dst = [
-            [0.0, 0.0],
-            [100.0, 0.0],
-            [100.0, 100.0],
-            [0.0, 100.0],
-        ];
+        let src = [[0.0, 0.0], [100.0, 0.0], [100.0, 100.0], [0.0, 100.0]];
+        let dst = [[0.0, 0.0], [100.0, 0.0], [100.0, 100.0], [0.0, 100.0]];
         let hom = compute_homography(&src, &dst);
 
         // 应该接近单位矩阵

@@ -96,8 +96,6 @@ async fn test_subscribe_before_execute() {
             .await
             .expect("接收超时")
             .expect("通道关闭");
-        // recv() 返回 Result<T, RecvError>，成功时直接是 T（这里是 ()）
-        (); // 收到 () 单元类型
     }
 }
 
@@ -138,7 +136,5 @@ async fn test_channel_capacity() {
             .await
             .expect("接收超时")
             .expect("通道关闭");
-        // recv() 返回 Result<T, RecvError>，成功时直接是 T（这里是 ()）
-        (); // 收到 () 单元类型
     }
 }

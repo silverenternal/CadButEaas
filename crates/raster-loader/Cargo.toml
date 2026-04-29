@@ -10,3 +10,4 @@ image = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true }
+kamadak-exif = "0.5.5"
