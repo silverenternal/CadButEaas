@@ -1,0 +1,19 @@
+version: inference_memory_profiles_v1
+profiles:
+  32gb_safe:
+    max_image_side: 2048
+    crop_tile_size: 1024
+    max_nodes_per_sheet: 2048
+    max_edge_candidates: 8000
+    degraded_mode: true
+  96gb_primary:
+    max_image_side: 4096
+    crop_tile_size: 4096
+    max_nodes_per_sheet: 4096
+    max_edge_candidates: 20000
+    degraded_mode: true
+degraded_mode_policy:
+  - downscale image before crop extraction
+  - cap proposal nodes before all-pairs relation scoring
+  - emit skipped_tile_count and skipped_edge_candidate_count
+  - never materialize all crops or all edges on CUDA at once

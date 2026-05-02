@@ -6,10 +6,8 @@ use std::time::Instant;
 use crate::formats::{ExportFormat, SceneJson};
 use common_types::request::Request;
 use common_types::response::Response;
-use common_types::{
-    CadError, InternalErrorReason, IoErrorReason, SceneState, Service, ServiceHealth,
-    ServiceMetrics, ServiceVersion,
-};
+use common_types::{CadError, InternalErrorReason, IoErrorReason, SceneState};
+use service_kit::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 use std::fmt::Debug;
 
 /// 导出配置

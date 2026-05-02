@@ -4,23 +4,25 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use accelerator_api::Accelerator;
-use common_types::{CadError, PdfRasterImage, Polyline, ServiceMetrics};
+use common_types::{CadError, PdfRasterImage, Polyline};
 use image::{DynamicImage, GenericImageView, GrayImage};
 use log::{debug, warn};
+use service_kit::ServiceMetrics;
 
 use crate::algorithms::{
     adaptive_params, architectural_rules, detect_edges, detect_line_types_from_polylines,
     douglas_peucker, extract_contours, fill_gaps, hough_assisted_gap_filling, paper_detection,
     perspective_correction, preprocessing, skeletonize, threshold, threshold as threshold_algo,
-    FitData, OcrBackend, SkeletonConfig,
+    SkeletonConfig,
 };
 use crate::config::{PreprocessingConfig, RasterStrategy, VectorizeConfig};
 use crate::line_type::LineType;
 use crate::pipeline::{
-    strategy_for_kind, PrimitiveCandidate, RasterVectorizationOutput, SemanticCandidate,
-    SymbolCandidate, TextCandidate, VectorizationAttemptReport, VectorizePipelineBuilder,
+    strategy_for_kind, RasterVectorizationOutput, VectorizationAttemptReport,
+    VectorizePipelineBuilder,
 };
 use crate::quality::evaluate_image_quality;
+use crate::semantic::RasterSemanticExtractor;
 use accelerator_api::{AcceleratorOp, EdgeMap, Image as AcceleratorImage};
 
 #[cfg(feature = "opencv")]
@@ -174,10 +176,18 @@ impl VectorizeService {
             message: "所有光栅矢量化策略均失败".to_string(),
         })?;
         output.report.attempts = attempts;
-        output.report.primitive_candidates = primitive_candidates(&output.polylines);
-        output.report.text_candidates = text_candidates(&gray);
-        output.report.symbol_candidates = symbol_candidates(&gray);
-        output.report.semantic_candidates = semantic_candidates(&output.polylines);
+        let semantic = RasterSemanticExtractor::with_vlm_backend(config.vlm_backend.clone())
+            .extract(&gray, &output.polylines);
+        output.report.primitive_candidates = semantic.primitive_candidates;
+        output.report.text_candidates = semantic.text_candidates;
+        output.report.symbol_candidates = semantic.symbol_candidates;
+        output.report.dimension_candidates = semantic.dimension_candidates;
+        output.report.semantic_candidates = semantic.semantic_candidates;
+        output.report.vlm_backend = Some(semantic.vlm_backend);
+        output.report.vlm_model_name = semantic.vlm_model_name;
+        output.report.vlm_latency_ms = semantic.vlm_latency_ms;
+        output.report.vlm_fallback_reason = semantic.vlm_fallback_reason;
+        output.report.vlm_warnings = semantic.vlm_warnings;
         Ok(output)
     }
 
@@ -667,115 +677,6 @@ fn attempt_score(quality_score: f64, polyline_count: usize, contour_count: usize
     };
     let contour_penalty = if contour_count > 10_000 { 15.0 } else { 0.0 };
     (quality_score + geometry_score - contour_penalty).clamp(0.0, 100.0)
-}
-
-fn primitive_candidates(polylines: &[Polyline]) -> Vec<PrimitiveCandidate> {
-    polylines
-        .iter()
-        .enumerate()
-        .take(256)
-        .filter_map(|(_, polyline)| {
-            crate::algorithms::fit_best_primitive(polyline, 2.0).map(|fit| {
-                let (primitive_type, start, end) = match &fit.data {
-                    FitData::Line(line) => ("line", line.start, line.end),
-                    FitData::Arc(arc) => {
-                        let start = [
-                            arc.center[0] + arc.radius * arc.start_angle.cos(),
-                            arc.center[1] + arc.radius * arc.start_angle.sin(),
-                        ];
-                        let end = [
-                            arc.center[0] + arc.radius * arc.end_angle.cos(),
-                            arc.center[1] + arc.radius * arc.end_angle.sin(),
-                        ];
-                        ("arc", start, end)
-                    }
-                    FitData::Bezier(bezier) => ("bezier", bezier.p0, bezier.p3),
-                };
-
-                PrimitiveCandidate {
-                    primitive_type: primitive_type.to_string(),
-                    start,
-                    end,
-                    rms_error: fit.rms_error,
-                    confidence: (1.0 / (1.0 + fit.rms_error)).clamp(0.0, 1.0),
-                }
-            })
-        })
-        .collect()
-}
-
-fn text_candidates(gray: &GrayImage) -> Vec<TextCandidate> {
-    let ocr = crate::algorithms::HeuristicOcrBackend::new();
-    ocr.recognize(gray)
-        .into_iter()
-        .map(|text| {
-            let accepted = text.confidence >= 0.5;
-            TextCandidate {
-                content: text.text,
-                confidence: text.confidence,
-                bbox: [
-                    text.bbox.x_min as f64,
-                    text.bbox.y_min as f64,
-                    text.bbox.x_max as f64,
-                    text.bbox.y_max as f64,
-                ],
-                rotation: text.orientation,
-                accepted,
-            }
-        })
-        .collect()
-}
-
-fn symbol_candidates(gray: &GrayImage) -> Vec<SymbolCandidate> {
-    let classifier = crate::algorithms::SymbolClassifier::new();
-    classifier
-        .classify(gray)
-        .into_iter()
-        .map(|symbol| SymbolCandidate {
-            symbol_type: symbol.symbol_type.to_string(),
-            confidence: symbol.confidence,
-            bbox: [
-                symbol.x as f64,
-                symbol.y as f64,
-                (symbol.x + symbol.width) as f64,
-                (symbol.y + symbol.height) as f64,
-            ],
-            rotation: symbol.rotation,
-        })
-        .collect()
-}
-
-fn semantic_candidates(polylines: &[Polyline]) -> Vec<SemanticCandidate> {
-    polylines
-        .iter()
-        .enumerate()
-        .filter_map(|(idx, polyline)| {
-            if polyline.len() < 2 {
-                return None;
-            }
-            let length = polyline
-                .windows(2)
-                .map(|segment| {
-                    let dx = segment[1][0] - segment[0][0];
-                    let dy = segment[1][1] - segment[0][1];
-                    (dx * dx + dy * dy).sqrt()
-                })
-                .sum::<f64>();
-            let semantic_type = if length > 80.0 {
-                "hard_wall"
-            } else if length > 25.0 {
-                "opening"
-            } else {
-                "detail_line"
-            };
-            Some(SemanticCandidate {
-                target_id: idx,
-                semantic_type: semantic_type.to_string(),
-                confidence: if length > 80.0 { 0.72 } else { 0.55 },
-                source: "rule".to_string(),
-            })
-        })
-        .collect()
 }
 
 impl Default for VectorizeService {

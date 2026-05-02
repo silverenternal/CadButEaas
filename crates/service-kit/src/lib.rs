@@ -18,9 +18,9 @@ use std::time::Instant;
 use hdrhistogram::Histogram;
 use serde::{Deserialize, Serialize};
 
-use crate::error::CadError;
-use crate::request::Request;
-use crate::response::Response;
+use common_types::error::CadError;
+use common_types::request::Request;
+use common_types::response::Response;
 
 // ============================================================================
 // 线程局部存储：缓存分片索引（避免重复计算）
@@ -208,7 +208,7 @@ impl ShardedHistogram {
     /// # 示例
     ///
     /// ```
-    /// use common_types::service::ShardedHistogram;
+    /// use service_kit::ShardedHistogram;
     ///
     /// // 创建 8 个分片的直方图，最大追踪 1 小时延迟，3 位有效数字
     /// let hist = ShardedHistogram::new(8, 3_600_000, 3);
@@ -576,7 +576,7 @@ impl ServiceVersion {
 /// # 示例
 ///
 /// ```rust,no_run
-/// use common_types::{Service, ServiceMetrics};
+/// use service_kit::{Service, ServiceMetrics};
 /// use common_types::request::Request;
 /// use common_types::response::Response;
 ///
@@ -673,7 +673,7 @@ pub trait ServiceConfig: Clone + Debug + Default {
 /// # 示例
 ///
 /// ```rust,no_run
-/// use common_types::service::HealthCheckUtils;
+/// use service_kit::HealthCheckUtils;
 ///
 /// let fs_health = HealthCheckUtils::check_filesystem_health();
 /// let mem_health = HealthCheckUtils::check_memory_health();
@@ -850,7 +850,7 @@ impl HealthCheckUtils {
 /// # 示例
 ///
 /// ```
-/// use common_types::service::HealthMonitor;
+/// use service_kit::HealthMonitor;
 ///
 /// // 启动健康监控
 /// let monitor = HealthMonitor::start();
@@ -945,7 +945,7 @@ impl HealthMonitor {
     /// # 示例
     ///
     /// ```
-    /// use common_types::service::HealthMonitor;
+    /// use service_kit::HealthMonitor;
     ///
     /// let monitor = HealthMonitor::start();
     /// let (initial_health, subscriber) = monitor.subscribe();

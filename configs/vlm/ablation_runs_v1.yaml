@@ -1,0 +1,56 @@
+version: ablation_runs_v1
+shared:
+  split_policy: locked_test_never_tuned
+  metrics:
+    - accuracy
+    - macro_f1
+    - probability_r2
+    - node_f1
+    - relation_f1
+    - invalid_graph_rate
+    - latency_ms
+    - peak_memory_mib
+  reporting:
+    strict_metrics_are_primary: true
+    ambiguity_adjusted_allowed_only_as_diagnostic: true
+    write_prediction_jsonl: true
+runs:
+  no_moe_shared_head:
+    disables:
+      - expert_router
+      - per_element_specialist_heads
+    baseline: single_shared_head
+    compare_to: full_moe_router
+  no_geometry_features:
+    disables:
+      - se2_canonical_features
+      - primitive_graph_geometry
+      - lie_operator_features
+    baseline: raster_only_crop
+    compare_to: geometry_aware_expert
+  no_router_trace:
+    disables:
+      - route_decision_log
+      - fallback_reason_log
+    baseline: same_predictions_without_audit_trace
+    compare_to: auditable_router
+  no_constraint_fusion:
+    disables:
+      - typed_relation_constraints
+      - room_label_repair
+      - invalid_graph_guard
+    baseline: unconstrained_json_merge
+    compare_to: constraint_fusion
+  no_hardcase_loop:
+    disables:
+      - hard_case_round_2_training_items
+      - hard_case_weighting
+    baseline: pre_hardcase_checkpoint
+    compare_to: reviewed_hardcase_checkpoint
+  no_memory_guard:
+    disables:
+      - preflight_memory_budget
+      - degraded_tile_mode
+      - edge_candidate_cap
+    baseline: unbounded_inference
+    compare_to: memory_guarded_inference

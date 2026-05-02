@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CadStruct Expert Training Config",
+  "type": "object",
+  "required": ["expert_name", "dataset_dir", "output_dir"],
+  "properties": {
+    "expert_name": {
+      "type": "string",
+      "enum": ["WallOpeningExpert", "RoomSpaceExpert", "SymbolFixtureExpert", "TextDimensionExpert", "SceneGraphFusion"]
+    },
+    "dataset_dir": {"type": "string"},
+    "output_dir": {"type": "string"},
+    "epochs": {"type": "integer", "minimum": 0},
+    "batch_size": {"type": "integer", "minimum": 1},
+    "hidden_dim": {"type": "integer", "minimum": 1},
+    "dropout": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "learning_rate": {"type": "number", "exclusiveMinimum": 0.0},
+    "max_train_items": {"type": "integer", "minimum": 0},
+    "max_eval_items": {"type": "integer", "minimum": 0},
+    "max_per_label": {"type": "integer", "minimum": 0},
+    "image_cache_size": {"type": "integer", "minimum": 0},
+    "class_weight_mode": {"type": "string", "enum": ["balanced", "sqrt", "none"]},
+    "seed": {"type": "integer"},
+    "memory_budget_mib": {"type": "integer", "minimum": 1},
+    "oom_policy": {
+      "type": "object",
+      "properties": {
+        "skip_oom_samples": {"type": "boolean"},
+        "tile_size": {"type": "integer", "minimum": 1},
+        "degraded_mode": {"type": "boolean"}
+      }
+    }
+  },
+  "additionalProperties": true
+}

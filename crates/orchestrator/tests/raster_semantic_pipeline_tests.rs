@@ -39,6 +39,7 @@ async fn raster_semantic_pipeline_returns_report_scale_and_candidates() {
     assert!(report.final_polyline_count > 0);
     assert!(!report.stage_stats.is_empty());
     assert!(!report.attempts.is_empty());
+    assert_eq!(report.vlm_backend.as_deref(), Some("heuristic"));
     assert!(!result.scene.edges.is_empty());
     assert!(!result.semantic_candidates.is_empty());
 

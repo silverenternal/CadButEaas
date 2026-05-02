@@ -8,9 +8,10 @@ use acoustic::{
 };
 use async_trait::async_trait;
 use common_types::error::InternalErrorReason;
-use common_types::{CadError, Request, Response, Service, ServiceHealth, ServiceVersion};
+use common_types::{CadError, Request, Response};
 use config::CadConfig;
 use interact::InteractionService;
+use service_kit::{DependencyHealth, Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -65,7 +66,7 @@ pub struct OrchestratorService {
     config: OrchestratorConfig,
     cad_config: Option<CadConfig>,
     pipeline: ProcessingPipeline,
-    metrics: Arc<common_types::ServiceMetrics>,
+    metrics: Arc<ServiceMetrics>,
     /// 声学服务（无状态设计，使用 Arc 共享引用，无需锁）
     /// (deprecated - 声学功能已停止开发)
     #[allow(deprecated)]
@@ -99,7 +100,7 @@ impl OrchestratorService {
             config,
             cad_config,
             pipeline,
-            metrics: Arc::new(common_types::ServiceMetrics::new("OrchestratorService")),
+            metrics: Arc::new(ServiceMetrics::new("OrchestratorService")),
             #[allow(deprecated)]
             acoustic_service: Arc::new(AcousticService::new(AcousticServiceConfig::default())),
         }
@@ -221,7 +222,7 @@ impl Service for OrchestratorService {
         // 构建依赖健康状态
         let mut health = ServiceHealth::healthy(env!("CARGO_PKG_VERSION"))
             .with_uptime(0)
-            .with_dependency(common_types::DependencyHealth {
+            .with_dependency(DependencyHealth {
                 name: "ProcessingPipeline".to_string(),
                 status: pipeline_health.status,
                 message: None,
@@ -243,7 +244,7 @@ impl Service for OrchestratorService {
         "OrchestratorService"
     }
 
-    fn metrics(&self) -> &common_types::ServiceMetrics {
+    fn metrics(&self) -> &ServiceMetrics {
         &self.metrics
     }
 }

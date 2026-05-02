@@ -1,0 +1,33 @@
+{
+  "base_model": "models/vlm/internvl3_5_14b_hf",
+  "model_family": "internvl3_5",
+  "dataset_jsonl": "datasets/cadstruct/train.jsonl",
+  "dev_jsonl": "datasets/cadstruct/dev.jsonl",
+  "sft_dataset_jsonl": "datasets/cadstruct_sft_structural/train.jsonl",
+  "sft_dev_jsonl": "datasets/cadstruct_sft_structural/dev.jsonl",
+  "output_dir": "checkpoints/cadstruct_vl_14b_lora_structural",
+  "epochs": 1,
+  "max_steps": 100,
+  "max_length": 6144,
+  "max_image_side": 512,
+  "max_vision_tiles": 8,
+  "skip_at_max_length": true,
+  "skip_oom_samples": true,
+  "learning_rate": 0.0001,
+  "per_device_train_batch_size": 1,
+  "gradient_accumulation_steps": 16,
+  "load_in_4bit": true,
+  "lora_r": 32,
+  "lora_alpha": 64,
+  "lora_dropout": 0.05,
+  "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+  "train_multimodal_projector": true,
+  "train_geometry_adapter": false,
+  "cuda_visible_devices": "0",
+  "target_scope": "structural_core",
+  "notes": [
+    "Stage-1 model-target aligned training config.",
+    "Uses structural-core SFT rows: hard_wall, door, and window labels only; furniture/equipment taxonomy is deferred to a separate symbol stage.",
+    "Keeps the same OOM guardrails as the full CadStruct LoRA config."
+  ]
+}

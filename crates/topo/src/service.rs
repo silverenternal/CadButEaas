@@ -11,8 +11,8 @@ use common_types::request::Request;
 use common_types::response::Response;
 use common_types::{
     CadError, ClosedLoop, GeometryConstructionReason, LengthUnit, Point2, Polyline, SceneState,
-    Service, ServiceHealth, ServiceMetrics, ServiceVersion,
 };
+use service_kit::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 
 /// 拓扑配置
 #[derive(Debug, Clone, Default)]

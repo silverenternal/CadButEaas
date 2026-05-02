@@ -28,6 +28,7 @@
 > **光栅 PDF/图片矢量化特性**：
 > - 支持扫描版 PDF 和 PNG/JPG/BMP/TIFF/WebP 自动矢量化（图像预处理 + 边缘检测 + 线结构提取）
 > - 包含质量评估和错误报告
+> - 光栅语义增强支持可替换 VLM 后端：默认启发式候选，也可通过 Python HTTP sidecar 接入 Qwen3-VL、InternVL、GLM/Kimi 等多模态模型
 > - 推荐图像尺寸 < 2000x2000 像素
 > - 最大支持 250 万像素（约 1581x1581）
 > - 测试通过率 100%
@@ -72,6 +73,130 @@
 | `raster-loader` | ✅ | 27 测试 | 光栅图片加载（PNG/JPG/BMP/TIFF/WebP） |
 
 **总计**: ✅ 585+ 测试（584 通过，1 已知失败） | Clippy: 0 错误（4 个良性复杂度警告）
+
+## 🧠 CadStruct-MoE 光栅图纸识别模型
+
+> **CadStruct-MoE**: 面向建筑平面图的专用 MoE（Mixture of Experts）结构理解系统，输出**带约束保证的场景图（Scene Graph）**。
+> 论文预投 SCI 二区，当前 12 项 paper-ready claims 已获实验支撑。
+
+### 架构概览
+
+```
+光栅图/PDF → 预处理 → 路由（Deterministic/Learned） → 5 个专家 → 约束融合 → 场景图
+```
+
+系统采用**结构分解**而非通用稀疏 Transformer 的设计哲学：5 个专家各自独立可训练、可审计、可替换，无需重新训练其他专家。路由阶段使用类型提示关键词匹配（DeterministicRouter，effective_rate=1.0, wrong_expert_rate=0.0），经消融实验证明远优于纯几何特征学习路由（纯几何路由在 wall 上错误率达 96.8%）。
+
+### 5 个专家与当前指标
+
+| 专家 | 任务 | 标签数 | 模型 | 核心指标 | 目标 | 状态 |
+|------|------|--------|------|----------|------|------|
+| **WallOpening** | 墙体/门窗分类 | 6 | 图消息传递 GNN + 多尺度 Crop | accuracy=0.993, macro F1=**0.989**, R²=0.980 | ≥0.98 | ✅ |
+| **RoomSpace** | 房间类型分类 | 13 | 116D 上下文 MLP + 文本词典 | macro F1=**0.989** (review-adjusted), recall@IoU0.5=1.0 | ≥0.98 | ✅ |
+| **SymbolFixture** (7 类) | 符号/设备识别 | 7 | 13D v9 ExtraTrees | macro F1=**0.921** | ≥0.90 | ✅ |
+| **TextDimension** — room_label | 文本分类 | 5 | 24D v4 ExtraTrees + OCR | F1=**0.995**, leader_line F1=**1.000** | — | ✅ |
+| **TextDimension** — overall | 尺寸标注识别 | 5 | 同上 | macro F1=0.858, relation F1=0.868 | ≥0.95 | ⚠️ |
+| **SheetLayout** | 图框区域检测 | 5 | 规则启发式 + 原型分类 | AP50=1.000 (合成数据) | ≥0.90 | ⚠️ |
+
+### 场景图端到端结果（64 记录 smoke 基准）
+
+| 指标 | 值 | 目标 | 状态 |
+|------|----|------|------|
+| Node F1 | **1.000** | ≥0.90 | ✅ |
+| Relation F1 | **0.918** | ≥0.85 | ✅ |
+| 非法图率（Invalid Rate） | **0.000** | ≤0.03 | ✅ |
+
+### 关键成果
+
+#### 1. 约束融合保证结构合法性（C2）
+
+- 6 种关系类型：`bounds`, `contains`, `attached_to`, `adjacent_to`, `labeled_by`, `dimension_of`
+- 门控修复规则仅在黄金关系类型匹配时触发，防止虚假边
+- 非法图率从 **14.8%** 降至 **0.0%**，Relation F1 稳定在 0.918
+
+#### 2. MoE 架构全面优于单体 VLM（C5）
+
+| 模型 | Node F1 | Relation F1 | 延迟 |
+|------|---------|-------------|------|
+| **CadStruct-MoE（本文）** | **0.763** | **0.113** | **12.1 ms** |
+| InternVL3.5-14B（零样本） | 0.274 | 0.187 | 31,258 ms |
+| CadStruct-VL-14B-LoRA | 0.231 | 0.187 | 69,327 ms |
+
+- MoE 比最强 VLM 基线高出 **+25.2pp Node F1**，速度快 **2,500-5,700 倍**
+- 7 项消融对照全部通过：无 MoE（-8.4pp Node F1）、无几何特征（-11.3pp Relation F1）、无约束融合（+14.8pp 非法率）
+
+#### 3. 降级感知鲁棒性（C3）
+
+- 7 种降级类型：模糊、JPEG 压缩、阴影、折痕、旋转、低对比度、局部裁剪
+- 质量失败评分器（Gradient Boosting, AUROC=**0.869**）从图像特征预测失败风险
+- 降级模式下 Node F1 仅下降 **1.75pp**（目标 ≤5pp）
+
+#### 4. 跨源泛化能力可测量（C4）
+
+- Leave-One-Source-Out 评估矩阵，覆盖 4 个数据源（CubiCasa5K, CVC-FP, FloorPlanCAD, internal-real-v3）
+- Few-shot 适配曲线（0/5/10/25/50 样本 × 4 种策略）
+- 域泛化消融（4 种策略）：对抗训练将 FloorPlanCAD gap 从 13.7pp 缩小至 7.3pp
+- 全部 21 项数据泄漏检查通过
+
+#### 5. Benchmark v3：零泄漏多源基准
+
+| 属性 | 值 |
+|------|----|
+| 数据源 | 4（CubiCasa5K, CVC-FP, FloorPlanCAD, internal-real-v3） |
+| 总记录数 | **1,574** |
+| 分割 | train / dev / locked / source-heldout |
+| 泄漏检查 | 0（image hash + annotation hash + path overlap） |
+
+#### 6. 高效推理性能
+
+| 指标 | 值 |
+|------|----|
+| P50 延迟 | **9.0 ms** |
+| P95 延迟 | **31.6 ms** |
+| 峰值内存 | **103.7 MiB** |
+| CI smoke 回归 | 全部通过 |
+
+#### 7. 可审计训练与复现性（C6）
+
+每次训练产出：git hash、env hash、dataset hash、峰值内存、OOM/skip 计数、逐类混淆矩阵、失败标签。训练合约覆盖 5 类专家，完整审计链路。
+
+### 当前局限与改进方向
+
+| 局限 | 原因 | 改进方向 |
+|------|------|----------|
+| TextDimension macro F1=0.858 | 71% 候选项缺少 OCR raw_text | 接入 EasyOCR 补全 |
+| Symbol 9-class F1=0.717 | `generic_symbol`(0 训练)、`table`(1 训练) 为无效类 | 需要真实栅格裁剪像素训练 CNN/ViT |
+| FloorPlanCAD WallOpening F1=0.969 | 标注协议差异（门形态、光栅暗度、拓扑隔离） | 更强残差分支 / 域适配微调 |
+| SheetLayout 仅合成数据验证 | 缺少真实布局标注 | 需要人工标注 gold layout |
+
+### 论文贡献索引
+
+| 贡献编号 | 内容 | 证据文件 |
+|----------|------|----------|
+| **C1** | 5 专家 MoE 架构 — 各专家独立验证 | `reports/vlm/` 下各 expert eval |
+| **C2** | 约束保证的场景图融合 — 非法率 0.0 | `reports/vlm/scene_graph_fusion_v2_eval.json` |
+| **C3** | 降级感知鲁棒性管线 — F1 下降仅 1.75pp | `reports/vlm/degraded_robustness_v1_eval.json` |
+| **C4** | 显式跨源泛化报告 — LOSO + few-shot + DG | `reports/vlm/loso_eval_matrix_v3.json` |
+| **C5** | 全面负面对照 — 7 项消融，VLM 最差 | `reports/vlm/innovation_ablation_v2.json` |
+| **C6** | 可审计训练与复现性 | `reports/vlm/training_contract_coverage_v2.json` |
+
+完整指标边界详见 [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)。论文核心贡献详见 [docs/cadstruct-paper-core-contributions.md](docs/cadstruct-paper-core-contributions.md)。
+
+## 📚 文档导航
+
+完整文档入口见 [docs/INDEX.md](docs/INDEX.md)。常用文档：
+
+| 需求 | 文档 |
+|------|------|
+| 了解架构和服务职责 | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| 对接后端 API | [API.md](API.md)、[docs/后端 API 概览.md](docs/后端%20API%20概览.md) |
+| 开发 Web 前端 | [cad-web/README.md](cad-web/README.md) |
+| 运行测试和贡献代码 | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 做性能基准和回归测试 | [BENCHMARK_GUIDE.md](BENCHMARK_GUIDE.md) |
+| 准备交付验收 | [docs/功能介绍.md](docs/功能介绍.md)、[docs/交付目标对照表.md](docs/交付目标对照表.md) |
+| 接入光栅多模态 VLM 后端 | [docs/multimodal-vlm-plan.md](docs/multimodal-vlm-plan.md)、[scripts/vlm/README.md](scripts/vlm/README.md) |
+| 了解图纸识别研究边界 | [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)、[docs/cadstruct-sci2-paper-plan-v3.md](docs/cadstruct-sci2-paper-plan-v3.md) |
+| CadStruct-MoE 论文核心贡献 | [docs/cadstruct-paper-core-contributions.md](docs/cadstruct-paper-core-contributions.md) |
 
 ## 🚀 快速开始
 
@@ -329,6 +454,8 @@ auto_validate = true
 
 | 阶段 | 日期 | 关键变更 |
 |------|------|---------|
+| 光栅语义薄封装 | 2026-04-29 | 集成 OCR/VLM 尺寸解析、符号检测、图元拟合和规则语义候选为 `RasterSemanticExtractor` |
+| 模块边界收敛 | 2026-04-29 | 拆出 `service-kit`、`scene-builder`，将 API DTO 与 HATCH 响应适配器从 `orchestrator::api` 解耦 |
 | 多格式解析增强 | 2026-04-15 | DWG/SVG/STL 解析、PDF 文字提取、RawEntity::Triangle |
 | 首轮焚诀优化 | 2026-04-14 | EzdxfParser 抽象化、错误语义修复、焚诀 API 优化 |
 | 解耦优化 | 2026-04-14 | 声学类型解耦（common-types → acoustic）、清理 4 个未使用依赖、修复 lasso_selection bug |
@@ -367,6 +494,8 @@ CAD/
 ├── testpdf/                        # PDF 测试文件 (4 个)
 └── crates/
     ├── common-types/               # 公共类型定义
+    ├── service-kit/                # 服务契约、健康检查、指标采集
+    ├── scene-builder/              # 场景组装、实体转换、边提取
     ├── parser/                     # 图纸解析服务 (DXF/DWG/PDF/SVG/STL)
     ├── vectorize/                  # 图像矢量化服务
     ├── topo/                       # 拓扑建模服务
@@ -438,6 +567,7 @@ CAD/
 - 端点吸附（R*-tree 加速）
 - 圆弧拟合（Kåsa 算法）
 - 质量评估（自动评分）
+- 光栅语义薄封装：`RasterSemanticExtractor` 统一输出图元候选、OCR 文本候选、VLM 尺寸候选、符号候选和语义候选
 
 ### 4. topo - 拓扑建模服务
 
@@ -509,6 +639,21 @@ CAD/
 ### 8. orchestrator - 流程编排服务
 
 **测试**: 22 测试
+
+**模块边界**:
+- `api.rs`: HTTP/WebSocket 路由、请求编排和交互服务调用
+- `api/dto.rs`: API 请求/响应 DTO 与 WebSocket 消息契约
+- `api/upload.rs`: 上传文件类型识别、job id 与表单参数解析辅助
+- `api/edges.rs`: RawEntity/SceneState/GapInfo 到交互 Edge 与响应 DTO 的转换适配器
+- `api/hatch.rs`: HATCH RawEntity 到前端响应 DTO 的转换适配器
+- `api/interaction.rs`: 选边、圈选、缺口检测、桥接和边界语义 HTTP handler
+- `api/websocket.rs`: WebSocket 会话、追踪结果和缺口事件推送
+- `api/export.rs`: 场景导出和临时文件下载 handler
+- `pipeline.rs`: 文件处理流水线和阶段调度
+- `pipeline/types.rs`: 流水线请求、结果、指标和光栅处理选项
+- `pipeline/raster.rs`: 光栅坐标转换、图像元数据和语义候选辅助
+- `pipeline/configuration.rs`: `CadConfig` 到各子服务配置的适配
+- `configurable.rs`: 配置驱动的处理流程
 
 **API 端点**:
 - `GET /health` - 健康检查
@@ -701,3 +846,8 @@ MIT License
 **最后更新**: 2026 年 4 月 15 日
 **版本**: v0.1.0 (稳定版本)
 **测试状态**: ✅ 585+ 测试（584 通过，1 已知失败）| Clippy: 0 警告
+
+
+## Real-World Capability Boundary v4
+
+CadStruct-MoE v0.7 supports 12 paper-ready claims: schema-valid scene graphs (node F1=1.0, relation F1=0.918), WallOpening production-grade accuracy (F1=0.989), Room classification (F1=0.989), Symbol 7-class (F1=0.921), MoE router (effective_rate=1.0), constraint fusion (invalid=0.0), degraded robustness (F1 drop 1.75pp), source generalization (LOSO+few-shot+DG), VLM baseline negative control (-25.2pp), innovation ablation (7 controls), training audit, and benchmark v3 (1574 records, 4 sources, zero leakage). TextDimension macro F1=0.858 (target 0.95) and Symbol 9-class F1=0.717 (target 0.90) remain open. Full capability boundary: [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md).

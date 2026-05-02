@@ -14,7 +14,6 @@ pub mod request;
 pub mod response;
 pub mod robust_geometry; // P0-7 新增：稳健几何内核
 pub mod scene;
-pub mod service;
 
 // 显式导出以避免重复导出警告
 pub use geometry::*;
@@ -37,7 +36,6 @@ pub use error::{
     RecoverySuggestion, Result, Severity, ToleranceErrorReason, TopoErrorReason, TopoStage,
     ValidationIssue,
 };
-pub use service::*;
 // request 中的 ToleranceConfig 与 geometry 中的冲突，使用几何版本
 pub use request::{
     BuildTopologyRequest, ExportFormat, ExportRequest, ParseFileRequest, Request, RequestId,

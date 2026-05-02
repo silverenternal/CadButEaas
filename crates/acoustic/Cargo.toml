@@ -9,6 +9,7 @@ description = "声学分析服务 - 选区材料统计、房间级 T60 计算、
 [dependencies]
 # 内部依赖
 common-types = { path = "../common-types" }
+service-kit = { path = "../service-kit" }
 
 # 序列化
 serde = { workspace = true }

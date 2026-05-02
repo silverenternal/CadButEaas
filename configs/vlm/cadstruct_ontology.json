@@ -1,0 +1,98 @@
+{
+  "version": "v0.1.0",
+  "date": "2026-04-30",
+  "description": "Unified CadStruct ontology for modular floorplan MoE experts.",
+  "families": {
+    "boundary": {
+      "description": "Structural boundary and opening primitives.",
+      "labels": [
+        "hard_wall",
+        "partition_wall",
+        "door",
+        "window",
+        "opening",
+        "curtain_wall"
+      ],
+      "primary_expert": "wall_opening"
+    },
+    "space": {
+      "description": "Room and space regions plus adjacency.",
+      "labels": [
+        "room",
+        "bedroom",
+        "living_room",
+        "kitchen",
+        "bathroom",
+        "toilet",
+        "corridor",
+        "balcony",
+        "closet",
+        "office",
+        "storage",
+        "unknown_room"
+      ],
+      "primary_expert": "room_space"
+    },
+    "symbol": {
+      "description": "Architectural fixtures, furniture, stairs, equipment, and repeated symbols.",
+      "labels": [
+        "stair",
+        "column",
+        "sink",
+        "bathtub",
+        "toilet_fixture",
+        "shower",
+        "sofa",
+        "bed",
+        "table",
+        "chair",
+        "appliance",
+        "equipment",
+        "generic_symbol"
+      ],
+      "primary_expert": "symbol_fixture"
+    },
+    "text": {
+      "description": "Text, dimensions, notes, callouts, and leader-linked annotations.",
+      "labels": [
+        "room_label",
+        "dimension_text",
+        "dimension_line",
+        "extension_line",
+        "leader_line",
+        "callout",
+        "legend_text",
+        "note_text"
+      ],
+      "primary_expert": "text_dimension"
+    },
+    "sheet": {
+      "description": "Sheet-level layout regions and metadata carriers.",
+      "labels": [
+        "title_block",
+        "table",
+        "schedule",
+        "legend",
+        "stamp",
+        "key_value_field"
+      ],
+      "primary_expert": "sheet_layout"
+    }
+  },
+  "relation_types": [
+    "touches",
+    "contains",
+    "contained_in",
+    "bounds",
+    "interrupted_by",
+    "attached_to",
+    "inside",
+    "labels",
+    "dimension_of",
+    "adjacent_to"
+  ],
+  "paper_claim_policy": {
+    "wall_opening_only": "Use when reporting current hard_wall/door/window primitive recognition.",
+    "structured_scene_graph": "Use only after room, symbol, text/dimension, and fusion metrics have locked-test evidence."
+  }
+}

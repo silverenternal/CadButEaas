@@ -11,9 +11,10 @@
 use std::time::Instant;
 
 use base64::{engine::general_purpose, Engine as _};
-use common_types::{CadError, Polyline, ServiceMetrics};
+use common_types::{CadError, Polyline};
 use image::{DynamicImage, GenericImageView, GrayImage};
 use serde::{Deserialize, Serialize};
+use service_kit::ServiceMetrics;
 use thiserror::Error;
 
 use crate::algorithms::{
@@ -115,6 +116,22 @@ pub struct SymbolCandidate {
     pub rotation: f64,
 }
 
+/// VLM/规则解析出的尺寸标注候选。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DimensionCandidate {
+    pub raw_text: String,
+    pub nominal_value: Option<f64>,
+    pub tolerance_type: Option<String>,
+    pub upper_deviation: Option<f64>,
+    pub lower_deviation: Option<f64>,
+    pub geometric_type: Option<String>,
+    pub datums: Vec<String>,
+    pub roughness: Option<f64>,
+    pub bbox: [f64; 4],
+    pub confidence: f64,
+    pub source: String,
+}
+
 /// 光栅语义候选。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SemanticCandidate {
@@ -150,7 +167,13 @@ pub struct RasterVectorizationReport {
     pub primitive_candidates: Vec<PrimitiveCandidate>,
     pub text_candidates: Vec<TextCandidate>,
     pub symbol_candidates: Vec<SymbolCandidate>,
+    pub dimension_candidates: Vec<DimensionCandidate>,
     pub semantic_candidates: Vec<SemanticCandidate>,
+    pub vlm_backend: Option<String>,
+    pub vlm_model_name: Option<String>,
+    pub vlm_latency_ms: Option<u64>,
+    pub vlm_fallback_reason: Option<String>,
+    pub vlm_warnings: Vec<String>,
 }
 
 impl RasterVectorizationReport {
@@ -190,7 +213,13 @@ impl RasterVectorizationReport {
             primitive_candidates: Vec::new(),
             text_candidates: Vec::new(),
             symbol_candidates: Vec::new(),
+            dimension_candidates: Vec::new(),
             semantic_candidates: Vec::new(),
+            vlm_backend: None,
+            vlm_model_name: None,
+            vlm_latency_ms: None,
+            vlm_fallback_reason: None,
+            vlm_warnings: Vec::new(),
         }
     }
 }
@@ -1162,7 +1191,13 @@ impl VectorizePipeline {
             primitive_candidates: Vec::new(),
             text_candidates: Vec::new(),
             symbol_candidates: Vec::new(),
+            dimension_candidates: Vec::new(),
             semantic_candidates: Vec::new(),
+            vlm_backend: None,
+            vlm_model_name: None,
+            vlm_latency_ms: None,
+            vlm_fallback_reason: None,
+            vlm_warnings: Vec::new(),
         };
 
         Ok(RasterVectorizationOutput {

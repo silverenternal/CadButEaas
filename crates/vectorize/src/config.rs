@@ -3,6 +3,8 @@
 use accelerator_api::{ArcFitConfig, ContourExtractConfig, EdgeDetectConfig, SnapConfig};
 use serde::{Deserialize, Serialize};
 
+use crate::semantic::vlm_backend::RasterVlmBackendConfig;
+
 fn default_max_pixels() -> usize {
     30_000_000
 }
@@ -122,6 +124,9 @@ pub struct VectorizeConfig {
     /// 质量反馈最大重试次数。
     #[serde(default = "default_max_retries")]
     pub max_retries: usize,
+    /// 光栅语义增强 VLM 后端配置。
+    #[serde(default)]
+    pub vlm_backend: RasterVlmBackendConfig,
 }
 
 /// 图像预处理配置
@@ -187,6 +192,7 @@ impl Default for VectorizeConfig {
             adaptive_params: true,
             raster_strategy: RasterStrategy::Auto,
             max_retries: 3,
+            vlm_backend: RasterVlmBackendConfig::default(),
         }
     }
 }

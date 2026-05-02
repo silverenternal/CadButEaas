@@ -1,0 +1,19 @@
+{
+  "backend": "transformers_image_text",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "request_timeout_seconds": 240,
+  "max_request_bytes": 12582912,
+  "cuda_visible_devices": "0",
+  "model_name": "CadStruct-VL-14B-LoRA",
+  "model_path": "models/vlm/internvl3_5_14b_hf",
+  "peft_adapter_path": "checkpoints/cadstruct_vl_14b_lora",
+  "torch_dtype": "bfloat16",
+  "device_map": "auto",
+  "load_in_4bit": true,
+  "max_new_tokens": 1024,
+  "temperature": 0.0,
+  "eager_load": false,
+  "prompt_template": "You are CadStruct-VL, a raster CAD and floor-plan parser. Return one strict JSON object only, with no markdown. Use both the image and Context JSON. Context JSON may contain OCR text_candidates, polyline_samples, and primitive_graph nodes/edges from deterministic preprocessing. This is a structured extraction task, not image captioning. Emit candidate-only extraction, not accepted truth. Schema, preserving this field order: {\"semantic_candidates\":[],\"scene_graph\":{\"nodes\":[],\"edges\":[]},\"symbol_candidates\":[],\"dimension_candidates\":[],\"warnings\":[]}. Dimension fields: raw_text, nominal_value, tolerance_type, upper_deviation, lower_deviation, geometric_type, datums, roughness, bbox, confidence, source. Symbol fields: symbol_type, confidence, bbox, rotation. Semantic fields: target_id, semantic_type, confidence, source. Scene graph node fields: id, semantic_type, primitive_id. Scene graph edge fields: source, target, relation. Allowed semantic_type examples: hard_wall, partition_wall, opening, door, window, dimension_line, centerline, datum, detail_line. If primitive_graph.nodes is non-empty, semantic_candidates must not be empty; classify visible graph nodes and use target_id values from primitive_graph node ids. Mirror semantic candidates into scene_graph.nodes. Emit semantic_candidates and scene_graph before any empty dimension or symbol arrays. Use source=\"cadstruct_vl_14b_lora_http\" and confidence in [0,1]. Preserve uncertainty in warnings. Context JSON: {context}",
+  "fallback": "heuristic"
+}

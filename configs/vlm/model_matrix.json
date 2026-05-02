@@ -1,0 +1,25 @@
+{
+  "primary": {
+    "smoke": "configs/vlm/qwen3_vl_8b_smoke.json",
+    "paper": "configs/vlm/qwen3_vl_32b_paper.json",
+    "cadstruct_14b_eval": "configs/vlm/internvl3_5_14b_eval.json",
+    "cadstruct_14b_lora": "configs/vlm/cadstruct_14b_lora.json",
+    "cadstruct_14b_lora_eval": "configs/vlm/cadstruct_14b_lora_eval.json",
+    "cadstruct_14b_lora_structural": "configs/vlm/cadstruct_14b_lora_structural.json",
+    "cadstruct_14b_lora_structural_eval": "configs/vlm/cadstruct_14b_lora_structural_eval.json"
+  },
+  "baselines": {
+    "internvl3_5": "configs/vlm/internvl3_5_baseline.json",
+    "glm4_6v": "configs/vlm/glm4_6v_baseline.json",
+    "kimi_vl_efficiency": "configs/vlm/kimi_vl_efficiency_baseline.json",
+    "mock_ci": "configs/vlm/default.json"
+  },
+  "notes": [
+    "Use Qwen3-VL-8B for local smoke and ablation iteration.",
+    "Use Qwen3-VL-32B as the paper-grade primary local model on the 96GB GPU.",
+    "Use InternVL3.5, GLM-4.6V, and Kimi-VL as comparative baselines when their HF loaders are compatible with the local Transformers version.",
+    "Keep all outputs candidate-only and evaluate against geometry consistency metrics."
+    ,
+    "Use the structural-core CadStruct LoRA configs for Stage-1 model-target aligned training."
+  ]
+}

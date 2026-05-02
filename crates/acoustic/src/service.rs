@@ -26,7 +26,7 @@ use crate::acoustic_types::{
 use common_types::request::Request;
 use common_types::response::Response;
 use common_types::scene::SceneState;
-use common_types::service::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
+use service_kit::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 
 use crate::comparative::ComparativeAnalyzer;
 use crate::reverberation::ReverberationCalculator;
@@ -240,7 +240,7 @@ impl Service for AcousticService {
 mod tests {
     use super::*;
     use common_types::scene::RawEdge;
-    use common_types::service::HealthStatus;
+    use service_kit::HealthStatus;
 
     #[allow(dead_code)]
     fn create_test_scene() -> SceneState {

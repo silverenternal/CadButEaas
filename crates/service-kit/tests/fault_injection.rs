@@ -4,7 +4,7 @@
 
 use common_types::error::AutoFix;
 use common_types::scene::SceneState;
-use common_types::service::{HealthCheckUtils, HealthMonitor, HealthStatus, ShardedHistogram};
+use service_kit::{HealthCheckUtils, HealthMonitor, HealthStatus, ShardedHistogram};
 use std::sync::Arc;
 
 /// 测试健康监控器在正常情况下的行为

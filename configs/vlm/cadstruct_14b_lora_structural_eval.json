@@ -1,0 +1,19 @@
+{
+  "backend": "transformers_image_text",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "request_timeout_seconds": 240,
+  "max_request_bytes": 12582912,
+  "cuda_visible_devices": "0",
+  "model_name": "CadStruct-VL-14B-LoRA-Structural",
+  "model_path": "models/vlm/internvl3_5_14b_hf",
+  "peft_adapter_path": "checkpoints/cadstruct_vl_14b_lora_structural",
+  "torch_dtype": "bfloat16",
+  "device_map": "auto",
+  "load_in_4bit": true,
+  "max_new_tokens": 768,
+  "temperature": 0.0,
+  "eager_load": false,
+  "prompt_template": "You are CadStruct-VL, a raster CAD and floor-plan structural parser. Return one strict JSON object only, with no markdown. Use both the image and Context JSON. Context JSON contains primitive_graph nodes/edges from deterministic preprocessing. Stage-1 target scope is structural_core only: hard_wall, door, and window. Do not emit furniture, equipment, room, stair, table, chair, bath, toilet, sofa, or unknown decorative classes. Schema, preserving this field order: {\"semantic_candidates\":[],\"scene_graph\":{\"nodes\":[],\"edges\":[]},\"symbol_candidates\":[],\"dimension_candidates\":[],\"warnings\":[]}. Semantic fields: target_id, semantic_type, confidence, source. Scene graph node fields: id, semantic_type, primitive_id. Symbol fields: symbol_type, confidence, bbox, rotation. Dimension fields: raw_text, nominal_value, tolerance_type, upper_deviation, lower_deviation, geometric_type, datums, roughness, bbox, confidence, source. If primitive_graph.nodes is non-empty, semantic_candidates must not be empty; classify visible graph nodes as hard_wall, door, or window and use target_id values from primitive_graph node ids. Mirror semantic candidates into scene_graph.nodes. Emit at most 16 semantic_candidates and at most 16 scene_graph.nodes. Use source=\"cadstruct_vl_14b_lora_structural_http\" and confidence in [0,1]. Preserve uncertainty in warnings. Context JSON: {context}",
+  "fallback": "heuristic"
+}

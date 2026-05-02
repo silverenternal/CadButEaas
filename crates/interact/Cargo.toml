@@ -6,6 +6,7 @@ description = "交互协同服务 - 状态驱动的自动追踪/圈选/补全"
 
 [dependencies]
 common-types = { path = "../common-types" }
+service-kit = { path = "../service-kit" }
 serde = { version = "1.0", features = ["derive"] }
 schemars = "0.8"
 thiserror = "1.0"

@@ -11,8 +11,8 @@ use common_types::request::Request;
 use common_types::response::Response;
 use common_types::{
     CadError, GeometryConstructionReason, LengthUnit, Point2, RecoverySuggestion, SceneState,
-    Service, ServiceHealth, ServiceMetrics, ServiceVersion,
 };
+use service_kit::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 
 /// 单位标定结果
 #[derive(Debug, Clone)]

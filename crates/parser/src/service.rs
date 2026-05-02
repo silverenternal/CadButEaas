@@ -11,7 +11,8 @@ use crate::stl_parser::StlParser;
 use crate::svg_parser::SvgParser;
 use common_types::request::Request;
 use common_types::response::Response;
-use common_types::{CadError, RawEntity, Service, ServiceHealth, ServiceMetrics, ServiceVersion};
+use common_types::{CadError, RawEntity};
+use service_kit::{Service, ServiceHealth, ServiceMetrics, ServiceVersion};
 use std::path::Path;
 
 /// 图纸解析服务

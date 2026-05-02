@@ -24,11 +24,11 @@ pub mod dirty_rect;
 use common_types::error::{CadError, InternalErrorReason};
 use common_types::geometry::{LineStyle, LineWidth};
 use common_types::scene::{BoundarySemantic, ClosedLoop};
-use common_types::service::ServiceMetrics;
 use geo::{Contains, Coord, Intersects, LineString, Polygon};
 use nalgebra::Vector2;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use service_kit::ServiceMetrics;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

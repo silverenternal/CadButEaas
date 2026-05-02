@@ -1,0 +1,92 @@
+{
+  "version": "v0.1.0",
+  "date": "2026-04-30",
+  "description": "External and internal datasets mapped to the CadStruct MoE ontology.",
+  "datasets": {
+    "floorplancad": {
+      "local_path": "datasets/external/floorplancad",
+      "status": "complete",
+      "families": ["boundary"],
+      "priority": "core",
+      "primary_experts": ["wall_opening"],
+      "notes": "Existing target-domain CAD/floor-plan corpus for hard_wall, door, and window morphology."
+    },
+    "cvc_fp_figshare": {
+      "local_path": "datasets/external/cvc_fp_figshare",
+      "status": "complete_unpacked",
+      "families": ["boundary", "space"],
+      "priority": "core",
+      "primary_experts": ["wall_opening", "room_space"],
+      "notes": "Existing robustness corpus. Annotation conversion needs source-specific audit before room training."
+    },
+    "cubicasa5k_zenodo": {
+      "local_path": "datasets/external/cubicasa5k_zenodo",
+      "status": "partial_download",
+      "families": ["boundary", "space", "symbol"],
+      "priority": "P0",
+      "primary_experts": ["wall_opening", "room_space", "symbol_fixture"],
+      "source_url": "https://zenodo.org/records/2613548/files/cubicasa5k.zip?download=1",
+      "notes": "Official CubiCasa5K package. Use SVG polygons/icons for rooms, openings, and object categories."
+    },
+    "deepfloorplan": {
+      "local_path": "datasets/external/deepfloorplan",
+      "status": "not_downloaded",
+      "families": ["boundary", "space"],
+      "priority": "P1",
+      "primary_experts": ["room_space"],
+      "source_url": "https://github.com/zlzeng/DeepFloorplan",
+      "notes": "Room-boundary and room-type masks. Useful for room expert pretraining, less useful for graph-level symbols."
+    },
+    "rplan": {
+      "local_path": "datasets/external/rplan",
+      "status": "not_downloaded",
+      "families": ["space"],
+      "priority": "P1",
+      "primary_experts": ["room_space"],
+      "notes": "Large room-layout corpus for topology priors. Verify access and license before ingestion."
+    },
+    "resplan": {
+      "local_path": "datasets/external/resplan",
+      "status": "research_access_needed",
+      "families": ["boundary", "space", "symbol"],
+      "priority": "P1_research",
+      "primary_experts": ["room_space", "symbol_fixture"],
+      "source_url": "https://arxiv.org/abs/2508.14006",
+      "notes": "Promising vector-graph dataset. Do not depend on it until data availability and license are confirmed."
+    },
+    "sesyd_grec_symbols": {
+      "local_path": "datasets/external/symbol_spotting",
+      "status": "not_downloaded",
+      "families": ["symbol"],
+      "priority": "P2",
+      "primary_experts": ["symbol_fixture"],
+      "notes": "Synthetic symbol-spotting benchmarks. Use for stress tests, not as sole real-drawing evidence."
+    },
+    "doclaynet": {
+      "local_path": "datasets/external/doclaynet",
+      "status": "not_downloaded",
+      "families": ["text", "sheet"],
+      "priority": "P2",
+      "primary_experts": ["text_dimension", "sheet_layout"],
+      "source_url": "https://research.ibm.com/publications/doclaynet-a-large-human-annotated-dataset-for-document-layout-segmentation",
+      "notes": "Generic layout pretraining for title blocks/tables. Not floorplan-specific."
+    },
+    "publaynet": {
+      "local_path": "datasets/external/publaynet",
+      "status": "not_downloaded",
+      "families": ["sheet"],
+      "priority": "P2",
+      "primary_experts": ["sheet_layout"],
+      "source_url": "https://research.ibm.com/publications/publaynet-largest-dataset-ever-for-document-layout-analysis",
+      "notes": "Generic document layout pretraining. Use only as transfer data."
+    },
+    "internal_dimensions_v1": {
+      "local_path": "datasets/internal/dimensions_v1",
+      "status": "needed",
+      "families": ["text"],
+      "priority": "P0_internal",
+      "primary_experts": ["text_dimension"],
+      "notes": "Required for real dimension/text claims. Public floorplan datasets are insufficient for target-domain dimension extraction."
+    }
+  }
+}

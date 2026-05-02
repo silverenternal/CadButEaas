@@ -1,0 +1,18 @@
+{
+  "backend": "transformers_image_text",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "request_timeout_seconds": 240,
+  "max_request_bytes": 8388608,
+  "cuda_visible_devices": "0",
+  "model_name": "GLM-4.6V baseline",
+  "model_path": "zai-org/GLM-4.6V",
+  "torch_dtype": "bfloat16",
+  "device_map": "auto",
+  "load_in_4bit": false,
+  "max_new_tokens": 768,
+  "temperature": 0.0,
+  "eager_load": false,
+  "prompt_template": "Return strict JSON only for raster engineering drawing candidate extraction. Use source=\"glm4_6v_http\". Context JSON: {context}",
+  "fallback": "heuristic"
+}

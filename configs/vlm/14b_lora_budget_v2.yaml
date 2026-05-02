@@ -1,0 +1,24 @@
+version: 14b_lora_budget_v2
+decision: do_not_continue_full_14b_training_now
+role: teacher_and_ablation_only
+model:
+  base_model: models/vlm/internvl3_5_14b_hf
+  adapter: LoRA
+  load_in_4bit: true
+  lora_r: 32
+  max_length: 6144
+  max_image_side: 512
+  max_vision_tiles: 8
+budget:
+  observed_peak_memory_mib: 45224
+  train_hardware: primary_96gb_only
+  eval_hardware: 32gb_allowed_with_4bit
+guards:
+  skip_at_max_length: true
+  skip_oom_samples: true
+  require_zero_shot_samples_per_model: 30
+  forbid_locked_label_teacher_cache: true
+next_required_before_training:
+  - zero_shot_vlm_benchmark_v2 reaches sample floor for every model
+  - structure-specific node/relation head ablation beats current MoE expert baseline
+  - teacher hints remain offline and disableable

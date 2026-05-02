@@ -7,6 +7,8 @@ license.workspace = true
 
 [dependencies]
 common-types = { path = "../common-types" }
+service-kit = { path = "../service-kit" }
+scene-builder = { path = "../scene-builder" }
 parser = { path = "../parser" }
 vectorize = { path = "../vectorize" }
 vector-graph = { path = "../vector-graph" }
@@ -42,6 +44,7 @@ tokio-tungstenite = { workspace = true }
 
 [dev-dependencies]
 common-types = { path = "../common-types" }
+service-kit = { path = "../service-kit" }
 config = { path = "../config" }
 parser = { path = "../parser" }
 tempfile = "3.10"

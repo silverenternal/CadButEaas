@@ -8,6 +8,13 @@ benchmark-results/
 lcov.info
 coverage/
 
+# Local Python environments and caches
+.venv-vlm/
+__pycache__/
+*.pyc
+models/
+checkpoints/
+
 # Monitoring (Prometheus + Grafana)
 monitoring/prometheus_data/
 monitoring/grafana_data/
@@ -15,3 +22,14 @@ monitoring/*.log
 monitoring/logs/
 monitoring/*.env
 monitoring/secrets/
+
+# Generated raster VLM smoke data
+datasets/external/
+datasets/cadstruct_smoke/
+datasets/cadstruct/*.jsonl
+datasets/cadstruct/manifest.json
+datasets/cadstruct_sft/*.jsonl
+datasets/cadstruct_sft/manifest.json
+datasets/raster_vlm/*.jsonl
+datasets/raster_vlm/images/
+reports/vlm/

@@ -1,0 +1,64 @@
+version: degraded_training_v1
+description: Degraded robustness training config for core experts
+degradation_types:
+- blur
+- jpeg
+- shadow
+- fold
+- rotation
+- low_contrast
+- partial_crop
+augmentation:
+  enabled: true
+  severity_range:
+  - 0.3
+  - 0.7
+  mix_clean_degraded: true
+  clean_ratio: 0.4
+  degraded_ratio: 0.6
+experts:
+  wall_opening:
+    degraded_mode_threshold_factor: 0.85
+    enable_tile_processing: true
+    abstain_on_low_contrast: true
+  room_space:
+    degraded_mode_threshold_factor: 0.85
+    enable_tile_processing: true
+    relaxed_polygon_constraints: true
+  symbol_fixture:
+    degraded_mode_threshold_factor: 0.8
+    enable_tile_processing: true
+    open_set_abstain_threshold: 0.6
+  text_dimension:
+    degraded_mode_threshold_factor: 0.8
+    ocr_fallback_enabled: true
+    relaxed_ocr_confidence: true
+evaluation:
+  clean_split: smoke
+  degraded_split: cadstruct_degraded_v1
+  max_drop_pp: 5.0
+  metrics:
+  - node_macro_f1
+  - relation_f1
+  - invalid_graph_rate
+router:
+  model_type: random_forest
+  feature_names:
+  - contrast
+  - brightness
+  - edge_clarity
+  - brightness_bimodality
+  - text_density
+  - skew
+  - noise
+  - symbol_density
+  feature_importance:
+    contrast: 0.1284
+    brightness: 0.1683
+    edge_clarity: 0.1337
+    brightness_bimodality: 0.1491
+    text_density: 0.131
+    skew: 0.1466
+    noise: 0.143
+    symbol_density: 0.0
+  threshold_tuning: maximize_recall_at_precision_0.80

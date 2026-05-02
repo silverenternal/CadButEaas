@@ -1,0 +1,18 @@
+{
+  "backend": "qwen3_vl",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "request_timeout_seconds": 180,
+  "max_request_bytes": 12582912,
+  "cuda_visible_devices": "0",
+  "model_name": "Qwen3-VL-32B-Instruct",
+  "model_path": "Qwen/Qwen3-VL-32B-Instruct",
+  "torch_dtype": "bfloat16",
+  "device_map": "auto",
+  "load_in_4bit": false,
+  "max_new_tokens": 1024,
+  "temperature": 0.0,
+  "eager_load": false,
+  "prompt_template": "You are analyzing raster CAD and engineering drawings for a candidate-only extraction pipeline. Return one strict JSON object only, with no markdown. You MUST use both the image and the provided Context JSON. The Context JSON contains OCR text_candidates, symbol_candidates, and polyline_samples from deterministic CAD preprocessing. If a text_candidate contains a plausible numeric dimension, emit a dimension_candidate for it unless there is a clear visual contradiction. If a polyline_sample is long and wall-like, emit a semantic_candidate with target_id matching that sample index. Do not mark anything as accepted; emit candidates with uncertainty. Schema: {\"dimension_candidates\":[],\"symbol_candidates\":[],\"semantic_candidates\":[],\"warnings\":[]}. Dimension fields: raw_text, nominal_value, tolerance_type, upper_deviation, lower_deviation, geometric_type, datums, roughness, bbox, confidence, source. Symbol fields: symbol_type, confidence, bbox, rotation. Semantic fields: target_id, semantic_type, confidence, source. Use source=\"qwen3_vl_32b_http\" and confidence in [0,1]. Context JSON: {context}",
+  "fallback": "heuristic"
+}

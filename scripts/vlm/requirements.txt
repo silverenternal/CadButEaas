@@ -1,0 +1,14 @@
+torch
+torchvision
+transformers
+accelerate
+bitsandbytes
+peft
+fastapi
+uvicorn
+pillow
+qwen-vl-utils
+sentencepiece
+protobuf
+einops
+python-multipart

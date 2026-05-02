@@ -1,0 +1,15 @@
+{
+  "backend": "mock",
+  "host": "127.0.0.1",
+  "port": 8765,
+  "request_timeout_seconds": 30,
+  "max_request_bytes": 8388608,
+  "cuda_visible_devices": "0",
+  "model_name": "mock-raster-vlm",
+  "model_path": null,
+  "quantization": "none",
+  "max_new_tokens": 768,
+  "temperature": 0.0,
+  "prompt_template": "You are analyzing raster CAD and engineering drawings for a candidate-only extraction pipeline. Return one strict JSON object only, with no markdown. Schema: {\"dimension_candidates\":[],\"symbol_candidates\":[],\"semantic_candidates\":[],\"warnings\":[]}. Use source=\"vlm_http\" and confidence in [0,1]. Context JSON: {context}",
+  "fallback": "heuristic"
+}

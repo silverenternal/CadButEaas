@@ -7,6 +7,7 @@ license.workspace = true
 
 [dependencies]
 common-types = { path = "../common-types" }
+service-kit = { path = "../service-kit" }
 accelerator-api = { path = "../accelerator-api" }
 accelerator-cpu = { path = "../accelerator-cpu" }
 accelerator-registry = { path = "../accelerator-registry", optional = true }

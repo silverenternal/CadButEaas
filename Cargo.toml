@@ -2,6 +2,8 @@
 resolver = "2"
 members = [
     "crates/common-types",
+    "crates/service-kit",
+    "crates/scene-builder",
     "crates/parser",
     "crates/vectorize",
     "crates/topo",

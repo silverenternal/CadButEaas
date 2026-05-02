@@ -480,7 +480,7 @@ impl ConfigurablePipeline {
                             // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
                             let entities = futures::executor::block_on(ctx_entities.read());
                             let polylines =
-                                ProcessingPipeline::extract_polylines_from_entities(&entities);
+                                scene_builder::extract_polylines_from_entities(&entities);
                             Ok::<_, CadError>(polylines)
                         });
                         // 添加超时保护和取消机制
@@ -508,9 +508,9 @@ impl ConfigurablePipeline {
                             let polylines = futures::executor::block_on(ctx_polylines.read());
                             let entities = futures::executor::block_on(ctx_entities.read());
                             let mut scene = pipeline.topo().build_scene(&polylines)?;
-                            ProcessingPipeline::fill_scene_edges(&mut scene, &entities);
+                            scene_builder::fill_scene_edges(&mut scene, &entities);
                             let entities_refs: Vec<&RawEntity> = entities.iter().collect();
-                            ProcessingPipeline::auto_infer_boundaries(&mut scene, &entities_refs);
+                            scene_builder::auto_infer_boundaries(&mut scene, &entities_refs);
                             Ok::<_, CadError>(scene)
                         });
                         // 添加超时保护和取消机制
@@ -1035,9 +1035,9 @@ impl ConfigurablePipeline {
         let entities_len = ctx_entities.read().await.len();
 
         // 提取文字标注和标注尺寸统计
-        let text_annotations = ProcessingPipeline::extract_text_annotations(&entities_arc);
+        let text_annotations = scene_builder::extract_text_annotations(&entities_arc);
         *ctx.text_annotations.write().await = text_annotations;
-        let dimension_summary = ProcessingPipeline::extract_dimension_summary(&entities_arc);
+        let dimension_summary = scene_builder::extract_dimension_summary(&entities_arc);
         *ctx.dimension_summary.write().await = dimension_summary;
 
         tracing::info!("解析阶段完成：得到 {} 个实体", entities_len);
@@ -1048,7 +1048,7 @@ impl ConfigurablePipeline {
     async fn execute_vectorize(&self, ctx: &StageContext) -> Result<(), CadError> {
         // P11 锐评修复 1: 零拷贝 - Arc::clone 只增加引用计数
         let entities: Arc<[RawEntity]> = Arc::clone(&*ctx.entities.read().await);
-        let polylines = ProcessingPipeline::extract_polylines_from_entities(&entities);
+        let polylines = scene_builder::extract_polylines_from_entities(&entities);
         drop(entities); // 释放读锁
                         // P11 锐评修复 1: 零拷贝 - 直接转换为 Arc<[T]>
         *ctx.polylines.write().await = polylines.into();
@@ -1075,10 +1075,10 @@ impl ConfigurablePipeline {
             let entities = futures::executor::block_on(ctx_entities.read());
             let mut scene = topo.build_scene(&polylines)?;
             // 填充边数据
-            ProcessingPipeline::fill_scene_edges(&mut scene, &entities);
+            scene_builder::fill_scene_edges(&mut scene, &entities);
             // 语义推断
             let entities_refs: Vec<&RawEntity> = entities.iter().collect();
-            ProcessingPipeline::auto_infer_boundaries(&mut scene, &entities_refs);
+            scene_builder::auto_infer_boundaries(&mut scene, &entities_refs);
             Ok::<_, CadError>(scene)
         })
         .await
