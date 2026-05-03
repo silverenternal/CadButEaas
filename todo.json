@@ -1,164 +1,221 @@
 {
-  "title": "CadStruct-MoE SCI 二区论文指标提升计划",
-  "created": "2026-05-02",
-  "target_venue": "Advanced Engineering Informatics (IF=8.8, CAS 二区) 或同等",
-  "done_when": "所有核心指标达标，消融实验完整，论文可投稿",
-
-  "metrics_target": {
-    "text_dimension":   { "current": 0.882, "target": 0.95, "gap": -0.07,  "status": "🟡 close" },
-    "room_space":       { "current": 0.782, "target": 0.95, "gap": -0.17,  "status": "🟡 needs work" },
-    "symbol_fixture":   { "current": 0.403, "target": 0.90, "gap": -0.50,  "status": "🔴 critical — domain shift" },
-    "wall_opening":     { "current": 0.644, "target": 0.97, "gap": -0.33,  "status": "🔴 critical — passthrough" },
-    "sheet_layout":     { "current": null,  "target": 0.85, "gap": null,   "status": "🔴 critical — no training data" },
-    "edge_f1":          { "current": 0.000, "target": 0.75, "gap": -0.75,  "status": "🔴 critical — ID mismatch" },
-    "moe_vs_single":    { "current": null,  "target": "MoE > single by ≥3pp", "gap": null, "status": "🔴 not done" }
+  "title": "CadStruct-MoE SCI2 强投稿针对性强化计划 v8",
+  "created": "2026-05-04",
+  "decision": {
+    "is_model_mature_for_submission": "强可投稿原型，但不能负责任地判断为 SCI2 99% 中稿率成熟稿。",
+    "why_not_99_percent_ready": [
+      "近两年 WAFFLE/ResPlan 等工作把 floorplan understanding 推向 in-the-wild、多源、多模态和 graph/vector benchmark；v3 已确认 external OCR 与 cross-source symbol annotation pack 可复现，但 human-gold 仍为 0，外部泛化 claim 仍必须阻断。",
+      "主指标已经强：node macro F1=0.951696、node accuracy=0.981566、no-repair relation F1=0.920938、invalid graph rate=0.0；但论文审稿风险不只看本地 locked split，还看外部泛化和可复现对比。",
+      "Lie/SE(2) gated residual 已有真实 matched 性能提升，v9 完成 true graph-coordinate transform stress；结果支持 identity/matched 性能提升，但不支持大幅坐标变换泛化。",
+      "MoE 差异化优势是 domain-structured deterministic routing + typed experts，不是通用 sparse-token MoE；需要把 expert contribution、wrong-family cost、router audit 做成主文级 evidence，而不是只放 appendix。"
+    ],
+    "current_strong_evidence": {
+      "paper_main": {
+        "source": "reports/vlm/scene_graph_fusion_symbol_long_tail_model_no_repair_scorer_v1_eval.json",
+        "node_macro_f1": 0.951696,
+        "node_accuracy": 0.981566,
+        "relation_f1_no_repair": 0.920938,
+        "relation_precision": 0.961937,
+        "relation_recall": 0.88329,
+        "invalid_graph_rate": 0.0,
+        "strict_relation_record_bootstrap_f1_ci_95": {
+          "p2_5": 0.913169,
+          "p50": 0.920875,
+          "p97_5": 0.928493
+        }
+      },
+      "lie_se2_gated_residual": {
+        "source": "reports/vlm/lie_se2_core_claim_decision_v9.json",
+        "h512_matched_seed_count": 3,
+        "h512_full_lie_wins": "3/3",
+        "h512_mean_smoke_macro_f1_gain_pp": 1.822,
+        "h512_smoke_probability_r2_gain_pp": 2.343,
+        "h1024_smoke_macro_f1_gain_pp": 1.121,
+        "claim": "explicit gated Lie/SE(2) residual branch is a core geometry component with matched and seed-30 identity performance support; transform-generalization claim remains limited",
+        "seed30_identity_gated_vs_ungated_macro_f1_gain_pp": 1.227,
+        "seed30_identity_gated_vs_no_lie_macro_f1_gain_pp": 3.319,
+        "transform_generalization_supported": false
+      },
+      "external_human_gold_boundary": {
+        "source": "reports/vlm/external_generalization_claim_decision_v3.json",
+        "manifest": "reports/vlm/external_human_gold_manifest_v3.json",
+        "external_ocr_pending_records": 50,
+        "cross_source_symbol_pending_records": 50,
+        "external_ocr_drawings_with_gold": 0,
+        "cross_source_symbol_annotations_with_gold": 0,
+        "claim": "annotation-ready external protocol; no external/wild generalization performance claim until human gold is filled"
+      },
+      "domain_structured_moe_main_tables": {
+        "router_table": "reports/vlm/domain_structured_moe_main_router_table_v1.json",
+        "expert_contribution": "reports/vlm/expert_contribution_matrix_main_v1.json",
+        "resource_table": "reports/vlm/moe_latency_resource_table_v1.json",
+        "deterministic_wrong_expert_rate": 0.0,
+        "learned_wrong_expert_rate": 0.152302,
+        "claim": "auditable deterministic domain-structured routing is the main MoE mechanism; learned/top-k routers are ablations/capacity diagnostics"
+      }
+    },
+    "submission_posture": "v8 todo 已完成：可以作为强 SCI2 候选稿推进；仍不应承诺 99% 中稿率，外部/wild 泛化需等待 human-gold 标注。"
   },
-
-  "tasks": [
+  "frontier_literature_snapshot_2024_2026": [
     {
-      "id": "T1",
-      "title": "SymbolFixture 同域重训练",
-      "priority": "🔴 critical",
-      "problem": "v8 ExtraTrees 训练在 symbol_fixture_detector_v2，评估在 CubiCasa5k，domain shift 导致只预测 stair/column/bathtub 3/9 类",
-      "solution": "从 CubiCasa5k_reviewed_locked_test.jsonl 提取 symbol_candidates 作为训练/评估数据，确保同域",
-      "subtasks": [
-        { "step": 1, "action": "分析 CubiCasa5k symbol 类型分布和 bbox 格式", "status": "pending" },
-        { "step": 2, "action": "构建同域训练集（train/dev/locked split）", "status": "pending" },
-        { "step": 3, "action": "训练 v9 ExtraTrees（同域 13D 特征）", "status": "pending" },
-        { "step": 4, "action": "评估同域 F1，目标 ≥0.70（至少模型能工作）", "status": "pending" },
-        { "step": 5, "action": "更新 SymbolFixtureExpert 加载 v9 模型", "status": "pending" },
-        { "step": 6, "action": "重新运行全管线，验证端到端指标", "status": "pending" }
-      ],
-      "acceptance": "Symbol F1 ≥ 0.70 on CubiCasa5k dev",
-      "estimated_effort": "2-3 days"
+      "work": "WAFFLE: Multimodal Floorplan Understanding in the Wild",
+      "year": 2025,
+      "url": "https://openaccess.thecvf.com/content/WACV2025/html/Ganon_WAFFLE_Multimodal_Floorplan_Understanding_in_the_Wild_WACV_2025_paper.html",
+      "trend": "近 20K in-the-wild floorplan images + metadata，强调多建筑类型、多地区、多数据格式和外部泛化。",
+      "implication_for_us": "必须补 external/cross-source human-gold 或明确把 wild generalization 限制住。"
     },
-
     {
-      "id": "T2",
-      "title": "WallOpening GNN 模型集成",
-      "priority": "🔴 critical",
-      "problem": "当前是 PassthroughExpert，用 gold 标签 passthrough，不是真实预测",
-      "solution": "加载外部 GNN 模型（已有 checkpoint），集成到 WallOpeningExpert.predict()",
-      "subtasks": [
-        { "step": 1, "action": "定位 GNN 模型 checkpoint 路径和输入格式", "status": "pending" },
-        { "step": 2, "action": "实现 WallOpeningExpert._load_gnn_model()", "status": "pending" },
-        { "step": 3, "action": "实现 predict() 用 GNN 推理替代 passthrough", "status": "pending" },
-        { "step": 4, "action": "评估 CubiCasa5k 上 GNN F1", "status": "pending" },
-        { "step": 5, "action": "重新运行全管线，验证 WallOpening F1 ≥ 0.90", "status": "pending" }
-      ],
-      "acceptance": "WallOpening F1 ≥ 0.90 on CubiCasa5k dev, not passthrough",
-      "estimated_effort": "2-3 days"
+      "work": "Vision Language Models Can Parse Floor Plan Maps",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2409.12842",
+      "trend": "VLM 开始处理 floorplan/map parsing，关注导航式任务、语义区域和连通结构理解。",
+      "implication_for_us": "我们的 typed graph/no-repair validity 是差异化，但需要避免和 VLM QA/navigation 任务混用指标。"
     },
-
     {
-      "id": "T3",
-      "title": "Edge ID 空间对齐 + Relation F1",
-      "priority": "🔴 critical",
-      "problem": "启发式边用 numeric candidate_id，gold 边用 svg_* ID，无法计算 Edge F1",
-      "solution": "在 fuse_real_upstream.py 中对齐 ID 空间，使 heuristic edges 可与 gold edges 比较",
-      "subtasks": [
-        { "step": 1, "action": "分析 gold edges 的 source/target ID 格式和 relation 类型", "status": "pending" },
-        { "step": 2, "action": "建立 candidate_id → svg_id 映射表", "status": "pending" },
-        { "step": 3, "action": "更新 _generate_edges() 用 gold-compatible ID", "status": "pending" },
-        { "step": 4, "action": "运行 evaluate_relations() 验证 Edge F1 ≥ 0.60", "status": "pending" },
-        { "step": 5, "action": "优化 symbol→room 边（4.37M 太多，加空间包含阈值）", "status": "pending" }
-      ],
-      "acceptance": "Edge F1 ≥ 0.60 on CubiCasa5k dev",
-      "estimated_effort": "1-2 days"
+      "work": "Comprehensive floor plan vectorization with sparse point set representation",
+      "year": 2025,
+      "url": "https://www.sciencedirect.com/science/article/pii/S0926580525000639",
+      "trend": "floorplan vectorization 更强调高精度几何、复杂布局和结构化表示。",
+      "implication_for_us": "我们的核心不是纯 vectorization SOTA，而是语义 typed scene graph；需要提供 relation/no-repair/typed validity 证据。"
     },
-
     {
-      "id": "T4",
-      "title": "MoE vs 单模型消融实验",
-      "priority": "🟡 important",
-      "problem": "没有证明 MoE 架构比端到端单模型更好",
-      "solution": "用现有 graph_node_classifier 作为 single-model baseline，与 MoE 联合 F1 对比",
-      "subtasks": [
-        { "step": 1, "action": "运行 graph_node_classifier 在 493 条 dev 记录上", "status": "pending" },
-        { "step": 2, "action": "计算 single-model node macro F1", "status": "pending" },
-        { "step": 3, "action": "计算 MoE node macro F1（当前专家联合）", "status": "pending" },
-        { "step": 4, "action": "对比：MoE F1 - single F1 ≥ 3pp", "status": "pending" },
-        { "step": 5, "action": "生成消融实验报告", "status": "pending" }
-      ],
-      "acceptance": "MoE F1 > single-model F1 by ≥3pp, or explain why not",
-      "estimated_effort": "1-2 days"
+      "work": "ResPlan: A Large-Scale Vector-Graph Dataset of 17,000 Residential Floor Plans",
+      "year": 2025,
+      "url": "https://arxiv.org/abs/2508.14006",
+      "trend": "新数据集直接提供 geometric 与 graph-based formats，推动 spatial reasoning benchmark。",
+      "implication_for_us": "graph output 是正确方向，但需要展示我们的 graph schema、专家贡献和跨源鲁棒性。"
     },
-
     {
-      "id": "T5",
-      "title": "TextDimension 提升至 0.95",
-      "priority": "🟡 nice to have",
-      "problem": "当前 F1=0.882，距 0.95 差 7pp",
-      "solution": "分析 confusion matrix，针对低 F1 类别优化特征或增加训练数据",
-      "subtasks": [
-        { "step": 1, "action": "分析 TextDimension per-class confusion（哪些类混淆）", "status": "pending" },
-        { "step": 2, "action": "尝试 v5：增加 OCR 特征（词长、数字检测、大写比例）", "status": "pending" },
-        { "step": 3, "action": "或尝试 class_weight 调整处理不平衡", "status": "pending" },
-        { "step": 4, "action": "评估 v5 F1，目标 ≥0.93", "status": "pending" }
-      ],
-      "acceptance": "TextDimension F1 ≥ 0.93 on CubiCasa5k dev",
-      "estimated_effort": "1-2 days"
+      "work": "Routers in Vision Mixture of Experts: An Empirical Study",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2401.15969",
+      "trend": "Vision MoE 重点比较 token-choice、expert-choice、soft MoE，并强调 router design 对性能/计算的影响。",
+      "implication_for_us": "我们要把 domain-structured routing 的 wrong-family cost、expert utilization、deterministic vs learned router 放进主文。"
     },
-
     {
-      "id": "T6",
-      "title": "RoomSpace 端到端提升至 0.90",
-      "priority": "🟡 nice to have",
-      "problem": "sklearn dev F1=0.947 但端到端只有 0.782，差距大",
-      "solution": "调查端到端 gap 原因（可能是候选 bbox 格式、特征提取差异）",
-      "subtasks": [
-        { "step": 1, "action": "对比 sklearn 评估脚本 vs run_all_experts 的特征提取差异", "status": "pending" },
-        { "step": 2, "action": "修复不一致（如果有）", "status": "pending" },
-        { "step": 3, "action": "重新评估端到端 RoomSpace F1", "status": "pending" }
-      ],
-      "acceptance": "RoomSpace F1 ≥ 0.88 on end-to-end pipeline",
-      "estimated_effort": "1-2 days"
-    },
-
-    {
-      "id": "T7",
-      "title": "专家消融实验（freeze one at a time）",
-      "priority": "🟡 important",
-      "problem": "没有量化每个专家对 MoE 整体性能的贡献",
-      "solution": "依次 freeze 每个专家（用 passthrough），测量 MoE 整体 F1 下降",
-      "subtasks": [
-        { "step": 1, "action": "实现 freeze_one_expert 管线", "status": "pending" },
-        { "step": 2, "action": "运行 5 次（每次 freeze 一个专家）", "status": "pending" },
-        { "step": 3, "action": "报告每个专家的贡献（F1 drop）", "status": "pending" }
-      ],
-      "acceptance": "5 expert contribution measurements",
-      "estimated_effort": "1 day"
-    },
-
-    {
-      "id": "T8",
-      "title": "SheetLayout 最小化评估",
-      "priority": "🟢 low",
-      "problem": "4/5 类无训练数据，无法训练监督模型",
-      "solution": "在论文中将该专家标注为 'future work'，不纳入主结果表",
-      "subtasks": [
-        { "step": 1, "action": "从论文主结果表中移除 SheetLayout（或标注为 N/A）", "status": "pending" },
-        { "step": 2, "action": "在 Limitations 部分说明数据缺口", "status": "pending" },
-        { "step": 3, "action": "保留规则启发式作为 placeholder", "status": "pending" }
-      ],
-      "acceptance": "SheetLayout clearly marked as future work in paper",
-      "estimated_effort": "0.5 days"
+      "work": "ViMoE: An Empirical Study of Designing Vision Mixture-of-Experts",
+      "year": 2024,
+      "url": "https://arxiv.org/abs/2410.15732",
+      "trend": "视觉 MoE 论文越来越重视 expert specialization 和 router behavior。",
+      "implication_for_us": "我们应把 expert specialization 作为核心贡献证据，而不是泛称 MoE。"
     }
   ],
-
-  "critical_path": ["T1", "T2", "T3", "T4"],
-  "nice_to_have": ["T5", "T6"],
-  "low_priority": ["T7", "T8"],
-
+  "core_innovation_and_differentiation": [
+    {
+      "innovation": "Domain-structured MoE for CAD/floorplan typed scene graph",
+      "advantage": "按候选族和工程图元素拆专家，router 可审计；不同于通用 sparse-token MoE。",
+      "current_evidence": "主文 router/contribution/resource 表已生成；deterministic wrong_expert_rate=0.0，learned fair router wrong_expert_rate=0.152302；4 个核心专家有 measured contribution。",
+      "must_strengthen": "若要进一步提升性能，需要针对 symbol_fixture 长尾和外部 human-gold 做训练/标注；当前 MoE 主文证据已可用。"
+    },
+    {
+      "innovation": "No-repair typed relation fusion",
+      "advantage": "直接输出 typed node + relation graph，invalid graph rate=0.0，不依赖 gold repair。",
+      "current_evidence": "relation F1=0.920938，precision=0.961937，recall=0.88329，strict CI [0.913169, 0.928493]。",
+      "must_strengthen": "补 relation hard-case taxonomy、record-level examples、与 rule-only/repair/learned scorer 对照表。"
+    },
+    {
+      "innovation": "Explicit gated Lie/SE(2) residual geometry branch",
+      "advantage": "不是把 Lie 特征混入普通数值向量，而是用 gated residual 显式建模几何子空间。",
+      "current_evidence": "h512 matched 3/3 positive，mean +1.822pp；h1024 +1.121pp；seed30 identity gated vs ungated +1.227pp、vs no-Lie +3.319pp。",
+      "must_strengthen": "若要 claim 坐标变换泛化，需要训练期引入一致的 graph-coordinate/raster 联合 SE(2) 增强；当前只能 claim matched/identity 性能提升。"
+    },
+    {
+      "innovation": "Claim-ledger reproducibility boundary",
+      "advantage": "把 main/appendix/diagnostic/pending external claims 分离，降低 overclaim 风险。",
+      "current_evidence": "overclaim scan passed；final evidence pack passed。",
+      "must_strengthen": "生成最终 source manifest、paper tables、ablation table、limitation/rebuttal table，并确保 README/docs 同步新 Lie gated claim。"
+    }
+  ],
+  "tasks": [],
+  "execution_order": [],
+  "paper_positioning_one_sentence": "CadStruct-MoE is an auditable domain-structured mixture-of-experts system for typed CAD/floorplan scene-graph parsing, combining deterministic expert routing, explicit gated Lie/SE(2) geometry, conservative no-repair relation fusion, and claim-ledger reproducibility.",
   "overall_status": {
-    "total_tasks": 8,
-    "completed": 0,
-    "in_progress": 0,
-    "pending": 8,
-    "blocking_issues": [
-      "Symbol domain shift (T1) — current F1=0.40 unusable for paper",
-      "WallOpening passthrough (T2) — not a real model",
-      "Edge F1=0.0 (T3) — scene graph incomplete"
-    ]
-  }
+    "total_tasks": 0,
+    "completed": 4,
+    "pending": 0,
+    "readiness": "v8 todo completed. Evidence pack v2 passes with stronger gated Lie performance evidence, main-paper MoE tables, external annotation boundary, and zero-blocking overclaim scan."
+  },
+  "completed_tasks": [
+    {
+      "id": "SCI2-V8-T2",
+      "completed_at": "2026-05-04",
+      "outputs": [
+        "reports/vlm/lie_se2_true_graph_transform_stress_v1.json",
+        "reports/vlm/lie_se2_gated_vs_ungated_vs_no_lie_ablation_v1.json",
+        "reports/vlm/lie_se2_core_claim_decision_v9.json"
+      ],
+      "evidence": {
+        "decision": "reports/vlm/lie_se2_core_claim_decision_v9.json",
+        "identity_macro_f1_gated_vs_ungated_delta_pp": 1.227,
+        "identity_macro_f1_gated_vs_no_lie_delta_pp": 3.319,
+        "h512_multiseed_smoke_macro_f1_gain_pp": 1.822,
+        "transform_generalization_supported": false
+      },
+      "note": "Completed with real performance lift evidence and explicit transform-generalization limitation per done_when."
+    },
+    {
+      "id": "SCI2-V8-T1",
+      "completed_at": "2026-05-04",
+      "outputs": [
+        "reports/vlm/external_human_gold_manifest_v3.json",
+        "reports/vlm/external_ocr_human_gold_smoke_v3.json",
+        "reports/vlm/symbol_cross_source_human_gold_smoke_v3.json",
+        "reports/vlm/external_generalization_claim_decision_v3.json"
+      ],
+      "evidence": {
+        "decision": "reports/vlm/external_generalization_claim_decision_v3.json",
+        "manifest": "reports/vlm/external_human_gold_manifest_v3.json",
+        "external_ocr_pending_records": 50,
+        "cross_source_symbol_pending_records": 50,
+        "external_ocr_drawings_with_gold": 0,
+        "cross_source_symbol_annotations_with_gold": 0,
+        "claim_status": "blocked_external_generalization_claim_annotation_pack_ready"
+      },
+      "note": "Completed per done_when with annotation pack paths and explicit block because no human-gold labels are filled."
+    },
+    {
+      "id": "SCI2-V8-T3",
+      "completed_at": "2026-05-04",
+      "outputs": [
+        "reports/vlm/domain_structured_moe_main_router_table_v1.json",
+        "reports/vlm/expert_contribution_matrix_main_v1.json",
+        "reports/vlm/moe_latency_resource_table_v1.json",
+        "docs/domain-structured-moe-main-claim-v1.md"
+      ],
+      "evidence": {
+        "router_table": "reports/vlm/domain_structured_moe_main_router_table_v1.json",
+        "expert_contribution": "reports/vlm/expert_contribution_matrix_main_v1.json",
+        "resource_table": "reports/vlm/moe_latency_resource_table_v1.json",
+        "claim_doc": "docs/domain-structured-moe-main-claim-v1.md",
+        "deterministic_wrong_expert_rate": 0.0,
+        "learned_wrong_expert_rate": 0.152302,
+        "core_measured_experts": [
+          "wall_opening",
+          "room_space",
+          "symbol_fixture",
+          "text_dimension"
+        ]
+      },
+      "note": "Completed by promoting existing measured router/contribution/resource evidence into main-paper tables."
+    },
+    {
+      "id": "SCI2-V8-T4",
+      "completed_at": "2026-05-04",
+      "outputs": [
+        "reports/vlm/paper_metric_table_manifest_v4.json",
+        "reports/vlm/sci2_final_submission_evidence_pack_v2.json",
+        "reports/vlm/sci2_overclaim_scan_v2.json",
+        "docs/cadstruct-paper-core-contributions-v2.md"
+      ],
+      "evidence": {
+        "metric_manifest": "reports/vlm/paper_metric_table_manifest_v4.json",
+        "final_evidence_pack": "reports/vlm/sci2_final_submission_evidence_pack_v2.json",
+        "overclaim_scan": "reports/vlm/sci2_overclaim_scan_v2.json",
+        "core_contribution_doc": "docs/cadstruct-paper-core-contributions-v2.md",
+        "final_pack_status": "passed",
+        "overclaim_blocking_count": 0
+      },
+      "note": "Completed final v2 evidence pack and overclaim scan with new Lie gated metrics and MoE main tables."
+    }
+  ]
 }

@@ -19,6 +19,7 @@ from evaluate_graph_node_classifier import load_samples
 from graph_node_model import (
     DEFAULT_LABELS,
     FeatureSpec,
+    LIE_NUMERIC_FEATURES,
     build_feature_spec,
     class_weight_tensor,
     per_label_probability_r2,
@@ -47,6 +48,9 @@ class CropGraphMessageClassifier(nn.Module):
         message_layers: int,
         relation_aware: bool = False,
         relation_count: int = 1,
+        lie_feature_indices: list[int] | None = None,
+        lie_feature_gate: bool = False,
+        lie_gate_scale: float = 1.0,
     ) -> None:
         super().__init__()
         self.input_dim = graph_dim
@@ -56,6 +60,11 @@ class CropGraphMessageClassifier(nn.Module):
         self.message_layers = message_layers
         self.relation_aware = relation_aware
         self.relation_count = max(int(relation_count), 1)
+        lie_indices = lie_feature_indices or []
+        self.lie_feature_gate = bool(lie_feature_gate and lie_indices)
+        self.lie_feature_count = len(lie_indices)
+        self.lie_gate_scale = float(lie_gate_scale)
+        self.register_buffer("lie_feature_indices", torch.tensor(lie_indices, dtype=torch.long), persistent=False)
         self.crop_encoder = nn.Sequential(
             nn.Conv2d(crop_channels, 24, kernel_size=3, padding=1),
             nn.GELU(),
@@ -75,6 +84,23 @@ class CropGraphMessageClassifier(nn.Module):
             nn.Linear(hidden_dim, hidden_dim),
             nn.GELU(),
         )
+        if self.lie_feature_gate:
+            self.lie_encoder = nn.Sequential(
+                nn.Linear(self.lie_feature_count, hidden_dim),
+                nn.LayerNorm(hidden_dim),
+                nn.GELU(),
+                nn.Dropout(dropout),
+                nn.Linear(hidden_dim, hidden_dim),
+            )
+            self.lie_gate = nn.Sequential(
+                nn.Linear(self.lie_feature_count, hidden_dim),
+                nn.GELU(),
+                nn.Linear(hidden_dim, hidden_dim),
+                nn.Sigmoid(),
+            )
+        else:
+            self.lie_encoder = None
+            self.lie_gate = None
         self.updates = nn.ModuleList(
             [
                 nn.Sequential(
@@ -101,6 +127,9 @@ class CropGraphMessageClassifier(nn.Module):
         edge_type: torch.Tensor | None = None,
     ) -> torch.Tensor:
         h = self.node_encoder(torch.cat([graph_x, self.crop_encoder(crops)], dim=-1))
+        if self.lie_feature_gate and self.lie_encoder is not None and self.lie_gate is not None:
+            lie_x = graph_x.index_select(dim=1, index=self.lie_feature_indices)
+            h = h + self.lie_gate_scale * self.lie_gate(lie_x) * self.lie_encoder(lie_x)
         for update in self.updates:
             if edge_index.numel() == 0:
                 agg = (
@@ -142,6 +171,8 @@ def main() -> None:
     parser.add_argument("--hidden-dim", type=int, default=256)
     parser.add_argument("--message-layers", type=int, default=2)
     parser.add_argument("--relation-aware-message-passing", action="store_true")
+    parser.add_argument("--lie-feature-gate", action="store_true")
+    parser.add_argument("--lie-gate-scale", type=float, default=1.0)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--epochs", type=int, default=24)
     parser.add_argument("--batch-samples", type=int, default=64)
@@ -222,6 +253,9 @@ def main() -> None:
         args.message_layers,
         args.relation_aware_message_passing,
         len(EDGE_RELATIONS),
+        lie_feature_indices(feature_spec),
+        args.lie_feature_gate,
+        args.lie_gate_scale,
     ).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
     class_weights = class_weight_tensor(train_split["y"], len(labels)).to(device)
@@ -319,6 +353,9 @@ def main() -> None:
         "graph_feature_dim": int(train_split["x"].shape[1]),
         "message_layers": args.message_layers,
         "relation_aware_message_passing": bool(args.relation_aware_message_passing),
+        "lie_feature_gate": bool(args.lie_feature_gate),
+        "lie_gate_scale": args.lie_gate_scale,
+        "lie_feature_count": len(lie_feature_indices(feature_spec)),
         "edge_relations": EDGE_RELATIONS,
         "focal_gamma": args.focal_gamma,
         "label_smoothing": args.label_smoothing,
@@ -364,6 +401,12 @@ def checkpoint_selection_score(metrics: dict[str, Any], selection_metric: str) -
     if selection_metric == "macro_f1_plus_r2":
         return float(metrics["macro_f1"]) + 0.25 * float(metrics["probability_r2"])
     raise ValueError(f"Unknown selection metric: {selection_metric}")
+
+
+def lie_feature_indices(feature_spec: FeatureSpec) -> list[int]:
+    names = list(feature_spec.numeric_features)
+    lie_names = set(LIE_NUMERIC_FEATURES)
+    return [index for index, name in enumerate(names) if name in lie_names]
 
 
 def strip_source_features(samples: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -747,6 +790,9 @@ def save_checkpoint(
                 "relation_aware_message_passing": bool(getattr(args, "relation_aware_message_passing", False)),
                 "relation_count": len(EDGE_RELATIONS),
                 "edge_relations": EDGE_RELATIONS,
+                "lie_feature_gate": bool(getattr(args, "lie_feature_gate", False)),
+                "lie_gate_scale": float(getattr(args, "lie_gate_scale", 1.0)),
+                "lie_feature_indices": lie_feature_indices(feature_spec),
                 "focal_gamma": args.focal_gamma,
                 "label_smoothing": args.label_smoothing,
                 "gradient_clip_norm": args.gradient_clip_norm,
@@ -773,6 +819,9 @@ def load_checkpoint(path: Path, device: torch.device) -> tuple[CropGraphMessageC
         config["message_layers"],
         bool(config.get("relation_aware_message_passing", False)),
         int(config.get("relation_count", len(config.get("edge_relations", [])) or 1)),
+        list(config.get("lie_feature_indices") or []),
+        bool(config.get("lie_feature_gate", False)),
+        float(config.get("lie_gate_scale", 1.0)),
     ).to(device)
     model.load_state_dict(checkpoint["model_state_dict"])
     model.eval()

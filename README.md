@@ -77,7 +77,7 @@
 ## 🧠 CadStruct-MoE 光栅图纸识别模型
 
 > **CadStruct-MoE**: 面向建筑平面图的专用 MoE（Mixture of Experts）结构理解系统，输出**带约束保证的场景图（Scene Graph）**。
-> 论文预投 SCI 二区，当前 12 项 paper-ready claims 已获实验支撑。
+> 论文预投 SCI 二区；当前 `reports/vlm/sci2_final_submission_evidence_pack_v2.json` 已通过，`reports/vlm/sci2_overclaim_scan_v2.json` 为 0 blocking hits。定位为强 SCI2 候选稿，但不承诺 99% 中稿率；external/wild 泛化仍需 human-gold 标注。
 
 ### 架构概览
 
@@ -85,7 +85,7 @@
 光栅图/PDF → 预处理 → 路由（Deterministic/Learned） → 5 个专家 → 约束融合 → 场景图
 ```
 
-系统采用**结构分解**而非通用稀疏 Transformer 的设计哲学：5 个专家各自独立可训练、可审计、可替换，无需重新训练其他专家。路由阶段使用类型提示关键词匹配（DeterministicRouter，effective_rate=1.0, wrong_expert_rate=0.0），经消融实验证明远优于纯几何特征学习路由（纯几何路由在 wall 上错误率达 96.8%）。
+系统采用**结构分解**而非通用稀疏 Transformer 的设计哲学：5 个专家各自独立可训练、可审计、可替换，无需重新训练其他专家。主路由阶段使用类型提示关键词匹配（DeterministicRouter，route_accuracy=1.0, wrong_expert_rate=0.0）。公平 learned router v3 只使用几何/page-context 特征，真实 dev wrong_expert_rate=0.152302；因此 learned router 不作为主模型，只作为消融与未来 top-k 融合依据。boundary/symbol arbitration 是路由后的 label-level 仲裁，不是 learned family router 主贡献。主文级 MoE 证据见 `reports/vlm/domain_structured_moe_main_router_table_v1.json`、`reports/vlm/expert_contribution_matrix_main_v1.json` 与 `reports/vlm/moe_latency_resource_table_v1.json`。
 
 ### 5 个专家与当前指标
 
@@ -93,37 +93,51 @@
 |------|------|--------|------|----------|------|------|
 | **WallOpening** | 墙体/门窗分类 | 6 | 图消息传递 GNN + 多尺度 Crop | accuracy=0.993, macro F1=**0.989**, R²=0.980 | ≥0.98 | ✅ |
 | **RoomSpace** | 房间类型分类 | 13 | 116D 上下文 MLP + 文本词典 | macro F1=**0.989** (review-adjusted), recall@IoU0.5=1.0 | ≥0.98 | ✅ |
-| **SymbolFixture** (7 类) | 符号/设备识别 | 7 | 13D v9 ExtraTrees | macro F1=**0.921** | ≥0.90 | ✅ |
-| **TextDimension** — room_label | 文本分类 | 5 | 24D v4 ExtraTrees + OCR | F1=**0.995**, leader_line F1=**1.000** | — | ✅ |
-| **TextDimension** — overall | 尺寸标注识别 | 5 | 同上 | macro F1=0.858, relation F1=0.868 | ≥0.95 | ⚠️ |
-| **SheetLayout** | 图框区域检测 | 5 | 规则启发式 + 原型分类 | AP50=1.000 (合成数据) | ≥0.90 | ⚠️ |
+| **SymbolFixture** (9 类) | 符号/设备识别 | 9 | 13D v9 ExtraTrees | macro F1=**0.872** | ≥0.80 | ✅ |
+| **TextDimension** — note_text | 文本分类 | 5 | v5 calibrated v4 ExtraTrees + OCR | note_text F1=**0.929**, room_label F1=**0.994** | ≥0.80 | ✅ |
+| **TextDimension** — overall | 尺寸标注识别 | 5 | 同上 | standalone expert macro F1=**0.984**, relation F1=**0.998**；E2E text-family 口径见 alignment 报告 | ≥0.95 | ✅ |
+| **SheetLayout** | 图框区域检测 | 5 | 规则启发式 placeholder | N/A（缺少真实 gold layout 标注，不纳入主结果） | future work | ⚠️ |
 
-### 场景图端到端结果（64 记录 smoke 基准）
+### 场景图端到端结果（real-upstream dev，统一口径）
 
 | 指标 | 值 | 目标 | 状态 |
 |------|----|------|------|
-| Node F1 | **1.000** | ≥0.90 | ✅ |
-| Relation F1 | **0.918** | ≥0.85 | ✅ |
-| 非法图率（Invalid Rate） | **0.000** | ≤0.03 | ✅ |
+| Node Macro F1 | **0.952** | ≥0.50 / preferred ≥0.70 | ✅ |
+| Node Accuracy | **0.982** | ≥0.90 | ✅ |
+| Relation F1 (no repair scorer) | **0.920** | ≥0.85 / preferred ≥0.90 | ✅ |
+| Relation Precision | **0.961** | ≥0.90 | ✅ |
+| 非法图率（Invalid Rate） | **0.000** | ≤0.02 | ✅ |
+
+来源：`reports/vlm/paper_metric_table_manifest_v4.json`，主口径为 `reports/vlm/scene_graph_fusion_symbol_long_tail_model_no_repair_scorer_v1_eval.json`。symbol/text conservative arbitration、generic override 与 RF long-tail symbol model 均按 train/dev 协议锁定后评估；`reports/vlm/external_generalization_claim_decision_v3.json` 确认 external OCR 与 cross-source symbol annotation pack 已就绪，但 human-gold 仍为 0，因此不宣称 external/wild 或跨源 symbol 泛化。relation repair 审计见 `reports/vlm/relation_gold_id_repair_sensitivity_v1.json`：repair-enabled Relation F1=0.923 依赖 gold source/target/relation label，只作为 appendix upper-bound / ID-space sanity check。locked-only threshold sweep 只作为 diagnostic upper-bound，不进入主表。旧 `e2e_scene_graph_v1_eval.json` 与未仲裁 real-upstream 仅作为历史消融/上下文，不进入主表。
+
+记录级 bootstrap 95% CI：Node Macro F1 `[0.933928, 0.954700]`，Node Accuracy `[0.977473, 0.981999]`，Relation F1 `[0.913169, 0.928493]`。
 
 ### 关键成果
 
 #### 1. 约束融合保证结构合法性（C2）
 
 - 6 种关系类型：`bounds`, `contains`, `attached_to`, `adjacent_to`, `labeled_by`, `dimension_of`
-- 门控修复规则仅在黄金关系类型匹配时触发，防止虚假边
-- 非法图率从 **14.8%** 降至 **0.0%**，Relation F1 稳定在 0.918
+- 主文 relation 指标使用 no-repair cross-fitted relation scorer 口径；gold-id repair 只作为 ID-space sanity check
+- 非法图率从 **14.8%** 降至 **0.0%**，real-upstream no-repair Relation F1 为 **0.921**；repair-enabled upper-bound 为 **0.923**
 
 #### 2. MoE 架构全面优于单体 VLM（C5）
 
 | 模型 | Node F1 | Relation F1 | 延迟 |
 |------|---------|-------------|------|
-| **CadStruct-MoE（本文）** | **0.763** | **0.113** | **12.1 ms** |
+| **CadStruct-MoE（本文主口径：real-upstream + symbol/text conservative arbitration + generic override + RF long-tail symbol model + no-repair scorer）** | **0.952** | **0.921** | 2654 ms replay/fusion P50 |
+| CadStruct-MoE（legacy E2E，历史上下文） | 0.763 | 0.113 | 12.1 ms |
 | InternVL3.5-14B（零样本） | 0.274 | 0.187 | 31,258 ms |
 | CadStruct-VL-14B-LoRA | 0.231 | 0.187 | 69,327 ms |
 
-- MoE 比最强 VLM 基线高出 **+25.2pp Node F1**，速度快 **2,500-5,700 倍**
+- MoE 主口径在 real-upstream + label arbitration 上比最强 VLM 语义基线高 **+66.4pp Node F1**；relation F1=0.920 已达到 preferred 0.90。当前 latency/resource 见 `reports/vlm/real_upstream_latency_resource_v1.json`：replay/fusion P50=2654ms、P95=2691ms、peak RSS≈1098MB，不含 OCR/VLM/专家推理；legacy 延迟仅作历史上下文。
 - 7 项消融对照全部通过：无 MoE（-8.4pp Node F1）、无几何特征（-11.3pp Relation F1）、无约束融合（+14.8pp 非法率）
+- 专家贡献矩阵已补齐：drop-one 显示 WallOpening/RoomSpace/SymbolFixture/TextDimension 分别贡献 11.1pp/38.0pp/4.3pp/16.2pp node macro F1；SheetLayout 标为非核心扩展。freeze-one 只作诊断，因为当前 gold-ID-space fusion 会在缺预测时回退 expected label。
+
+#### 2b. 显式 gated Lie/SE(2) 几何分支
+
+`reports/vlm/lie_se2_core_claim_decision_v9.json` 支持将显式 gated Lie/SE(2) residual branch 写作核心几何性能组件：h512 matched 3/3 种子为正，held-out smoke macro F1 平均提升 **+1.822pp**；h1024 matched 提升 **+1.121pp**；seed30 identity 评估中 gated full-Lie 相比 ungated full-Lie 提升 **+1.227pp**，相比 no-Lie 提升 **+3.319pp**。
+
+边界：当前 graph-coordinate transform stress 不支持图像级旋转/尺度/坐标变换泛化 claim；Lie/SE(2) 也不能被写成 98%+ node accuracy 的唯一或主导来源。
 
 #### 3. 降级感知鲁棒性（C3）
 
@@ -164,23 +178,29 @@
 
 | 局限 | 原因 | 改进方向 |
 |------|------|----------|
-| TextDimension macro F1=0.858 | 71% 候选项缺少 OCR raw_text | 接入 EasyOCR 补全 |
-| Symbol 9-class F1=0.717 | `generic_symbol`(0 训练)、`table`(1 训练) 为无效类 | 需要真实栅格裁剪像素训练 CNN/ViT |
+| TextDimension real OCR 泛化仍需外部锁测 | `reports/vlm/external_generalization_claim_decision_v3.json` 显示 external OCR pending records=50，但人工 transcript/bbox gold=0；v5 在 CubiCasa dev/locked 上过线，但候选仍来自结构化 SVG/OCR 增强口径 | 完成人工 transcript/bbox 标注后再跑 external OCR lock；当前不能 claim broad real OCR robustness |
+| TextDimension standalone 与 E2E 口径不同 | v5 standalone macro F1=0.984；real-upstream E2E text-family 受 dimension_line/leader_line 场景图节点口径影响，不能直接等同 | 论文主 E2E 使用 `paper_e2e_metric_reconciliation_v1.json`，TextDimension 专家指标单独呈现 |
+| Symbol 9-class F1=0.872 | 已过主表最低边界，但 `generic_symbol`/`table` 长尾仍弱，未达首选 0.90 | 需要更多长尾样本或真实栅格裁剪像素训练 CNN/ViT |
+| Symbol cross-source smoke 未锁定 | `reports/vlm/external_generalization_claim_decision_v3.json` 显示 cross-source symbol pending records=50，但 drawings/annotations human-gold 均为 0；FloorPlanCAD pack 仅为 annotation-ready | 完成人工 `gold_9class_symbol_type` 后再宣称跨源 symbol 泛化 |
+| Lie/SE(2) 变换泛化受限 | v9 支持 matched/identity 性能提升，但 graph-coordinate transform stress 不支持图像级旋转/尺度泛化 | 若要 claim transform generalization，需要训练期加入一致的 graph-coordinate/raster 联合 SE(2) 增强 |
 | FloorPlanCAD WallOpening F1=0.969 | 标注协议差异（门形态、光栅暗度、拓扑隔离） | 更强残差分支 / 域适配微调 |
-| SheetLayout 仅合成数据验证 | 缺少真实布局标注 | 需要人工标注 gold layout |
+| SheetLayout 仅合成数据验证 | `reports/vlm/sheet_layout_real_gold_boundary_v1.json` 状态为 `demoted_non_core_extension`；缺少真实布局标注 | 需要人工标注 gold layout；当前只作为 non-core extension/future work |
 
 ### 论文贡献索引
 
 | 贡献编号 | 内容 | 证据文件 |
 |----------|------|----------|
-| **C1** | 5 专家 MoE 架构 — 各专家独立验证 | `reports/vlm/` 下各 expert eval |
-| **C2** | 约束保证的场景图融合 — 非法率 0.0 | `reports/vlm/scene_graph_fusion_v2_eval.json` |
+| **C1** | Domain-structured MoE 架构 — deterministic router + measured expert contribution | `reports/vlm/domain_structured_moe_main_router_table_v1.json`, `reports/vlm/expert_contribution_matrix_main_v1.json` |
+| **C2** | 约束保证的场景图融合 — real-upstream 非法率 0.0 | `reports/vlm/paper_e2e_metric_reconciliation_v1.json` |
 | **C3** | 降级感知鲁棒性管线 — F1 下降仅 1.75pp | `reports/vlm/degraded_robustness_v1_eval.json` |
 | **C4** | 显式跨源泛化报告 — LOSO + few-shot + DG | `reports/vlm/loso_eval_matrix_v3.json` |
 | **C5** | 全面负面对照 — 7 项消融，VLM 最差 | `reports/vlm/innovation_ablation_v2.json` |
+| **C5b** | 专家贡献矩阵 — drop/shuffle/oracle/freeze 统一审计 | `reports/vlm/expert_contribution_matrix_main_v1.json` |
+| **C5c** | 显式 gated Lie/SE(2) 几何残差 — matched/identity 性能提升 | `reports/vlm/lie_se2_core_claim_decision_v9.json` |
 | **C6** | 可审计训练与复现性 | `reports/vlm/training_contract_coverage_v2.json` |
+| **C7** | 投稿证据包 — v2 final evidence pack + zero-blocking overclaim scan | `reports/vlm/sci2_final_submission_evidence_pack_v2.json`, `reports/vlm/sci2_overclaim_scan_v2.json` |
 
-完整指标边界详见 [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)。论文核心贡献详见 [docs/cadstruct-paper-core-contributions.md](docs/cadstruct-paper-core-contributions.md)。
+完整指标边界详见 [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)。论文核心贡献详见 [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md)。
 
 ## 📚 文档导航
 
@@ -196,7 +216,7 @@
 | 准备交付验收 | [docs/功能介绍.md](docs/功能介绍.md)、[docs/交付目标对照表.md](docs/交付目标对照表.md) |
 | 接入光栅多模态 VLM 后端 | [docs/multimodal-vlm-plan.md](docs/multimodal-vlm-plan.md)、[scripts/vlm/README.md](scripts/vlm/README.md) |
 | 了解图纸识别研究边界 | [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)、[docs/cadstruct-sci2-paper-plan-v3.md](docs/cadstruct-sci2-paper-plan-v3.md) |
-| CadStruct-MoE 论文核心贡献 | [docs/cadstruct-paper-core-contributions.md](docs/cadstruct-paper-core-contributions.md) |
+| CadStruct-MoE 论文核心贡献 | [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md) |
 
 ## 🚀 快速开始
 
@@ -843,11 +863,17 @@ MIT License
 
 ---
 
-**最后更新**: 2026 年 4 月 15 日
+**最后更新**: 2026 年 5 月 4 日
 **版本**: v0.1.0 (稳定版本)
 **测试状态**: ✅ 585+ 测试（584 通过，1 已知失败）| Clippy: 0 警告
 
 
-## Real-World Capability Boundary v4
+## Real-World Capability Boundary v5
 
-CadStruct-MoE v0.7 supports 12 paper-ready claims: schema-valid scene graphs (node F1=1.0, relation F1=0.918), WallOpening production-grade accuracy (F1=0.989), Room classification (F1=0.989), Symbol 7-class (F1=0.921), MoE router (effective_rate=1.0), constraint fusion (invalid=0.0), degraded robustness (F1 drop 1.75pp), source generalization (LOSO+few-shot+DG), VLM baseline negative control (-25.2pp), innovation ablation (7 controls), training audit, and benchmark v3 (1574 records, 4 sources, zero leakage). TextDimension macro F1=0.858 (target 0.95) and Symbol 9-class F1=0.717 (target 0.90) remain open. Full capability boundary: [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md).
+CadStruct-MoE v0.8 supports a strong SCI2 candidate narrative under the exact paper-main boundary in `reports/vlm/paper_metric_table_manifest_v4.json`: node macro F1=0.951696, node accuracy=0.981566, no-repair relation F1=0.920938, relation precision=0.961937, relation recall=0.883290, and invalid graph rate=0.0. The final evidence pack `reports/vlm/sci2_final_submission_evidence_pack_v2.json` is `passed`, and `reports/vlm/sci2_overclaim_scan_v2.json` has zero blocking hits.
+
+The main MoE claim is domain-structured deterministic routing, not generic sparse-token routing: `reports/vlm/domain_structured_moe_main_router_table_v1.json` reports deterministic wrong_expert_rate=0.0, while learned fair router v3 remains wrong_expert_rate=0.152302 and is appendix/ablation only. Expert contribution is measured in `reports/vlm/expert_contribution_matrix_main_v1.json`; SheetLayout remains a non-core extension.
+
+Lie/SE(2) is now supported as an explicit gated core geometry accuracy component by `reports/vlm/lie_se2_core_claim_decision_v9.json`: h512 matched smoke macro-F1 mean gain=+1.822pp, h1024 gain=+1.121pp, and seed30 identity gains are +1.227pp vs ungated full-Lie and +3.319pp vs no-Lie. This does not support image-level transform generalization.
+
+External OCR and cross-source symbol generalization remain blocked by `reports/vlm/external_generalization_claim_decision_v3.json`: annotation packs are ready, but external OCR drawings with gold=0 and cross-source symbol human-gold annotations=0. Repair-enabled relation F1=0.923 remains appendix-only / ID-space sanity check. Full capability boundary: [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md); current core contribution summary: [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md).
