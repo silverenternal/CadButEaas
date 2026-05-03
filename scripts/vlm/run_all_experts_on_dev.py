@@ -38,6 +38,105 @@ from cadstruct_moe.experts.wall_opening import WallOpeningExpert
 from cadstruct_moe.schema import RoutedCandidate
 
 
+def _normalize_bbox(value: Any) -> list[float] | None:
+    if not isinstance(value, list) or len(value) < 4:
+        return None
+    try:
+        x1, y1, x2, y2 = [float(item or 0.0) for item in value[:4]]
+    except (TypeError, ValueError):
+        return None
+    return [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
+
+
+def _bbox_contains(left: list[float], right: list[float]) -> bool:
+    return left[0] <= right[0] and left[1] <= right[1] and left[2] >= right[2] and left[3] >= right[3]
+
+
+def _overlap_length(left_min: float, left_max: float, right_min: float, right_max: float) -> float:
+    return max(0.0, min(left_max, right_max) - max(left_min, right_min))
+
+
+def _adjacent(left: list[float], right: list[float]) -> bool:
+    if _bbox_contains(left, right) or _bbox_contains(right, left):
+        return False
+    horizontal_gap = max(left[0] - right[2], right[0] - left[2], 0.0)
+    vertical_gap = max(left[1] - right[3], right[1] - left[3], 0.0)
+    if horizontal_gap > 2.0 or vertical_gap > 2.0:
+        return False
+    x_overlap = _overlap_length(left[0], left[2], right[0], right[2])
+    y_overlap = _overlap_length(left[1], left[3], right[1], right[3])
+    min_side = max(min(left[2] - left[0], left[3] - left[1], right[2] - right[0], right[3] - right[1]), 1.0)
+    return max(x_overlap, y_overlap) / min_side >= 0.03
+
+
+def _room_adjacency(rooms: list[dict[str, Any]]) -> dict[str, int]:
+    degrees = {room["id"]: 0 for room in rooms}
+    for left_index, left in enumerate(rooms):
+        for right in rooms[left_index + 1:]:
+            if _adjacent(left["bbox"], right["bbox"]):
+                degrees[left["id"]] += 1
+                degrees[right["id"]] += 1
+    return degrees
+
+
+def _build_room_page_context(record: dict[str, Any]) -> dict[str, Any]:
+    expected = record.get("expected_json") or {}
+    meta = record.get("metadata") or {}
+    page_w = float(meta.get("width") or 2000.0)
+    page_h = float(meta.get("height") or 2000.0)
+    rooms = [
+        {
+            "id": str(item.get("id") or f"room_{index}"),
+            "room_type": str(item.get("room_type") or "room"),
+            "bbox": bbox,
+            "shape_features": item.get("shape_features") if isinstance(item.get("shape_features"), dict) else {},
+        }
+        for index, item in enumerate(expected.get("room_candidates") or [])
+        for bbox in [_normalize_bbox(item.get("bbox"))]
+        if isinstance(item, dict) and bbox is not None
+    ]
+    symbols = [
+        {
+            "id": str(item.get("id") or f"symbol_{index}"),
+            "symbol_type": str(item.get("symbol_type") or "generic_symbol"),
+            "bbox": bbox,
+        }
+        for index, item in enumerate(expected.get("symbol_candidates") or [])
+        for bbox in [_normalize_bbox(item.get("bbox"))]
+        if isinstance(item, dict) and bbox is not None
+    ]
+    texts = [
+        {
+            "id": str(item.get("id") or f"text_{index}"),
+            "text_type": str(item.get("text_type") or "note_text"),
+            "text": str(item.get("raw_text", item.get("text", "")) or ""),
+            "bbox": bbox,
+        }
+        for index, item in enumerate(expected.get("text_candidates") or [])
+        for bbox in [_normalize_bbox(item.get("bbox"))]
+        if isinstance(item, dict) and bbox is not None
+    ]
+    primitive_graph = (record.get("request_hints") or {}).get("primitive_graph") or {}
+    boundaries = [
+        {
+            "semantic_type": str(item.get("semantic_type") or "unknown"),
+            "bbox": bbox,
+        }
+        for item in primitive_graph.get("nodes") or []
+        for bbox in [_normalize_bbox(item.get("bbox"))]
+        if isinstance(item, dict) and bbox is not None
+    ]
+    return {
+        "width": page_w,
+        "height": page_h,
+        "rooms": rooms,
+        "symbols": symbols,
+        "texts": texts,
+        "boundaries": boundaries,
+        "adjacency": _room_adjacency(rooms),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dev-split", default=str(DEV_SPLIT))
@@ -121,6 +220,7 @@ def main() -> None:
     # Build RoutedCandidate lists from dev records for each expert family
     print("\n--- Building RoutedCandidates ---")
     boundary_candidates = []
+    boundary_candidate_batches = []
     room_candidates = []
     symbol_candidates = []
     text_candidates = []
@@ -129,20 +229,47 @@ def main() -> None:
         expected = record.get("expected_json") or {}
         meta = record.get("metadata") or {}
         page_meta = {"width": meta.get("width", 2000), "height": meta.get("height", 2000)}
+        room_page_context = _build_room_page_context(record)
+        primitive_graph = (record.get("request_hints") or {}).get("primitive_graph") or {}
+        primitive_by_id = {
+            str(node.get("id")): node
+            for node in primitive_graph.get("nodes") or []
+            if isinstance(node, dict) and node.get("id") is not None
+        }
+        primitive_edges = [
+            edge
+            for edge in primitive_graph.get("edges") or []
+            if isinstance(edge, dict)
+        ]
 
         # Boundary candidates
+        record_boundary_candidates = []
         for node in expected.get("semantic_candidates") or []:
             label = node.get("semantic_type", node.get("label", "unknown"))
             if label in ("hard_wall", "door", "window"):
-                boundary_candidates.append(RoutedCandidate(
-                    candidate_id=str(node.get("target_id", node.get("id"))),
+                target_id = str(node.get("target_id", node.get("id")))
+                primitive = primitive_by_id.get(target_id, {})
+                candidate = RoutedCandidate(
+                    candidate_id=target_id,
                     expert="wall_opening",
                     family="boundary",
                     candidate_type="boundary",
                     confidence=0.9,
-                    bbox=node.get("bbox"),
-                    payload={"_page_metadata": page_meta},
-                ))
+                    bbox=primitive.get("bbox") or node.get("bbox"),
+                    payload={
+                        "_page_metadata": page_meta,
+                        "image": record.get("image_path"),
+                        "raster_path": record.get("image_path"),
+                        "source_dataset": record.get("source_dataset"),
+                        "features": primitive,
+                        "bbox": primitive.get("bbox") or node.get("bbox"),
+                        "edges": primitive_edges,
+                    },
+                )
+                record_boundary_candidates.append(candidate)
+                boundary_candidates.append(candidate)
+        if record_boundary_candidates:
+            boundary_candidate_batches.append(record_boundary_candidates)
 
         # Room candidates
         for room in expected.get("room_candidates") or []:
@@ -156,6 +283,7 @@ def main() -> None:
                 payload={
                     "shape_features": room.get("shape_features", {}),
                     "_page_metadata": page_meta,
+                    "page_context": room_page_context,
                 },
             ))
 
@@ -197,7 +325,13 @@ def main() -> None:
 
     # WallOpening expert
     print("\n--- WallOpening expert ---")
-    wall_preds = run_expert(wall_expert, boundary_candidates, "wall_opening", "boundary", gold_by_family)
+    wall_preds = run_expert_batched(
+        wall_expert,
+        boundary_candidate_batches,
+        "wall_opening",
+        "boundary",
+        gold_by_family,
+    )
     all_predictions.extend(wall_preds)
     expert_results["wall_opening"] = {"predictions": len(wall_preds), "gold": len(gold_by_family["boundary"])}
 
@@ -283,6 +417,45 @@ def run_expert(
         })
     gold_count = len(gold_by_family.get(family, []))
     print(f"  Predictions: {len(results)}, Gold: {gold_count}, Source: {predictions[0].source if predictions else 'N/A'}")
+    return results
+
+
+def run_expert_batched(
+    expert,
+    candidate_batches: list[list[RoutedCandidate]],
+    expert_name: str,
+    family: str,
+    gold_by_family: dict[str, list],
+) -> list[dict]:
+    """Run a graph-aware expert one record at a time.
+
+    WallOpening's crop GNN builds graph and raster context from one sample.
+    Passing candidates from all records as a single graph makes the image
+    context ambiguous and destroys door/window predictions.
+    """
+    results = []
+    first_source = "N/A"
+    for candidates in candidate_batches:
+        predictions = expert.predict(candidates)
+        if predictions and first_source == "N/A":
+            first_source = predictions[0].source
+        for pred in predictions:
+            results.append({
+                "candidate_id": str(pred.candidate_id),
+                "expert": pred.expert,
+                "family": pred.family,
+                "label": pred.label,
+                "confidence": pred.confidence,
+                "bbox": pred.bbox,
+                "geometry": pred.geometry,
+                "image": None,
+                "source": pred.source,
+            })
+    gold_count = len(gold_by_family.get(family, []))
+    print(
+        f"  Predictions: {len(results)}, Gold: {gold_count}, "
+        f"Batches: {len(candidate_batches)}, Source: {first_source}"
+    )
     return results
 
 

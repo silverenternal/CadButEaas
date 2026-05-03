@@ -79,7 +79,7 @@ def _room_text_match_vector(texts: list[str]) -> dict[str, float]:
     return scores
 
 
-_MODEL_DIR = Path(__file__).resolve().parents[4] / "checkpoints" / "cadstruct_moe_room_space_context_sklearn_text_locked_unweighted_v2"
+_MODEL_DIR = Path(__file__).resolve().parents[4] / "checkpoints" / "cadstruct_moe_room_space_hierarchical_sklearn_v5_t046"
 
 
 # --- Bbox geometry helpers ---
@@ -409,6 +409,53 @@ def _build_context_from_candidates(candidates: list[RoutedCandidate]) -> dict[st
     }
 
 
+def _context_from_payload(candidate: RoutedCandidate, fallback: dict[str, Any]) -> dict[str, Any]:
+    context = candidate.payload.get("page_context")
+    if not isinstance(context, dict):
+        return fallback
+    return {
+        "width": float(context.get("width") or fallback.get("width") or 2000.0),
+        "height": float(context.get("height") or fallback.get("height") or 2000.0),
+        "rooms": list(context.get("rooms") or []),
+        "symbols": list(context.get("symbols") or []),
+        "texts": list(context.get("texts") or []),
+        "boundaries": list(context.get("boundaries") or []),
+        "adjacency": dict(context.get("adjacency") or {}),
+    }
+
+
+def _predict_hierarchical(
+    gate_model: Any,
+    typed_model: Any,
+    typed_encoder: Any,
+    room_threshold: float,
+    X: np.ndarray,
+) -> tuple[list[str], list[float], list[dict[str, float]]]:
+    gate_probs = gate_model.predict_proba(X)
+    typed_indices = typed_model.predict(X)
+    typed_probs = typed_model.predict_proba(X)
+    typed_labels = typed_encoder.inverse_transform(typed_indices)
+
+    labels: list[str] = []
+    confidences: list[float] = []
+    all_probs: list[dict[str, float]] = []
+    typed_classes = [str(item) for item in typed_encoder.classes_]
+    for gate_prob, typed_label, typed_prob in zip(gate_probs, typed_labels, typed_probs):
+        room_probability = float(gate_prob[1])
+        if room_probability >= room_threshold:
+            label = "room"
+            confidence = room_probability
+        else:
+            label = str(typed_label)
+            confidence = (1.0 - room_probability) * float(max(typed_prob))
+        labels.append(label)
+        confidences.append(float(confidence))
+        probs = {"room": round(room_probability, 4)}
+        probs.update({typed_classes[i]: round(float(value), 4) for i, value in enumerate(typed_prob)})
+        all_probs.append(probs)
+    return labels, confidences, all_probs
+
+
 class RoomSpaceExpert(PassthroughExpert):
     """Room/Space expert using trained sklearn context model.
 
@@ -420,6 +467,11 @@ class RoomSpaceExpert(PassthroughExpert):
         self.default_label = "room"
         self._model: Any = None
         self._label_encoder: Any = None
+        self._gate_model: Any = None
+        self._typed_model: Any = None
+        self._typed_label_encoder: Any = None
+        self._room_threshold: float = 0.5
+        self._model_type: str = "context"
         self._feature_set: str = "enhanced"
         self._load_model()
 
@@ -430,9 +482,18 @@ class RoomSpaceExpert(PassthroughExpert):
         try:
             import joblib
             data = joblib.load(str(model_path))
-            self._model = data.get("model")
-            self._label_encoder = data.get("label_encoder")
-            self._feature_set = data.get("feature_set", "enhanced")
+            if data.get("gate_model") is not None and data.get("typed_model") is not None:
+                self._model_type = "hierarchical"
+                self._gate_model = data.get("gate_model")
+                self._typed_model = data.get("typed_model")
+                self._typed_label_encoder = data.get("typed_label_encoder")
+                self._room_threshold = float(data.get("room_threshold", 0.5))
+                self._model = self._gate_model
+            else:
+                self._model_type = "context"
+                self._model = data.get("model")
+                self._label_encoder = data.get("label_encoder")
+                self._feature_set = data.get("feature_set", "enhanced")
         except Exception:
             self._model = None
 
@@ -440,8 +501,11 @@ class RoomSpaceExpert(PassthroughExpert):
         if self._model is None:
             return super().predict(candidates)
 
-        # Build context from all candidates
-        context = _build_context_from_candidates(candidates)
+        # Build a fallback context from the supplied batch. Prefer per-record
+        # page_context payloads because end-to-end batches can contain many
+        # records; mixing all rooms into one global context corrupts adjacency,
+        # area rank, and text/symbol containment features.
+        fallback_context = _build_context_from_candidates(candidates)
 
         # Extract features for room candidates only
         predictions: list[ExpertPrediction] = []
@@ -458,6 +522,7 @@ class RoomSpaceExpert(PassthroughExpert):
                 "shape_features": candidate.payload.get("shape_features", {}),
             }
 
+            context = _context_from_payload(candidate, fallback_context)
             feats = _extract_room_features(room, context)
             if feats is None:
                 predictions.append(
@@ -479,17 +544,34 @@ class RoomSpaceExpert(PassthroughExpert):
             X = np.array([fr[1] for fr in feature_rows], dtype=np.float64)
             X = np.nan_to_num(X, nan=0.0, posinf=10.0, neginf=-10.0)
 
-            y_pred = self._model.predict(X)
-            y_pred_proba = self._model.predict_proba(X) if hasattr(self._model, "predict_proba") else None
+            if self._model_type == "hierarchical":
+                labels, confidences, all_probs = _predict_hierarchical(
+                    self._gate_model,
+                    self._typed_model,
+                    self._typed_label_encoder,
+                    self._room_threshold,
+                    X,
+                )
+            else:
+                y_pred = self._model.predict(X)
+                y_pred_proba = self._model.predict_proba(X) if hasattr(self._model, "predict_proba") else None
+                labels = [
+                    str(self._label_encoder.inverse_transform([int(pred_idx)])[0]) if self._label_encoder else str(pred_idx)
+                    for pred_idx in y_pred
+                ]
+                confidences = [
+                    float(max(proba)) if proba is not None else feature_rows[index][0].confidence
+                    for index, proba in enumerate(y_pred_proba if y_pred_proba is not None else [None] * len(feature_rows))
+                ]
+                all_probs = [
+                    {
+                        str(self._label_encoder.classes_[i]): round(float(p), 4)
+                        for i, p in enumerate(proba)
+                    } if self._label_encoder and proba is not None else {}
+                    for proba in (y_pred_proba if y_pred_proba is not None else [None] * len(feature_rows))
+                ]
 
-            for (candidate, _feats), pred_idx, proba in zip(
-                feature_rows, y_pred, y_pred_proba if y_pred_proba is not None else [None] * len(feature_rows)
-            ):
-                if self._label_encoder:
-                    label = str(self._label_encoder.inverse_transform([int(pred_idx)])[0])
-                else:
-                    label = str(pred_idx)
-                confidence = float(max(proba)) if proba is not None else candidate.confidence
+            for (candidate, _feats), label, confidence, probs in zip(feature_rows, labels, confidences, all_probs):
                 predictions.append(
                     ExpertPrediction(
                         candidate_id=candidate.candidate_id,
@@ -501,27 +583,9 @@ class RoomSpaceExpert(PassthroughExpert):
                         source=f"{self.name}_sklearn_context",
                         metadata={
                             "candidate_type": candidate.candidate_type,
-                            "all_probs": {
-                                str(self._label_encoder.classes_[i]): round(float(p), 4)
-                                for i, p in enumerate(proba)
-                            } if self._label_encoder and proba is not None else {},
+                            "model_type": self._model_type,
+                            "all_probs": probs,
                         },
-                    )
-                )
-
-        # Pass through non-space candidates
-        for candidate in candidates:
-            if candidate.family != "space":
-                predictions.append(
-                    ExpertPrediction(
-                        candidate_id=candidate.candidate_id,
-                        expert=self.name,
-                        family=self.family,
-                        label=self.default_label,
-                        confidence=candidate.confidence,
-                        bbox=candidate.bbox,
-                        source=f"{self.name}_passthrough",
-                        metadata={"candidate_type": candidate.candidate_type, "skipped": True},
                     )
                 )
 

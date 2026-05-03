@@ -186,12 +186,12 @@ class LearnedRouter:
             # Fallback to deterministic
             return DeterministicRouter().route_record(record)
 
-        # First pass: collect all candidates for sibling count feature
+        # First pass: collect all candidates. The learned router was trained
+        # with expert-name families (wall_opening, room_space, ...), so keep the
+        # same namespace for the fair sibling-count feature.
         det = DeterministicRouter()
         pre_routed: list[RoutedCandidate] = []
-        all_candidates_with_family: list[dict] = []
 
-        # Build pre-routed candidates and track family for feature extraction
         graph = ((record.get("request_hints") or {}).get("primitive_graph") or {})
         for node in graph.get("nodes") or []:
             pre_routed.append(det.route_primitive_node(node))
@@ -199,34 +199,26 @@ class LearnedRouter:
         for index, candidate in enumerate(iter_candidates(record, "text_candidates")):
             routed = det.route_external_candidate(candidate, index, default_family="text")
             pre_routed.append(routed)
-            all_candidates_with_family.append({
-                "bbox": list(routed.bbox) if routed.bbox else None,
-                "_family": "text_dimension",
-            })
 
         for index, candidate in enumerate(iter_candidates(record, "symbol_candidates")):
             routed = det.route_external_candidate(candidate, index, default_family="symbol")
             pre_routed.append(routed)
-            all_candidates_with_family.append({
-                "bbox": list(routed.bbox) if routed.bbox else None,
-                "_family": "symbol_fixture",
-            })
 
         for index, candidate in enumerate(iter_candidates(record, "semantic_regions")):
             routed = det.route_external_candidate(candidate, index, default_family="space")
             pre_routed.append(routed)
-            all_candidates_with_family.append({
-                "bbox": list(routed.bbox) if routed.bbox else None,
-                "_family": "room_space",
-            })
 
         for index, candidate in enumerate(iter_candidates(record, "layout_regions")):
             routed = det.route_external_candidate(candidate, index, default_family="sheet")
             pre_routed.append(routed)
-            all_candidates_with_family.append({
-                "bbox": list(routed.bbox) if routed.bbox else None,
-                "_family": "sheet_layout",
-            })
+
+        all_candidates_with_family = [
+            {
+                "bbox": list(rc.bbox) if rc.bbox else None,
+                "_family": rc.expert,
+            }
+            for rc in pre_routed
+        ]
 
         # Extract features for each candidate
         page_meta = (record.get("metadata") or {})

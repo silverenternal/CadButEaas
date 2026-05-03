@@ -1,7 +1,7 @@
 """Text/Dimension expert wrapper.
 
-Loads the trained v4 ExtraTrees model (29 features: bbox geometry + layout/role +
-OCR text patterns + page context) and classifies text candidates into:
+Loads the trained v5-calibrated ExtraTrees model (29 features: bbox geometry +
+layout/role + OCR text patterns + page context) and classifies text candidates into:
   dimension_line, dimension_text, leader_line, note_text, room_label
 """
 
@@ -15,7 +15,6 @@ from typing import Any
 from ..schema import ExpertPrediction, RoutedCandidate
 from .base import BaseExpert, PassthroughExpert
 
-# v4 ExtraTrees was trained with 24 features (no text-pattern scores in saved joblib)
 FEATURE_NAMES = [
     "cx", "cy", "width", "height", "area", "log_aspect",
     "y_bucket_neg", "y_bucket_origin", "is_narrow_vertical", "is_horizontal_bar",
@@ -23,9 +22,12 @@ FEATURE_NAMES = [
     "has_dimension_unit", "has_foot_inch", "is_alpha_only", "has_digit_and_alpha",
     "is_short_label",
     "page_norm_cx", "page_norm_cy", "page_norm_w", "page_norm_h",
+    "score_dimension_line", "score_dimension_text", "score_leader_line",
+    "score_note_text", "score_room_label",
 ]
 
-_MODEL_DIR = Path(__file__).resolve().parents[4] / "checkpoints" / "text_dimension_expert_v4"
+_MODEL_DIR = Path(__file__).resolve().parents[4] / "checkpoints" / "text_dimension_expert_v4_aug2"
+_NOTE_TEXT_THRESHOLD = 0.69
 
 
 def _normalize_text(text: str) -> str:
@@ -124,11 +126,14 @@ def _extract_features(payload: dict[str, Any]) -> list[float] | None:
         has_dimension_unit, has_foot_inch, is_alpha_only, has_digit_and_alpha,
         is_short_label,
         page_norm_cx, page_norm_cy, page_norm_w, page_norm_h,
+        pattern_scores["score_dimension_line"], pattern_scores["score_dimension_text"],
+        pattern_scores["score_leader_line"], pattern_scores["score_note_text"],
+        pattern_scores["score_room_label"],
     ]
 
 
 class TextDimensionExpert(PassthroughExpert):
-    """Text/Dimension expert using trained v4 ExtraTrees model.
+    """Text/Dimension expert using trained v5-calibrated ExtraTrees model.
 
     Falls back to passthrough if model checkpoint is not found.
     """
@@ -191,6 +196,17 @@ class TextDimensionExpert(PassthroughExpert):
 
             for (candidate, _feats), pred_idx, proba in zip(feature_rows, y_pred_idx, y_pred_proba):
                 label = self._encoder.inverse_transform([int(pred_idx)])[0] if self._encoder else str(pred_idx)
+                if self._encoder is not None and label == "note_text":
+                    classes = list(self._encoder.classes_)
+                    if "note_text" in classes:
+                        note_idx = classes.index("note_text")
+                        if float(proba[note_idx]) < _NOTE_TEXT_THRESHOLD:
+                            best_non_note = max(
+                                (idx for idx, class_name in enumerate(classes) if class_name != "note_text"),
+                                key=lambda idx: float(proba[idx]),
+                            )
+                            label = self._encoder.inverse_transform([int(best_non_note)])[0]
+                            pred_idx = best_non_note
                 confidence = float(max(proba))
                 predictions.append(
                     ExpertPrediction(
@@ -200,9 +216,10 @@ class TextDimensionExpert(PassthroughExpert):
                         label=label,
                         confidence=confidence,
                         bbox=candidate.bbox,
-                        source=f"{self.name}_v4_extra_trees",
+                        source=f"{self.name}_v5_calibrated_note_gate",
                         metadata={
                             "candidate_type": candidate.candidate_type,
+                            "note_text_threshold": _NOTE_TEXT_THRESHOLD,
                             "all_probs": {
                                 self._encoder.classes_[i]: round(float(p), 4)
                                 for i, p in enumerate(proba)
