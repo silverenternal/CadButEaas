@@ -1,0 +1,187 @@
+{
+  "version": "final_claim_ledger_v1",
+  "created": "2026-05-03",
+  "claim_roles": {
+    "paper_main_scene_graph": {
+      "role": "main",
+      "source": "reports/vlm/scene_graph_fusion_symbol_v2_text_conservative_generic_override_no_repair_scorer_v1_eval.json",
+      "setting": "real_upstream_with_boundary_symbol_v2_text_conservative_generic_override_no_repair_scorer_v1",
+      "node_macro_f1": 0.944408,
+      "relation_f1_no_repair": 0.920365,
+      "invalid_graph_rate": 0.0
+    },
+    "repair_enabled_relation_f1_0_923": {
+      "role": "appendix_upper_bound",
+      "source": "reports/vlm/relation_gold_id_repair_sensitivity_v1.json",
+      "allowed_in_main_table": false
+    },
+    "text_dimension_v5": {
+      "role": "standalone_expert",
+      "source": "reports/vlm/text_dimension_expert_v5_eval.json",
+      "external_ocr_status": "not_available_with_annotation_plan",
+      "broad_ocr_claim_allowed": false
+    },
+    "symbol_arbitration": {
+      "role": "main_post_router_label_arbitration",
+      "source": "reports/vlm/symbol_label_arbitration_generalization_v1.json",
+      "conservative_report": "reports/vlm/symbol_conservative_arbitration_v1.json",
+      "adoption": "keep_full_arbitration"
+    },
+    "sheet_layout": {
+      "role": "future_work_non_core",
+      "source": "reports/vlm/sheet_layout_real_gold_boundary_v1.json"
+    },
+    "learned_router": {
+      "role": "appendix_or_future_work",
+      "source": "reports/vlm/moe_router_v3_fair_ablation.json"
+    }
+  },
+  "scanned_contexts": [
+    {
+      "path": "README.md",
+      "line": 98,
+      "metric_key": "text_dimension_standalone_relation",
+      "literal": "0.998",
+      "context": "| **TextDimension** — overall | 尺寸标注识别 | 5 | 同上 | standalone expert macro F1=**0.984**, relation F1=**0.998**；E2E text-family 口径见 alignment 报告 | ≥0.95 | ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "README.md",
+      "line": 98,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "| **TextDimension** — overall | 尺寸标注识别 | 5 | 同上 | standalone expert macro F1=**0.984**, relation F1=**0.998**；E2E text-family 口径见 alignment 报告 | ≥0.95 | ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "README.md",
+      "line": 111,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "来源：`reports/vlm/paper_e2e_metric_reconciliation_v1.json`，主口径为 `reports/vlm/scene_graph_fusion_symbol_v2_text_conservative_generic_override_no_repair_scorer_v1_eval.json`。symbol/text conservative arbitration 与 generic override 均按 train/dev 协议锁定后评估；`reports/vlm/",
+      "role": "appendix"
+    },
+    {
+      "path": "README.md",
+      "line": 119,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "- 非法图率从 **14.8%** 降至 **0.0%**，real-upstream no-repair Relation F1 为 **0.920**；repair-enabled upper-bound 为 **0.923**",
+      "role": "appendix"
+    },
+    {
+      "path": "README.md",
+      "line": 174,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "| TextDimension standalone 与 E2E 口径不同 | v5 standalone macro F1=0.984；real-upstream E2E text-family 受 dimension_line/leader_line 场景图节点口径影响，不能直接等同 | 论文主 E2E 使用 `paper_e2e_metric_reconciliation_v1.json`，TextDimension 专家指标单独呈现 |",
+      "role": "standalone"
+    },
+    {
+      "path": "README.md",
+      "line": 863,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "CadStruct-MoE v0.7 supports a paper-ready structured-MoE narrative, but the E2E claim must use the reconciled no-repair real-upstream source in `reports/vlm/paper_e2e_metric_reconciliation_v1.json`: node macro F1=0.944408, node accuracy=0.979887, relation F1=0",
+      "role": "appendix"
+    },
+    {
+      "path": "docs/cadstruct-paper-core-contributions.md",
+      "line": 48,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "**Result**: On the reconciled real-upstream setting (`reports/vlm/paper_e2e_metric_reconciliation_v1.json`), the current paper-main source is `reports/vlm/scene_graph_fusion_symbol_v2_text_conservative_generic_override_no_repair_scorer_v1_eval.json`: Node Macr",
+      "role": "appendix"
+    },
+    {
+      "path": "docs/cadstruct-paper-core-contributions.md",
+      "line": 118,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "| **TextDimension** | standalone macro F1 | 0.984 | ≥0.95 | ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "docs/cadstruct-paper-core-contributions.md",
+      "line": 119,
+      "metric_key": "text_dimension_standalone_relation",
+      "literal": "0.998",
+      "context": "| TextDimension | relation F1 | 0.998 | ≥0.95 | ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "docs/cadstruct-paper-core-contributions.md",
+      "line": 123,
+      "metric_key": "text_dimension_standalone_relation",
+      "literal": "0.998",
+      "context": "| TextDimension — dimension_text | F1 | 0.998 | — | ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "docs/cadstruct-paper-core-contributions.md",
+      "line": 148,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "Note: The paper main E2E source is `reports/vlm/paper_e2e_metric_reconciliation_v1.json`. Legacy E2E and VLM rows use different settings and should not be merged into a single headline claim without this caveat. Repair-enabled relation F1=0.923 is appendix-onl",
+      "role": "appendix"
+    },
+    {
+      "path": "docs/real-world-capability-boundary-v3.md",
+      "line": 27,
+      "metric_key": "repair_enabled_relation_appendix",
+      "literal": "0.923",
+      "context": "- **E2E Scene Graph Relations**: no-repair relation scorer F1=0.920365 clears the preferred 0.90 target. Repair-enabled F1=0.923 is appendix-only because gold-ID repair uses gold relation labels; locked-only threshold sweeps are diagnostic upper bounds and are",
+      "role": "appendix"
+    },
+    {
+      "path": "docs/real-world-capability-boundary-v3.md",
+      "line": 63,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "| TextDimension Standalone Macro F1 | 0.61 | **0.984** | ≥0.95 ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "docs/real-world-capability-boundary-v3.md",
+      "line": 64,
+      "metric_key": "text_dimension_standalone_relation",
+      "literal": "0.998",
+      "context": "| TextDimension Relation F1 | 0.87 | **0.998** | ≥0.95 ✅ |",
+      "role": "standalone"
+    },
+    {
+      "path": "docs/real-world-capability-boundary-v3.md",
+      "line": 77,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "| R4. OCR/Text/Sheet | 5 | 6 | 1 | ✅ done (TextDimension v5 macro F1=0.984; external real OCR robustness still pending) |",
+      "role": "standalone"
+    },
+    {
+      "path": "reports/vlm/paper_tables_v2/main_results.tex",
+      "line": 13,
+      "metric_key": "paper_main_no_repair_relation_v2",
+      "literal": "0.871",
+      "context": "Relation F1 (no repair) & & 0.8710 & $\\geq 0.85$ \\\\",
+      "role": "main"
+    },
+    {
+      "path": "reports/vlm/paper_tables_v2/main_results.tex",
+      "line": 29,
+      "metric_key": "text_dimension_standalone_macro",
+      "literal": "0.984",
+      "context": "Text Macro F1 & & 0.9842 & $\\geq 0.95$ \\\\",
+      "role": "diagnostic"
+    },
+    {
+      "path": "reports/vlm/paper_tables_v2/main_results.tex",
+      "line": 30,
+      "metric_key": "text_dimension_standalone_relation",
+      "literal": "0.998",
+      "context": "Relation F1 & & 0.9983 & $\\geq 0.95$ \\\\",
+      "role": "diagnostic"
+    }
+  ],
+  "failure_hits": [],
+  "status": "passed"
+}

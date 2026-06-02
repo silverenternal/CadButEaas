@@ -1,0 +1,48 @@
+{
+  "version": "sci2_final_submission_evidence_pack_v2",
+  "created": "2026-05-04",
+  "metric_manifest": "reports/vlm/paper_metric_table_manifest_v4.json",
+  "core_contribution_doc": "docs/cadstruct-paper-core-contributions-v2.md",
+  "main_metrics": {
+    "node_macro_f1": 0.951696,
+    "node_accuracy": 0.981566,
+    "relation_f1": 0.920938,
+    "relation_precision": 0.961937,
+    "relation_recall": 0.88329,
+    "invalid_graph_rate": 0.0
+  },
+  "lie_se2": {
+    "source": "reports/vlm/lie_se2_core_claim_decision_v9.json",
+    "h512_mean_smoke_macro_f1_gain_pp": 1.822,
+    "seed30_identity_gated_vs_ungated_macro_f1_gain_pp": 1.227,
+    "seed30_identity_gated_vs_no_lie_macro_f1_gain_pp": 3.319,
+    "transform_generalization_supported": false
+  },
+  "domain_structured_moe": {
+    "router_table": "reports/vlm/domain_structured_moe_main_router_table_v1.json",
+    "expert_contribution": "reports/vlm/expert_contribution_matrix_main_v1.json",
+    "resource_table": "reports/vlm/moe_latency_resource_table_v1.json"
+  },
+  "external_boundary": {
+    "source": "reports/vlm/external_generalization_claim_decision_v3.json",
+    "status": "completed_blocked_with_annotation_pack_paths",
+    "human_gold_status": {
+      "external_ocr_drawings_with_gold": 0,
+      "cross_source_symbol_drawings_with_gold": 0,
+      "cross_source_symbol_annotations_with_gold": 0
+    }
+  },
+  "done_when_check": {
+    "main_node_macro_f1_ge_095": true,
+    "main_node_accuracy_ge_098": true,
+    "main_relation_f1_ge_090": true,
+    "invalid_graph_rate_eq_0": true,
+    "lie_v9_done": true,
+    "external_v3_done": true,
+    "moe_router_table_passed": true,
+    "expert_contribution_table_passed": true,
+    "resource_table_passed": true,
+    "overclaim_scan_zero_blocking": true
+  },
+  "status": "passed"
+}

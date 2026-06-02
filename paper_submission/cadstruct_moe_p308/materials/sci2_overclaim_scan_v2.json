@@ -1,0 +1,15 @@
+{
+  "version": "sci2_overclaim_scan_v2",
+  "created": "2026-05-04",
+  "scanned_files": [
+    "README.md",
+    "docs/cadstruct-paper-core-contributions.md",
+    "docs/cadstruct-paper-core-contributions-v2.md",
+    "docs/real-world-capability-boundary-v3.md",
+    "docs/domain-structured-moe-main-claim-v1.md"
+  ],
+  "hits": [],
+  "blocking_hits": [],
+  "blocking_count": 0,
+  "status": "passed_zero_blocking_hits"
+}

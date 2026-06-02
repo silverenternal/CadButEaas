@@ -1,0 +1,221 @@
+{
+  "version": "p306_paper_materials_package_v1",
+  "created": "2026-05-27",
+  "status": "paper_materials_and_e2e_outputs_packaged",
+  "execution_environment": {
+    "required_for_dependency_sensitive_checks": true,
+    "server": "hugo@47.110.35.232",
+    "ssh": "ssh -p 33022 hugo@47.110.35.232",
+    "server_project_dir": "/home/hugo/codes/CadButEaas",
+    "local_mirror_dir": "/home/hugo/codes/zhao_projects/CadButEaas",
+    "rule": "Use the server real environment for validation, report regeneration, and dependency-sensitive checks. The local mounted mirror is acceptable for lightweight report editing."
+  },
+  "headline_claim_boundary": "CadStruct-MoE should be written as a reviewed SVG/contract normalized-candidate graph-recognition result. P301 relation F1 is an internal locked fine-threshold audit, not external validation and not runtime raster performance.",
+  "primary_quantitative_result": {
+    "id": "P301_conservative_relation_confidence_preserved_residual_rescue",
+    "source": "reports/vlm/p304_p301_reviewed_metric_package.json",
+    "evaluation_source": "reports/vlm/scene_graph_fusion_symbol_relation_confidence_preserved_rescue_p301_fine_relation_no_repair_scorer_v1_eval.json",
+    "prediction_source": "reports/vlm/real_upstream_predictions_dev_symbol_relation_confidence_preserved_rescue_p301.jsonl",
+    "metric_role": "reviewed SVG/contract normalized-candidate main result plus internal locked fine-threshold relation audit",
+    "node_macro_f1": 0.962907,
+    "node_accuracy": 0.982498,
+    "relation_precision": 0.9949,
+    "relation_recall": 0.872665,
+    "relation_f1": 0.929782,
+    "selected_relation_threshold": 0.985,
+    "invalid_graph_rate": 0.0,
+    "strong_symbol_f1": {
+      "shower": 0.992464,
+      "sink": 0.96691,
+      "appliance": 0.955079,
+      "stair": 0.926378,
+      "column": 0.922162,
+      "equipment": 0.913676,
+      "bathtub": 0.835616
+    },
+    "weak_symbol_f1": {
+      "generic_symbol": 0.784314
+    }
+  },
+  "external_validation_status": {
+    "source": "reports/vlm/p305c_external_generalization_claim_decision.json",
+    "status": "external_generalization_claim_blocked",
+    "decision": "Do not make external/source-heldout generalization claims for P301 or for RoomSpace/SymbolFixture/TextDimension.",
+    "true_source_heldout_batch": "reports/vlm/p305b_source_heldout_eval_batch.json",
+    "wall_opening": {
+      "status": "evaluated_but_weak",
+      "cvc_fp_train_floorplancad_test_macro_f1": 0.485651,
+      "floorplancad_train_cvc_fp_test_macro_f1": 0.159075,
+      "claim": "zero-shot source transfer is not supported"
+    },
+    "blocked_experts": {
+      "RoomSpace": "blocked_single_locked_source_needs_non_CubiCasa_locked_room_source",
+      "SymbolFixture": "blocked_single_locked_source_needs_FloorPlanCAD_or_internal_symbol_fixture_locked_labels",
+      "TextDimension": "blocked_single_locked_source_needs_FloorPlanCAD_or_internal_OCR_text_locked_labels"
+    },
+    "relation_heldout_boundary": "relation_no_repair_heldout_scorer_v1 is internal record-heldout within the locked benchmark, not external source validation."
+  },
+  "end_to_end_outputs": [
+    {
+      "id": "svg_contract_model_fused_scene_graph_locked_smoke",
+      "role": "end-to-end SVG-derived candidate graph export with loaded expert checkpoints",
+      "source": "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json",
+      "predictions": "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke.jsonl",
+      "cases": 64,
+      "node_f1": 0.723279,
+      "relation_f1": 1.0,
+      "family_node_f1": {
+        "boundary": 0.774974,
+        "space": 0.886297,
+        "symbol": 0.456018,
+        "text": 0.994737
+      },
+      "interpretation": "This is a registered-checkpoint E2E smoke path on SVG-derived candidates. It is useful for demonstrating export and failure modes, not for replacing P301 as the main paper metric."
+    },
+    {
+      "id": "scene_graph_f1_locked_smoke_oracle_like_export",
+      "role": "contract/export sanity check",
+      "source": "reports/vlm/cubicasa_svg_case/scene_graph_f1_locked_smoke_eval.json",
+      "cases_by_source": {
+        "cubicasa5k": 64
+      },
+      "node_f1": 1.0,
+      "relation_f1": 1.0,
+      "invalid_graph_rate": 0.0,
+      "interpretation": "Use only as a contract/export sanity check. The perfect score indicates gold-compatible export behavior and should not be presented as model recognition performance."
+    },
+    {
+      "id": "visual_demo_model_v13_real_e2e",
+      "role": "qualitative E2E visualization candidate for paper figures",
+      "manifest": "reports/vlm/visual_demo_model_v13_real_e2e/sample_manifest_v1.json",
+      "output_dir": "reports/vlm/visual_demo_model_v13_real_e2e",
+      "prediction_path": "reports/vlm/real_upstream_model_predictions_model_v13_real_infer_rel_contains_boundary_room_symbol_v14.jsonl",
+      "source_dataset_policy": "Only CubiCasa5K/CubiCasa samples are used in this visual demo.",
+      "paper_candidate_figure_png": "reports/vlm/visual_demo_model_v13_real_e2e/paper_candidate_figure_v13_real_e2e.png",
+      "paper_candidate_figure_svg": "reports/vlm/visual_demo_model_v13_real_e2e/paper_candidate_figure_v13_real_e2e.svg",
+      "review_pack": "reports/vlm/visual_demo_model_v13_real_e2e/review_pack_v3/index.html",
+      "samples": [
+        {
+          "sample_id": "cubicasa5k_00_11563",
+          "nodes": 160,
+          "edges": 24,
+          "rendered_nodes": 159,
+          "side_by_side_png": "reports/vlm/visual_demo_model_v13_real_e2e/cubicasa5k_00_11563/side_by_side.png"
+        },
+        {
+          "sample_id": "cubicasa5k_01_13277",
+          "nodes": 204,
+          "edges": 30,
+          "rendered_nodes": 196,
+          "side_by_side_png": "reports/vlm/visual_demo_model_v13_real_e2e/cubicasa5k_01_13277/side_by_side.png"
+        },
+        {
+          "sample_id": "cubicasa5k_02_13624",
+          "nodes": 196,
+          "edges": 25,
+          "rendered_nodes": 196,
+          "side_by_side_png": "reports/vlm/visual_demo_model_v13_real_e2e/cubicasa5k_02_13624/side_by_side.png"
+        },
+        {
+          "sample_id": "cubicasa5k_03_5039",
+          "nodes": 243,
+          "edges": 34,
+          "rendered_nodes": 242,
+          "side_by_side_png": "reports/vlm/visual_demo_model_v13_real_e2e/cubicasa5k_03_5039/side_by_side.png"
+        },
+        {
+          "sample_id": "cubicasa5k_04_9351",
+          "nodes": 280,
+          "edges": 8,
+          "rendered_nodes": 280,
+          "side_by_side_png": "reports/vlm/visual_demo_model_v13_real_e2e/cubicasa5k_04_9351/side_by_side.png"
+        }
+      ],
+      "interpretation": "Use as qualitative E2E output: input, overlay, and side-by-side graph rendering. Do not describe as source-heldout or pure raster."
+    },
+    {
+      "id": "image_only_moe_e2e_v14",
+      "role": "negative image-only E2E evidence and runtime-source-integrity reference",
+      "source": "reports/vlm/image_only_moe_e2e_v14_ablation_dashboard.json",
+      "cases": 16,
+      "source_integrity_passed": true,
+      "proposal_mean_f1": 0.0,
+      "final_scene_graph_nodes": 17,
+      "final_scene_graph_edges": 0,
+      "adopted": false,
+      "interpretation": "Useful as a limitation/failure-analysis artifact. It proves source-integrity checks can pass, but pure image-only proposal quality is not adoption-ready."
+    },
+    {
+      "id": "runtime_raster_secondary_adapter_p262",
+      "role": "bounded secondary runtime raster adapter evidence",
+      "source": "reports/vlm/p263_secondary_raster_adapter_package.json",
+      "selected_artifact": "P262 frozen secondary raster adapter",
+      "overall_f1": 0.729861,
+      "equipment_f1": 0.729524,
+      "claim_boundary": "Secondary runtime raster adapter evidence only. Main paper claim remains SVG/contract CadStruct-MoE."
+    }
+  ],
+  "visualization_code_review": {
+    "main_renderer": {
+      "script": "scripts/vlm/render_scene_graph_visual_demo.py",
+      "role": "SVG/HTML-first renderer for CadStruct-MoE scene graph visual demos; emits SVG and PNG when rsvg-convert is available.",
+      "important_behavior": [
+        "copies the input reference image",
+        "maps scene-graph bboxes to the image canvas",
+        "emits overlay_only, overlay_on_image, side_by_side, per-sample summary, sample manifest, coverage audit, and review pack",
+        "selects warning/uncertain cases so the review pack is not only best-case recognition"
+      ]
+    },
+    "image_only_v17_entrypoint": {
+      "script": "scripts/vlm/render_visual_demo_image_only_moe_v17.py",
+      "role": "thin render entrypoint into image_only_moe_v17_pipeline.main('render')"
+    },
+    "hard_case_renderer": {
+      "script": "scripts/vlm/build_visual_hard_case_pack_v18.py",
+      "role": "deterministic visual hard-case pack for raster-only MoE debugging",
+      "output": "reports/vlm/visual_hard_cases_v18/index.html",
+      "paper_use": "Use for error analysis or appendix only; it is not the main visual result."
+    }
+  },
+  "recommended_paper_materials": [
+    {
+      "section": "Main results table",
+      "use": [
+        "P301 node macro-F1 0.962907",
+        "P301 node accuracy 0.982498",
+        "P301 internal locked relation F1 0.929782",
+        "P301 invalid graph rate 0.0"
+      ],
+      "source": "reports/vlm/p304_p301_reviewed_metric_package.md"
+    },
+    {
+      "section": "Claim boundary paragraph",
+      "use": "Reviewed SVG/contract normalized-candidate result; relation F1 is internal locked fine-threshold audit; external generalization blocked by P305.",
+      "source": "reports/vlm/p305c_external_generalization_claim_decision.md"
+    },
+    {
+      "section": "Qualitative figure",
+      "use": "Use the v13 real E2E side-by-side or paper_candidate_figure asset.",
+      "source": "reports/vlm/visual_demo_model_v13_real_e2e"
+    },
+    {
+      "section": "Runtime bridge paragraph",
+      "use": "Mention P262/P263 only as bounded secondary raster adapter evidence, not as the main claim.",
+      "source": "reports/vlm/p263_secondary_raster_adapter_package.md"
+    },
+    {
+      "section": "Limitations",
+      "use": "State external/source-heldout generalization is not established; image-only v14/v18 remains non-adopted; generic_symbol remains weak at 0.784314.",
+      "source": "reports/vlm/p305b_external_source_heldout_validation.md"
+    }
+  ],
+  "do_not_claim": [
+    "Do not call P301 externally validated.",
+    "Do not claim source-heldout generalization for RoomSpace, SymbolFixture, or TextDimension.",
+    "Do not use relation_no_repair_heldout_scorer_v1 as external source validation.",
+    "Do not claim runtime raster generalization from SVG/contract metrics.",
+    "Do not present scene_graph_f1_locked_smoke_eval.json perfect scores as model recognition performance.",
+    "Do not present image_only_moe_e2e_v14 as adopted or successful; it is negative E2E evidence."
+  ],
+  "manuscript_ready_summary": "CadStruct-MoE is currently strongest as a reviewed SVG/contract normalized-candidate graph-recognition system. The packaged P301 line reaches node macro-F1 0.962907 and node accuracy 0.982498, with relation F1 0.929782 under an internal locked fine-threshold audit and invalid graph rate 0.0. Qualitative end-to-end outputs are available through the v13 real E2E visual demo and SVG-derived locked-smoke scene-graph exports. External/source-heldout generalization should not be claimed: P305 found only weak WallOpening transfer evidence and blocked RoomSpace, SymbolFixture, and TextDimension pending new external labels."
+}

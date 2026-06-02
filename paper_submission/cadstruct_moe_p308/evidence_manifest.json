@@ -1,0 +1,174 @@
+{
+  "version": "p308_submission_materials_v1",
+  "created_at": "2026-06-02T11:32:56",
+  "package_dir": "paper_submission/cadstruct_moe_p308",
+  "main_tex": "paper_submission/cadstruct_moe_p308/main.tex",
+  "expected_pdf": "paper_submission/cadstruct_moe_p308/main.pdf",
+  "claim_boundary": {
+    "main": "SVG/contract normalized-candidate CadStruct-MoE graph recognition",
+    "not_main": [
+      "pure runtime-raster detector performance",
+      "external/source-heldout validation",
+      "artificial/manual label collection as the core contribution"
+    ]
+  },
+  "materials": [
+    {
+      "source": "reports/vlm/p308_submission_package.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p308_submission_package.json",
+      "bytes": 2042
+    },
+    {
+      "source": "reports/vlm/p308_submission_static_check.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p308_submission_static_check.json",
+      "bytes": 1433
+    },
+    {
+      "source": "reports/vlm/p308_submission_static_check.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p308_submission_static_check.md",
+      "bytes": 1512
+    },
+    {
+      "source": "reports/vlm/p308_submission_readiness.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p308_submission_readiness.json",
+      "bytes": 952
+    },
+    {
+      "source": "reports/vlm/p308_submission_readiness.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p308_submission_readiness.md",
+      "bytes": 810
+    },
+    {
+      "source": "reports/vlm/p307_manuscript_refresh_package.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p307_manuscript_refresh_package.json",
+      "bytes": 1554
+    },
+    {
+      "source": "reports/vlm/p307_manuscript_refresh_package.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p307_manuscript_refresh_package.md",
+      "bytes": 10223
+    },
+    {
+      "source": "reports/vlm/p307_manuscript_refresh_tables.tex",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p307_manuscript_refresh_tables.tex",
+      "bytes": 2968
+    },
+    {
+      "source": "reports/vlm/p306_paper_materials_package.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p306_paper_materials_package.json",
+      "bytes": 11590
+    },
+    {
+      "source": "reports/vlm/p306_paper_materials_package.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p306_paper_materials_package.md",
+      "bytes": 7233
+    },
+    {
+      "source": "reports/vlm/p305c_external_generalization_claim_decision.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p305c_external_generalization_claim_decision.json",
+      "bytes": 2454
+    },
+    {
+      "source": "reports/vlm/p305c_external_generalization_claim_decision.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p305c_external_generalization_claim_decision.md",
+      "bytes": 1910
+    },
+    {
+      "source": "reports/vlm/p304_claim_consistency_check.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p304_claim_consistency_check.json",
+      "bytes": 1119
+    },
+    {
+      "source": "reports/vlm/p304_claim_consistency_check.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p304_claim_consistency_check.md",
+      "bytes": 704
+    },
+    {
+      "source": "reports/vlm/p304_p301_reviewed_metric_package.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p304_p301_reviewed_metric_package.json",
+      "bytes": 6122
+    },
+    {
+      "source": "reports/vlm/p304_p301_reviewed_metric_package.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p304_p301_reviewed_metric_package.md",
+      "bytes": 3060
+    },
+    {
+      "source": "reports/vlm/p303_model_code_review.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p303_model_code_review.json",
+      "bytes": 7632
+    },
+    {
+      "source": "reports/vlm/p303_model_code_review.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p303_model_code_review.md",
+      "bytes": 5321
+    },
+    {
+      "source": "reports/vlm/p301_relation_confidence_preserved_conservative_rescue.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p301_relation_confidence_preserved_conservative_rescue.json",
+      "bytes": 1365087
+    },
+    {
+      "source": "reports/vlm/p301_relation_confidence_preserved_conservative_rescue.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/p301_relation_confidence_preserved_conservative_rescue.md",
+      "bytes": 906
+    },
+    {
+      "source": "reports/vlm/sci2_final_submission_evidence_pack_v2.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/sci2_final_submission_evidence_pack_v2.json",
+      "bytes": 1789
+    },
+    {
+      "source": "reports/vlm/sci2_overclaim_scan_v2.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/sci2_overclaim_scan_v2.json",
+      "bytes": 415
+    },
+    {
+      "source": "reports/vlm/final_claim_ledger_v2.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/final_claim_ledger_v2.json",
+      "bytes": 8082
+    },
+    {
+      "source": "docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/cadstruct-paper-core-contributions-v2.md",
+      "bytes": 2445
+    },
+    {
+      "source": "docs/cadstruct/paper/real-world-capability-boundary-v3.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/real-world-capability-boundary-v3.md",
+      "bytes": 7757
+    },
+    {
+      "source": "docs/cadstruct/current/model-asset-inventory.md",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/model-asset-inventory.md",
+      "bytes": 9860
+    },
+    {
+      "source": "struct.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/struct.json",
+      "bytes": 53445
+    },
+    {
+      "source": "struct_audit.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/struct_audit.json",
+      "bytes": 15419
+    },
+    {
+      "source": "todo.json",
+      "package_path": "paper_submission/cadstruct_moe_p308/materials/todo.json",
+      "bytes": 119151
+    }
+  ],
+  "figures": [
+    {
+      "source": "reports/vlm/visual_demo_model_v13_real_e2e/paper_candidate_figure_v13_real_e2e.png",
+      "package_path": "paper_submission/cadstruct_moe_p308/figures/paper_candidate_figure_v13_real_e2e.png",
+      "bytes": 117002
+    },
+    {
+      "source": "reports/vlm/visual_demo_model_v13_real_e2e/paper_candidate_figure_v13_real_e2e.svg",
+      "package_path": "paper_submission/cadstruct_moe_p308/figures/paper_candidate_figure_v13_real_e2e.svg",
+      "bytes": 27345
+    }
+  ]
+}

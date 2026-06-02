@@ -1,0 +1,35 @@
+{
+  "id": "p268_template_or_compile_readiness",
+  "source": "reports/vlm/p308_generic_submission_manuscript.tex",
+  "templates_found": [],
+  "ready_for_template_insertion": false,
+  "ready_for_compile": false,
+  "claim_check": {
+    "source": "reports/vlm/p308_generic_submission_manuscript.tex",
+    "exists": true,
+    "required_metrics": {
+      "0.951696": false,
+      "0.981566": false,
+      "0.920938": false,
+      "0.000000": true,
+      "0.729861": true,
+      "0.729524": true
+    },
+    "forbidden_hits": [],
+    "has_main_boundary": true,
+    "pass": false
+  },
+  "compile": {
+    "pdflatex": null,
+    "latexmk": null,
+    "tectonic": null,
+    "attempted": false,
+    "returncode": null,
+    "log": "",
+    "work_dir": null,
+    "artifacts": [],
+    "status": "not_attempted_no_latex_engine"
+  },
+  "p267_bundle_status": "ready_for_template_or_compile_environment",
+  "decision": "still_waiting_for_external_template_or_latex_engine"
+}

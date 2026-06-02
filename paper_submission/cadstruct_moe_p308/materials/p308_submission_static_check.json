@@ -1,0 +1,44 @@
+{
+  "source": "reports/vlm/p308_generic_submission_manuscript.tex",
+  "exists": true,
+  "required_metrics": {
+    "0.962907": true,
+    "0.982498": true,
+    "0.994900": true,
+    "0.872665": true,
+    "0.929782": true,
+    "0.000000": true,
+    "0.729861": true,
+    "0.729524": true,
+    "0.485651": true,
+    "0.159075": true
+  },
+  "required_phrases": {
+    "SVG/contract normalized-candidate": true,
+    "internal locked fine-threshold audit": true,
+    "not external validation": true,
+    "external/source-heldout generalization remains blocked": true,
+    "not source-heldout or pure-raster evidence": true,
+    "not as the headline model result": true,
+    "not adopted": true
+  },
+  "forbidden_hits": [],
+  "structural_checks": {
+    "has_documentclass": true,
+    "has_abstract": true,
+    "has_main_results_table": true,
+    "has_symbol_table": true,
+    "has_e2e_inventory_table": true,
+    "has_external_generalization_table": true,
+    "has_figure_plan": true,
+    "uses_old_p265_headline_node_macro_f1": false,
+    "uses_old_p265_headline_relation_f1": false
+  },
+  "compile_status": "not_attempted_no_latex_engine",
+  "legacy_p268_claim_check": {
+    "status": "not_applicable_to_p308",
+    "reason": "P268 checker is hard-coded for old P265/P266 metrics 0.951696/0.920938; P308 intentionally replaces them with P301 metrics."
+  },
+  "pass": true,
+  "decision": "ready_for_template_insertion_pending_latex_engine"
+}

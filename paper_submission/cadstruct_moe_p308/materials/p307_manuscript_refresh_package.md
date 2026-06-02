@@ -1,0 +1,119 @@
+# P307 Manuscript Refresh Package
+
+Created: 2026-05-27
+
+Status: manuscript-ready refresh built from P306.
+
+## Purpose
+
+This package refreshes the older P265/P266 manuscript material with the reviewed P301/P304 result and P305/P306 claim boundaries. It is intentionally separate from the prior submission bundle so historical P265/P266 artifacts remain intact.
+
+## Replacement Abstract
+
+We present CadStruct-MoE, a contract-centered mixture-of-experts framework for converting architectural CAD floor-plan evidence into structurally valid scene graphs. Under the reviewed SVG/contract normalized-candidate evaluation boundary, the promoted P301 line reaches node macro-F1 0.962907, node accuracy 0.982498, and invalid graph rate 0.000000. Relation scoring reaches F1 0.929782 under an internal locked fine-threshold audit; this relation value is not external validation. We additionally report qualitative end-to-end scene-graph outputs and a bounded runtime raster adapter as secondary bridge evidence, while explicitly blocking external/source-heldout generalization claims until new external labels are available.
+
+## Replacement Contributions
+
+- A contract-centered CadStruct-MoE architecture that separates normalized candidate reasoning, specialized experts, relation scoring, graph fusion, and source-boundary accounting.
+- A reviewed P301 SVG/contract normalized-candidate result with node macro-F1 0.962907, node accuracy 0.982498, and invalid graph rate 0.000000.
+- An internal locked fine-threshold relation audit reaching relation precision 0.994900, recall 0.872665, and F1 0.929782, reported separately from external validation.
+- Qualitative end-to-end output assets from the v13 real E2E visual demo and an SVG-derived locked-smoke export path.
+- A bounded secondary runtime raster adapter, frozen at P262, with overall F1 0.729861 and equipment F1 0.729524; this is bridge evidence rather than the headline claim.
+- A conservative external-generalization decision: P305 blocks source-heldout generalization claims for P301, RoomSpace, SymbolFixture, and TextDimension pending new external labels.
+
+## Results Narrative
+
+The reviewed P301 line is the current main quantitative result. It applies a conservative relation-confidence-preserved residual relabeler on top of the P297 SVG/contract candidate and changes 77 locked symbols: 54 `appliance->equipment`, 20 `stair->equipment`, and 3 `column->equipment`. This raises node macro-F1 to 0.962907 and node accuracy to 0.982498 while preserving the P297 relation score. Relation F1 is 0.929782 under the internal locked fine-threshold audit at threshold 0.985, with relation precision 0.994900 and recall 0.872665. This relation audit is useful for the paper but must not be described as external validation.
+
+Per-class symbol results show the strongest recurring categories above 0.90 F1: shower 0.992464, sink 0.966910, appliance 0.955079, stair 0.926378, column 0.922162, and equipment 0.913676. Bathtub reaches 0.835616. The remaining weak disclosure category is `generic_symbol` at 0.784314, which should be framed as a residual/open-set label rather than a solved recurring fixture category.
+
+## End-To-End Output Narrative
+
+The paper can now include a bounded end-to-end output subsection. The main qualitative figure source is `reports/vlm/visual_demo_model_v13_real_e2e`, which contains five CubiCasa visual-demo cases with input images, overlays, side-by-side outputs, per-sample summaries, a review pack, and `paper_candidate_figure_v13_real_e2e.png/.svg`. These figures demonstrate the system output format and scene-graph visualization, but they are not source-heldout or pure-raster evidence.
+
+For an SVG-derived export-chain demonstration, `reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json` runs registered expert checkpoints on SVG-derived candidates across 64 cases. It reports node F1 0.723279 and relation F1 1.000000, with family node F1 of 0.774974 for boundary, 0.886297 for space, 0.456018 for symbol, and 0.994737 for text. This path is useful as an end-to-end smoke/export demonstration, not as the headline model result.
+
+The perfect-score `reports/vlm/cubicasa_svg_case/scene_graph_f1_locked_smoke_eval.json` should only be cited as a contract/export sanity check because its behavior is gold-compatible and should not be presented as model recognition performance.
+
+The image-only path remains negative evidence. `reports/vlm/image_only_moe_e2e_v14_ablation_dashboard.json` passes source-integrity checks on 16 rows, but proposal mean F1 is 0.0, the final scene graph has 17 nodes and 0 edges, and the artifact is explicitly not adopted. This belongs in limitations or appendix discussion.
+
+## External Generalization And Limitations
+
+External/source-heldout generalization remains blocked by P305. The only true source-heldout expert evaluated in P305b is WallOpening, and transfer is weak: cvc_fp to floorplancad macro-F1 is 0.485651, while floorplancad to cvc_fp macro-F1 is 0.159075. RoomSpace, SymbolFixture, and TextDimension are blocked by single locked-source coverage or missing external labels. `relation_no_repair_heldout_scorer_v1` is internal record-heldout within the locked benchmark and must not be used as external source validation.
+
+The runtime raster adapter is also secondary. P262 improves the promoted P232 raster baseline from F1 0.726314 to 0.729861, with equipment F1 0.729524, but this remains bridge evidence. The manuscript should not frame the project as a pure raster detector or claim runtime raster generalization from SVG/contract metrics.
+
+## Figure Captions
+
+### Figure 1: Contract-Centered CadStruct-MoE Pipeline
+
+**CadStruct-MoE contract-centered CAD scene-graph pipeline.** Normalized SVG/contract candidates are routed to specialized experts for symbols, spaces, boundaries, text, and relations, then fused into a schema-valid CAD scene graph. The reviewed P301 line reaches node macro-F1 0.962907 and node accuracy 0.982498 under the SVG/contract normalized-candidate boundary. Relation F1 0.929782 is reported as an internal locked fine-threshold audit, while runtime raster and external source-heldout claims are reported separately.
+
+### Figure 2: End-To-End Scene-Graph Output
+
+**Qualitative end-to-end scene-graph output.** The v13 real E2E visual demo renders CubiCasa inputs, predicted graph overlays, and side-by-side scene-graph views. These visualizations demonstrate output structure and qualitative behavior, including warning/uncertain cases selected by the review pack, but they should not be interpreted as source-heldout or pure-raster evaluation.
+
+Recommended asset: `reports/vlm/visual_demo_model_v13_real_e2e/paper_candidate_figure_v13_real_e2e.png`.
+
+### Figure 3: Claim-Boundary Ledger
+
+**Claim-boundary ledger for CAD scene-graph evidence.** P301 metrics evaluate reviewed SVG/contract normalized-candidate recognition; relation F1 is an internal locked fine-threshold audit; P262 is bounded runtime raster bridge evidence; P305 blocks external/source-heldout generalization claims until new external labels are available.
+
+### Figure 4: Symbol Strengths And Residual Labels
+
+**Symbol performance under the reviewed SVG/contract boundary.** Recurring categories are strong, with shower, sink, appliance, stair, column, and equipment all above 0.90 F1. Bathtub reaches 0.835616, while `generic_symbol` remains the weak residual/open-set category at 0.784314.
+
+## Main Tables
+
+### Table 1. Reviewed P301 Main Result
+
+| Metric | Value | Claim boundary |
+| --- | ---: | --- |
+| Node macro-F1 | 0.962907 | SVG/contract normalized-candidate audit |
+| Node accuracy | 0.982498 | SVG/contract normalized-candidate audit |
+| Relation precision | 0.994900 | internal locked fine-threshold audit |
+| Relation recall | 0.872665 | internal locked fine-threshold audit |
+| Relation F1 | 0.929782 | internal locked fine-threshold audit |
+| Invalid graph rate | 0.000000 | SVG/contract graph-validity audit |
+
+### Table 2. Strong And Disclosure Symbol Classes
+
+| Class | F1 | Role |
+| --- | ---: | --- |
+| shower | 0.992464 | strong recurring symbol |
+| sink | 0.966910 | strong recurring symbol |
+| appliance | 0.955079 | strong recurring symbol |
+| stair | 0.926378 | strong recurring symbol |
+| column | 0.922162 | strong recurring symbol |
+| equipment | 0.913676 | strong recurring symbol |
+| bathtub | 0.835616 | lower-support disclosure symbol |
+| generic_symbol | 0.784314 | residual/open-set disclosure label |
+
+### Table 3. End-To-End Output Inventory
+
+| Artifact | Role | Use in paper |
+| --- | --- | --- |
+| `visual_demo_model_v13_real_e2e` | qualitative E2E visualization | main qualitative figure |
+| `model_fused_scene_graph_locked_smoke_eval.json` | SVG-derived E2E export smoke | export-chain demonstration |
+| `scene_graph_f1_locked_smoke_eval.json` | contract/export sanity check | appendix or internal note only |
+| `image_only_moe_e2e_v14_ablation_dashboard.json` | negative image-only E2E evidence | limitations/appendix |
+| `p263_secondary_raster_adapter_package.json` | secondary runtime raster bridge | bounded bridge paragraph |
+
+### Table 4. External-Generalization Decision
+
+| Area | Status | Paper wording |
+| --- | --- | --- |
+| P301 external validation | blocked | do not call externally validated |
+| WallOpening source transfer | evaluated but weak | zero-shot source transfer not supported |
+| RoomSpace | blocked | needs non-CubiCasa locked room labels |
+| SymbolFixture | blocked | needs FloorPlanCAD/internal symbol fixture labels |
+| TextDimension | blocked | needs FloorPlanCAD/internal OCR/text labels |
+| Relation heldout scorer | internal record-heldout only | not external source validation |
+
+## Drop-In Guardrails
+
+- Replace old P265/P266 headline metrics 0.951696 and 0.920938 with P301/P304 metrics only when the text also states the updated claim boundary.
+- Do not rewrite the older P265/P266 package in place unless preparing a new submission artifact.
+- Keep P305 external-generalization block visible in abstract, limitations, or claim-boundary text.
+- Keep the E2E visual demo separate from the primary quantitative metric table.
+- Do not use perfect export-sanity scores as model recognition evidence.

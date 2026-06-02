@@ -1,0 +1,80 @@
+% P307 manuscript refresh tables, generated 2026-05-27.
+% Boundary: P301 is reviewed SVG/contract normalized-candidate evidence.
+% Relation metrics are internal locked fine-threshold audits, not external validation.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Reviewed P301 CadStruct-MoE main result.}
+\label{tab:p301_main_result}
+\begin{tabular}{lrl}
+\toprule
+Metric & Value & Claim boundary \\
+\midrule
+Node macro-F1 & 0.962907 & SVG/contract normalized-candidate audit \\
+Node accuracy & 0.982498 & SVG/contract normalized-candidate audit \\
+Relation precision & 0.994900 & internal locked fine-threshold audit \\
+Relation recall & 0.872665 & internal locked fine-threshold audit \\
+Relation F1 & 0.929782 & internal locked fine-threshold audit \\
+Invalid graph rate & 0.000000 & SVG/contract graph-validity audit \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Strong and disclosure symbol classes under the reviewed SVG/contract boundary.}
+\label{tab:p301_symbol_classes}
+\begin{tabular}{lrl}
+\toprule
+Class & F1 & Role \\
+\midrule
+shower & 0.992464 & strong recurring symbol \\
+sink & 0.966910 & strong recurring symbol \\
+appliance & 0.955079 & strong recurring symbol \\
+stair & 0.926378 & strong recurring symbol \\
+column & 0.922162 & strong recurring symbol \\
+equipment & 0.913676 & strong recurring symbol \\
+bathtub & 0.835616 & lower-support disclosure symbol \\
+generic\_symbol & 0.784314 & residual/open-set disclosure label \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{End-to-end output inventory and paper use.}
+\label{tab:p307_e2e_inventory}
+\begin{tabular}{lll}
+\toprule
+Artifact & Role & Use in paper \\
+\midrule
+visual\_demo\_model\_v13\_real\_e2e & qualitative E2E visualization & main qualitative figure \\
+model\_fused\_scene\_graph\_locked\_smoke & SVG-derived E2E export smoke & export-chain demonstration \\
+scene\_graph\_f1\_locked\_smoke & contract/export sanity check & appendix or internal note only \\
+image\_only\_moe\_e2e\_v14 & negative image-only E2E evidence & limitations/appendix \\
+P263/P262 raster adapter & secondary runtime raster bridge & bounded bridge paragraph \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{P305 external-generalization decision carried into the manuscript.}
+\label{tab:p305_external_generalization}
+\begin{tabular}{lll}
+\toprule
+Area & Status & Paper wording \\
+\midrule
+P301 external validation & blocked & do not call externally validated \\
+WallOpening source transfer & evaluated but weak & zero-shot source transfer not supported \\
+RoomSpace & blocked & needs non-CubiCasa locked room labels \\
+SymbolFixture & blocked & needs FloorPlanCAD/internal symbol fixture labels \\
+TextDimension & blocked & needs FloorPlanCAD/internal OCR/text labels \\
+Relation heldout scorer & internal record-heldout only & not external source validation \\
+\bottomrule
+\end{tabular}
+\end{table}

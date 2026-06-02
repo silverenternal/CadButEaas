@@ -1,0 +1,34 @@
+{
+  "version": "p307_manuscript_refresh_package_v1",
+  "created": "2026-05-27",
+  "status": "manuscript_refresh_packaged",
+  "source_package": "reports/vlm/p306_paper_materials_package.json",
+  "outputs": [
+    "reports/vlm/p307_manuscript_refresh_package.md",
+    "reports/vlm/p307_manuscript_refresh_tables.tex",
+    "reports/vlm/p307_manuscript_refresh_package.json"
+  ],
+  "main_result": {
+    "id": "P301_conservative_relation_confidence_preserved_residual_rescue",
+    "node_macro_f1": 0.962907,
+    "node_accuracy": 0.982498,
+    "relation_precision": 0.9949,
+    "relation_recall": 0.872665,
+    "relation_f1": 0.929782,
+    "invalid_graph_rate": 0.0,
+    "claim_boundary": "reviewed SVG/contract normalized-candidate result plus internal locked fine-threshold relation audit"
+  },
+  "e2e_outputs_added": [
+    "v13 real E2E visual demo for qualitative paper figure",
+    "SVG-derived model-fused scene-graph locked-smoke export path",
+    "contract/export sanity check caveat",
+    "image-only v14 negative E2E evidence",
+    "P262/P263 secondary runtime raster adapter bridge"
+  ],
+  "external_generalization": {
+    "status": "blocked",
+    "source": "reports/vlm/p305c_external_generalization_claim_decision.json",
+    "required_wording": "Do not make external/source-heldout generalization claims for P301 or for RoomSpace/SymbolFixture/TextDimension."
+  },
+  "safe_next_step": "Use this package to refresh manuscript text/tables/figures. Do not overwrite historical P265/P266 submission bundle unless creating a new submission artifact."
+}

@@ -1,0 +1,30 @@
+{
+  "version": "p304_claim_consistency_check_v1",
+  "created": "2026-05-27",
+  "status": "passed_with_required_boundary_language",
+  "checked_artifacts": [
+    "reports/vlm/p303_model_code_review.json",
+    "reports/vlm/p304_p301_reviewed_metric_package.json",
+    "reports/vlm/p304_p301_reviewed_metric_package.md"
+  ],
+  "required_language": [
+    "SVG/contract normalized-candidate",
+    "internal locked fine-threshold audit",
+    "not external validation",
+    "not runtime raster performance"
+  ],
+  "checks": {
+    "p303_exists": true,
+    "p304_package_exists": true,
+    "server_real_environment_recorded": true,
+    "p301_not_called_external_validation": true,
+    "relation_f1_marked_internal_audit": true,
+    "runtime_raster_boundary_present": true,
+    "p302_rejection_preserved": true
+  },
+  "remaining_risks": [
+    "P301 relation F1 remains an internal locked fine-threshold audit, not external validation.",
+    "Prediction relabeling is order-based; changing prediction sources requires candidate_id/record_index assertions before promotion.",
+    "generic_symbol remains weak at F1=0.784314."
+  ]
+}

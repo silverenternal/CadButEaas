@@ -1,0 +1,108 @@
+{
+  "version": "p303_model_code_review_v1",
+  "created": "2026-05-27",
+  "status": "passed_with_packaging_restrictions",
+  "decision": "P304 may proceed, but only as reviewed SVG/contract experiment-line packaging with explicit internal locked fine-threshold relation-audit language. Do not present P301 relation F1 as external validation or runtime raster performance.",
+  "scope": [
+    "scripts/vlm/evaluate_symbol_bathtub_conservative_rescue_p291.py",
+    "scripts/vlm/evaluate_symbol_sink_refresh_rescue_p297.py",
+    "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py",
+    "scripts/vlm/evaluate_symbol_pairwise_micro_rescue_p302.py",
+    "scripts/vlm/fuse_relation_scorer_no_repair_v1.py",
+    "scripts/vlm/audit_relation_no_repair_sci2_scorer_v1.py",
+    "scripts/vlm/fuse_real_upstream.py",
+    "scripts/vlm/train_symbol_label_arbitration_v2.py",
+    "reports/vlm/p301_relation_confidence_preserved_conservative_rescue.json",
+    "reports/vlm/scene_graph_fusion_symbol_relation_confidence_preserved_rescue_p301_fine_relation_no_repair_scorer_v1_eval.json"
+  ],
+  "findings": [
+    {
+      "id": "P303-F1",
+      "severity": "high",
+      "status": "claim_boundary_required",
+      "title": "Fine relation thresholds are selected on the locked benchmark and cannot be reported as external validation.",
+      "evidence": [
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:122-145 builds locked fine_eval, sweeps thresholds, selects sweep[0], and reports selected_threshold.",
+        "scripts/vlm/audit_relation_no_repair_sci2_scorer_v1.py:207-220 sorts threshold_sweep by relation F1/precision on the same evaluated rows.",
+        "reports/vlm/scene_graph_fusion_symbol_relation_confidence_preserved_rescue_p301_fine_relation_no_repair_scorer_v1_eval.json reports selected_threshold=0.985 and claim_boundary=Internal locked fine-threshold audit; not external validation."
+      ],
+      "impact": "P301 relation F1=0.929782 is useful internal evidence, but paper packaging must label it as an internal locked fine-threshold audit. It is not a held-out external metric.",
+      "required_action": "P304 may proceed only if all tables and prose mark P292/P294/P295/P296/P297/P300/P301/P302 relation values as internal locked threshold audits."
+    },
+    {
+      "id": "P303-F2",
+      "severity": "medium",
+      "status": "runtime_boundary_required",
+      "title": "Evaluation/fusion helpers use expected_json/gold-compatible IDs and must stay offline-only.",
+      "evidence": [
+        "scripts/vlm/fuse_real_upstream.py:56-62 documents reconstructing from dev split to preserve gold-compatible scene graph node IDs.",
+        "scripts/vlm/audit_relation_no_repair_sci2_scorer_v1.py:58-64 builds gold_edge_set from expected_json for labels/evaluation.",
+        "todo.json hard_contract forbids expected_json, gold labels, annotation paths, offline object IDs, and row_id as runtime features."
+      ],
+      "impact": "This is acceptable for SVG/contract offline audit, but it cannot be described as a runtime raster inference path.",
+      "required_action": "P304 must keep SVG/contract normalized-candidate claims separate from runtime raster claims and must not promote these helpers as runtime-safe inference artifacts."
+    },
+    {
+      "id": "P303-F3",
+      "severity": "medium",
+      "status": "guardrail_present_but_fragile",
+      "title": "Prediction relabeling relies on symbol stream order matching locked_items order.",
+      "evidence": [
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:148-186 increments symbol_index over base_predictions and compares only total symbol count to locked_items length.",
+        "scripts/vlm/evaluate_symbol_pairwise_micro_rescue_p302.py:275-302 has the same order-based mapping pattern.",
+        "Metadata writes record_index/candidate_id after assignment, but there is no per-row assert that prediction candidate_id equals locked_items[symbol_index]."
+      ],
+      "impact": "Existing reports are probably consistent because counts match and previous pipeline preserves order, but a future shuffled prediction file could silently relabel the wrong candidate while passing the count check.",
+      "required_action": "Before changing prediction sources, add candidate_id/record_index alignment assertions or a keyed relabeler. P304 can proceed using existing frozen artifacts with this fragility documented."
+    },
+    {
+      "id": "P303-F4",
+      "severity": "low",
+      "status": "passes_review",
+      "title": "Node residual relabeler selection keeps train/dev/locked separation for P301.",
+      "evidence": [
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:216-260 trains on train, scores dev candidates, and selects candidate from dev metrics.",
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:261-292 applies the selected policy to locked once and writes adjusted predictions/fine audit.",
+        "scripts/vlm/evaluate_symbol_bathtub_binary_rescue_p289.py:136-146 and evaluate_symbol_conservative_multilabel_overlay_p285.py:276-285 include split image overlap checks."
+      ],
+      "impact": "No blocker-level leakage was found in P301 node-label model/threshold selection during this pass.",
+      "required_action": "Keep P301 as the current reviewed SVG/contract experiment-line candidate, subject to F1/F2/F3 packaging restrictions."
+    },
+    {
+      "id": "P303-F5",
+      "severity": "low",
+      "status": "passes_review",
+      "title": "P301 relation confidence preservation is implemented as claimed.",
+      "evidence": [
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:163-167 changes label but copies previous_confidence back into row['confidence'].",
+        "scripts/vlm/evaluate_symbol_relation_confidence_preserved_rescue_p301.py:169-180 records relation_confidence_preserved_from_p297 metadata.",
+        "reports/vlm/p301_relation_confidence_preserved_conservative_rescue.json states relation_confidence_policy=preserve P297 prediction confidence when label changes."
+      ],
+      "impact": "The implementation supports the P301 confidence-preservation narrative.",
+      "required_action": "P304 should describe this as a conservative residual relabeler on top of P297, not as a new broad architecture."
+    }
+  ],
+  "checklist": {
+    "server_real_environment": {
+      "required": true,
+      "executed_on": "server:/home/hugo/codes/CadButEaas via ssh -p 33022 hugo@47.110.35.232",
+      "python_version_observed": "Python 3.14.5"
+    },
+    "split_hygiene": "pass_with_relation_threshold_caveat",
+    "locked_threshold_selection": "internal_audit_only",
+    "feature_provenance": "offline_svg_contract_features_allowed_for_training_audit_not_runtime",
+    "prediction_alignment": "fragile_order_based_mapping_documented",
+    "confidence_preservation": "pass",
+    "checkpoint_reproducibility": "pass_for_fixed_seed_serialized_policy_first_pass",
+    "source_integrity_boundary": "claim_boundary_required"
+  },
+  "p304_gate": {
+    "allowed": true,
+    "allowed_only_if": [
+      "P301 is labeled SVG/contract normalized-candidate experiment-line, not raster detector performance.",
+      "Relation F1 values from P292/P294/P295/P296/P297/P300/P301/P302 are labeled internal locked fine-threshold audits.",
+      "Packaging does not claim external validation unless a new external-source evaluation is run.",
+      "Prediction source changes require candidate_id/record_index alignment assertions before promotion."
+    ]
+  }
+}

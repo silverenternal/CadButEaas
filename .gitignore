@@ -33,6 +33,10 @@ monitoring/secrets/
 *.onnx
 *.engine
 *.pid
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
 logs/
 logs_*.out
 runs/

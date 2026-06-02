@@ -1,0 +1,150 @@
+{
+  "version": "p304_p301_reviewed_metric_package_v1",
+  "created": "2026-05-27",
+  "status": "packaged_reviewed_svg_contract_candidate",
+  "depends_on": [
+    "reports/vlm/p303_model_code_review.json",
+    "reports/vlm/p301_relation_confidence_preserved_conservative_rescue.json",
+    "reports/vlm/scene_graph_fusion_symbol_relation_confidence_preserved_rescue_p301_fine_relation_no_repair_scorer_v1_eval.json"
+  ],
+  "execution_environment": {
+    "required": true,
+    "verified": true,
+    "location": "server:/home/hugo/codes/CadButEaas via ssh -p 33022 hugo@47.110.35.232",
+    "note": "P304 packaging uses server-real-environment evidence and local mounted file edits only for lightweight report writing."
+  },
+  "main_candidate": {
+    "id": "P301_conservative_relation_confidence_preserved_residual_rescue",
+    "claim_boundary": "Reviewed SVG/contract normalized-candidate symbol classification plus internal locked fine-threshold relation audit; not runtime raster performance and not external validation.",
+    "node_macro_f1": 0.962907,
+    "node_accuracy": 0.982498,
+    "relation_precision": 0.9949,
+    "relation_recall": 0.872665,
+    "relation_f1": 0.929782,
+    "relation_metric_role": "internal_locked_fine_threshold_audit",
+    "selected_relation_threshold": 0.985,
+    "invalid_graph_rate": 0.0,
+    "changed_locked_symbols": 77,
+    "changed_locked_breakdown": {
+      "appliance->equipment": 54,
+      "stair->equipment": 20,
+      "column->equipment": 3
+    },
+    "delta_vs_p297": {
+      "node_macro_f1_delta_pp": 0.0227,
+      "node_accuracy_delta_pp": 0.0149,
+      "relation_f1_delta_pp": 0.0,
+      "relation_precision_delta_pp": 0.0,
+      "relation_recall_delta_pp": 0.0,
+      "invalid_graph_rate_delta": 0.0
+    },
+    "strong_symbol_f1": {
+      "shower": 0.992464,
+      "sink": 0.96691,
+      "appliance": 0.955079,
+      "stair": 0.926378,
+      "column": 0.922162,
+      "equipment": 0.913676,
+      "bathtub": 0.835616
+    },
+    "weak_symbol_f1": {
+      "generic_symbol": 0.784314
+    }
+  },
+  "evidence_chain": [
+    {
+      "id": "P291",
+      "role": "clean train/dev-selected node-symbol baseline after P285",
+      "status": "passed_stronger_than_p285_candidate",
+      "boundary": "SVG/contract normalized-candidate; relation scorer output before fine-threshold line."
+    },
+    {
+      "id": "P292",
+      "role": "internal relation fine-threshold audit for P291",
+      "status": "fine_threshold_improves_p291",
+      "boundary": "Internal locked threshold audit; not external validation."
+    },
+    {
+      "id": "P294",
+      "role": "risk-clamped column rescue",
+      "status": "passed_risk_clamped_node_and_fine_relation_candidate",
+      "node_macro_f1": 0.961969,
+      "relation_f1": 0.929055,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P295",
+      "role": "risk-clamped shower rescue",
+      "status": "passed_shower_risk_clamped_node_and_fine_relation_candidate",
+      "node_macro_f1": 0.962096,
+      "relation_f1": 0.929256,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P296",
+      "role": "bathtub refresh rescue",
+      "status": "passed_bathtub_refresh_node_and_fine_relation_candidate",
+      "node_macro_f1": 0.962661,
+      "relation_f1": 0.929256,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P297",
+      "role": "strong pre-residual sink-refresh baseline",
+      "status": "passed_sink_refresh_node_and_fine_relation_candidate",
+      "node_macro_f1": 0.96268,
+      "relation_f1": 0.929782,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P298",
+      "role": "tiny appliance/column overlay rejection",
+      "status": "keep_p297_mainline_reject_tiny_rescue_overlays",
+      "boundary": "Internal locked diagnostic; not promoted."
+    },
+    {
+      "id": "P299",
+      "role": "confidence-changing residual relabeler rejection",
+      "status": "diagnostic_only_reject_for_relation_regression",
+      "boundary": "Internal diagnostic; motivates confidence preservation."
+    },
+    {
+      "id": "P300",
+      "role": "relation-confidence-preservation diagnostic",
+      "status": "diagnostic_not_mainline_because_less_conservative_than_p301",
+      "node_macro_f1": 0.962877,
+      "relation_f1": 0.929782,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P301",
+      "role": "reviewed promoted candidate",
+      "status": "passed_conservative_relation_confidence_preserved_residual_rescue_candidate",
+      "node_macro_f1": 0.962907,
+      "relation_f1": 0.929782,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P302",
+      "role": "post-P301 pairwise micro-rescue rejection",
+      "status": "diagnostic_only_keep_p301",
+      "node_macro_f1": 0.962885,
+      "relation_f1": 0.929782,
+      "relation_metric_role": "internal_locked_fine_threshold_audit"
+    },
+    {
+      "id": "P303",
+      "role": "model-code review gate",
+      "status": "passed_with_packaging_restrictions",
+      "boundary": "Allows P304 only with explicit internal-audit and non-runtime claim language."
+    }
+  ],
+  "p303_restrictions": [
+    "Do not present P301 relation F1 as external validation.",
+    "Do not present P301 or P291-P302 SVG/contract metrics as runtime raster detector performance.",
+    "State that fine relation thresholds were selected on locked records and therefore are internal locked threshold audits.",
+    "Keep expected_json/gold-compatible ID reconstruction offline-only.",
+    "Do not change prediction sources without candidate_id/record_index alignment assertions."
+  ],
+  "reviewer_safe_summary": "P301 is the reviewed SVG/contract experiment-line candidate: a conservative residual relabeler on top of P297 that preserves relation confidence, improves node macro-F1, and keeps relation F1 unchanged in the internal locked fine-threshold audit. The package does not claim external validation or runtime raster detector performance."
+}

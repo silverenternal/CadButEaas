@@ -1,0 +1,48 @@
+{
+  "version": "p308_submission_package_v1",
+  "created": "2026-05-27",
+  "status": "generic_submission_manuscript_created_static_pass_pending_latex_engine_or_template",
+  "source_refresh": "reports/vlm/p307_manuscript_refresh_package.md",
+  "tex_source": "reports/vlm/p308_generic_submission_manuscript.tex",
+  "claim_boundary": "P301 is reviewed SVG/contract normalized-candidate evidence; relation F1 is an internal locked fine-threshold audit; external generalization remains blocked by P305.",
+  "required_metrics": [
+    "0.962907",
+    "0.982498",
+    "0.929782",
+    "0.000000",
+    "0.729861",
+    "0.729524",
+    "0.485651",
+    "0.159075"
+  ],
+  "expected_outputs_after_validation": [
+    "reports/vlm/p308_submission_readiness.json",
+    "reports/vlm/p308_submission_readiness.md",
+    "reports/vlm/p308_compile_out/p308_generic_submission_manuscript.pdf"
+  ],
+  "execution_environment": {
+    "required_for_validation": true,
+    "server": "hugo@47.110.35.232",
+    "ssh": "ssh -p 33022 hugo@47.110.35.232",
+    "server_project_dir": "/home/hugo/codes/CadButEaas"
+  },
+  "validation_outputs": [
+    "reports/vlm/p308_submission_static_check.json",
+    "reports/vlm/p308_submission_static_check.md",
+    "reports/vlm/p308_submission_readiness.json",
+    "reports/vlm/p308_submission_readiness.md"
+  ],
+  "static_check": {
+    "source": "reports/vlm/p308_submission_static_check.json",
+    "pass": true,
+    "decision": "ready_for_template_insertion_pending_latex_engine"
+  },
+  "legacy_p268_check": {
+    "source": "reports/vlm/p308_submission_readiness.json",
+    "decision": "still_waiting_for_external_template_or_latex_engine",
+    "claim_pass": false,
+    "note": "P268 claim check is hard-coded for old P265/P266 metrics and is not applicable to the P308 P301-refresh manuscript."
+  },
+  "compile_status": "not_attempted_no_latex_engine_on_server",
+  "next_step": "Provide a target venue template or a LaTeX engine, then rerun compile/template insertion validation for reports/vlm/p308_generic_submission_manuscript.tex."
+}
