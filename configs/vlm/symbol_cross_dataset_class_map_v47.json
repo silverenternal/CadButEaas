@@ -1,0 +1,63 @@
+{
+  "version": "symbol_cross_dataset_class_map_v47",
+  "current_symbol_space": [
+    "sink",
+    "shower",
+    "stair",
+    "equipment",
+    "appliance",
+    "generic_symbol",
+    "table",
+    "bathtub",
+    "column"
+  ],
+  "floorplancad_map": {
+    "sink": "sink",
+    "shower": "shower",
+    "stair": "stair",
+    "stairs": "stair",
+    "escalator": "stair",
+    "table": "table",
+    "bathtub": "bathtub",
+    "bath_tub": "bathtub",
+    "bath": "bathtub",
+    "column": "column",
+    "chair": "equipment",
+    "bed": "equipment",
+    "sofa": "equipment",
+    "wardrobe": "equipment",
+    "half_height_cabinet": "equipment",
+    "high_cabinet": "equipment",
+    "tv_cabinet": "equipment",
+    "bedside_cupboard": "equipment",
+    "parking": "generic_symbol",
+    "toilet": "equipment",
+    "squat_toilet": "equipment",
+    "urinal": "equipment",
+    "single_door": "generic_symbol",
+    "double_door": "generic_symbol",
+    "sliding_door": "generic_symbol",
+    "window": "generic_symbol",
+    "bay_window": "generic_symbol",
+    "blind_window": "generic_symbol",
+    "opening_symbol": "generic_symbol",
+    "wall": null,
+    "class_31": "generic_symbol",
+    "class_32": "generic_symbol",
+    "class_34": "generic_symbol",
+    "class_35": "generic_symbol"
+  },
+  "notes": {
+    "wall": "excluded from symbol detector claims; belongs to boundary/structure tasks",
+    "parking": "treated as generic_symbol for symbol detector pretraining only",
+    "class_31": "unknown semantic bucket in local export; map to generic_symbol until clarified",
+    "class_32": "unknown semantic bucket in local export; map to generic_symbol until clarified",
+    "class_34": "unknown semantic bucket in local export; map to generic_symbol until clarified",
+    "class_35": "unknown semantic bucket in local export; map to generic_symbol until clarified"
+  },
+  "source_integrity": {
+    "runtime_input": "raster image only",
+    "offline_supervision": "all labels are offline and for audit/training only",
+    "svg_or_cad_geometry_at_runtime": false
+  }
+}

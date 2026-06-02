@@ -1,0 +1,93 @@
+{
+  "id": "SCI-P1-108-raster-evidence-consolidation",
+  "created_on": "2026-05-15",
+  "decision": "current_project_has_limited_publishable_raster_evidence_but_not_full_sci2_ready_end_to_end_scene_graph",
+  "claim_matrix": [
+    {
+      "claim_id": "C1_public_raster_symbol_precision_opt_in",
+      "status": "ready_as_limited_opt_in_evidence",
+      "scope": "74-row CubiCasa locked overlay subset against public_raster_moe_supervision_v19 target boxes",
+      "metric": "symbol target-level IoU@0.30",
+      "evidence": "reports/vlm/raster_moe_target_level_eval_p101.json",
+      "headline": "p100 precision 0.188403, recall 0.681419, F1 0.295190, inflation 3.616826; vs v28 precision +0.072279/F1 +0.095458/inflation -2.525917",
+      "limitations": [
+        "74-row subset, not full 992-row locked set",
+        "symbol target-level only",
+        "not relation graph quality"
+      ]
+    },
+    {
+      "claim_id": "C2_image_only_room_mask_to_box_repair",
+      "status": "promising_internal_raster_evidence",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "space target-level IoU@0.30",
+      "evidence": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+      "headline": "space F1 0.370752, precision 0.274181, recall 0.572337",
+      "limitations": [
+        "separate 256x256 image-only dataset",
+        "not directly comparable to public_raster_moe_supervision_v19",
+        "not relation graph quality"
+      ]
+    },
+    {
+      "claim_id": "C3_image_only_symbol_branch",
+      "status": "negative_not_ready",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "symbol target-level IoU@0.30",
+      "evidence": "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json",
+      "headline": "best handcrafted symbol peak F1 0.046862, precision 0.034493, recall 0.073062",
+      "limitations": [
+        "too weak for publication claim",
+        "needs dedicated detector/localization branch"
+      ]
+    },
+    {
+      "claim_id": "C4_image_only_text_branch",
+      "status": "negative_not_ready",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "text target-level IoU@0.30 / pixel mask F1",
+      "evidence": "reports/vlm/image_only_mask_quality_audit_p105.json",
+      "headline": "text pixel best F1 0.008322; target-level F1 remains 0.0",
+      "limitations": [
+        "requires OCR/retraining",
+        "do not include as positive claim"
+      ]
+    },
+    {
+      "claim_id": "C5_contains_relation_policy",
+      "status": "oracle_expected_json_opt_in_only",
+      "scope": "expected-json/dev and secondary smoke replay paths",
+      "metric": "contains relation F1",
+      "evidence": "reports/vlm/contains_relation_policy_validation_p095_summary.json",
+      "headline": "dev relation F1 0.926172->1.000000; real_v3 smoke 0.918303->1.000000",
+      "limitations": [
+        "not model-output robustness",
+        "not runtime default",
+        "not real industrial generalization"
+      ]
+    }
+  ],
+  "recommended_paper_boundary": {
+    "safe_positive_claims": [
+      "raster symbol operating-point precision opt-in on locked overlay subset",
+      "image-only room mask-to-box repair as internal raster evidence",
+      "audit-driven negative evidence for symbol/text bottlenecks"
+    ],
+    "unsafe_claims": [
+      "full raster MoE scene-graph quality",
+      "real industrial drawing generalization",
+      "image-only symbol/text readiness",
+      "contains relation model-output robustness"
+    ]
+  },
+  "recommended_next_path": {
+    "engineering": "train/evaluate dedicated symbol detector or OCR branch if continuing model improvement",
+    "paper": "package audit-driven MoE with limited raster target-level evidence plus honest limitations, but add stronger baselines/cross-source validation before SCI2 submission"
+  },
+  "artifacts": [
+    "reports/vlm/raster_moe_target_level_eval_p101.json",
+    "reports/vlm/mask_to_box_extraction_repair_p106.md",
+    "reports/vlm/symbol_proposal_localization_repair_p107.md",
+    "reports/vlm/contains_relation_policy_validation_p095_summary.json"
+  ]
+}

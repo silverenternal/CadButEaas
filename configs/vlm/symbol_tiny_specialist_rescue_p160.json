@@ -1,0 +1,1422 @@
+{
+  "id": "SCI-P2-160-symbol-tiny-specialist-rescue",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p160_current_best_symbol_policy",
+  "claim_boundary": "Post-hoc tiny/small box-size sweep on 74-row public-raster overlay subset. Runtime policy uses predicted bbox/label/score only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.810937,
+        "medium": 0.558511,
+        "small": 0.563069,
+        "tiny": 0.218927,
+        "xlarge": 0.497537
+      },
+      "by_area_center_recall": {
+        "large": 0.8125,
+        "medium": 0.617021,
+        "small": 0.605982,
+        "tiny": 0.372881,
+        "xlarge": 0.492611
+      },
+      "changed_pred_buckets": {}
+    }
+  },
+  "searched_policy_count": 343,
+  "passing_policy_count": 172,
+  "best_policy": {
+    "name": "p160_fixed_if_tiny_btiny_s0.35_tw8_th8_sw10_sh10",
+    "mode": "fixed_if_tiny",
+    "apply_buckets": [
+      "tiny"
+    ],
+    "score_min": 0.35,
+    "tiny_width": 8,
+    "tiny_height": 8,
+    "small_min_width": 10,
+    "small_min_height": 10
+  },
+  "best_metrics": {
+    "tp": 1315,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.546323,
+    "recall": 0.524322,
+    "f1": 0.535097,
+    "center_recall": 0.585327,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.564369,
+      "tiny": 0.220339,
+      "xlarge": 0.497537
+    },
+    "by_area_center_recall": {
+      "large": 0.8125,
+      "medium": 0.617021,
+      "small": 0.604681,
+      "tiny": 0.377119,
+      "xlarge": 0.492611
+    },
+    "changed_pred_buckets": {
+      "tiny": 108
+    }
+  },
+  "delta_vs_p157": {
+    "precision": 0.000831,
+    "recall": 0.000797,
+    "f1": 0.000814,
+    "center_recall": 0.000797,
+    "prediction_inflation": 0.0
+  },
+  "tiny_iou_delta": 0.001412,
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.35_tw8_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.001412
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.35_tw8_th8_sw12_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.001412
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.35_tw8_th8_sw14_sh12",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.001412
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btinysmall_s0.35_tw8_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.588517,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56827,
+          "tiny": 0.216102,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.609883,
+          "tiny": 0.382768,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 490,
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": -0.002825
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btinysmall_s0.5_tw8_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.586523,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56827,
+          "tiny": 0.216102,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.608583,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": -0.002825
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btinysmall_s0.5_tw12_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 12,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.586922,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56827,
+          "tiny": 0.216102,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.608583,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": -0.002825
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btinysmall_s0.5_tw8_th8_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btinysmall_s0.5_tw8_th8_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btinysmall_s0.5_tw8_th8_sw14_sh12",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.0_tw8_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.0_tw8_th8_sw12_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.0_tw8_th8_sw14_sh12",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.2_tw8_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.2_tw8_th8_sw12_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btiny_s0.2_tw8_th8_sw14_sh12",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56567,
+          "tiny": 0.217514,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": -0.001413
+    },
+    {
+      "policy": {
+        "name": "p160_fixed_if_tiny_btinysmall_s0.5_tw10_th8_sw10_sh10",
+        "mode": "fixed_if_tiny",
+        "apply_buckets": [
+          "tiny",
+          "small"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 10,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545908,
+        "recall": 0.523923,
+        "f1": 0.53469,
+        "center_recall": 0.586922,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.56827,
+          "tiny": 0.214689,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.608583,
+          "tiny": 0.378531,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "small": 238,
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": -0.004238
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.0_tw6_th6_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.0_tw6_th6_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.0_tw6_th6_sw14_sh12",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.0,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.2_tw6_th6_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.2_tw6_th6_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.2_tw6_th6_sw14_sh12",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.2,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 158
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.35_tw6_th6_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.35_tw6_th6_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.35_tw6_th6_sw14_sh12",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.35,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.584928,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 108
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.5_tw6_th6_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.5_tw6_th6_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.5_tw6_th6_sw14_sh12",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 6,
+        "tiny_height": 6,
+        "small_min_width": 14,
+        "small_min_height": 12
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.5_tw8_th8_sw10_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 10,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    },
+    {
+      "policy": {
+        "name": "p160_min_size_btiny_s0.5_tw8_th8_sw12_sh10",
+        "mode": "min_size",
+        "apply_buckets": [
+          "tiny"
+        ],
+        "score_min": 0.5,
+        "tiny_width": 8,
+        "tiny_height": 8,
+        "small_min_width": 12,
+        "small_min_height": 10
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "changed_pred_buckets": {
+          "tiny": 31
+        }
+      },
+      "tiny_iou_delta": 0.0
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p160_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_tiny_specialist_rescue_p160.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_tiny_specialist_rescue_p160.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_tiny_specialist_rescue_p160_eval.json",
+  "official_metrics": {
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "tiny": 0.218927,
+        "small": 0.563069,
+        "medium": 0.558511,
+        "large": 0.735469
+      },
+      "by_area_center_recall": {
+        "tiny": 0.372881,
+        "small": 0.605982,
+        "medium": 0.617021,
+        "large": 0.735469
+      }
+    },
+    "p160_best": {
+      "tp": 1315,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.546323,
+      "recall": 0.524322,
+      "f1": 0.535097,
+      "center_recall": 0.585327,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "tiny": 0.220339,
+        "small": 0.564369,
+        "medium": 0.558511,
+        "large": 0.735469
+      },
+      "by_area_center_recall": {
+        "tiny": 0.377119,
+        "small": 0.604681,
+        "medium": 0.617021,
+        "large": 0.735469
+      }
+    }
+  },
+  "delta_vs_p157_official": {
+    "precision": 0.000831,
+    "recall": 0.000797,
+    "f1": 0.000814,
+    "center_recall": 0.000797,
+    "prediction_inflation": 0.0
+  },
+  "recommendation": {
+    "current_best": "p160_best",
+    "reason": "official materialized P101 eval improves F1, precision, recall and center over P157 with unchanged inflation.",
+    "next": "P160 crosses the extended near-term 0.535 line; next either run P161 guardrail or try one more P160B/P157 combined micro-search if time permits."
+  }
+}

@@ -1,0 +1,186 @@
+{
+  "id": "SCI-P2-120-symbol-score-fine-compression-sweep",
+  "claim_boundary": "Fine score compression sweep over P119 subset predictions only; not a full locked quality claim.",
+  "inputs": {
+    "eval": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid.json",
+    "predictions": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid_predictions.jsonl"
+  },
+  "baseline_gates": {
+    "center_recall_gt": 0.851394,
+    "tiny_iou_recall_gt": 0.393013,
+    "candidate_inflation_lte": 7.919152
+  },
+  "rows": [
+    {
+      "score_threshold": 0.005,
+      "matched": 7251,
+      "predicted": 98224,
+      "gold": 10200,
+      "precision": 0.073821,
+      "recall": 0.710882,
+      "f1": 0.133753,
+      "center_recall": 0.859412,
+      "candidate_inflation": 9.629804,
+      "typed_accuracy_on_iou_matches": 0.919184,
+      "area_iou_recall": {
+        "large_le_4096": 0.878109,
+        "medium_le_1024": 0.827108,
+        "small_le_256": 0.775489,
+        "tiny_le_64": 0.466715,
+        "xlarge_gt_4096": 0.585513
+      },
+      "tiny_iou_recall": 0.466715,
+      "passes_center": true,
+      "passes_tiny_iou": true,
+      "passes_inflation": false,
+      "passes_all_baseline_gates": false
+    },
+    {
+      "score_threshold": 0.006,
+      "matched": 7212,
+      "predicted": 89300,
+      "gold": 10200,
+      "precision": 0.080761,
+      "recall": 0.707059,
+      "f1": 0.144965,
+      "center_recall": 0.853725,
+      "candidate_inflation": 8.754902,
+      "typed_accuracy_on_iou_matches": 0.919994,
+      "area_iou_recall": {
+        "large_le_4096": 0.876007,
+        "medium_le_1024": 0.821084,
+        "small_le_256": 0.7724,
+        "tiny_le_64": 0.461986,
+        "xlarge_gt_4096": 0.581489
+      },
+      "tiny_iou_recall": 0.461986,
+      "passes_center": true,
+      "passes_tiny_iou": true,
+      "passes_inflation": false,
+      "passes_all_baseline_gates": false
+    },
+    {
+      "score_threshold": 0.007,
+      "matched": 7181,
+      "predicted": 82147,
+      "gold": 10200,
+      "precision": 0.087416,
+      "recall": 0.70402,
+      "f1": 0.155522,
+      "center_recall": 0.847745,
+      "candidate_inflation": 8.053627,
+      "typed_accuracy_on_iou_matches": 0.920345,
+      "area_iou_recall": {
+        "large_le_4096": 0.874256,
+        "medium_le_1024": 0.81506,
+        "small_le_256": 0.768795,
+        "tiny_le_64": 0.461259,
+        "xlarge_gt_4096": 0.574447
+      },
+      "tiny_iou_recall": 0.461259,
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": false,
+      "passes_all_baseline_gates": false
+    },
+    {
+      "score_threshold": 0.008,
+      "matched": 7139,
+      "predicted": 76442,
+      "gold": 10200,
+      "precision": 0.093391,
+      "recall": 0.699902,
+      "f1": 0.164793,
+      "center_recall": 0.842549,
+      "candidate_inflation": 7.494314,
+      "typed_accuracy_on_iou_matches": 0.921418,
+      "area_iou_recall": {
+        "large_le_4096": 0.870403,
+        "medium_le_1024": 0.810843,
+        "small_le_256": 0.763131,
+        "tiny_le_64": 0.457985,
+        "xlarge_gt_4096": 0.570423
+      },
+      "tiny_iou_recall": 0.457985,
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_baseline_gates": false
+    },
+    {
+      "score_threshold": 0.009,
+      "matched": 7094,
+      "predicted": 71608,
+      "gold": 10200,
+      "precision": 0.099067,
+      "recall": 0.69549,
+      "f1": 0.17343,
+      "center_recall": 0.837647,
+      "candidate_inflation": 7.020392,
+      "typed_accuracy_on_iou_matches": 0.92247,
+      "area_iou_recall": {
+        "large_le_4096": 0.86655,
+        "medium_le_1024": 0.807229,
+        "small_le_256": 0.757467,
+        "tiny_le_64": 0.452164,
+        "xlarge_gt_4096": 0.569416
+      },
+      "tiny_iou_recall": 0.452164,
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_baseline_gates": false
+    },
+    {
+      "score_threshold": 0.01,
+      "matched": 7065,
+      "predicted": 67463,
+      "gold": 10200,
+      "precision": 0.104724,
+      "recall": 0.692647,
+      "f1": 0.18194,
+      "center_recall": 0.833824,
+      "candidate_inflation": 6.61402,
+      "typed_accuracy_on_iou_matches": 0.922718,
+      "area_iou_recall": {
+        "large_le_4096": 0.863748,
+        "medium_le_1024": 0.804819,
+        "small_le_256": 0.753347,
+        "tiny_le_64": 0.451073,
+        "xlarge_gt_4096": 0.56338
+      },
+      "tiny_iou_recall": 0.451073,
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_baseline_gates": false
+    }
+  ],
+  "passing_rows": [],
+  "best_row": {
+    "score_threshold": 0.005,
+    "matched": 7251,
+    "predicted": 98224,
+    "gold": 10200,
+    "precision": 0.073821,
+    "recall": 0.710882,
+    "f1": 0.133753,
+    "center_recall": 0.859412,
+    "candidate_inflation": 9.629804,
+    "typed_accuracy_on_iou_matches": 0.919184,
+    "area_iou_recall": {
+      "large_le_4096": 0.878109,
+      "medium_le_1024": 0.827108,
+      "small_le_256": 0.775489,
+      "tiny_le_64": 0.466715,
+      "xlarge_gt_4096": 0.585513
+    },
+    "tiny_iou_recall": 0.466715,
+    "passes_center": true,
+    "passes_tiny_iou": true,
+    "passes_inflation": false,
+    "passes_all_baseline_gates": false
+  },
+  "decision": "fine_score_threshold_does_not_pass_subset_gates",
+  "recommendation": "Move to support-aware candidate compression or localization/tiny-box repair; simple score threshold is insufficient."
+}

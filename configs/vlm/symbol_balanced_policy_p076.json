@@ -1,0 +1,15 @@
+{
+  "version": "symbol_balanced_policy_p076",
+  "status": "balanced_opt_in_symbol_policy",
+  "default_detector_backbone": "frozen_v28_yolov8s_seg_rect",
+  "runtime_input_boundary": "Consumes detector page predictions generated from raster tile pixels only. No gold labels, parser geometry, SVG, CAD vectors, expected_json, or annotation paths at runtime.",
+  "base_policy_config": "configs/vlm/symbol_precision_gated_policy_p070.json",
+  "balanced_reranker_gate": {
+    "score_min": 0.1,
+    "score_max": 1.01,
+    "overlap_min": 0.4,
+    "overlap_max": 1.01,
+    "max_add_per_page": 20
+  },
+  "promotion_boundary": "Balanced opt-in policy. Frozen v28 remains default; P0-70 is recall-favoring opt-in; P0-76 is balanced opt-in with better precision/inflation."
+}

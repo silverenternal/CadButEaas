@@ -86,7 +86,7 @@ def fail_hits(contexts: list[dict[str, Any]]) -> list[dict[str, Any]]:
             failures.append({**hit, "reason": "SheetLayout appears as core/passed claim"})
         if re.search(r"(learned router|fair learned router)", ctx) and re.search(r"(main model|主模型|main router|主路由)", ctx) and "not" not in ctx and "不" not in ctx:
             failures.append({**hit, "reason": "learned router appears as main model"})
-        if key == "old_no_repair_relation_v1" and path in {"README.md", "docs/cadstruct-paper-core-contributions.md", "docs/real-world-capability-boundary-v3.md", "reports/vlm/paper_tables_v2/main_results.tex"}:
+        if key == "old_no_repair_relation_v1" and path in {"README.md", "docs/cadstruct/paper/cadstruct-paper-core-contributions.md", "docs/cadstruct/paper/real-world-capability-boundary-v3.md", "reports/vlm/paper_tables_v2/main_results.tex"}:
             failures.append({**hit, "reason": "stale no-repair v1 relation value in current paper-facing file"})
     return failures
 

@@ -1,0 +1,91 @@
+{
+  "id": "P0-89-non-symbol-downstream-bottleneck-scout",
+  "created_on": "2026-05-15",
+  "purpose": "Scout the next downstream bottleneck after closing hand-tuned symbol policy work at P0-88.",
+  "symbol_policy_boundary": {
+    "handoff": "configs/vlm/symbol_downstream_policy_handoff_p088.json",
+    "default_policy": "v28_frozen_detector_baseline",
+    "opt_in_policy": "p076_balanced_opt_in",
+    "do_not_add_symbol_gates": true
+  },
+  "evidence": {
+    "oracle_fusion_v2": {
+      "source": "reports/vlm/scene_graph_fusion_v2_eval.json",
+      "records": 64,
+      "node_f1": 1.0,
+      "relation_f1": 0.918303,
+      "relation_precision": 0.97665,
+      "relation_recall": 0.866534,
+      "invalid_graph_rate": 0.0,
+      "failure_case_count": 46,
+      "missing_contains_edges": 335,
+      "extra_contains_edges": 52,
+      "repair_rule_counts": {
+        "symbol_room_containment": 52
+      },
+      "interpretation": "When oracle nodes are available, node quality is saturated; remaining gap is relation inference, specifically contains relations."
+    },
+    "registered_expert_svg_candidate_smoke": {
+      "source": "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json",
+      "records": 64,
+      "node_f1": 0.723279,
+      "relation_f1": 1.0,
+      "by_family_node_f1": {
+        "boundary": 0.774974,
+        "space": 0.886297,
+        "symbol": 0.456018,
+        "text": 0.994737
+      },
+      "interpretation": "With registered expert checkpoints on SVG-derived candidates, text is saturated, space is acceptable, boundary is a material non-symbol weakness, and symbol remains weak but is now bounded by P0-88 policy handoff rather than more hand-tuned gates."
+    },
+    "symbol_policy_p085": {
+      "source": "reports/vlm/symbol_policy_moe_overlay_p085_summary.json",
+      "p076_vs_v28_symbol_iou_recall_delta": 0.020734,
+      "p076_vs_v28_invalid_graph_rate_delta": 0.0,
+      "p076_vs_v28_warnings_delta": 0,
+      "interpretation": "P0-76 opt-in is packaged and graph-safe; further hand-tuned symbol iteration is not the next best bottleneck scout target."
+    }
+  },
+  "ranked_next_bottlenecks": [
+    {
+      "rank": 1,
+      "id": "relation_contains_inference",
+      "family": "relation",
+      "priority": "high",
+      "evidence": "oracle fusion_v2 has perfect node F1 but relation recall 0.866534 with 335 missing contains edges and 52 extra contains edges.",
+      "recommended_next_task": "P0-90 audit contains relation misses/extras by room/symbol geometry and propose a calibrated relation scorer or containment policy."
+    },
+    {
+      "rank": 2,
+      "id": "boundary_node_expert_quality",
+      "family": "boundary",
+      "priority": "medium_high",
+      "evidence": "registered expert smoke boundary node F1 is 0.774974, below space 0.886297 and text 0.994737.",
+      "recommended_next_task": "Audit boundary false labels/misses before retraining; determine if issue is candidate coverage, label classifier, or graph topology."
+    },
+    {
+      "rank": 3,
+      "id": "space_node_quality",
+      "family": "space",
+      "priority": "medium",
+      "evidence": "registered expert smoke space node F1 is 0.886297; not saturated but less urgent than relation contains and boundary.",
+      "recommended_next_task": "Inspect room boundary/contains relation errors first because space quality may interact with contains relation inference."
+    },
+    {
+      "rank": 4,
+      "id": "text_node_quality",
+      "family": "text",
+      "priority": "low",
+      "evidence": "registered expert smoke text node F1 is 0.994737.",
+      "recommended_next_task": "Do not prioritize text unless a downstream metric specifically surfaces text relation failures."
+    }
+  ],
+  "decision": {
+    "next_focus": "P0-90-contains-relation-error-audit",
+    "why": "Relation contains inference is the clearest non-symbol downstream bottleneck: nodes are oracle-perfect in fusion_v2 but relation recall still misses 335 contains edges.",
+    "avoid": [
+      "Do not add new symbol detector gates.",
+      "Do not train a model before a relation miss/extra audit identifies features and failure modes."
+    ]
+  }
+}

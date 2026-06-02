@@ -1,0 +1,102 @@
+{
+  "id": "SCI-P2-142-contains-model-output-smoke-plan",
+  "created_on": "2026-05-16",
+  "decision": "model_output_contains_smoke_available_but_negative_far_below_095",
+  "claim_boundary": "P095 remains expected-json replay positive evidence. Existing image-only raster model-output relation evaluations are separate smoke/diagnostic evidence and do not validate runtime contains robustness.",
+  "p095_expected_json": {
+    "primary_dev": {
+      "input": "datasets/cadstruct_cubicasa5k_moe/dev.jsonl",
+      "records": 493,
+      "baseline_relation_f1": 0.926172,
+      "candidate_relation_f1": 1.0,
+      "relation_f1_delta": 0.073828,
+      "baseline_missing_contains": 2035,
+      "candidate_missing_contains": 0,
+      "baseline_extra_contains": 277,
+      "candidate_extra_contains": 0,
+      "multi_room_symbols": 1966,
+      "all_gates_pass": true
+    },
+    "secondary_real_v3_smoke": {
+      "input": "datasets/cadstruct_real_world_benchmark_v3/smoke.jsonl",
+      "records": 64,
+      "baseline_relation_f1": 0.918303,
+      "candidate_relation_f1": 1.0,
+      "relation_f1_delta": 0.081697,
+      "baseline_missing_contains": 335,
+      "candidate_missing_contains": 0,
+      "baseline_extra_contains": 52,
+      "candidate_extra_contains": 0,
+      "multi_room_symbols": 318,
+      "all_gates_pass": true
+    }
+  },
+  "model_output_smoke_rows": [
+    {
+      "file": "reports/vlm/topology_relations_v18_eval.json",
+      "rows": 64,
+      "source_mode": "image_only_raster_moe",
+      "smoke": null,
+      "precision": 0.006629,
+      "recall": 0.299634,
+      "f1": 0.012971,
+      "predicted": 98810,
+      "gold": 2186,
+      "tp": 655,
+      "duplicate_positive": 3559
+    },
+    {
+      "file": "reports/vlm/topology_relations_v18_nms_eval.json",
+      "rows": 64,
+      "source_mode": "image_only_raster_moe",
+      "smoke": false,
+      "precision": 0.019327,
+      "recall": 0.288198,
+      "f1": 0.036225,
+      "predicted": 32597,
+      "gold": 2186,
+      "tp": 630,
+      "duplicate_positive": 1490
+    },
+    {
+      "file": "reports/vlm/topology_relations_v18_bipartite_smoke_eval.json",
+      "rows": 5,
+      "source_mode": "image_only_raster_moe",
+      "smoke": null,
+      "precision": 0.015413,
+      "recall": 0.042543,
+      "f1": 0.022628,
+      "predicted": 6034,
+      "gold": 2186,
+      "tp": 93,
+      "duplicate_positive": 575
+    },
+    {
+      "file": "reports/vlm/topology_relations_v18_relation_reranked_smoke_eval.json",
+      "rows": 5,
+      "source_mode": "image_only_raster_moe",
+      "smoke": true,
+      "precision": 0.043073,
+      "recall": 0.027447,
+      "f1": 0.033529,
+      "predicted": 1393,
+      "gold": 2186,
+      "tp": 60,
+      "duplicate_positive": 101
+    }
+  ],
+  "best_model_output_contains_symbol": {
+    "file": "reports/vlm/topology_relations_v18_nms_eval.json",
+    "rows": 64,
+    "source_mode": "image_only_raster_moe",
+    "smoke": false,
+    "precision": 0.019327,
+    "recall": 0.288198,
+    "f1": 0.036225,
+    "predicted": 32597,
+    "gold": 2186,
+    "tp": 630,
+    "duplicate_positive": 1490
+  },
+  "recommendation": "Do not upgrade P095 to runtime robustness. Use model-output relation smoke as negative evidence showing upstream visual graph quality is the blocker; future work should replay contains policy after symbol/room rescue."
+}

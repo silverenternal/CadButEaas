@@ -1,0 +1,1435 @@
+{
+  "id": "P199_learned_symbol_box_refiner",
+  "created_on": "2026-05-19",
+  "decision": "no_promotion_keep_baseline",
+  "claim_boundary": "Offline supervised box-refiner experiment. LOPO is planning evidence; full-fit overlay still requires independent validation before paper claim.",
+  "inputs": {
+    "base_overlay": "reports/vlm/symbol_box_refiner_p197b_over_p196c_best_overlay.jsonl"
+  },
+  "training_examples_full": 1621,
+  "group_count_full": 69,
+  "best_policy": {
+    "alpha": 0.25,
+    "labels": [
+      "shower",
+      "sink"
+    ],
+    "buckets": [],
+    "max_center_dist": 40.0,
+    "min_group": 8,
+    "model_type": "grouped_median_box_delta",
+    "selection": "leave_one_page_out_best_policy"
+  },
+  "metrics": {
+    "baseline": {
+      "tp": 1351,
+      "predicted": 2249,
+      "gold": 2508,
+      "precision": 0.600711,
+      "recall": 0.538676,
+      "f1": 0.568005,
+      "center_recall": 0.575359,
+      "prediction_inflation": 0.89673,
+      "by_area_iou_recall": {
+        "large": 0.814063,
+        "medium": 0.537234,
+        "small": 0.607282,
+        "tiny": 0.218927,
+        "xlarge": 0.527094
+      },
+      "by_area_center_recall": {
+        "large": 0.826562,
+        "medium": 0.62234,
+        "small": 0.630689,
+        "tiny": 0.300847,
+        "xlarge": 0.487685
+      }
+    },
+    "lopo_best": {
+      "tp": 1349,
+      "predicted": 2249,
+      "gold": 2508,
+      "precision": 0.599822,
+      "recall": 0.537879,
+      "f1": 0.567164,
+      "center_recall": 0.572568,
+      "prediction_inflation": 0.89673,
+      "by_area_iou_recall": {
+        "large": 0.814063,
+        "medium": 0.537234,
+        "small": 0.604681,
+        "tiny": 0.218927,
+        "xlarge": 0.527094
+      },
+      "by_area_center_recall": {
+        "large": 0.825,
+        "medium": 0.62234,
+        "small": 0.630689,
+        "tiny": 0.292373,
+        "xlarge": 0.487685
+      }
+    },
+    "full_fit_overlay": {
+      "tp": 1350,
+      "predicted": 2249,
+      "gold": 2508,
+      "precision": 0.600267,
+      "recall": 0.538278,
+      "f1": 0.567585,
+      "center_recall": 0.572967,
+      "prediction_inflation": 0.89673,
+      "by_area_iou_recall": {
+        "large": 0.814063,
+        "medium": 0.537234,
+        "small": 0.605982,
+        "tiny": 0.218927,
+        "xlarge": 0.527094
+      },
+      "by_area_center_recall": {
+        "large": 0.826562,
+        "medium": 0.62234,
+        "small": 0.630689,
+        "tiny": 0.292373,
+        "xlarge": 0.487685
+      }
+    }
+  },
+  "delta_full_vs_baseline": {
+    "precision": -0.000444,
+    "recall": -0.000398,
+    "f1": -0.00042,
+    "center_recall": -0.002392,
+    "prediction_inflation": 0.0
+  },
+  "top_lopo_candidates": [
+    {
+      "alpha": 0.25,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [],
+      "metrics": {
+        "tp": 1349,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.599822,
+        "recall": 0.537879,
+        "f1": 0.567164,
+        "center_recall": 0.572568,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.604681,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.630689,
+          "tiny": 0.292373,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1349,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.599822,
+        "recall": 0.537879,
+        "f1": 0.567164,
+        "center_recall": 0.572967,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.604681,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.630689,
+          "tiny": 0.292373,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1349,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.599822,
+        "recall": 0.537879,
+        "f1": 0.567164,
+        "center_recall": 0.572568,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.604681,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.630689,
+          "tiny": 0.292373,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [
+        "appliance",
+        "equipment",
+        "shower",
+        "sink",
+        "stair"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1346,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.598488,
+        "recall": 0.536683,
+        "f1": 0.565903,
+        "center_recall": 0.569777,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.602081,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1345,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.598044,
+        "recall": 0.536284,
+        "f1": 0.565482,
+        "center_recall": 0.569777,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.60078,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [
+        "appliance",
+        "equipment",
+        "shower",
+        "sink",
+        "stair"
+      ],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1345,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.598044,
+        "recall": 0.536284,
+        "f1": 0.565482,
+        "center_recall": 0.569378,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.817187,
+          "medium": 0.521277,
+          "small": 0.602081,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1344,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.597599,
+        "recall": 0.535885,
+        "f1": 0.565062,
+        "center_recall": 0.569378,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.817187,
+          "medium": 0.521277,
+          "small": 0.60078,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [],
+      "metrics": {
+        "tp": 1344,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.597599,
+        "recall": 0.535885,
+        "f1": 0.565062,
+        "center_recall": 0.568182,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.59948,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.624187,
+          "tiny": 0.283898,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1344,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.597599,
+        "recall": 0.535885,
+        "f1": 0.565062,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.59948,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.624187,
+          "tiny": 0.285311,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1344,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.597599,
+        "recall": 0.535885,
+        "f1": 0.565062,
+        "center_recall": 0.568182,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.59948,
+          "tiny": 0.217514,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.624187,
+          "tiny": 0.283898,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [
+        "appliance",
+        "equipment",
+        "shower",
+        "sink",
+        "stair"
+      ],
+      "buckets": [],
+      "metrics": {
+        "tp": 1342,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.59671,
+        "recall": 0.535088,
+        "f1": 0.564221,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.8125,
+          "medium": 0.526596,
+          "small": 0.602081,
+          "tiny": 0.217514,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62766,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.477833
+        }
+      }
+    },
+    {
+      "alpha": 0.25,
+      "labels": [],
+      "buckets": [],
+      "metrics": {
+        "tp": 1341,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.596265,
+        "recall": 0.534689,
+        "f1": 0.563801,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.8125,
+          "medium": 0.526596,
+          "small": 0.60078,
+          "tiny": 0.217514,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62766,
+          "small": 0.629389,
+          "tiny": 0.282486,
+          "xlarge": 0.477833
+        }
+      }
+    },
+    {
+      "alpha": 0.75,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [],
+      "metrics": {
+        "tp": 1334,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.593153,
+        "recall": 0.531898,
+        "f1": 0.560858,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.595579,
+          "tiny": 0.207627,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.621586,
+          "tiny": 0.276836,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.75,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1334,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.593153,
+        "recall": 0.531898,
+        "f1": 0.560858,
+        "center_recall": 0.566188,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.595579,
+          "tiny": 0.207627,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.621586,
+          "tiny": 0.278249,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.75,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1334,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.593153,
+        "recall": 0.531898,
+        "f1": 0.560858,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.595579,
+          "tiny": 0.207627,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.621586,
+          "tiny": 0.276836,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [
+        "appliance",
+        "equipment",
+        "shower",
+        "sink",
+        "stair"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1330,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.591374,
+        "recall": 0.530303,
+        "f1": 0.559176,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.586476,
+          "tiny": 0.211864,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.613784,
+          "tiny": 0.269774,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1329,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.590929,
+        "recall": 0.529904,
+        "f1": 0.558756,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.585176,
+          "tiny": 0.211864,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.613784,
+          "tiny": 0.269774,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [
+        "appliance",
+        "equipment",
+        "shower",
+        "sink",
+        "stair"
+      ],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1329,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.590929,
+        "recall": 0.529904,
+        "f1": 0.558756,
+        "center_recall": 0.560606,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.820312,
+          "medium": 0.515957,
+          "small": 0.585176,
+          "tiny": 0.211864,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.62234,
+          "small": 0.613784,
+          "tiny": 0.268362,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 1.0,
+      "labels": [
+        "shower",
+        "sink"
+      ],
+      "buckets": [
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1329,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.590929,
+        "recall": 0.529904,
+        "f1": 0.558756,
+        "center_recall": 0.563397,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.589077,
+          "tiny": 0.207627,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.616385,
+          "tiny": 0.274011,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "alpha": 0.5,
+      "labels": [],
+      "buckets": [
+        "medium",
+        "small",
+        "tiny"
+      ],
+      "metrics": {
+        "tp": 1327,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.59004,
+        "recall": 0.529107,
+        "f1": 0.557915,
+        "center_recall": 0.560207,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.820312,
+          "medium": 0.510638,
+          "small": 0.583875,
+          "tiny": 0.211864,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.825,
+          "medium": 0.617021,
+          "small": 0.613784,
+          "tiny": 0.268362,
+          "xlarge": 0.487685
+        }
+      }
+    }
+  ],
+  "model": {
+    "min_group": 8,
+    "count_examples": 1621,
+    "groups": {
+      "label_bucket_score:generic_symbol|large|hi": {
+        "n": 218,
+        "delta": [
+          0.004181,
+          -0.00406,
+          -0.009074,
+          -0.013508
+        ]
+      },
+      "label_bucket:generic_symbol|large": {
+        "n": 253,
+        "delta": [
+          0.003473,
+          -0.003914,
+          -0.01059,
+          -0.014511
+        ]
+      },
+      "label:generic_symbol": {
+        "n": 275,
+        "delta": [
+          0.004134,
+          -0.003914,
+          -0.012326,
+          -0.016634
+        ]
+      },
+      "bucket:large": {
+        "n": 568,
+        "delta": [
+          0.003276,
+          -0.003692,
+          -0.034035,
+          -0.013508
+        ]
+      },
+      "global": {
+        "n": 1621,
+        "delta": [
+          0.004856,
+          -0.011122,
+          -0.194668,
+          -0.058765
+        ]
+      },
+      "label_bucket_score:sink|large|mid": {
+        "n": 16,
+        "delta": [
+          0.001949,
+          0.037143,
+          -0.129283,
+          0.007457
+        ]
+      },
+      "label_bucket:sink|large": {
+        "n": 197,
+        "delta": [
+          0.002234,
+          4e-05,
+          -0.073044,
+          -0.012407
+        ]
+      },
+      "label:sink": {
+        "n": 443,
+        "delta": [
+          0.007032,
+          -0.015039,
+          -0.133531,
+          -0.117106
+        ]
+      },
+      "label_bucket_score:sink|small|lo": {
+        "n": 72,
+        "delta": [
+          0.057625,
+          -0.077974,
+          -0.434641,
+          -0.275795
+        ]
+      },
+      "label_bucket:sink|small": {
+        "n": 124,
+        "delta": [
+          0.026524,
+          -0.032485,
+          -0.435463,
+          -0.231179
+        ]
+      },
+      "bucket:small": {
+        "n": 476,
+        "delta": [
+          0.029045,
+          -0.039362,
+          -0.452612,
+          -0.265691
+        ]
+      },
+      "label_bucket_score:equipment|small|mid": {
+        "n": 150,
+        "delta": [
+          0.055881,
+          -0.014356,
+          -0.815014,
+          -0.61156
+        ]
+      },
+      "label_bucket:equipment|small": {
+        "n": 207,
+        "delta": [
+          0.042945,
+          -0.016659,
+          -0.822665,
+          -0.60545
+        ]
+      },
+      "label:equipment": {
+        "n": 323,
+        "delta": [
+          0.040688,
+          -0.02664,
+          -0.551908,
+          -0.338138
+        ]
+      },
+      "label_bucket_score:appliance|medium|hi": {
+        "n": 98,
+        "delta": [
+          -0.003089,
+          -0.04003,
+          -0.286154,
+          -0.006354
+        ]
+      },
+      "label_bucket:appliance|medium": {
+        "n": 233,
+        "delta": [
+          -0.006815,
+          -0.025553,
+          -0.282234,
+          -0.012591
+        ]
+      },
+      "label:appliance": {
+        "n": 280,
+        "delta": [
+          -0.002043,
+          -0.019875,
+          -0.268376,
+          -0.012646
+        ]
+      },
+      "bucket:medium": {
+        "n": 321,
+        "delta": [
+          -0.006277,
+          -0.028037,
+          -0.276644,
+          -0.012591
+        ]
+      },
+      "label_bucket_score:shower|small|mid": {
+        "n": 49,
+        "delta": [
+          0.073723,
+          -0.105118,
+          -0.260598,
+          -0.17623
+        ]
+      },
+      "label_bucket:shower|small": {
+        "n": 115,
+        "delta": [
+          0.065062,
+          -0.097844,
+          -0.342177,
+          -0.180899
+        ]
+      },
+      "label:shower": {
+        "n": 147,
+        "delta": [
+          0.052837,
+          -0.105118,
+          -0.283188,
+          -0.184847
+        ]
+      },
+      "label_bucket_score:shower|tiny|mid": {
+        "n": 8,
+        "delta": [
+          0.047176,
+          0.052979,
+          -0.029922,
+          -0.218108
+        ]
+      },
+      "label_bucket:shower|tiny": {
+        "n": 30,
+        "delta": [
+          0.04056,
+          -0.121899,
+          -0.219127,
+          -0.271153
+        ]
+      },
+      "bucket:tiny": {
+        "n": 130,
+        "delta": [
+          0.026152,
+          -0.085673,
+          -0.133531,
+          -0.133531
+        ]
+      },
+      "label_bucket_score:shower|small|lo": {
+        "n": 66,
+        "delta": [
+          0.050201,
+          -0.097145,
+          -0.379233,
+          -0.183357
+        ]
+      },
+      "label_bucket_score:shower|tiny|lo": {
+        "n": 22,
+        "delta": [
+          0.01412,
+          -0.214184,
+          -0.23824,
+          -0.273618
+        ]
+      },
+      "label_bucket_score:appliance|large|hi": {
+        "n": 29,
+        "delta": [
+          0.002082,
+          -0.008926,
+          -0.077719,
+          -0.018547
+        ]
+      },
+      "label_bucket:appliance|large": {
+        "n": 40,
+        "delta": [
+          -0.000147,
+          -0.005677,
+          -0.07841,
+          -0.020477
+        ]
+      },
+      "label_bucket_score:sink|large|hi": {
+        "n": 180,
+        "delta": [
+          0.003257,
+          -0.000434,
+          -0.067938,
+          -0.013044
+        ]
+      },
+      "label_bucket_score:sink|tiny|lo": {
+        "n": 48,
+        "delta": [
+          0.048079,
+          -0.010597,
+          -0.133531,
+          -0.133531
+        ]
+      },
+      "label_bucket:sink|tiny": {
+        "n": 99,
+        "delta": [
+          0.024022,
+          -0.077432,
+          -0.133531,
+          -0.133531
+        ]
+      },
+      "label_bucket_score:equipment|small|lo": {
+        "n": 52,
+        "delta": [
+          -0.000749,
+          -0.020245,
+          -0.917272,
+          -0.534013
+        ]
+      },
+      "label_bucket_score:generic_symbol|large|mid": {
+        "n": 34,
+        "delta": [
+          -0.003769,
+          0.001741,
+          -0.016584,
+          -0.023901
+        ]
+      },
+      "label_bucket_score:appliance|large|mid": {
+        "n": 11,
+        "delta": [
+          -0.013982,
+          0.0157,
+          -0.081099,
+          -0.022407
+        ]
+      },
+      "label_bucket_score:appliance|medium|mid": {
+        "n": 125,
+        "delta": [
+          -0.009385,
+          -0.019518,
+          -0.280791,
+          -0.015334
+        ]
+      },
+      "label_bucket_score:sink|tiny|mid": {
+        "n": 51,
+        "delta": [
+          -0.020599,
+          -0.091208,
+          -0.133531,
+          -0.133531
+        ]
+      },
+      "label_bucket_score:column|small|mid": {
+        "n": 22,
+        "delta": [
+          -0.006485,
+          -0.010348,
+          -0.192078,
+          -0.058105
+        ]
+      },
+      "label_bucket:column|small": {
+        "n": 29,
+        "delta": [
+          -0.005937,
+          -0.013622,
+          -0.120788,
+          -0.033177
+        ]
+      },
+      "label:column": {
+        "n": 82,
+        "delta": [
+          -0.007647,
+          -0.014842,
+          -0.186674,
+          -0.028701
+        ]
+      },
+      "label_bucket_score:sink|medium|hi": {
+        "n": 10,
+        "delta": [
+          -0.021335,
+          -0.10032,
+          -0.202548,
+          0.009737
+        ]
+      },
+      "label_bucket:sink|medium": {
+        "n": 22,
+        "delta": [
+          -0.021335,
+          -0.053528,
+          -0.164774,
+          -0.061391
+        ]
+      },
+      "label_bucket_score:equipment|large|mid": {
+        "n": 18,
+        "delta": [
+          0.065934,
+          -0.170876,
+          0.053186,
+          0.030697
+        ]
+      },
+      "label_bucket:equipment|large": {
+        "n": 40,
+        "delta": [
+          0.025964,
+          -0.042238,
+          -0.016349,
+          -0.007228
+        ]
+      },
+      "label_bucket_score:equipment|medium|lo": {
+        "n": 12,
+        "delta": [
+          0.123979,
+          -0.014711,
+          0.392071,
+          0.425374
+        ]
+      },
+      "label_bucket:equipment|medium": {
+        "n": 21,
+        "delta": [
+          0.101025,
+          -0.066396,
+          0.327015,
+          0.497807
+        ]
+      },
+      "label_bucket_score:equipment|xlarge|mid": {
+        "n": 16,
+        "delta": [
+          0.018367,
+          -0.021164,
+          -0.295022,
+          -0.113689
+        ]
+      },
+      "label_bucket:equipment|xlarge": {
+        "n": 55,
+        "delta": [
+          0.036485,
+          -0.026381,
+          -0.212048,
+          -0.139775
+        ]
+      },
+      "bucket:xlarge": {
+        "n": 126,
+        "delta": [
+          0.018245,
+          -0.000935,
+          -0.079186,
+          -0.081039
+        ]
+      },
+      "label_bucket_score:equipment|xlarge|hi": {
+        "n": 19,
+        "delta": [
+          0.043613,
+          -0.024436,
+          -0.293752,
+          -0.239846
+        ]
+      },
+      "label_bucket_score:sink|small|mid": {
+        "n": 49,
+        "delta": [
+          -0.024728,
+          0.048012,
+          -0.437103,
+          -0.206033
+        ]
+      },
+      "label_bucket_score:stair|xlarge|mid": {
+        "n": 13,
+        "delta": [
+          0.005834,
+          0.110032,
+          -0.113448,
+          0.166485
+        ]
+      },
+      "label_bucket:stair|xlarge": {
+        "n": 39,
+        "delta": [
+          0.048044,
+          0.006369,
+          -0.06603,
+          -0.0828
+        ]
+      },
+      "label:stair": {
+        "n": 68,
+        "delta": [
+          0.049761,
+          0.007248,
+          0.016318,
+          -0.061951
+        ]
+      },
+      "label_bucket_score:equipment|medium|mid": {
+        "n": 9,
+        "delta": [
+          -0.026149,
+          -0.07091,
+          0.206386,
+          0.58152
+        ]
+      },
+      "label_bucket_score:stair|xlarge|hi": {
+        "n": 26,
+        "delta": [
+          0.052585,
+          0.005299,
+          -0.061548,
+          -0.09497
+        ]
+      },
+      "label_bucket_score:stair|large|hi": {
+        "n": 11,
+        "delta": [
+          0.070792,
+          0.011584,
+          0.058503,
+          -0.007602
+        ]
+      },
+      "label_bucket:stair|large": {
+        "n": 29,
+        "delta": [
+          0.062317,
+          0.008204,
+          0.12504,
+          -0.037506
+        ]
+      },
+      "label_bucket_score:stair|large|mid": {
+        "n": 16,
+        "delta": [
+          0.031512,
+          0.003407,
+          0.188275,
+          -0.04342
+        ]
+      },
+      "label_bucket_score:column|medium|hi": {
+        "n": 10,
+        "delta": [
+          -0.02846,
+          -0.071699,
+          -0.185605,
+          -0.020822
+        ]
+      },
+      "label_bucket:column|medium": {
+        "n": 43,
+        "delta": [
+          -0.00756,
+          -0.029299,
+          -0.27198,
+          -0.034597
+        ]
+      },
+      "label_bucket_score:equipment|xlarge|lo": {
+        "n": 20,
+        "delta": [
+          0.009926,
+          -0.052707,
+          0.040571,
+          -0.025093
+        ]
+      },
+      "label_bucket_score:equipment|large|lo": {
+        "n": 22,
+        "delta": [
+          -0.022338,
+          0.014111,
+          -0.064919,
+          -0.144521
+        ]
+      },
+      "label_bucket:column|large": {
+        "n": 9,
+        "delta": [
+          -0.011492,
+          0.01214,
+          -0.040484,
+          0.020403
+        ]
+      },
+      "label_bucket_score:column|medium|lo": {
+        "n": 9,
+        "delta": [
+          0.027211,
+          -0.038142,
+          -0.189392,
+          -0.034597
+        ]
+      },
+      "label_bucket_score:generic_symbol|xlarge|hi": {
+        "n": 17,
+        "delta": [
+          0.008814,
+          0.000107,
+          -0.041411,
+          -0.054859
+        ]
+      },
+      "label_bucket:generic_symbol|xlarge": {
+        "n": 20,
+        "delta": [
+          0.006658,
+          -0.001899,
+          -0.037564,
+          -0.042529
+        ]
+      },
+      "label_bucket_score:column|large|hi": {
+        "n": 8,
+        "delta": [
+          -0.009606,
+          0.013181,
+          -0.070159,
+          0.001728
+        ]
+      },
+      "label_bucket_score:column|medium|mid": {
+        "n": 24,
+        "delta": [
+          0.017818,
+          -0.001091,
+          -0.308525,
+          -0.112841
+        ]
+      },
+      "label_bucket_score:appliance|medium|lo": {
+        "n": 10,
+        "delta": [
+          0.127235,
+          -0.089139,
+          -0.279149,
+          -0.026967
+        ]
+      }
+    }
+  },
+  "notes": [
+    "P199 uses grouped median dx/dy/dw/dh deltas as a lightweight learned refiner without external sklearn dependency.",
+    "Runtime application uses only candidate label, bucket, score, and geometry; gold is used only for offline supervised training/evaluation.",
+    "If full-fit improves but LOPO does not, treat it as overfit diagnostic and do not promote for paper claim."
+  ],
+  "outputs": {
+    "json": "configs/vlm/symbol_learned_box_refiner_p199.json",
+    "md": "reports/vlm/symbol_learned_box_refiner_p199.md",
+    "overlay": "reports/vlm/symbol_learned_box_refiner_p199_overlay.jsonl"
+  }
+}

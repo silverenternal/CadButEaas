@@ -1,0 +1,18 @@
+{
+  "id": "P189_symbol_hardcase_rescue_set",
+  "source_overlays": {
+    "p182": "reports/vlm/symbol_box_refiner_p192_overlay.jsonl",
+    "p188": "reports/vlm/symbol_box_refiner_p197b_over_p196c_best_overlay.jsonl"
+  },
+  "claim_boundary": "Offline error taxonomy only; gold targets used for analysis and training-set construction, never as runtime input.",
+  "recommended_next": [
+    "P190 hard-case oversampling detector retrain",
+    "P191 tiny/small specialist",
+    "P192 box refinement for near misses"
+  ],
+  "sampling_rules": {
+    "oversample_4x": "priority_score >= 20",
+    "oversample_2x": "priority_score >= 10",
+    "include_1x": "remaining hard-case pages"
+  }
+}

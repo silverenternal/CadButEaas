@@ -1,0 +1,79 @@
+{
+  "id": "SCI-P2-135-claim-rewrite-for-sub095-metrics",
+  "created_on": "2026-05-16",
+  "source": "reports/vlm/manuscript_draft_v0_1_p130.md",
+  "artifact": "reports/vlm/manuscript_draft_v0_2_p135.md",
+  "decision": "sub095_metrics_reframed_as_operating_point_diagnostic_or_negative_evidence",
+  "rewrite_count": 23,
+  "inserted_policy_note": true,
+  "risk_scan": [
+    {
+      "term": "solved",
+      "count": 2,
+      "lines": [
+        {
+          "line": 93,
+          "text": "The image-only multifamily experiment evaluates target-level boxes on 61 matched rows. The clearest image-only diagnostic signal is the space/room branch after mask-to-box repair. It obtains precision 0.274181, recall 0."
+        },
+        {
+          "line": 278,
+          "text": "- Do not claim: full raster scene-graph solved."
+        }
+      ]
+    },
+    {
+      "term": "high-accuracy",
+      "count": 4,
+      "lines": [
+        {
+          "line": 5,
+          "text": "Status: **bounded draft for internal review; metrics below 0.95 are treated as diagnostic/operating-point evidence, not final high-accuracy claims**"
+        },
+        {
+          "line": 89,
+          "text": "This experiment supports a bounded operating-point claim: named opt-in symbol policies can be evaluated for precision/inflation trade-offs, without implying high-accuracy symbol recognition or changing runtime defaults s"
+        },
+        {
+          "line": 129,
+          "text": "The main result of this work is not a high-accuracy monolithic detector for raster floorplan understanding. Instead, the contribution is an audit-gated mixture-of-experts framework that makes floorplan parsing decisions "
+        },
+        {
+          "line": 131,
+          "text": "The public-raster symbol results demonstrate the value of audited policy handoff, but not high-accuracy symbol recognition. The precision-oriented opt-in policy improves target-level symbol F1 and reduces prediction infl"
+        }
+      ]
+    },
+    {
+      "term": "near-perfect",
+      "count": 1,
+      "lines": [
+        {
+          "line": 13,
+          "text": "Most visual detection metrics in this draft are below 0.95. They are therefore treated as operating-point, ablation, diagnostic, or negative-evidence results rather than near-perfect recognition claims. The only paper-fa"
+        }
+      ]
+    },
+    {
+      "term": "robust end-to-end",
+      "count": 1,
+      "lines": [
+        {
+          "line": 9,
+          "text": "Raster floorplan understanding remains difficult because architectural symbols, room regions, text, and relations have different visual scales and failure modes. We present an audit-gated mixture-of-experts pipeline for "
+        }
+      ]
+    },
+    {
+      "term": "state-of-the-art",
+      "count": 0,
+      "lines": []
+    }
+  ],
+  "key_changes": [
+    "Inserted explicit Sub-0.95 Metric Policy section.",
+    "Reframed p100 symbol as operating-point/inflation reduction, not high-accuracy recognition.",
+    "Reframed image-only room/space as measurable diagnostic signal, not solved extraction.",
+    "Kept P095 positive only as expected-json replay.",
+    "Preserved negative evidence language for symbol/text and selector probes."
+  ]
+}

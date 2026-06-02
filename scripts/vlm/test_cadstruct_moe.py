@@ -1,5 +1,4 @@
-from scripts.vlm.cadstruct_moe import DeterministicRouter
-from scripts.vlm.cadstruct_moe.experts import RoomSpaceExpert, WallOpeningExpert
+from scripts.vlm.cadstruct_moe import DeterministicRouter, build_default_experts, describe_experts, summarize_expert_execution
 from scripts.vlm.cadstruct_moe.fusion import fuse_predictions
 
 
@@ -29,6 +28,7 @@ def test_deterministic_router_routes_core_families() -> None:
 
 
 def test_passthrough_experts_and_fusion_warnings() -> None:
+    experts = build_default_experts(["boundary", "space"])
     router = DeterministicRouter()
     routed = router.route_record(
         {
@@ -38,8 +38,38 @@ def test_passthrough_experts_and_fusion_warnings() -> None:
             }
         }
     )
-    wall_predictions = WallOpeningExpert().predict([item for item in routed if item.family == "boundary"])
-    room_predictions = RoomSpaceExpert().predict([item for item in routed if item.family == "space"])
+    wall_predictions = experts["boundary"].predict([item for item in routed if item.family == "boundary"])
+    room_predictions = experts["space"].predict([item for item in routed if item.family == "space"])
     fused = fuse_predictions(wall_predictions + room_predictions)
     assert len(fused.scene_graph["nodes"]) == 2
     assert "room_without_boundary_relation:room0" in fused.warnings
+
+
+def test_expert_registry_is_descriptive() -> None:
+    expert_bundle = build_default_experts()
+    registry = describe_experts(expert_bundle)
+    assert set(registry) == {"boundary", "space", "symbol", "text", "sheet"}
+    assert registry["boundary"]["name"] == "wall_opening"
+
+
+def test_expert_audit_summary_tracks_basic_counts() -> None:
+    expert = build_default_experts(["sheet"])["sheet"]
+    from scripts.vlm.cadstruct_moe.schema import RoutedCandidate
+    routed = [
+        RoutedCandidate(
+            candidate_id="c0",
+            expert="sheet_layout",
+            family="sheet",
+            candidate_type="title_block",
+            confidence=0.6,
+            bbox=[0.0, 0.0, 10.0, 10.0],
+            source="deterministic_router",
+            payload={},
+            route_trace={},
+        )
+    ]
+    predictions = expert.predict(routed)
+    summary = summarize_expert_execution(expert, routed, predictions)
+    assert summary["candidate_count"] == 1
+    assert summary["prediction_count"] == 1
+    assert summary["fallback_prediction_count"] == 0

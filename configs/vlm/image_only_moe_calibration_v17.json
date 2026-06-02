@@ -1,0 +1,117 @@
+{
+  "version": "image_only_moe_calibration_v17",
+  "thresholds": {
+    "boundary": 0.16,
+    "space": 0.11,
+    "symbol": 0.16,
+    "text": 0.12,
+    "sheet": 0.05
+  },
+  "before": {
+    "boundary": {
+      "matched": 9,
+      "labeled_tp": 0,
+      "precision": 0.045455,
+      "recall": 0.002932,
+      "f1": 0.005508,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 198,
+      "gold": 3070
+    },
+    "space": {
+      "matched": 33,
+      "labeled_tp": 0,
+      "precision": 0.55,
+      "recall": 0.354839,
+      "f1": 0.431373,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 60,
+      "gold": 93
+    },
+    "symbol": {
+      "matched": 7,
+      "labeled_tp": 0,
+      "precision": 0.081395,
+      "recall": 0.024306,
+      "f1": 0.037433,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 86,
+      "gold": 288
+    },
+    "text": {
+      "matched": 1,
+      "labeled_tp": 0,
+      "precision": 0.00495,
+      "recall": 0.0125,
+      "f1": 0.007092,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 202,
+      "gold": 80
+    }
+  },
+  "after": {
+    "boundary": {
+      "matched": 9,
+      "labeled_tp": 0,
+      "precision": 0.045455,
+      "recall": 0.002932,
+      "f1": 0.005508,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 198,
+      "gold": 3070
+    },
+    "space": {
+      "matched": 33,
+      "labeled_tp": 0,
+      "precision": 0.55,
+      "recall": 0.354839,
+      "f1": 0.431373,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 60,
+      "gold": 93
+    },
+    "symbol": {
+      "matched": 7,
+      "labeled_tp": 0,
+      "precision": 0.081395,
+      "recall": 0.024306,
+      "f1": 0.037433,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 86,
+      "gold": 288
+    },
+    "text": {
+      "matched": 1,
+      "labeled_tp": 0,
+      "precision": 0.00495,
+      "recall": 0.0125,
+      "f1": 0.007092,
+      "label_precision": 0.0,
+      "label_recall": 0.0,
+      "label_f1": 0.0,
+      "predicted": 202,
+      "gold": 80
+    }
+  },
+  "hard_case_count": 0,
+  "source_integrity": {
+    "source_mode": "image_only_raster_moe",
+    "svg_candidate_ids_used": false,
+    "annotation_geometry_used_at_inference": false,
+    "model_input": "raster_image_only"
+  }
+}

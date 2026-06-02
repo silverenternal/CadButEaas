@@ -1,0 +1,56 @@
+{
+  "id": "SCI-P2-112-full-public-raster-symbol-eval-scout",
+  "created_on": "2026-05-15",
+  "decision": "full_tile_assets_exist_but_inference_sanity_timed_out_on_current_mount_or_gpu_path",
+  "target_dataset": {
+    "path": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+    "rows": 992,
+    "sources": {
+      "cubicasa5k": 493,
+      "floorplancad": 499
+    },
+    "rows_with_symbol_targets": 845,
+    "symbol_targets": 19425
+  },
+  "tile_dataset": {
+    "path": "datasets/symbol_tile_detector_tiny_sahi_v21/locked.jsonl",
+    "tiles": 23754,
+    "unique_row_ids": 845,
+    "sources": {
+      "cubicasa5k": 16530,
+      "floorplancad": 7224
+    }
+  },
+  "yolo_exports": {
+    "seg_rect_v27_locked_subset": {
+      "path": "datasets/symbol_tile_detector_tiny_sahi_v21_yolo_seg_rect_v27/images/locked",
+      "tiles": 2000,
+      "unique_row_ids": 74,
+      "role": "existing P064/P100 74-row overlay subset"
+    },
+    "v22_locked_full": {
+      "path": "datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full/images/locked",
+      "tiles": 23754,
+      "unique_row_ids": 845,
+      "role": "full available tile export for symbol-target rows"
+    }
+  },
+  "existing_predictions": {
+    "v28_subset": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_predictions_p064_refresh.jsonl",
+    "v28_subset_rows": 74,
+    "p100_subset": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_precision_at_recall70_predictions_p100.jsonl",
+    "p100_subset_rows": 74
+  },
+  "sanity_run": {
+    "command": "timeout 180 .venv/bin/python scripts/vlm/eval_symbol_yolo_tile_detector_v22.py --data datasets/symbol_tile_detector_tiny_sahi_v21 --yolo-dir datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full --weights runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt --split locked --limit-tiles 20 --imgsz 640 --predict-batch 4 --selection-mode balanced_f1 ...",
+    "exit_code": 124,
+    "result": "timed_out_without_output",
+    "interpretation": "Assets are present, but current mounted/interactive path is not reliable enough for even a small inference sanity run. Use remote/tmux/batch execution or investigate GPU/IO before full eval."
+  },
+  "recommended_next_task": {
+    "id": "SCI-P2-113-full-symbol-eval-execution-wrapper",
+    "goal": "Create a robust async runner for full symbol eval on v22_locked_full with logging, resume-friendly artifacts, and subset fallback."
+  },
+  "full_eval_candidate_command": ".venv/bin/python scripts/vlm/eval_symbol_yolo_tile_detector_v22.py --data datasets/symbol_tile_detector_tiny_sahi_v21 --yolo-dir datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full --weights runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt --split locked --limit-tiles 0 --imgsz 640 --decode-conf 0.001 --decode-iou 0.7 --max-det-per-tile 300 --predict-batch 16 --score-threshold-grid 0.02,0.05 --nms-threshold-grid 0.45,0.55 --max-per-page 500 --selection-mode balanced_f1 --eval-output reports/vlm/full_public_raster_symbol_eval_locked_p113.json --predictions-output reports/vlm/full_public_raster_symbol_eval_locked_p113_predictions.jsonl --device 0",
+  "fallback_protocol": "If full inference remains unstable, run an expanded deterministic subset over v22_locked_full and report row/tile coverage explicitly."
+}

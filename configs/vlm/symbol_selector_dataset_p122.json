@@ -1,0 +1,105 @@
+{
+  "id": "SCI-P2-122-symbol-selector-dataset-build",
+  "claim_boundary": "Offline selector dataset only; labels use gold for supervision/evaluation and are forbidden at runtime.",
+  "inputs": {
+    "eval": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid.json",
+    "predictions": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid_predictions.jsonl"
+  },
+  "outputs": {
+    "train": "datasets/symbol_selector_subset_p122/train.jsonl",
+    "dev": "datasets/symbol_selector_subset_p122/dev.jsonl",
+    "all": "datasets/symbol_selector_subset_p122/all.jsonl"
+  },
+  "feature_contract": {
+    "runtime_available": true,
+    "forbidden_runtime_features": [
+      "gold_bbox",
+      "gold_label",
+      "annotation_path",
+      "svg_geometry",
+      "expected_json"
+    ],
+    "offline_label_only": [
+      "keep_any",
+      "keep_iou",
+      "keep_center",
+      "keep_tiny_nwd",
+      "best_gold_iou",
+      "best_gold_nwd",
+      "best_gold_label"
+    ]
+  },
+  "summary": {
+    "train": {
+      "candidates": 156623,
+      "pages": 483,
+      "keep_any": 33955,
+      "label_reasons": {
+        "negative": 122668,
+        "keep_iou_type_match": 17288,
+        "keep_center": 11919,
+        "keep_iou_type_mismatch": 2943,
+        "keep_tiny_nwd": 1805
+      },
+      "predicted_labels": {
+        "shower": 37440,
+        "equipment": 36723,
+        "column": 23929,
+        "generic_symbol": 17962,
+        "sink": 15044,
+        "appliance": 13679,
+        "stair": 10451,
+        "bathtub": 1395
+      }
+    },
+    "dev": {
+      "candidates": 40187,
+      "pages": 120,
+      "keep_any": 8261,
+      "label_reasons": {
+        "negative": 31926,
+        "keep_iou_type_match": 4275,
+        "keep_center": 2869,
+        "keep_iou_type_mismatch": 718,
+        "keep_tiny_nwd": 399
+      },
+      "predicted_labels": {
+        "equipment": 10165,
+        "shower": 9474,
+        "column": 5093,
+        "generic_symbol": 4954,
+        "sink": 3992,
+        "appliance": 3379,
+        "stair": 2732,
+        "bathtub": 398
+      }
+    },
+    "all": {
+      "candidates": 196810,
+      "pages": 603,
+      "keep_any": 42216,
+      "label_reasons": {
+        "negative": 154594,
+        "keep_iou_type_match": 21563,
+        "keep_center": 14788,
+        "keep_iou_type_mismatch": 3661,
+        "keep_tiny_nwd": 2204
+      },
+      "predicted_labels": {
+        "shower": 46914,
+        "equipment": 46888,
+        "column": 29022,
+        "generic_symbol": 22916,
+        "sink": 19036,
+        "appliance": 17058,
+        "stair": 13183,
+        "bathtub": 1793
+      }
+    }
+  },
+  "split_policy": {
+    "unit": "row_id",
+    "dev_fraction": 0.2,
+    "seed": 20260516
+  }
+}

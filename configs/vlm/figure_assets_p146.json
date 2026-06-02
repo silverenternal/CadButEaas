@@ -1,0 +1,29 @@
+{
+  "id": "SCI-P2-146-figure-assets-for-review-draft",
+  "created_on": "2026-05-17",
+  "decision": "figure_1_and_figure_2_review_assets_ready",
+  "claim_boundary": "Figures are review-draft assets. Figure 2 uses bounded operating-point metrics, not high-accuracy recognition claims.",
+  "figures": [
+    {
+      "figure": "Figure 1",
+      "title": "Audit-gated MoE runtime contract and policy handoff",
+      "svg": "reports/vlm/figures/figure1_audit_gated_moe_p146.svg",
+      "status": "ready_for_review",
+      "notes": "Schematic; can be redrawn in journal style later."
+    },
+    {
+      "figure": "Figure 2",
+      "title": "Symbol operating-point rescue on 74-row public-raster overlay subset",
+      "svg": "reports/vlm/figures/figure2_symbol_operating_points_p146.svg",
+      "csv": "reports/vlm/figures/figure2_symbol_operating_points_p146.csv",
+      "json": "reports/vlm/figures/figure2_symbol_operating_points_p146.json",
+      "status": "ready_for_review",
+      "notes": "Shows v28, P100, P136, P140; includes claim-boundary note."
+    }
+  ],
+  "remaining": [
+    "Replace SVG styling if target journal requires vector PDF/EPS.",
+    "Verify captions during final human claim audit.",
+    "Optionally export SVG to PDF/PNG externally."
+  ]
+}

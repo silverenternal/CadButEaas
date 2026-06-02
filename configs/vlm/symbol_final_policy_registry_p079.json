@@ -1,0 +1,105 @@
+{
+  "version": "symbol_final_policy_registry_p079",
+  "updated": "2026-05-15",
+  "runtime_input_boundary": "Policies consume raster-derived detector prediction JSONL files only. No SVG/parser geometry, CAD vectors, expected_json, annotation paths, or gold labels are allowed at runtime.",
+  "default_policy": "v28_frozen_detector_baseline",
+  "preferred_balanced_opt_in": "p076_balanced_policy",
+  "preferred_recall_opt_in": "p070_precision_gated_policy",
+  "policies": {
+    "v28_frozen_detector_baseline": {
+      "status": "default_baseline",
+      "description": "Frozen YOLOv8s-seg detector baseline; keep as default detector backbone.",
+      "weights": "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+      "eval_script": "scripts/vlm/eval_symbol_yolo_tile_detector_v22.py",
+      "locked_predictions": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_predictions_p064_refresh.jsonl",
+      "locked_eval": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_eval_p064_refresh.json",
+      "locked_metrics": {
+        "iou_0_30_recall": 0.738898,
+        "center_recall": 0.907484,
+        "candidate_inflation": 6.334704,
+        "precision": 0.116643,
+        "tiny_iou_recall": 0.507418,
+        "sink_iou_recall": 0.647744
+      }
+    },
+    "p070_precision_gated_policy": {
+      "status": "recall_opt_in",
+      "description": "Recall-oriented opt-in policy composed from RTDETR tiny-sink complement, geometric repair, and precision gate.",
+      "config": "configs/vlm/symbol_precision_gated_policy_p070.json",
+      "apply_script": "scripts/vlm/apply_symbol_precision_gated_policy_p070.py",
+      "smoke_predictions": "reports/vlm/symbol_precision_gated_policy_p070_smoke_v30_predictions.jsonl",
+      "locked_predictions": "reports/vlm/symbol_precision_gated_policy_p070_locked_predictions.jsonl",
+      "summary": "reports/vlm/symbol_precision_gated_policy_p070_summary.json",
+      "locked_metrics": {
+        "iou_0_30_recall": 0.769737,
+        "center_recall": 0.908306,
+        "candidate_inflation": 6.584704,
+        "precision": 0.116898,
+        "tiny_iou_recall": 0.617211,
+        "sink_iou_recall": 0.755459
+      },
+      "delta_vs_v28_locked": {
+        "iou_0_30_recall": 0.030839,
+        "center_recall": 0.000822,
+        "candidate_inflation": 0.25,
+        "precision": 0.000255
+      }
+    },
+    "p076_balanced_policy": {
+      "status": "balanced_opt_in",
+      "description": "Balanced opt-in policy that keeps most P0-70 recall gain while improving precision and inflation.",
+      "config": "configs/vlm/symbol_balanced_policy_p076.json",
+      "apply_script": "scripts/vlm/apply_symbol_balanced_policy_p076.py",
+      "smoke_predictions": "reports/vlm/symbol_balanced_policy_p076_smoke_v30_predictions.jsonl",
+      "locked_predictions": "reports/vlm/symbol_balanced_policy_p076_locked_predictions.jsonl",
+      "summary": "reports/vlm/symbol_balanced_policy_p076_summary.json",
+      "locked_metrics": {
+        "iou_0_30_recall": 0.766036,
+        "center_recall": 0.908306,
+        "candidate_inflation": 6.508224,
+        "precision": 0.117703,
+        "tiny_iou_recall": 0.603858,
+        "sink_iou_recall": 0.742358
+      },
+      "delta_vs_v28_locked": {
+        "iou_0_30_recall": 0.027138,
+        "center_recall": 0.000822,
+        "candidate_inflation": 0.17352,
+        "precision": 0.00106
+      },
+      "delta_vs_p070_locked": {
+        "iou_0_30_recall": -0.003701,
+        "center_recall": 0.0,
+        "candidate_inflation": -0.07648,
+        "precision": 0.000805
+      }
+    },
+    "p078_micro_balanced_selector": {
+      "status": "micro_balanced_opt_in",
+      "description": "Micro-optimization over P0-76: nearly same recall with slightly lower inflation and slightly higher precision; optional only.",
+      "apply_script": "scripts/vlm/apply_symbol_p076_added_candidate_selector_p078.py",
+      "smoke_predictions": "reports/vlm/symbol_p076_selector_p078_smoke_v30_predictions.jsonl",
+      "locked_predictions": "reports/vlm/symbol_p076_selector_p078_locked_predictions.jsonl",
+      "summary": "reports/vlm/symbol_p076_selector_p078_summary.json",
+      "locked_metrics": {
+        "iou_0_30_recall": 0.765625,
+        "candidate_inflation": 6.492188,
+        "precision": 0.11793,
+        "retained_p076_gain_fraction": 0.984855
+      },
+      "delta_vs_p076_locked": {
+        "iou_0_30_recall": -0.000411,
+        "candidate_inflation": -0.016036,
+        "precision": 0.000227
+      }
+    }
+  },
+  "recommended_usage": {
+    "default_pipeline": "Use v28_frozen_detector_baseline until downstream selector explicitly opts into a policy.",
+    "recall_favoring_runs": "Use p070_precision_gated_policy when maximizing recall is more important than minimizing inflation.",
+    "balanced_runs": "Use p076_balanced_policy when recall gain should come with precision at/above v28 and lower inflation than P0-70.",
+    "micro_balanced_runs": "Use p078_micro_balanced_selector only when marginally lower inflation/greater precision is worth a tiny recall loss versus P0-76."
+  },
+  "optional_micro_balanced": "p078_micro_balanced_selector",
+  "stop_condition": "Hand-tuned detector/policy iteration has reached diminishing returns. Continue only with a real learned/image-context selector or a new proposal source/model."
+}

@@ -1,0 +1,71 @@
+{
+  "id": "SCI-P1-97-cross-dataset-or-real-drawing-eval",
+  "created_on": "2026-05-15",
+  "decision": {
+    "status": "scout_complete_external_evidence_needed",
+    "best_immediate_path": "datasets/public_raster_moe_supervision_v19/dev.jsonl and locked.jsonl for cross-source raster target evaluation",
+    "best_real_registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl and source_heldout.jsonl for asset registry / pilot annotation planning",
+    "reason": "public_raster_moe_supervision_v19 already includes CubiCasa5K and FloorPlanCAD targets, while real_world_benchmark_v3 includes CubiCasa5K, CVC-FP, FloorPlanCAD and internal_real_v3 registry records but lacks direct expected_json scene_graph labels for immediate relation replay."
+  },
+  "asset_inventory": {
+    "public_raster_moe_supervision_v19_dev": {
+      "path": "datasets/public_raster_moe_supervision_v19/dev.jsonl",
+      "rows": 1002,
+      "sources": {"cubicasa5k": 493, "floorplancad": 509},
+      "labels": "raster targets by family, not full expected_json.scene_graph",
+      "usable_now_for": ["node/detector family evaluation", "cross-source symbol/boundary/space target coverage", "future adapter validation"],
+      "not_directly_usable_for": ["fusion_v2 relation F1 without adapter"]
+    },
+    "public_raster_moe_supervision_v19_locked": {
+      "path": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+      "rows": 992,
+      "sources": {"cubicasa5k": 493, "floorplancad": 499},
+      "labels": "raster targets by family, not full expected_json.scene_graph",
+      "usable_now_for": ["locked cross-source detector/node target evaluation"]
+    },
+    "real_world_benchmark_v3_locked": {
+      "path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl",
+      "rows": 836,
+      "sources": {"cubicasa5k": 493, "cvc_fp": 176, "floorplancad": 167},
+      "labels": "registry metadata only; no expected_json/targets in records",
+      "usable_now_for": ["asset registry", "sampling frame for annotation pilot", "source-heldout planning"],
+      "not_directly_usable_for": ["node F1", "relation F1"]
+    },
+    "real_world_benchmark_v3_source_heldout": {
+      "path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl",
+      "rows": 181,
+      "sources": {"cubicasa5k": 155, "cvc_fp": 22, "floorplancad": 4},
+      "labels": "registry metadata only; no expected_json/targets in records",
+      "usable_now_for": ["heldout source sampling", "manual annotation pilot selection"]
+    },
+    "external_sources_present": ["floorplancad", "cvc_fp", "resplan", "mlstructfp", "cubicasa5k"]
+  },
+  "recommended_eval_plan": [
+    {
+      "step": "P1-97A",
+      "name": "cross_source_target_adapter_scout",
+      "goal": "Build/read adapters from public_raster_moe_supervision_v19 targets into node-level evaluation tables by source and family.",
+      "output": "reports/vlm/cross_source_target_eval_scout_p097a.md",
+      "claim": "Cross-source raster target coverage/evaluation readiness, not full scene-graph relation validation."
+    },
+    {
+      "step": "P1-97B",
+      "name": "real_registry_annotation_pilot_plan",
+      "goal": "Sample a small balanced pilot from real_world_benchmark_v3 locked/source_heldout across cvc_fp/floorplancad/internal_real_v3 if available and define scene-graph annotation fields.",
+      "output": "reports/vlm/real_drawing_annotation_pilot_p097b.md",
+      "claim": "Annotation protocol and pilot plan for SCI robustness evidence."
+    },
+    {
+      "step": "P1-97C",
+      "name": "model_output_contains_replay_adapter",
+      "goal": "Adapt contains policy replay to registered model/fused graph outputs, separate from expected-json oracle replay.",
+      "output": "reports/vlm/model_output_contains_replay_plan_p097c.md",
+      "claim": "Bridges current relation result toward model-output robustness."
+    }
+  ],
+  "sci2_gap_assessment": {
+    "current_gap": "No full cross-dataset scene-graph relation F1 because multi-source v3 registry lacks direct expected_json.scene_graph labels and public_raster has targets but no scene_graph relation contract.",
+    "minimum_publishable_next": "Cross-source target-level node/detector evaluation plus a small manually annotated scene-graph pilot.",
+    "strong_sci2_next": "Model-output validation on multi-source data plus real/industrial annotated pilot with baseline comparison."
+  }
+}

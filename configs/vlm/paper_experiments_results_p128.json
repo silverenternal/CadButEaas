@@ -1,0 +1,29 @@
+{
+  "id": "SCI-P2-128-experiments-results-and-negative-evidence-draft",
+  "created_on": "2026-05-16",
+  "decision": "experiments_results_draft_ready_for_manuscript_v0_1",
+  "source_metrics": "configs/vlm/paper_metric_tables_p126.json",
+  "manuscript_sections": [
+    "Section 5 Experiments",
+    "Section 6 Error Taxonomy and Negative Evidence"
+  ],
+  "headline_results": {
+    "public_raster_symbol": "p100_precision_at_recall70 improves F1 by +0.095458 and lowers inflation by -2.525917 vs v28 on the 74-row overlay subset.",
+    "image_only_space": "space/room target-level F1 is 0.370752 with center recall 0.742448 on 61 matched rows.",
+    "contains_relation": "expected-json replay reaches 1.000000 relation F1 on primary dev and secondary smoke splits.",
+    "negative_evidence": "image-only symbol/text remain weak; P123/P124 do not pass all gates."
+  },
+  "safe_claims": [
+    "precision-oriented symbol opt-in improves target-level F1/inflation on a 74-row subset",
+    "image-only room/space branch has usable target-level signal",
+    "contains policy is validated only under expected-json replay",
+    "selector/compressor probes identify bottlenecks but are not runtime defaults"
+  ],
+  "unsafe_claims": [
+    "full raster scene-graph solved",
+    "industrial/real-world generalization",
+    "runtime-default contains relation robustness",
+    "image-only symbol/text readiness",
+    "P123/P124 positive selector success"
+  ]
+}

@@ -1,0 +1,493 @@
+{
+  "id": "SCI-P1-97B-real-registry-annotation-pilot-plan",
+  "created_on": "2026-05-15",
+  "decision": {
+    "pilot_size": 30,
+    "quota": {
+      "cvc_fp": 12,
+      "floorplancad": 12,
+      "cubicasa5k": 6
+    },
+    "status": "annotation_plan_ready_no_labels_created_yet",
+    "reason": "CVC-FP and FloorPlanCAD provide externality; CubiCasa hardcases provide continuity with existing expected-json metrics."
+  },
+  "source_inventory": {
+    "cubicasa5k": 648,
+    "cvc_fp": 198,
+    "floorplancad": 171
+  },
+  "pilot_records": [
+    {
+      "id": "irv3_06a94e6151f65d0e",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image025_45.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_1520f36973fcadc7",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image030_315.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_1a0083fbc006de23",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/eval/img/IId_LA0401_45.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_31ff34aa3947d913",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/IIa_BN0820_315.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_3882ad248bc63e9f",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image030_270.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_47b85057f6c22f45",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/eval/img/IId_LA0401_225.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_480321e252433a20",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/IIa_BN0820_45.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_4b33375ce58ee5f5",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image030_225.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_50ba3d341ec19010",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/eval/img/IId_LA0401_135.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_5eac07e0eed0d3d4",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image030_45.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_63f67ce5cca33b17",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image030_90.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_883f8595034cb13b",
+      "source_dataset": "cvc_fp",
+      "image_path": "datasets/external/cvc_fp_figshare/unpacked/1-WID512_ROTATE/5_fold_1/train/img/image025_315.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_6cdcb75cf0fd3406",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0206-0019.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_72c0a96e8b6c5b3d",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0011-0027.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_8cae6afb4f3ece94",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0203-0067.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_b77bae06563b67a3",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0267-0068.png",
+      "annotation_path": null,
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall",
+        "opening"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "01e856678235",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0207-0038.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "0261257ae3dd",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0090-0165.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "02d7a119fb8e",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0188-0002.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "031ba34c6ecb",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0205-0005.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "05d5f215c39d",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0058-0010.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "0809379d7099",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0229-0032.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "0824070557f5",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0060-0097.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "08a7ef96378c",
+      "source_dataset": "floorplancad",
+      "image_path": "datasets/external/floorplancad/data/0260-0017.png",
+      "annotation_path": "",
+      "scan_quality": "public_benchmark_raster",
+      "expected_element_groups": [
+        "wall_opening"
+      ],
+      "review_status": "locked",
+      "split_intent": "locked",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/locked.jsonl"
+    },
+    {
+      "id": "irv3_060c905ab68fd6d7",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/6583/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/6583/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "text",
+        "dimension"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_095bdae8aab23388",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality/8205/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality/8205/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "symbol"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_0a17f072f8448e27",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/5755/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/5755/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "text",
+        "dimension"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_0f27c2ec9708d55e",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality/507/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality/507/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "symbol"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_110a2fec7abad131",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/11661/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/11661/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "symbol"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    },
+    {
+      "id": "irv3_11b320f5d2c1abb3",
+      "source_dataset": "cubicasa5k",
+      "image_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/2516/F1_original.png",
+      "annotation_path": "datasets/external/cubicasa5k_zenodo/unpacked/cubicasa5k/high_quality_architectural/2516/model.svg",
+      "scan_quality": "clean_raster",
+      "expected_element_groups": [
+        "text",
+        "dimension"
+      ],
+      "review_status": "pending_human_review",
+      "split_intent": "review_candidate",
+      "registry_path": "datasets/cadstruct_real_world_benchmark_v3/source_heldout.jsonl"
+    }
+  ],
+  "annotation_schema": {
+    "record_fields": [
+      "record_id",
+      "source_dataset",
+      "image_path",
+      "annotator",
+      "review_status"
+    ],
+    "node_fields": [
+      "node_id",
+      "family",
+      "semantic_type",
+      "bbox",
+      "confidence_or_quality_flag"
+    ],
+    "families": [
+      "boundary",
+      "space",
+      "symbol",
+      "text"
+    ],
+    "relation_fields": [
+      "source",
+      "target",
+      "relation",
+      "confidence_or_quality_flag"
+    ],
+    "relations": [
+      "contains",
+      "bounds",
+      "adjacent_to",
+      "attached_to",
+      "labeled_by"
+    ],
+    "minimum_required_for_contains_eval": [
+      "space nodes with bbox",
+      "symbol nodes with bbox",
+      "contains relations from space to symbol"
+    ],
+    "quality_flags": [
+      "clear",
+      "ambiguous",
+      "partial",
+      "not_visible",
+      "ignore"
+    ]
+  },
+  "annotation_protocol": [
+    "Annotate only visible raster evidence; do not use SVG/CAD geometry at annotation time except for later audit comparison.",
+    "Draw room/space bbox or polygon proxy sufficient for contains relation evaluation.",
+    "Draw symbol fixture/equipment/stair/column/appliance/table/generic_symbol bboxes.",
+    "Add contains edges from every room/space to each contained symbol when the symbol belongs to that space.",
+    "Mark ambiguous multi-room symbols with quality_flag=ambiguous rather than forcing a single edge.",
+    "Double-review at least 20% of pilot records before using as paper evidence."
+  ],
+  "outputs_to_create_next": [
+    "datasets/annotations/real_scene_graph_pilot_p097b.jsonl",
+    "reports/vlm/real_scene_graph_pilot_annotation_guide_p097b.md"
+  ],
+  "claim_boundary": {
+    "can_claim_after_annotation": "small external/real-source scene-graph pilot exists for qualitative and limited quantitative validation",
+    "cannot_claim": "large-scale cross-dataset generalization until more labels are available"
+  }
+}

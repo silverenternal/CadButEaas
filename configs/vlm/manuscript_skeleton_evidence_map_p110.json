@@ -1,0 +1,225 @@
+{
+  "id": "SCI-P2-110-manuscript-skeleton-and-evidence-map",
+  "created_on": "2026-05-15",
+  "working_title": "Audit-Gated Mixture-of-Experts Scene-Graph Parsing for Raster Floorplans",
+  "submission_readiness": "not_ready_for_submission_yet",
+  "positioning": "A transparent, audit-driven MoE framework for raster floorplan scene-graph parsing, emphasizing claim boundaries, opt-in policies, target-level raster evidence, and negative bottleneck diagnostics.",
+  "core_thesis": "Instead of overclaiming one monolithic raster parser, the paper can contribute an auditable MoE evaluation and policy handoff framework, with limited but concrete raster target-level improvements and a clear roadmap to full scene-graph robustness.",
+  "abstract_skeleton": [
+    "Problem: raster floorplan scene-graph parsing requires symbol, room, text, boundary, and relation reasoning under noisy visual evidence.",
+    "Method: build an audit-gated MoE pipeline with explicit runtime contracts, policy registries, opt-in switches, and source-integrity checks.",
+    "Evidence: symbol operating-point rebalance improves precision/F1 and reduces candidate inflation on a locked raster overlay subset; room mask-to-box repair improves image-only room extraction.",
+    "Analysis: negative results reveal image-only symbol/text bottlenecks and prevent unsafe claims.",
+    "Conclusion: the framework provides a reproducible path toward SCI-quality raster scene-graph parsing, but current evidence requires additional baselines, cross-source validation, and human-reviewed real-raster annotations before final submission."
+  ],
+  "paper_sections": [
+    {
+      "section": "1 Introduction",
+      "content": [
+        "Motivation for raster floorplan scene graphs",
+        "Why SVG/oracle shortcuts are invalid at runtime",
+        "Need for auditable claim boundaries"
+      ]
+    },
+    {
+      "section": "2 Related Work",
+      "content": [
+        "Raster floorplan parsing",
+        "Scene graph extraction",
+        "Mixture-of-experts and policy gating",
+        "Symbol detection/OCR in technical drawings"
+      ]
+    },
+    {
+      "section": "3 Runtime Contract and Data",
+      "content": [
+        "Allowed runtime inputs",
+        "Forbidden geometry/expected-json inputs",
+        "Public raster supervision and image-only v15 path",
+        "Real-raster pilot annotation status"
+      ]
+    },
+    {
+      "section": "4 Audit-Gated MoE Pipeline",
+      "content": [
+        "Experts for boundary/space/symbol/text/relation",
+        "Policy registry and opt-in handoff",
+        "Evaluation modes: target-level vs relation replay vs model-output"
+      ]
+    },
+    {
+      "section": "5 Experiments",
+      "content": [
+        "P100 public-raster symbol operating-point study",
+        "P106 image-only room mask-to-box repair",
+        "P095 contains relation expected-json opt-in validation",
+        "Ablations and baselines still required"
+      ]
+    },
+    {
+      "section": "6 Error Taxonomy and Negative Evidence",
+      "content": [
+        "Image-only symbol branch failure",
+        "Text/OCR failure",
+        "Relation model-output gap",
+        "Why negative evidence improves reproducibility"
+      ]
+    },
+    {
+      "section": "7 Discussion and Limitations",
+      "content": [
+        "Not full end-to-end SCI2 evidence yet",
+        "Need full coverage and human-reviewed real-raster benchmark",
+        "Future symbol/OCR branches"
+      ]
+    },
+    {
+      "section": "8 Conclusion",
+      "content": [
+        "Audit-gated MoE as contribution",
+        "Concrete limited raster gains",
+        "Honest roadmap to submission readiness"
+      ]
+    }
+  ],
+  "claim_evidence_map": [
+    {
+      "claim_id": "C1_public_raster_symbol_precision_opt_in",
+      "status": "ready_as_limited_opt_in_evidence",
+      "scope": "74-row CubiCasa locked overlay subset against public_raster_moe_supervision_v19 target boxes",
+      "metric": "symbol target-level IoU@0.30",
+      "evidence": "reports/vlm/raster_moe_target_level_eval_p101.json",
+      "headline": "p100 precision 0.188403, recall 0.681419, F1 0.295190, inflation 3.616826; vs v28 precision +0.072279/F1 +0.095458/inflation -2.525917",
+      "limitations": [
+        "74-row subset, not full 992-row locked set",
+        "symbol target-level only",
+        "not relation graph quality"
+      ]
+    },
+    {
+      "claim_id": "C2_image_only_room_mask_to_box_repair",
+      "status": "promising_internal_raster_evidence",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "space target-level IoU@0.30",
+      "evidence": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+      "headline": "space F1 0.370752, precision 0.274181, recall 0.572337",
+      "limitations": [
+        "separate 256x256 image-only dataset",
+        "not directly comparable to public_raster_moe_supervision_v19",
+        "not relation graph quality"
+      ]
+    },
+    {
+      "claim_id": "C3_image_only_symbol_branch",
+      "status": "negative_not_ready",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "symbol target-level IoU@0.30",
+      "evidence": "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json",
+      "headline": "best handcrafted symbol peak F1 0.046862, precision 0.034493, recall 0.073062",
+      "limitations": [
+        "too weak for publication claim",
+        "needs dedicated detector/localization branch"
+      ]
+    },
+    {
+      "claim_id": "C4_image_only_text_branch",
+      "status": "negative_not_ready",
+      "scope": "61-row 256x256 image-only v15 path",
+      "metric": "text target-level IoU@0.30 / pixel mask F1",
+      "evidence": "reports/vlm/image_only_mask_quality_audit_p105.json",
+      "headline": "text pixel best F1 0.008322; target-level F1 remains 0.0",
+      "limitations": [
+        "requires OCR/retraining",
+        "do not include as positive claim"
+      ]
+    },
+    {
+      "claim_id": "C5_contains_relation_policy",
+      "status": "oracle_expected_json_opt_in_only",
+      "scope": "expected-json/dev and secondary smoke replay paths",
+      "metric": "contains relation F1",
+      "evidence": "reports/vlm/contains_relation_policy_validation_p095_summary.json",
+      "headline": "dev relation F1 0.926172->1.000000; real_v3 smoke 0.918303->1.000000",
+      "limitations": [
+        "not model-output robustness",
+        "not runtime default",
+        "not real industrial generalization"
+      ]
+    }
+  ],
+  "must_run_before_sci2_submission": [
+    {
+      "experiment": "Full public-raster symbol evaluation",
+      "why": "Current P100/P101 model-output coverage is only 74 rows, not full 992-row public raster locked set.",
+      "needed_artifact": "reports/vlm/full_public_raster_symbol_eval_locked.json"
+    },
+    {
+      "experiment": "Strong baselines and ablations",
+      "why": "SCI2 requires comparison against credible detector/OCR/scene-graph baselines and no-MoE variants.",
+      "needed_artifact": "reports/vlm/paper_baseline_ablation_full_matrix.json"
+    },
+    {
+      "experiment": "Model-output contains relation validation",
+      "why": "P095 relation gains are expected-json/oracle replay, not true raster model-output robustness.",
+      "needed_artifact": "reports/vlm/model_output_contains_relation_eval.json"
+    },
+    {
+      "experiment": "Human-reviewed real-raster pilot",
+      "why": "Current AI draft annotations are not ground truth.",
+      "needed_artifact": "datasets/annotations/real_scene_graph_pilot_human_reviewed.jsonl"
+    },
+    {
+      "experiment": "Dedicated symbol/OCR branch or documented failure boundary",
+      "why": "Image-only symbol/text remain weak; either improve them or explicitly scope them out.",
+      "needed_artifact": "reports/vlm/symbol_ocr_branch_eval.json"
+    }
+  ],
+  "figure_table_plan": [
+    {
+      "id": "Fig1",
+      "title": "Audit-gated MoE pipeline and runtime contract",
+      "status": "planned"
+    },
+    {
+      "id": "Fig2",
+      "title": "Policy handoff and opt-in decision flow",
+      "status": "planned"
+    },
+    {
+      "id": "Table1",
+      "title": "Claim-to-evidence matrix",
+      "status": "ready_from_P108"
+    },
+    {
+      "id": "Table2",
+      "title": "P100 symbol operating-point metrics",
+      "status": "ready_limited"
+    },
+    {
+      "id": "Table3",
+      "title": "P106/P107 image-only room/symbol/text diagnostics",
+      "status": "ready_internal"
+    },
+    {
+      "id": "Table4",
+      "title": "Required baselines/ablations before submission",
+      "status": "planned"
+    },
+    {
+      "id": "Fig3",
+      "title": "Failure taxonomy examples from real-raster pilot",
+      "status": "needs_human_review"
+    }
+  ],
+  "target_journal_positioning": {
+    "best_fit_profile": "Computer vision / CAD / engineering informatics journal that accepts method + audit/evaluation framework papers.",
+    "avoid_claiming": "Do not market as solved full industrial floorplan parser yet.",
+    "submission_gate": "Only consider SCI2 submission after full locked evaluation, baselines, and reviewed real-raster evidence are added."
+  },
+  "parallel_model_backlog": [
+    "Train/evaluate dedicated symbol detector branch for image-only v15 or full public-raster coverage.",
+    "Add OCR/text branch for raster text targets.",
+    "Validate contains relation on true model-output raster predictions.",
+    "Human-review real-scene pilot annotations before any real drawing metric claim."
+  ]
+}

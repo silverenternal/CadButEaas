@@ -1,0 +1,286 @@
+{
+  "id": "P208_frozen_symbol_moe_validation",
+  "manifest_path": "configs/vlm/symbol_locked_validation_manifest_p208.json",
+  "row_count": 74,
+  "independence_status": "not_independent_from_P101_development",
+  "claim_boundary": "This is a frozen re-evaluation manifest over the existing 74-row P101 overlay set, not an independent held-out dataset. Use only to audit frozen-stage reproducibility unless a separate locked manifest replaces it.",
+  "baseline_id": "P202",
+  "bootstrap_iterations": 1000,
+  "seed": 208,
+  "stages": [
+    {
+      "id": "P202",
+      "overlay": "reports/vlm/symbol_context_verifier_p202_overlay.jsonl",
+      "role": "context verifier core",
+      "row_count": 74,
+      "metrics": {
+        "tp": 1299,
+        "predicted": 1942,
+        "gold": 2508,
+        "precision": 0.668898,
+        "recall": 0.517943,
+        "f1": 0.58382,
+        "center_recall": 0.552632,
+        "prediction_inflation": 0.774322,
+        "by_bucket_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.484043,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_bucket_center_recall": {
+          "large": 0.801562,
+          "medium": 0.574468,
+          "small": 0.60078,
+          "tiny": 0.298023,
+          "xlarge": 0.453202
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.782477,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.5131,
+          "generic_symbol": 0.897059,
+          "shower": 0.217703,
+          "sink": 0.496361,
+          "stair": 0.266355
+        }
+      }
+    },
+    {
+      "id": "P206d",
+      "overlay": "reports/vlm/symbol_p205b_ranker_regressor_p206d_overlay.jsonl",
+      "role": "learned tabular ranker/regressor",
+      "row_count": 74,
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1955,
+        "gold": 2508,
+        "precision": 0.668542,
+        "recall": 0.521132,
+        "f1": 0.585705,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779506,
+        "by_bucket_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_bucket_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.78852,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.515284,
+          "generic_symbol": 0.897059,
+          "shower": 0.217703,
+          "sink": 0.503639,
+          "stair": 0.266355
+        }
+      }
+    },
+    {
+      "id": "P206e",
+      "overlay": "reports/vlm/symbol_p205b_crop_ranker_p206e_overlay.jsonl",
+      "role": "crop-visual ranker/regressor",
+      "row_count": 74,
+      "metrics": {
+        "tp": 1310,
+        "predicted": 1958,
+        "gold": 2508,
+        "precision": 0.66905,
+        "recall": 0.522329,
+        "f1": 0.586655,
+        "center_recall": 0.557018,
+        "prediction_inflation": 0.780702,
+        "by_bucket_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.505319,
+          "small": 0.581274,
+          "tiny": 0.223164,
+          "xlarge": 0.502463
+        },
+        "by_bucket_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.604681,
+          "tiny": 0.305085,
+          "xlarge": 0.453202
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.78852,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.515284,
+          "generic_symbol": 0.897059,
+          "shower": 0.220096,
+          "sink": 0.50655,
+          "stair": 0.266355
+        }
+      }
+    },
+    {
+      "id": "P206f",
+      "overlay": "reports/vlm/symbol_p205b_crop_ranker_p206f_overlay.jsonl",
+      "role": "cached hard-mined crop ranker",
+      "row_count": 74,
+      "metrics": {
+        "tp": 1329,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.665832,
+        "recall": 0.529904,
+        "f1": 0.590142,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.795853,
+        "by_bucket_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.596879,
+          "tiny": 0.221751,
+          "xlarge": 0.53202
+        },
+        "by_bucket_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.618986,
+          "tiny": 0.305085,
+          "xlarge": 0.487685
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.809668,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.534934,
+          "generic_symbol": 0.897059,
+          "shower": 0.222488,
+          "sink": 0.505095,
+          "stair": 0.280374
+        }
+      }
+    },
+    {
+      "id": "P206g",
+      "overlay": "reports/vlm/symbol_p206f_precision_repair_p206g_overlay.jsonl",
+      "role": "conservative precision repair",
+      "row_count": 74,
+      "metrics": {
+        "tp": 1332,
+        "predicted": 1994,
+        "gold": 2508,
+        "precision": 0.668004,
+        "recall": 0.5311,
+        "f1": 0.591737,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.795056,
+        "by_bucket_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_bucket_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.487685
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.812689,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.534934,
+          "generic_symbol": 0.897059,
+          "shower": 0.22488,
+          "sink": 0.50655,
+          "stair": 0.280374
+        }
+      }
+    }
+  ],
+  "bootstrap": {
+    "P202": {
+      "f1_ci95": [
+        0.551954,
+        0.613708
+      ],
+      "delta_f1_vs_baseline_ci95": [
+        0.0,
+        0.0
+      ],
+      "delta_f1_vs_baseline_mean": 0.0,
+      "prob_delta_positive": 0.0
+    },
+    "P206d": {
+      "f1_ci95": [
+        0.556301,
+        0.616275
+      ],
+      "delta_f1_vs_baseline_ci95": [
+        -0.000145,
+        0.004747
+      ],
+      "delta_f1_vs_baseline_mean": 0.001907,
+      "prob_delta_positive": 0.963
+    },
+    "P206e": {
+      "f1_ci95": [
+        0.554015,
+        0.617976
+      ],
+      "delta_f1_vs_baseline_ci95": [
+        0.000345,
+        0.00607
+      ],
+      "delta_f1_vs_baseline_mean": 0.002763,
+      "prob_delta_positive": 0.992
+    },
+    "P206f": {
+      "f1_ci95": [
+        0.559891,
+        0.620803
+      ],
+      "delta_f1_vs_baseline_ci95": [
+        0.001804,
+        0.011754
+      ],
+      "delta_f1_vs_baseline_mean": 0.006285,
+      "prob_delta_positive": 0.997
+    },
+    "P206g": {
+      "f1_ci95": [
+        0.55901,
+        0.621928
+      ],
+      "delta_f1_vs_baseline_ci95": [
+        0.002885,
+        0.013727
+      ],
+      "delta_f1_vs_baseline_mean": 0.007904,
+      "prob_delta_positive": 0.999
+    }
+  },
+  "best_stage_id": "P206g",
+  "paper_claim_eligible": false,
+  "interpretation": [
+    "Policies are frozen: P208 does not tune thresholds, gates, models, or overlays.",
+    "The available manifest is not independent from P101 development rows, so this run supports reproducibility and bounded evidence rather than broad final claims.",
+    "If an independent locked manifest is supplied later, the same script can rerun the frozen overlays and upgrade claim eligibility only if the gain remains positive."
+  ],
+  "outputs": {
+    "manifest": "configs/vlm/symbol_locked_validation_manifest_p208.json",
+    "json": "configs/vlm/symbol_locked_validation_p208.json",
+    "md": "reports/vlm/symbol_locked_validation_p208.md"
+  }
+}

@@ -1,0 +1,2619 @@
+{
+  "id": "SCI-P2-117-symbol-subset-failure-attribution",
+  "claim_boundary": "Failure attribution for the P116 2000-tile subset only; not a full locked model-quality claim.",
+  "inputs": {
+    "eval": "reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010.json",
+    "predictions": "reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010_predictions.jsonl"
+  },
+  "eval_gate": {
+    "beats_scaled_faster_rcnn_center_0_851394": false,
+    "beats_scaled_faster_rcnn_tiny_iou_0_393013": false,
+    "candidate_inflation_lte_7_919152": true,
+    "passed": false
+  },
+  "selected_thresholds": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.45
+  },
+  "totals": {
+    "gold": 10200,
+    "matched_iou": 6096,
+    "center_hit": 7437,
+    "nwd_070": 7096,
+    "predicted": 17651,
+    "false_positive_or_unmatched": 11555
+  },
+  "cause_summary": {
+    "iou_match_type_correct": {
+      "count": 5699,
+      "rate": 0.558725
+    },
+    "no_near_prediction": {
+      "count": 1208,
+      "rate": 0.118431
+    },
+    "center_hit_iou_miss_box_quality": {
+      "count": 1094,
+      "rate": 0.107255
+    },
+    "iou_match_type_confusion": {
+      "count": 1039,
+      "rate": 0.101863
+    },
+    "weak_overlap_or_duplicate_miss": {
+      "count": 549,
+      "rate": 0.053824
+    },
+    "nwd_near_iou_miss_tiny_box_quality": {
+      "count": 379,
+      "rate": 0.037157
+    },
+    "partial_overlap_below_iou": {
+      "count": 232,
+      "rate": 0.022745
+    }
+  },
+  "by_label": {
+    "appliance": {
+      "support": 1323,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 1055,
+          "rate": 0.79743
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 86,
+          "rate": 0.065004
+        },
+        "iou_match_type_confusion": {
+          "count": 68,
+          "rate": 0.051398
+        },
+        "no_near_prediction": {
+          "count": 48,
+          "rate": 0.036281
+        },
+        "partial_overlap_below_iou": {
+          "count": 34,
+          "rate": 0.025699
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 30,
+          "rate": 0.022676
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 2,
+          "rate": 0.001512
+        }
+      }
+    },
+    "bathtub": {
+      "support": 134,
+      "causes": {
+        "iou_match_type_confusion": {
+          "count": 64,
+          "rate": 0.477612
+        },
+        "no_near_prediction": {
+          "count": 34,
+          "rate": 0.253731
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 14,
+          "rate": 0.104478
+        },
+        "iou_match_type_correct": {
+          "count": 10,
+          "rate": 0.074627
+        },
+        "partial_overlap_below_iou": {
+          "count": 9,
+          "rate": 0.067164
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 3,
+          "rate": 0.022388
+        }
+      }
+    },
+    "column": {
+      "support": 438,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 285,
+          "rate": 0.650685
+        },
+        "no_near_prediction": {
+          "count": 107,
+          "rate": 0.244292
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 14,
+          "rate": 0.031963
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 14,
+          "rate": 0.031963
+        },
+        "iou_match_type_confusion": {
+          "count": 10,
+          "rate": 0.022831
+        },
+        "partial_overlap_below_iou": {
+          "count": 5,
+          "rate": 0.011416
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 3,
+          "rate": 0.006849
+        }
+      }
+    },
+    "equipment": {
+      "support": 1615,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 848,
+          "rate": 0.525077
+        },
+        "iou_match_type_confusion": {
+          "count": 230,
+          "rate": 0.142415
+        },
+        "no_near_prediction": {
+          "count": 217,
+          "rate": 0.134365
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 140,
+          "rate": 0.086687
+        },
+        "partial_overlap_below_iou": {
+          "count": 96,
+          "rate": 0.059443
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 65,
+          "rate": 0.040248
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 19,
+          "rate": 0.011765
+        }
+      }
+    },
+    "generic_symbol": {
+      "support": 1377,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 1003,
+          "rate": 0.728395
+        },
+        "no_near_prediction": {
+          "count": 129,
+          "rate": 0.093682
+        },
+        "iou_match_type_confusion": {
+          "count": 127,
+          "rate": 0.092229
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 50,
+          "rate": 0.036311
+        },
+        "partial_overlap_below_iou": {
+          "count": 37,
+          "rate": 0.02687
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 31,
+          "rate": 0.022513
+        }
+      }
+    },
+    "shower": {
+      "support": 1780,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 834,
+          "rate": 0.468539
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 409,
+          "rate": 0.229775
+        },
+        "no_near_prediction": {
+          "count": 346,
+          "rate": 0.194382
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 148,
+          "rate": 0.083146
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 27,
+          "rate": 0.015169
+        },
+        "iou_match_type_confusion": {
+          "count": 15,
+          "rate": 0.008427
+        },
+        "partial_overlap_below_iou": {
+          "count": 1,
+          "rate": 0.000562
+        }
+      }
+    },
+    "sink": {
+      "support": 2764,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 1409,
+          "rate": 0.509768
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 405,
+          "rate": 0.146527
+        },
+        "iou_match_type_confusion": {
+          "count": 373,
+          "rate": 0.134949
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 264,
+          "rate": 0.095514
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 206,
+          "rate": 0.07453
+        },
+        "no_near_prediction": {
+          "count": 90,
+          "rate": 0.032562
+        },
+        "partial_overlap_below_iou": {
+          "count": 17,
+          "rate": 0.006151
+        }
+      }
+    },
+    "stair": {
+      "support": 722,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 255,
+          "rate": 0.353186
+        },
+        "no_near_prediction": {
+          "count": 213,
+          "rate": 0.295014
+        },
+        "iou_match_type_confusion": {
+          "count": 141,
+          "rate": 0.195291
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 50,
+          "rate": 0.069252
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 34,
+          "rate": 0.047091
+        },
+        "partial_overlap_below_iou": {
+          "count": 28,
+          "rate": 0.038781
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 1,
+          "rate": 0.001385
+        }
+      }
+    },
+    "table": {
+      "support": 47,
+      "causes": {
+        "no_near_prediction": {
+          "count": 24,
+          "rate": 0.510638
+        },
+        "iou_match_type_confusion": {
+          "count": 11,
+          "rate": 0.234043
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 6,
+          "rate": 0.12766
+        },
+        "partial_overlap_below_iou": {
+          "count": 5,
+          "rate": 0.106383
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 1,
+          "rate": 0.021277
+        }
+      }
+    }
+  },
+  "by_area": {
+    "large_le_4096": {
+      "support": 2855,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 2016,
+          "rate": 0.70613
+        },
+        "iou_match_type_confusion": {
+          "count": 381,
+          "rate": 0.13345
+        },
+        "no_near_prediction": {
+          "count": 270,
+          "rate": 0.094571
+        },
+        "partial_overlap_below_iou": {
+          "count": 90,
+          "rate": 0.031524
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 49,
+          "rate": 0.017163
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 48,
+          "rate": 0.016813
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 1,
+          "rate": 0.00035
+        }
+      }
+    },
+    "medium_le_1024": {
+      "support": 1660,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 1209,
+          "rate": 0.728313
+        },
+        "no_near_prediction": {
+          "count": 197,
+          "rate": 0.118675
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 91,
+          "rate": 0.054819
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 65,
+          "rate": 0.039157
+        },
+        "iou_match_type_confusion": {
+          "count": 48,
+          "rate": 0.028916
+        },
+        "partial_overlap_below_iou": {
+          "count": 48,
+          "rate": 0.028916
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 2,
+          "rate": 0.001205
+        }
+      }
+    },
+    "small_le_256": {
+      "support": 1942,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 1261,
+          "rate": 0.649331
+        },
+        "no_near_prediction": {
+          "count": 300,
+          "rate": 0.15448
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 223,
+          "rate": 0.11483
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 71,
+          "rate": 0.03656
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 44,
+          "rate": 0.022657
+        },
+        "iou_match_type_confusion": {
+          "count": 33,
+          "rate": 0.016993
+        },
+        "partial_overlap_below_iou": {
+          "count": 10,
+          "rate": 0.005149
+        }
+      }
+    },
+    "tiny_le_64": {
+      "support": 2749,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 887,
+          "rate": 0.322663
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 700,
+          "rate": 0.254638
+        },
+        "iou_match_type_confusion": {
+          "count": 346,
+          "rate": 0.125864
+        },
+        "nwd_near_iou_miss_tiny_box_quality": {
+          "count": 332,
+          "rate": 0.120771
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 257,
+          "rate": 0.093489
+        },
+        "no_near_prediction": {
+          "count": 226,
+          "rate": 0.082212
+        },
+        "partial_overlap_below_iou": {
+          "count": 1,
+          "rate": 0.000364
+        }
+      }
+    },
+    "xlarge_gt_4096": {
+      "support": 994,
+      "causes": {
+        "iou_match_type_correct": {
+          "count": 326,
+          "rate": 0.327968
+        },
+        "iou_match_type_confusion": {
+          "count": 231,
+          "rate": 0.232394
+        },
+        "no_near_prediction": {
+          "count": 215,
+          "rate": 0.216298
+        },
+        "partial_overlap_below_iou": {
+          "count": 83,
+          "rate": 0.083501
+        },
+        "weak_overlap_or_duplicate_miss": {
+          "count": 81,
+          "rate": 0.081489
+        },
+        "center_hit_iou_miss_box_quality": {
+          "count": 58,
+          "rate": 0.05835
+        }
+      }
+    }
+  },
+  "false_positive_by_label": {
+    "shower": 2778,
+    "equipment": 2277,
+    "column": 1859,
+    "generic_symbol": 1552,
+    "sink": 1428,
+    "appliance": 907,
+    "stair": 657,
+    "bathtub": 97
+  },
+  "worst_labels_by_iou_success": [
+    {
+      "label": "table",
+      "support": 47,
+      "center_miss_rate": 0.744681,
+      "iou_success_rate": 0.234043,
+      "dominant_cause": "no_near_prediction"
+    },
+    {
+      "label": "shower",
+      "support": 1780,
+      "center_miss_rate": 0.293258,
+      "iou_success_rate": 0.476966,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "stair",
+      "support": 722,
+      "center_miss_rate": 0.382271,
+      "iou_success_rate": 0.548476,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "bathtub",
+      "support": 134,
+      "center_miss_rate": 0.343284,
+      "iou_success_rate": 0.552239,
+      "dominant_cause": "iou_match_type_confusion"
+    },
+    {
+      "label": "sink",
+      "support": 2764,
+      "center_miss_rate": 0.208755,
+      "iou_success_rate": 0.644718,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "equipment",
+      "support": 1615,
+      "center_miss_rate": 0.24582,
+      "iou_success_rate": 0.667492,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "column",
+      "support": 438,
+      "center_miss_rate": 0.294521,
+      "iou_success_rate": 0.673516,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "generic_symbol",
+      "support": 1377,
+      "center_miss_rate": 0.156863,
+      "iou_success_rate": 0.820625,
+      "dominant_cause": "iou_match_type_correct"
+    },
+    {
+      "label": "appliance",
+      "support": 1323,
+      "center_miss_rate": 0.128496,
+      "iou_success_rate": 0.848828,
+      "dominant_cause": "iou_match_type_correct"
+    }
+  ],
+  "worst_rows_by_failure_count": [
+    {
+      "row_id": "cubicasa5k_locked_00410",
+      "gold": 78,
+      "predicted": 79,
+      "unmatched_predictions": 50,
+      "causes": {
+        "iou_match_type_correct": 23,
+        "weak_overlap_or_duplicate_miss": 14,
+        "no_near_prediction": 27,
+        "iou_match_type_confusion": 9,
+        "center_hit_iou_miss_box_quality": 3,
+        "partial_overlap_below_iou": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "gold": 66,
+      "predicted": 45,
+      "unmatched_predictions": 21,
+      "causes": {
+        "iou_match_type_correct": 24,
+        "no_near_prediction": 13,
+        "iou_match_type_confusion": 9,
+        "weak_overlap_or_duplicate_miss": 15,
+        "center_hit_iou_miss_box_quality": 2,
+        "partial_overlap_below_iou": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00034",
+      "gold": 59,
+      "predicted": 62,
+      "unmatched_predictions": 33,
+      "causes": {
+        "iou_match_type_correct": 28,
+        "center_hit_iou_miss_box_quality": 17,
+        "nwd_near_iou_miss_tiny_box_quality": 2,
+        "iou_match_type_confusion": 4,
+        "no_near_prediction": 6,
+        "weak_overlap_or_duplicate_miss": 1,
+        "partial_overlap_below_iou": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "gold": 52,
+      "predicted": 87,
+      "unmatched_predictions": 65,
+      "causes": {
+        "iou_match_type_correct": 19,
+        "no_near_prediction": 10,
+        "center_hit_iou_miss_box_quality": 5,
+        "nwd_near_iou_miss_tiny_box_quality": 3,
+        "partial_overlap_below_iou": 3,
+        "iou_match_type_confusion": 7,
+        "weak_overlap_or_duplicate_miss": 5
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00087",
+      "gold": 30,
+      "predicted": 29,
+      "unmatched_predictions": 24,
+      "causes": {
+        "no_near_prediction": 9,
+        "iou_match_type_correct": 5,
+        "center_hit_iou_miss_box_quality": 14,
+        "nwd_near_iou_miss_tiny_box_quality": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00029",
+      "gold": 30,
+      "predicted": 35,
+      "unmatched_predictions": 30,
+      "causes": {
+        "iou_match_type_confusion": 3,
+        "partial_overlap_below_iou": 4,
+        "weak_overlap_or_duplicate_miss": 3,
+        "iou_match_type_correct": 3,
+        "center_hit_iou_miss_box_quality": 8,
+        "nwd_near_iou_miss_tiny_box_quality": 2,
+        "no_near_prediction": 7
+      }
+    },
+    {
+      "row_id": "floorplancad_03184",
+      "gold": 31,
+      "predicted": 30,
+      "unmatched_predictions": 23,
+      "causes": {
+        "no_near_prediction": 17,
+        "partial_overlap_below_iou": 1,
+        "iou_match_type_confusion": 5,
+        "iou_match_type_correct": 2,
+        "weak_overlap_or_duplicate_miss": 1,
+        "center_hit_iou_miss_box_quality": 5
+      }
+    },
+    {
+      "row_id": "floorplancad_04153",
+      "gold": 36,
+      "predicted": 33,
+      "unmatched_predictions": 21,
+      "causes": {
+        "no_near_prediction": 22,
+        "iou_match_type_confusion": 7,
+        "partial_overlap_below_iou": 1,
+        "iou_match_type_correct": 5,
+        "weak_overlap_or_duplicate_miss": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00107",
+      "gold": 40,
+      "predicted": 58,
+      "unmatched_predictions": 43,
+      "causes": {
+        "weak_overlap_or_duplicate_miss": 3,
+        "no_near_prediction": 16,
+        "partial_overlap_below_iou": 2,
+        "iou_match_type_correct": 15,
+        "iou_match_type_confusion": 2,
+        "center_hit_iou_miss_box_quality": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00486",
+      "gold": 55,
+      "predicted": 65,
+      "unmatched_predictions": 37,
+      "causes": {
+        "iou_match_type_correct": 27,
+        "center_hit_iou_miss_box_quality": 7,
+        "nwd_near_iou_miss_tiny_box_quality": 6,
+        "no_near_prediction": 7,
+        "iou_match_type_confusion": 5,
+        "partial_overlap_below_iou": 1,
+        "weak_overlap_or_duplicate_miss": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00215",
+      "gold": 46,
+      "predicted": 50,
+      "unmatched_predictions": 29,
+      "causes": {
+        "iou_match_type_correct": 21,
+        "center_hit_iou_miss_box_quality": 2,
+        "no_near_prediction": 20,
+        "iou_match_type_confusion": 2,
+        "nwd_near_iou_miss_tiny_box_quality": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00040",
+      "gold": 28,
+      "predicted": 18,
+      "unmatched_predictions": 12,
+      "causes": {
+        "iou_match_type_correct": 5,
+        "nwd_near_iou_miss_tiny_box_quality": 5,
+        "no_near_prediction": 17,
+        "iou_match_type_confusion": 1
+      }
+    },
+    {
+      "row_id": "floorplancad_00934",
+      "gold": 30,
+      "predicted": 80,
+      "unmatched_predictions": 71,
+      "causes": {
+        "no_near_prediction": 17,
+        "iou_match_type_confusion": 7,
+        "iou_match_type_correct": 2,
+        "partial_overlap_below_iou": 1,
+        "weak_overlap_or_duplicate_miss": 1,
+        "center_hit_iou_miss_box_quality": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00218",
+      "gold": 48,
+      "predicted": 80,
+      "unmatched_predictions": 55,
+      "causes": {
+        "iou_match_type_correct": 24,
+        "center_hit_iou_miss_box_quality": 7,
+        "iou_match_type_confusion": 3,
+        "nwd_near_iou_miss_tiny_box_quality": 1,
+        "no_near_prediction": 13
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00048",
+      "gold": 36,
+      "predicted": 63,
+      "unmatched_predictions": 49,
+      "causes": {
+        "iou_match_type_correct": 11,
+        "iou_match_type_confusion": 4,
+        "weak_overlap_or_duplicate_miss": 4,
+        "center_hit_iou_miss_box_quality": 8,
+        "no_near_prediction": 9
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00325",
+      "gold": 33,
+      "predicted": 44,
+      "unmatched_predictions": 35,
+      "causes": {
+        "no_near_prediction": 19,
+        "partial_overlap_below_iou": 1,
+        "weak_overlap_or_duplicate_miss": 1,
+        "iou_match_type_correct": 9,
+        "iou_match_type_confusion": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00359",
+      "gold": 43,
+      "predicted": 74,
+      "unmatched_predictions": 55,
+      "causes": {
+        "no_near_prediction": 11,
+        "iou_match_type_correct": 17,
+        "iou_match_type_confusion": 6,
+        "center_hit_iou_miss_box_quality": 6,
+        "partial_overlap_below_iou": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00434",
+      "gold": 26,
+      "predicted": 42,
+      "unmatched_predictions": 36,
+      "causes": {
+        "center_hit_iou_miss_box_quality": 10,
+        "iou_match_type_correct": 6,
+        "weak_overlap_or_duplicate_miss": 1,
+        "no_near_prediction": 9
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00166",
+      "gold": 49,
+      "predicted": 53,
+      "unmatched_predictions": 26,
+      "causes": {
+        "iou_match_type_correct": 27,
+        "center_hit_iou_miss_box_quality": 4,
+        "nwd_near_iou_miss_tiny_box_quality": 2,
+        "no_near_prediction": 10,
+        "partial_overlap_below_iou": 3,
+        "weak_overlap_or_duplicate_miss": 1,
+        "iou_match_type_confusion": 2
+      }
+    },
+    {
+      "row_id": "floorplancad_02976",
+      "gold": 20,
+      "predicted": 18,
+      "unmatched_predictions": 18,
+      "causes": {
+        "no_near_prediction": 17,
+        "center_hit_iou_miss_box_quality": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00009",
+      "gold": 33,
+      "predicted": 26,
+      "unmatched_predictions": 14,
+      "causes": {
+        "iou_match_type_correct": 12,
+        "nwd_near_iou_miss_tiny_box_quality": 1,
+        "weak_overlap_or_duplicate_miss": 2,
+        "no_near_prediction": 1,
+        "center_hit_iou_miss_box_quality": 16,
+        "iou_match_type_confusion": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00066",
+      "gold": 37,
+      "predicted": 70,
+      "unmatched_predictions": 52,
+      "causes": {
+        "iou_match_type_correct": 18,
+        "iou_match_type_confusion": 1,
+        "partial_overlap_below_iou": 2,
+        "center_hit_iou_miss_box_quality": 13,
+        "nwd_near_iou_miss_tiny_box_quality": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00471",
+      "gold": 60,
+      "predicted": 79,
+      "unmatched_predictions": 40,
+      "causes": {
+        "iou_match_type_correct": 38,
+        "iou_match_type_confusion": 4,
+        "weak_overlap_or_duplicate_miss": 8,
+        "center_hit_iou_miss_box_quality": 6,
+        "partial_overlap_below_iou": 3,
+        "nwd_near_iou_miss_tiny_box_quality": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00124",
+      "gold": 31,
+      "predicted": 45,
+      "unmatched_predictions": 34,
+      "causes": {
+        "iou_match_type_confusion": 4,
+        "center_hit_iou_miss_box_quality": 11,
+        "iou_match_type_correct": 9,
+        "no_near_prediction": 4,
+        "nwd_near_iou_miss_tiny_box_quality": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00247",
+      "gold": 33,
+      "predicted": 41,
+      "unmatched_predictions": 29,
+      "causes": {
+        "no_near_prediction": 7,
+        "partial_overlap_below_iou": 5,
+        "center_hit_iou_miss_box_quality": 5,
+        "iou_match_type_correct": 11,
+        "iou_match_type_confusion": 4,
+        "weak_overlap_or_duplicate_miss": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00179",
+      "gold": 23,
+      "predicted": 23,
+      "unmatched_predictions": 18,
+      "causes": {
+        "iou_match_type_correct": 4,
+        "center_hit_iou_miss_box_quality": 3,
+        "nwd_near_iou_miss_tiny_box_quality": 1,
+        "no_near_prediction": 14,
+        "iou_match_type_confusion": 1
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00210",
+      "gold": 28,
+      "predicted": 41,
+      "unmatched_predictions": 31,
+      "causes": {
+        "center_hit_iou_miss_box_quality": 15,
+        "iou_match_type_correct": 9,
+        "iou_match_type_confusion": 2,
+        "no_near_prediction": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00450",
+      "gold": 41,
+      "predicted": 52,
+      "unmatched_predictions": 28,
+      "causes": {
+        "iou_match_type_correct": 21,
+        "nwd_near_iou_miss_tiny_box_quality": 4,
+        "weak_overlap_or_duplicate_miss": 1,
+        "no_near_prediction": 7,
+        "center_hit_iou_miss_box_quality": 5,
+        "iou_match_type_confusion": 3
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00464",
+      "gold": 36,
+      "predicted": 34,
+      "unmatched_predictions": 19,
+      "causes": {
+        "iou_match_type_correct": 15,
+        "center_hit_iou_miss_box_quality": 2,
+        "no_near_prediction": 13,
+        "iou_match_type_confusion": 4,
+        "weak_overlap_or_duplicate_miss": 2
+      }
+    },
+    {
+      "row_id": "cubicasa5k_locked_00045",
+      "gold": 42,
+      "predicted": 70,
+      "unmatched_predictions": 46,
+      "causes": {
+        "no_near_prediction": 1,
+        "iou_match_type_correct": 22,
+        "center_hit_iou_miss_box_quality": 14,
+        "iou_match_type_confusion": 4,
+        "partial_overlap_below_iou": 1
+      }
+    }
+  ],
+  "examples": [
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_29",
+      "label": "appliance",
+      "area_bucket": "large_le_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.851647,
+      "best_nwd": 0.877747,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        1202.0,
+        1963.0,
+        1259.0,
+        2020.0
+      ],
+      "best_pred_bbox": [
+        1197.203872680664,
+        1963.1164093017578,
+        1257.5355224609375,
+        2023.1083374023438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_30",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.079847,
+      "best_nwd": 0.338266,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        1208.0,
+        1997.0,
+        1225.0,
+        2014.0
+      ],
+      "best_pred_bbox": [
+        1197.203872680664,
+        1963.1164093017578,
+        1257.5355224609375,
+        2023.1083374023438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_31",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.079847,
+      "best_nwd": 0.325022,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        1208.0,
+        1969.0,
+        1225.0,
+        1986.0
+      ],
+      "best_pred_bbox": [
+        1197.203872680664,
+        1963.1164093017578,
+        1257.5355224609375,
+        2023.1083374023438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_32",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.079847,
+      "best_nwd": 0.437347,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        1236.0,
+        1997.0,
+        1253.0,
+        2014.0
+      ],
+      "best_pred_bbox": [
+        1197.203872680664,
+        1963.1164093017578,
+        1257.5355224609375,
+        2023.1083374023438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_33",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.079847,
+      "best_nwd": 0.369938,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        1236.0,
+        1969.0,
+        1253.0,
+        1986.0
+      ],
+      "best_pred_bbox": [
+        1197.203872680664,
+        1963.1164093017578,
+        1257.5355224609375,
+        2023.1083374023438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_38",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.295286,
+      "best_nwd": 0.903705,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1224.0,
+        2102.0,
+        1229.0,
+        2107.0
+      ],
+      "best_pred_bbox": [
+        1223.3361206054688,
+        2102.942413330078,
+        1231.2225646972656,
+        2111.056854248047
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_39",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.372705,
+      "best_nwd": 0.92776,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1224.0,
+        2063.0,
+        1229.0,
+        2068.0
+      ],
+      "best_pred_bbox": [
+        1224.8106994628906,
+        2061.1453857421875,
+        1231.5924072265625,
+        2068.8348693847656
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_40",
+      "label": "equipment",
+      "area_bucket": "small_le_256",
+      "cause": "nwd_near_iou_miss_tiny_box_quality",
+      "best_iou": 0.048716,
+      "best_nwd": 0.781647,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1204.0,
+        2082.0,
+        1219.0,
+        2089.0
+      ],
+      "best_pred_bbox": [
+        1206.11181640625,
+        2046.5272369384766,
+        1247.1658325195312,
+        2091.2759857177734
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_12",
+      "label": "generic_symbol",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.267642,
+      "best_nwd": 0.145187,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        150.0,
+        2399.0,
+        230.0,
+        2519.0
+      ],
+      "best_pred_bbox": [
+        146.44699096679688,
+        2398.2930908203125,
+        229.89773559570312,
+        2431.7454833984375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_48",
+      "label": "generic_symbol",
+      "area_bucket": "medium_le_1024",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.876358,
+      "best_nwd": 0.944167,
+      "best_pred_label": "column",
+      "gold_bbox": [
+        246.0,
+        2399.0,
+        288.0,
+        2420.0
+      ],
+      "best_pred_bbox": [
+        246.62147521972656,
+        2398.7199096679688,
+        290.6070556640625,
+        2420.9657287597656
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_42",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 4e-06,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1599.0,
+        2092.0,
+        1666.0,
+        2158.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_46",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 6e-06,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1570.0,
+        2040.0,
+        1688.0,
+        2146.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00186",
+      "target_id": "cubicasa_locked_186_symbol_11",
+      "label": "stair",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 4e-06,
+      "best_pred_label": "",
+      "gold_bbox": [
+        0.0,
+        0.0,
+        10.0,
+        12.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_95",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.046105,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1678.0,
+        2268.0,
+        1739.0,
+        2393.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_96",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.051323,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1695.0,
+        2302.0,
+        1715.0,
+        2343.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_97",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.050093,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1702.0,
+        2318.0,
+        1723.0,
+        2359.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_100",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.597666,
+      "best_nwd": 0.568601,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1646.0,
+        2417.0,
+        1739.0,
+        2505.0
+      ],
+      "best_pred_bbox": [
+        1655.0578918457031,
+        2436.8189392089844,
+        1736.028305053711,
+        2518.0048217773438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_101",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.637094,
+      "best_nwd": 0.574337,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1633.0,
+        2428.0,
+        1728.0,
+        2517.0
+      ],
+      "best_pred_bbox": [
+        1655.0578918457031,
+        2436.8189392089844,
+        1736.028305053711,
+        2518.0048217773438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_102",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.79077,
+      "best_nwd": 0.785185,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1669.0,
+        2417.0,
+        1739.0,
+        2483.0
+      ],
+      "best_pred_bbox": [
+        1673.0195007324219,
+        2416.446060180664,
+        1736.1837463378906,
+        2492.766357421875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_104",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.086437,
+      "best_nwd": 0.215189,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1717.0,
+        2417.0,
+        1739.0,
+        2439.0
+      ],
+      "best_pred_bbox": [
+        1673.0195007324219,
+        2416.446060180664,
+        1736.1837463378906,
+        2492.766357421875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_105",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.636747,
+      "best_nwd": 0.580622,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1634.0,
+        2427.0,
+        1728.0,
+        2517.0
+      ],
+      "best_pred_bbox": [
+        1655.0578918457031,
+        2436.8189392089844,
+        1736.028305053711,
+        2518.0048217773438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_138",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.044825,
+      "best_nwd": 0.145046,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1779.0,
+        2305.0,
+        1881.0,
+        2407.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_139",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.069289,
+      "best_nwd": 0.221499,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1810.0,
+        2320.0,
+        1877.0,
+        2387.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_140",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.214343,
+      "best_nwd": 0.461042,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1779.0,
+        2338.0,
+        1825.0,
+        2385.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_141",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.08873,
+      "best_nwd": 0.259364,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1793.0,
+        2320.0,
+        1866.0,
+        2392.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_142",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.105464,
+      "best_nwd": 0.332756,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1782.0,
+        2326.0,
+        1849.0,
+        2392.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_143",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.036208,
+      "best_nwd": 0.066102,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1797.0,
+        2277.0,
+        1912.0,
+        2389.0
+      ],
+      "best_pred_bbox": [
+        1803.3834228515625,
+        2363.1604194641113,
+        1824.6260986328125,
+        2385.114486694336
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_144",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.039922,
+      "best_nwd": 0.148013,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1778.0,
+        2402.0,
+        1880.0,
+        2505.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_145",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.093453,
+      "best_nwd": 0.258626,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1799.0,
+        2433.0,
+        1865.0,
+        2501.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_146",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.102942,
+      "best_nwd": 0.375412,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1801.0,
+        2402.0,
+        1847.0,
+        2449.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_147",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.079798,
+      "best_nwd": 0.271665,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1793.0,
+        2417.0,
+        1866.0,
+        2489.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_148",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.096285,
+      "best_nwd": 0.314989,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1794.0,
+        2406.0,
+        1860.0,
+        2472.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_149",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.032849,
+      "best_nwd": 0.084374,
+      "best_pred_label": "appliance",
+      "gold_bbox": [
+        1797.0,
+        2421.0,
+        1909.0,
+        2535.0
+      ],
+      "best_pred_bbox": [
+        1800.40380859375,
+        2437.0061950683594,
+        1821.088134765625,
+        2457.283218383789
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_44",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.31169,
+      "best_nwd": 0.910792,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        3118.0,
+        2500.0,
+        3123.0,
+        2505.0
+      ],
+      "best_pred_bbox": [
+        3119.2583923339844,
+        2498.3760833740234,
+        3126.6370391845703,
+        2505.6578216552734
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_122",
+      "label": "shower",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.182646,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3099.0,
+        2379.0,
+        3106.0,
+        2391.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_123",
+      "label": "shower",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.18989,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3099.0,
+        2365.0,
+        3106.0,
+        2377.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_124",
+      "label": "shower",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.184081,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3099.0,
+        2362.0,
+        3106.0,
+        2366.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_125",
+      "label": "shower",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.170684,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3099.0,
+        2390.0,
+        3106.0,
+        2394.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_126",
+      "label": "shower",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.257132,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3107.0,
+        2373.0,
+        3118.0,
+        2383.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_127",
+      "label": "shower",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.282177,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3114.0,
+        2373.0,
+        3117.0,
+        2382.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_128",
+      "label": "shower",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.193292,
+      "best_pred_label": "",
+      "gold_bbox": [
+        3099.0,
+        2376.0,
+        3108.0,
+        2380.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_71",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.752346,
+      "best_nwd": 0.774487,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4365.0,
+        2602.0,
+        4425.0,
+        2669.0
+      ],
+      "best_pred_bbox": [
+        4366.7781982421875,
+        2602.1917114257812,
+        4415.73486328125,
+        2675.686553955078
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_72",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.5895,
+      "best_nwd": 0.645766,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4372.0,
+        2610.0,
+        4433.0,
+        2678.0
+      ],
+      "best_pred_bbox": [
+        4366.7781982421875,
+        2602.1917114257812,
+        4415.73486328125,
+        2675.686553955078
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_73",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.582586,
+      "best_nwd": 0.707874,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4365.0,
+        2602.0,
+        4410.0,
+        2652.0
+      ],
+      "best_pred_bbox": [
+        4366.7781982421875,
+        2602.1917114257812,
+        4415.73486328125,
+        2675.686553955078
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_74",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.297246,
+      "best_nwd": 0.44146,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4388.0,
+        2627.0,
+        4433.0,
+        2678.0
+      ],
+      "best_pred_bbox": [
+        4366.7781982421875,
+        2602.1917114257812,
+        4415.73486328125,
+        2675.686553955078
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_75",
+      "label": "equipment",
+      "area_bucket": "small_le_256",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.184828,
+      "best_nwd": 0.511656,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4365.0,
+        2602.0,
+        4380.0,
+        2619.0
+      ],
+      "best_pred_bbox": [
+        4365.490814208984,
+        2602.2613067626953,
+        4396.2337646484375,
+        2644.6082916259766
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_79",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.497579,
+      "best_nwd": 0.836568,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        4100.0,
+        2631.0,
+        4121.0,
+        2651.0
+      ],
+      "best_pred_bbox": [
+        4097.364715576172,
+        2625.1803588867188,
+        4118.354354858398,
+        2646.8283081054688
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_108",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.051085,
+      "best_nwd": 0.52879,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        2669.0,
+        2039.0,
+        2677.0,
+        2047.0
+      ],
+      "best_pred_bbox": [
+        2650.3135375976562,
+        2029.7331848144531,
+        2692.6183471679688,
+        2059.34716796875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_109",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.048786,
+      "best_nwd": 0.515444,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        2669.0,
+        2009.0,
+        2677.0,
+        2017.0
+      ],
+      "best_pred_bbox": [
+        2648.6349487304688,
+        1998.2737426757812,
+        2692.7741088867188,
+        2027.9948120117188
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_110",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.019955,
+      "best_nwd": 0.495606,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        2671.0,
+        2041.0,
+        2676.0,
+        2046.0
+      ],
+      "best_pred_bbox": [
+        2650.3135375976562,
+        2029.7331848144531,
+        2692.6183471679688,
+        2059.34716796875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_111",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.019057,
+      "best_nwd": 0.482465,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        2671.0,
+        2010.0,
+        2676.0,
+        2015.0
+      ],
+      "best_pred_bbox": [
+        2648.6349487304688,
+        1998.2737426757812,
+        2692.7741088867188,
+        2027.9948120117188
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_129",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.052142,
+      "best_pred_label": "",
+      "gold_bbox": [
+        2654.0,
+        2290.0,
+        2715.0,
+        2393.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_130",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.063128,
+      "best_pred_label": "",
+      "gold_bbox": [
+        2678.0,
+        2331.0,
+        2698.0,
+        2365.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_131",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.095096,
+      "best_pred_label": "",
+      "gold_bbox": [
+        2670.0,
+        2318.0,
+        2691.0,
+        2352.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00482",
+      "target_id": "cubicasa_locked_482_symbol_132",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.078383,
+      "best_nwd": 0.167078,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        2527.0,
+        2401.0,
+        2630.0,
+        2504.0
+      ],
+      "best_pred_bbox": [
+        2551.927276611328,
+        2417.1007690429688,
+        2608.303741455078,
+        2431.8510131835938
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_19",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.100558,
+      "best_nwd": 0.347277,
+      "best_pred_label": "generic_symbol",
+      "gold_bbox": [
+        366.0,
+        541.0,
+        412.0,
+        588.0
+      ],
+      "best_pred_bbox": [
+        384.09871216118336,
+        576.054057314992,
+        408.8102970123291,
+        619.3070449829102
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_20",
+      "label": "equipment",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.271325,
+      "best_pred_label": "",
+      "gold_bbox": [
+        386.0,
+        541.0,
+        413.0,
+        567.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_31",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.384779,
+      "best_nwd": 0.918094,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        648.0,
+        563.0,
+        653.0,
+        568.0
+      ],
+      "best_pred_bbox": [
+        648.4449462890625,
+        563.2318115234375,
+        655.1225891113281,
+        571.1935424804688
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_1",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.126367,
+      "best_nwd": 0.854369,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        641.0,
+        836.0,
+        648.0,
+        842.0
+      ],
+      "best_pred_bbox": [
+        641.9045715332031,
+        840.2467956542969,
+        649.2376708984375,
+        847.5089111328125
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_2",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.045483,
+      "best_nwd": 0.838664,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        642.0,
+        837.0,
+        646.0,
+        841.0
+      ],
+      "best_pred_bbox": [
+        641.9045715332031,
+        840.2467956542969,
+        649.2376708984375,
+        847.5089111328125
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_8",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.399654,
+      "best_nwd": 0.925826,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        756.0,
+        771.0,
+        761.0,
+        776.0
+      ],
+      "best_pred_bbox": [
+        754.4794311523438,
+        771.3928833007812,
+        761.7851867675781,
+        779.0135040283203
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_32",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.308589,
+      "best_nwd": 0.916186,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        648.0,
+        589.0,
+        653.0,
+        594.0
+      ],
+      "best_pred_bbox": [
+        649.5592651367188,
+        587.7560167312622,
+        656.3140563964844,
+        594.8551445007324
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00455",
+      "target_id": "cubicasa_locked_455_symbol_33",
+      "label": "equipment",
+      "area_bucket": "small_le_256",
+      "cause": "weak_overlap_or_duplicate_miss",
+      "best_iou": 0.067899,
+      "best_nwd": 0.593623,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        659.0,
+        579.0,
+        674.0,
+        586.0
+      ],
+      "best_pred_bbox": [
+        632.8634643554688,
+        576.7789078354836,
+        670.2232055664062,
+        607.0418663024902
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_1",
+      "label": "shower",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.086005,
+      "best_pred_label": "",
+      "gold_bbox": [
+        649.0,
+        601.0,
+        727.0,
+        604.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_2",
+      "label": "shower",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.102016,
+      "best_pred_label": "",
+      "gold_bbox": [
+        717.0,
+        598.0,
+        797.0,
+        602.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_35",
+      "label": "shower",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.202872,
+      "best_nwd": 0.86399,
+      "best_pred_label": "shower",
+      "gold_bbox": [
+        288.0,
+        694.0,
+        298.0,
+        697.0
+      ],
+      "best_pred_bbox": [
+        285.467041015625,
+        691.6897888183594,
+        295.7984313964844,
+        702.212646484375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_37",
+      "label": "sink",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.303503,
+      "best_pred_label": "",
+      "gold_bbox": [
+        312.0,
+        560.0,
+        350.0,
+        581.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_38",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.290204,
+      "best_pred_label": "",
+      "gold_bbox": [
+        327.0,
+        564.0,
+        335.0,
+        572.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_39",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.294856,
+      "best_pred_label": "",
+      "gold_bbox": [
+        329.0,
+        566.0,
+        334.0,
+        571.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_40",
+      "label": "equipment",
+      "area_bucket": "small_le_256",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.286157,
+      "best_pred_label": "",
+      "gold_bbox": [
+        328.0,
+        553.0,
+        335.0,
+        568.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_43",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.288086,
+      "best_nwd": 0.894641,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1231.0,
+        908.0,
+        1239.0,
+        916.0
+      ],
+      "best_pred_bbox": [
+        1233.5259399414062,
+        905.8659057617188,
+        1240.5026550292969,
+        912.5082397460938
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_44",
+      "label": "sink",
+      "area_bucket": "tiny_le_64",
+      "cause": "center_hit_iou_miss_box_quality",
+      "best_iou": 0.282072,
+      "best_nwd": 0.909129,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1233.0,
+        909.0,
+        1238.0,
+        914.0
+      ],
+      "best_pred_bbox": [
+        1233.5259399414062,
+        905.8659057617188,
+        1240.5026550292969,
+        912.5082397460938
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_45",
+      "label": "equipment",
+      "area_bucket": "small_le_256",
+      "cause": "nwd_near_iou_miss_tiny_box_quality",
+      "best_iou": 0.058723,
+      "best_nwd": 0.798555,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1231.0,
+        918.0,
+        1238.0,
+        933.0
+      ],
+      "best_pred_bbox": [
+        1220.5515899658203,
+        891.1146621704102,
+        1254.3118057250977,
+        928.9542236328125
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_46",
+      "label": "appliance",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.108129,
+      "best_nwd": 0.215882,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1266.0,
+        857.0,
+        1345.0,
+        935.0
+      ],
+      "best_pred_bbox": [
+        1295.7884826660156,
+        850.9237365722656,
+        1339.5676879882812,
+        872.8763046264648
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_47",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.308142,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1313.0,
+        886.0,
+        1337.0,
+        909.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_48",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.177286,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1296.0,
+        904.0,
+        1320.0,
+        927.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_49",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.104729,
+      "best_nwd": 0.560338,
+      "best_pred_label": "sink",
+      "gold_bbox": [
+        1291.0,
+        865.0,
+        1314.0,
+        889.0
+      ],
+      "best_pred_bbox": [
+        1295.7884826660156,
+        850.9237365722656,
+        1339.5676879882812,
+        872.8763046264648
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_50",
+      "label": "appliance",
+      "area_bucket": "medium_le_1024",
+      "cause": "no_near_prediction",
+      "best_iou": 0.0,
+      "best_nwd": 0.284642,
+      "best_pred_label": "",
+      "gold_bbox": [
+        1274.0,
+        883.0,
+        1298.0,
+        906.0
+      ],
+      "best_pred_bbox": null
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_6",
+      "label": "equipment",
+      "area_bucket": "large_le_4096",
+      "cause": "partial_overlap_below_iou",
+      "best_iou": 0.120906,
+      "best_nwd": 0.364047,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1387.0,
+        702.0,
+        1425.0,
+        739.0
+      ],
+      "best_pred_bbox": [
+        1413.7190475463867,
+        684.0372314453125,
+        1457.4444885253906,
+        740.3802490234375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00459",
+      "target_id": "cubicasa_locked_459_symbol_8",
+      "label": "equipment",
+      "area_bucket": "xlarge_gt_4096",
+      "cause": "iou_match_type_confusion",
+      "best_iou": 0.560756,
+      "best_nwd": 0.550556,
+      "best_pred_label": "equipment",
+      "gold_bbox": [
+        1396.0,
+        658.0,
+        1471.0,
+        730.0
+      ],
+      "best_pred_bbox": [
+        1413.3178405761719,
+        658.0602340698242,
+        1490.019287109375,
+        738.2376098632812
+      ]
+    }
+  ],
+  "interpretation": [
+    "Type accuracy is high once IoU matching succeeds; localization and box-quality misses dominate the failed gates.",
+    "center_hit_iou_miss_box_quality indicates proposals roughly locate the symbol but boxes do not overlap enough for IoU@0.30.",
+    "nwd_near_iou_miss_tiny_box_quality is especially relevant for tiny boxes where NWD sees proximity but IoU remains harsh.",
+    "no_near_prediction and weak_overlap_or_duplicate_miss are coverage/localization misses that a full run will not fix by itself."
+  ]
+}

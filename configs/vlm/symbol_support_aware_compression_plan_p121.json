@@ -1,0 +1,78 @@
+{
+  "id": "SCI-P2-121-symbol-support-aware-compression-plan",
+  "created_on": "2026-05-16",
+  "decision": "build_offline_selector_dataset_then_train_support_aware_compressor",
+  "claim_boundary": "Planning artifact only. No runtime promotion or full locked claim until selector passes subset gates and then validates on a larger/full split.",
+  "problem_statement": {
+    "p119_recall_possible": "Low score thresholds can pass center and tiny-IoU gates.",
+    "p119_inflation_blocker": "The same low thresholds exceed candidate inflation gate.",
+    "p120_simple_score_limit": "Fine score thresholding cannot pass center, tiny-IoU, and inflation together.",
+    "needed": "A selector/compressor that uses runtime-available candidate structure/support features, not gold labels, to remove redundant false positives while preserving true center/tiny coverage."
+  },
+  "evidence_inputs": {
+    "p116_eval": "reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010.json",
+    "p119_eval": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid.json",
+    "p119_predictions": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid_predictions.jsonl",
+    "p117_attribution": "configs/vlm/symbol_subset_failure_attribution_p117.json",
+    "p120_fine_sweep": "configs/vlm/symbol_score_fine_compression_p120.json"
+  },
+  "runtime_allowed_features": [
+    "candidate score",
+    "predicted label and label_id",
+    "bbox width/height/area/aspect",
+    "page-normalized bbox center and area when page extent is inferable from prediction set",
+    "tile scale parsed from tile_id such as s384/s640",
+    "tile offset parsed from tile_id",
+    "same-label overlap support count",
+    "cross-label overlap conflict count",
+    "nearby candidate density",
+    "max IoU with higher-score same-label candidate",
+    "max IoU with higher-score any-label candidate",
+    "score rank within page",
+    "score rank within label/page",
+    "page candidate count and label candidate count"
+  ],
+  "runtime_forbidden_features": [
+    "gold bbox",
+    "gold label",
+    "annotation path",
+    "SVG geometry or semantic_type/raw_label as runtime signal",
+    "any field derived from expected_json during inference"
+  ],
+  "offline_labels_for_training_only": {
+    "positive_center": "candidate covers a gold symbol center",
+    "positive_iou": "candidate IoU with a gold symbol >= 0.30",
+    "positive_tiny_nwd": "for tiny symbols, candidate NWD >= 0.70",
+    "negative": "candidate does not satisfy any positive condition and is not needed by a selected gold target",
+    "grouping": "page/listwise groups by row_id; split must be by row/page, not candidate"
+  },
+  "candidate_policy_to_try": [
+    {
+      "name": "score_plus_support_rules_baseline",
+      "description": "Non-learned compression baseline using score rank, same-label NMS support, per-label budgets, and local duplicate density.",
+      "why_first": "Fast, auditable, no sklearn dependency, good sanity baseline before training."
+    },
+    {
+      "name": "sklearn_listwise_or_pairwise_selector",
+      "description": "Train candidate keep/drop model on runtime features, then enforce per-page budget/rank constraints.",
+      "why_second": "May recover near-miss gap between score=0.006 and score=0.008 by dropping low-support false positives."
+    }
+  ],
+  "subset_success_gate": {
+    "center_recall_gt": 0.851394,
+    "tiny_iou_recall_gt": 0.393013,
+    "candidate_inflation_lte": 7.919152,
+    "source_integrity_violations": 0
+  },
+  "recommended_next_task": {
+    "id": "SCI-P2-122-symbol-selector-dataset-build",
+    "goal": "Build a selector dataset from P119 predictions and reconstructed subset golds with runtime-only features plus offline labels.",
+    "artifacts": [
+      "scripts/vlm/build_symbol_selector_dataset_p122.py",
+      "datasets/symbol_selector_subset_p122/train.jsonl",
+      "datasets/symbol_selector_subset_p122/dev.jsonl",
+      "configs/vlm/symbol_selector_dataset_p122.json",
+      "reports/vlm/symbol_selector_dataset_p122.md"
+    ]
+  }
+}

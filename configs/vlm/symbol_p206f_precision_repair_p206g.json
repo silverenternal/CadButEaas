@@ -1,0 +1,1522 @@
+{
+  "id": "P206g_symbol_p206f_precision_repair",
+  "claim_boundary": "P101-selected precision repair audit; gold labels used only for offline evaluation/audit.",
+  "p206e_metrics": {
+    "tp": 1310,
+    "predicted": 1958,
+    "gold": 2508,
+    "precision": 0.66905,
+    "recall": 0.522329,
+    "f1": 0.586655,
+    "center_recall": 0.557018,
+    "prediction_inflation": 0.780702,
+    "by_area_iou_recall": {
+      "large": 0.79375,
+      "medium": 0.505319,
+      "small": 0.581274,
+      "tiny": 0.223164,
+      "xlarge": 0.502463
+    },
+    "by_area_center_recall": {
+      "large": 0.803125,
+      "medium": 0.585106,
+      "small": 0.604681,
+      "tiny": 0.305085,
+      "xlarge": 0.453202
+    }
+  },
+  "p206f_metrics": {
+    "tp": 1329,
+    "predicted": 1996,
+    "gold": 2508,
+    "precision": 0.665832,
+    "recall": 0.529904,
+    "f1": 0.590142,
+    "center_recall": 0.564992,
+    "prediction_inflation": 0.795853,
+    "by_area_iou_recall": {
+      "large": 0.796875,
+      "medium": 0.505319,
+      "small": 0.596879,
+      "tiny": 0.221751,
+      "xlarge": 0.53202
+    },
+    "by_area_center_recall": {
+      "large": 0.80625,
+      "medium": 0.585106,
+      "small": 0.618986,
+      "tiny": 0.305085,
+      "xlarge": 0.487685
+    }
+  },
+  "addition_audit": {
+    "addition_count": 44,
+    "recoverable_iou_candidates": 25,
+    "center_only_candidates": 5,
+    "likely_fp_candidates": 14,
+    "by_label": {
+      "equipment": 15,
+      "stair": 7,
+      "shower": 7,
+      "sink": 6,
+      "appliance": 9
+    },
+    "by_bucket": {
+      "small": 11,
+      "xlarge": 13,
+      "tiny": 11,
+      "medium": 5,
+      "large": 4
+    },
+    "by_label_likely_fp": {
+      "equipment": 5,
+      "shower": 4,
+      "sink": 6,
+      "stair": 3,
+      "appliance": 1
+    },
+    "by_bucket_likely_fp": {
+      "small": 2,
+      "xlarge": 7,
+      "tiny": 6,
+      "medium": 4
+    },
+    "top_likely_fp": [
+      {
+        "row_id": "cubicasa5k_locked_00035",
+        "label": "sink",
+        "bucket": "tiny",
+        "score": 0.07831910997629166,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          1106.6381962184498,
+          58.736059615108,
+          1112.5737147264351,
+          64.32663594286343
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00049",
+        "label": "sink",
+        "bucket": "tiny",
+        "score": 0.09979436546564102,
+        "best_iou_to_p206e": 0.018341141973933172,
+        "best_iou_to_gold": 0.008032198556777064,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "sink",
+        "gold_bucket": "large",
+        "bbox": [
+          754.727510283647,
+          768.0485735620606,
+          767.1008382206007,
+          771.4415797294024
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00019",
+        "label": "sink",
+        "bucket": "medium",
+        "score": 0.117640420794487,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          784.4354426309447,
+          887.75879113469,
+          824.6184421280499,
+          912.2852057032919
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00019",
+        "label": "stair",
+        "bucket": "xlarge",
+        "score": 0.1470324695110321,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.003581709960299719,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "bathtub",
+        "gold_bucket": "xlarge",
+        "bbox": [
+          768.0024215527014,
+          946.4050516708093,
+          844.3280044555031,
+          1011.3732832080024
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00013",
+        "label": "shower",
+        "bucket": "tiny",
+        "score": 0.26556822657585144,
+        "best_iou_to_p206e": 0.06830212068213877,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          1049.0675310300808,
+          1514.2641263122623,
+          1055.2410506791084,
+          1519.5457931332007
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00013",
+        "label": "equipment",
+        "bucket": "xlarge",
+        "score": 0.2697835862636566,
+        "best_iou_to_p206e": 0.053378020149449285,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          634.128064217584,
+          1203.8461962294734,
+          686.6551536523567,
+          1282.6350807610227
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00045",
+        "label": "equipment",
+        "bucket": "xlarge",
+        "score": 0.3506579101085663,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          896.1626759022013,
+          618.5612867349691,
+          948.1400859716252,
+          712.6733146878883
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00028",
+        "label": "appliance",
+        "bucket": "small",
+        "score": 0.4328189492225647,
+        "best_iou_to_p206e": 0.06731290011975874,
+        "best_iou_to_gold": 0.06180197696482196,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "generic_symbol",
+        "gold_bucket": "large",
+        "bbox": [
+          769.8853127059737,
+          953.1971737382007,
+          784.3133245414803,
+          967.6667403401218
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00064",
+        "label": "sink",
+        "bucket": "medium",
+        "score": 0.4466618597507477,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          661.5588040581473,
+          180.47101639408987,
+          674.5957347462696,
+          215.60273879567382
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00030",
+        "label": "equipment",
+        "bucket": "xlarge",
+        "score": 0.5585402846336365,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          1236.2643409235868,
+          690.0980886147405,
+          1319.2034958028455,
+          767.7512939239008
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00017",
+        "label": "sink",
+        "bucket": "medium",
+        "score": 0.6304851770401001,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          60.17214293706057,
+          378.3283747943181,
+          87.05182202022083,
+          397.01881204310354
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00035",
+        "label": "sink",
+        "bucket": "medium",
+        "score": 0.6510039567947388,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          1090.9294282422836,
+          53.96981358186734,
+          1125.24668556573,
+          72.34896646426184
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00065",
+        "label": "equipment",
+        "bucket": "tiny",
+        "score": 0.6530784964561462,
+        "best_iou_to_p206e": 0.06197987982740572,
+        "best_iou_to_gold": 0.19640195501397723,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "equipment",
+        "gold_bucket": "small",
+        "bbox": [
+          736.0870762534607,
+          1454.2408614268568,
+          739.7846932978625,
+          1465.5916384088562
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00036",
+        "label": "stair",
+        "bucket": "xlarge",
+        "score": 0.7037071585655212,
+        "best_iou_to_p206e": 0.0,
+        "best_iou_to_gold": 0.0,
+        "center_hits_gold": false,
+        "is_iou_tp_candidate": false,
+        "gold_label": "",
+        "gold_bucket": "",
+        "bbox": [
+          578.2728067938098,
+          193.06266960955145,
+          642.1479316975079,
+          267.9908117413602
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00004",
+        "label": "equipment",
+        "bucket": "small",
+        "score": 0.0534697063267231,
+        "best_iou_to_p206e": 0.03786977579419751,
+        "best_iou_to_gold": 0.2728097918011334,
+        "center_hits_gold": true,
+        "is_iou_tp_candidate": false,
+        "gold_label": "equipment",
+        "gold_bucket": "small",
+        "bbox": [
+          958.1582580989484,
+          162.3414317212588,
+          971.7345837043426,
+          168.56410115513188
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00037",
+        "label": "stair",
+        "bucket": "xlarge",
+        "score": 0.11730263382196426,
+        "best_iou_to_p206e": 0.07541165975075587,
+        "best_iou_to_gold": 0.07701505855255929,
+        "center_hits_gold": true,
+        "is_iou_tp_candidate": false,
+        "gold_label": "generic_symbol",
+        "gold_bucket": "large",
+        "bbox": [
+          454.04999884101943,
+          1023.7301452962085,
+          560.3195602039106,
+          1103.0087745514659
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00027",
+        "label": "shower",
+        "bucket": "tiny",
+        "score": 0.11782456934452057,
+        "best_iou_to_p206e": 0.013221269655561212,
+        "best_iou_to_gold": 0.2716867007995937,
+        "center_hits_gold": true,
+        "is_iou_tp_candidate": false,
+        "gold_label": "shower",
+        "gold_bucket": "tiny",
+        "bbox": [
+          889.8491235925947,
+          894.5639473700772,
+          897.6987886929976,
+          899.9540333239132
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00027",
+        "label": "shower",
+        "bucket": "tiny",
+        "score": 0.12090826779603958,
+        "best_iou_to_p206e": 0.07221804398605743,
+        "best_iou_to_gold": 0.29775423085942126,
+        "center_hits_gold": true,
+        "is_iou_tp_candidate": false,
+        "gold_label": "shower",
+        "gold_bucket": "tiny",
+        "bbox": [
+          889.3806749568694,
+          896.1566156162277,
+          896.9408046452736,
+          903.7914109471834
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00013",
+        "label": "shower",
+        "bucket": "xlarge",
+        "score": 0.41520029306411743,
+        "best_iou_to_p206e": 0.016186231605456118,
+        "best_iou_to_gold": 0.007417936586891327,
+        "center_hits_gold": true,
+        "is_iou_tp_candidate": false,
+        "gold_label": "shower",
+        "gold_bucket": "small",
+        "bbox": [
+          966.2191114623236,
+          1446.0018674942946,
+          1048.8092354236185,
+          1559.9377056748124
+        ]
+      }
+    ]
+  },
+  "best_policy": {
+    "same_as_e_iou": 0.5,
+    "drop_labels": [],
+    "drop_buckets": [],
+    "min_score": 0.0,
+    "max_add_per_row": 5,
+    "max_iou_to_core": 0.98,
+    "min_dist_to_core": 12,
+    "name": "p206g_dist12"
+  },
+  "best_metrics": {
+    "tp": 1332,
+    "predicted": 1994,
+    "gold": 2508,
+    "precision": 0.668004,
+    "recall": 0.5311,
+    "f1": 0.591737,
+    "center_recall": 0.565789,
+    "prediction_inflation": 0.795056,
+    "by_area_iou_recall": {
+      "large": 0.798438,
+      "medium": 0.505319,
+      "small": 0.598179,
+      "tiny": 0.223164,
+      "xlarge": 0.53202
+    },
+    "by_area_center_recall": {
+      "large": 0.80625,
+      "medium": 0.585106,
+      "small": 0.620286,
+      "tiny": 0.306497,
+      "xlarge": 0.487685
+    }
+  },
+  "delta_vs_p206f": {
+    "precision": 0.002172,
+    "recall": 0.001196,
+    "f1": 0.001595,
+    "center_recall": 0.000797,
+    "prediction_inflation": -0.000797
+  },
+  "delta_vs_p206e": {
+    "precision": -0.001046,
+    "recall": 0.008771,
+    "f1": 0.005082,
+    "center_recall": 0.008771,
+    "prediction_inflation": 0.014354
+  },
+  "decision": "promote_precision_repair",
+  "top_policies": [
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 12,
+        "name": "p206g_dist12"
+      },
+      "metrics": {
+        "tp": 1332,
+        "predicted": 1994,
+        "gold": 2508,
+        "precision": 0.668004,
+        "recall": 0.5311,
+        "f1": 0.591737,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.795056,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 12,
+        "name": "p206g_cap3_dist12"
+      },
+      "metrics": {
+        "tp": 1332,
+        "predicted": 1994,
+        "gold": 2508,
+        "precision": 0.668004,
+        "recall": 0.5311,
+        "f1": 0.591737,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.795056,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.15,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_score15"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1990,
+        "gold": 2508,
+        "precision": 0.668342,
+        "recall": 0.530303,
+        "f1": 0.591374,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.793461,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.306497,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.1,
+        "max_add_per_row": 4,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 12,
+        "name": "p206g_cap4_score10_dist12"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1991,
+        "gold": 2508,
+        "precision": 0.668006,
+        "recall": 0.530303,
+        "f1": 0.591242,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.79386,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.306497,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 12,
+        "name": "p206g_iou08_dist12"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1992,
+        "gold": 2508,
+        "precision": 0.667671,
+        "recall": 0.530303,
+        "f1": 0.591111,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.794258,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.12,
+        "min_dist_to_core": 12,
+        "name": "p206g_iou12_dist12"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1992,
+        "gold": 2508,
+        "precision": 0.667671,
+        "recall": 0.530303,
+        "f1": 0.591111,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.794258,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [
+          "medium"
+        ],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_medium"
+      },
+      "metrics": {
+        "tp": 1331,
+        "predicted": 1997,
+        "gold": 2508,
+        "precision": 0.6665,
+        "recall": 0.530702,
+        "f1": 0.590899,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.796252,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.596879,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.618986,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 4,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap4"
+      },
+      "metrics": {
+        "tp": 1332,
+        "predicted": 2001,
+        "gold": 2508,
+        "precision": 0.665667,
+        "recall": 0.5311,
+        "f1": 0.590818,
+        "center_recall": 0.566188,
+        "prediction_inflation": 0.797847,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [
+          "medium"
+        ],
+        "min_score": 0.1,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_medium_score10"
+      },
+      "metrics": {
+        "tp": 1329,
+        "predicted": 1991,
+        "gold": 2508,
+        "precision": 0.667504,
+        "recall": 0.529904,
+        "f1": 0.590798,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.79386,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.594278,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.616385,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap2"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1995,
+        "gold": 2508,
+        "precision": 0.666667,
+        "recall": 0.530303,
+        "f1": 0.590717,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795455,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.596879,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.618986,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_keep_all"
+      },
+      "metrics": {
+        "tp": 1332,
+        "predicted": 2002,
+        "gold": 2508,
+        "precision": 0.665335,
+        "recall": 0.5311,
+        "f1": 0.590687,
+        "center_recall": 0.566188,
+        "prediction_inflation": 0.798246,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.1,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_score10"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.666333,
+        "recall": 0.530303,
+        "f1": 0.590586,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795853,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 0,
+        "name": "p206g_iou08"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.666333,
+        "recall": 0.530303,
+        "f1": 0.590586,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795853,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.12,
+        "min_dist_to_core": 0,
+        "name": "p206g_iou12"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.666333,
+        "recall": 0.530303,
+        "f1": 0.590586,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795853,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.2,
+        "min_dist_to_core": 0,
+        "name": "p206g_iou20"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.666333,
+        "recall": 0.530303,
+        "f1": 0.590586,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795853,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.1,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap3_score10"
+      },
+      "metrics": {
+        "tp": 1330,
+        "predicted": 1996,
+        "gold": 2508,
+        "precision": 0.666333,
+        "recall": 0.530303,
+        "f1": 0.590586,
+        "center_recall": 0.565391,
+        "prediction_inflation": 0.795853,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap3"
+      },
+      "metrics": {
+        "tp": 1331,
+        "predicted": 2000,
+        "gold": 2508,
+        "precision": 0.6655,
+        "recall": 0.530702,
+        "f1": 0.590506,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.797448,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.596879,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.618986,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "stair"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_stair"
+      },
+      "metrics": {
+        "tp": 1329,
+        "predicted": 1995,
+        "gold": 2508,
+        "precision": 0.666165,
+        "recall": 0.529904,
+        "f1": 0.590273,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.795455,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.30791,
+          "xlarge": 0.477833
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "stair"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.1,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_stair_score10"
+      },
+      "metrics": {
+        "tp": 1327,
+        "predicted": 1989,
+        "gold": 2508,
+        "precision": 0.667169,
+        "recall": 0.529107,
+        "f1": 0.590171,
+        "center_recall": 0.564195,
+        "prediction_inflation": 0.793062,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.30791,
+          "xlarge": 0.477833
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [
+          "xlarge"
+        ],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_xlarge"
+      },
+      "metrics": {
+        "tp": 1326,
+        "predicted": 1989,
+        "gold": 2508,
+        "precision": 0.666667,
+        "recall": 0.528708,
+        "f1": 0.589726,
+        "center_recall": 0.563397,
+        "prediction_inflation": 0.793062,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.505319,
+          "small": 0.598179,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.620286,
+          "tiny": 0.306497,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [
+          "xlarge"
+        ],
+        "min_score": 0.1,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_xlarge_score10"
+      },
+      "metrics": {
+        "tp": 1324,
+        "predicted": 1983,
+        "gold": 2508,
+        "precision": 0.667675,
+        "recall": 0.527911,
+        "f1": 0.589624,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.79067,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.505319,
+          "small": 0.595579,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.617685,
+          "tiny": 0.306497,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [],
+        "drop_buckets": [
+          "xlarge"
+        ],
+        "min_score": 0.0,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap3_drop_xlarge"
+      },
+      "metrics": {
+        "tp": 1325,
+        "predicted": 1987,
+        "gold": 2508,
+        "precision": 0.666834,
+        "recall": 0.528309,
+        "f1": 0.589544,
+        "center_recall": 0.562998,
+        "prediction_inflation": 0.792265,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.505319,
+          "small": 0.596879,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.618986,
+          "tiny": 0.306497,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "equipment"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_equipment"
+      },
+      "metrics": {
+        "tp": 1323,
+        "predicted": 1987,
+        "gold": 2508,
+        "precision": 0.665828,
+        "recall": 0.527512,
+        "f1": 0.588654,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.792265,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.505319,
+          "small": 0.594278,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.616385,
+          "tiny": 0.30791,
+          "xlarge": 0.463054
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "appliance"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.1,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_app_score10"
+      },
+      "metrics": {
+        "tp": 1323,
+        "predicted": 1988,
+        "gold": 2508,
+        "precision": 0.665493,
+        "recall": 0.527512,
+        "f1": 0.588523,
+        "center_recall": 0.562998,
+        "prediction_inflation": 0.792663,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.586476,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.609883,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "appliance"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_appliance"
+      },
+      "metrics": {
+        "tp": 1324,
+        "predicted": 1993,
+        "gold": 2508,
+        "precision": 0.664325,
+        "recall": 0.527911,
+        "f1": 0.588314,
+        "center_recall": 0.563397,
+        "prediction_inflation": 0.794657,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.587776,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.611183,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "appliance"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap3_drop_appliance"
+      },
+      "metrics": {
+        "tp": 1323,
+        "predicted": 1991,
+        "gold": 2508,
+        "precision": 0.66449,
+        "recall": 0.527512,
+        "f1": 0.588131,
+        "center_recall": 0.562998,
+        "prediction_inflation": 0.79386,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.586476,
+          "tiny": 0.223164,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.80625,
+          "medium": 0.585106,
+          "small": 0.609883,
+          "tiny": 0.30791,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "appliance",
+          "stair"
+        ],
+        "drop_buckets": [],
+        "min_score": 0.0,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_drop_appliance_stair"
+      },
+      "metrics": {
+        "tp": 1321,
+        "predicted": 1986,
+        "gold": 2508,
+        "precision": 0.665156,
+        "recall": 0.526715,
+        "f1": 0.587895,
+        "center_recall": 0.562201,
+        "prediction_inflation": 0.791866,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.505319,
+          "small": 0.587776,
+          "tiny": 0.223164,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.585106,
+          "small": 0.611183,
+          "tiny": 0.30791,
+          "xlarge": 0.477833
+        }
+      }
+    },
+    {
+      "policy": {
+        "same_as_e_iou": 0.5,
+        "drop_labels": [
+          "appliance"
+        ],
+        "drop_buckets": [
+          "xlarge"
+        ],
+        "min_score": 0.0,
+        "max_add_per_row": 4,
+        "max_iou_to_core": 0.98,
+        "min_dist_to_core": 0,
+        "name": "p206g_cap4_drop_app_xlarge"
+      },
+      "metrics": {
+        "tp": 1318,
+        "predicted": 1979,
+        "gold": 2508,
+        "precision": 0.665993,
+        "recall": 0.525518,
+        "f1": 0.587475,
+        "center_recall": 0.560606,
+        "prediction_inflation": 0.789075,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.505319,
+          "small": 0.587776,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.611183,
+          "tiny": 0.306497,
+          "xlarge": 0.46798
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "json": "configs/vlm/symbol_p206f_precision_repair_p206g.json",
+    "md": "reports/vlm/symbol_p206f_precision_repair_p206g.md",
+    "overlay": "reports/vlm/symbol_p206f_precision_repair_p206g_overlay.jsonl"
+  }
+}

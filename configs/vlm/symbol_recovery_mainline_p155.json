@@ -1,0 +1,129 @@
+{
+  "id": "SCI-P2-155-symbol-recovery-mainline-roadmap",
+  "created_on": "2026-05-17",
+  "decision": "make_symbol_recovery_the_primary_metric_rescue_mainline",
+  "rationale": "P140 showed a large jump from P100 F1 0.295190 to P140 F1 0.525029 with inflation 1.055024. This means symbol is not exhausted; the remaining bottleneck is recall/center recovery after aggressive cleanup.",
+  "current_best": {
+    "policy": {
+      "name": "t6_p90_lNone_same0.45_any0.75",
+      "thresholds": {
+        "*": 0.02,
+        "appliance": 0.32,
+        "bathtub": 0.32,
+        "column": 0.32,
+        "equipment": 0.24,
+        "generic_symbol": 0.45,
+        "shower": 0.24,
+        "sink": 0.24,
+        "stair": 0.24
+      },
+      "max_page_keep": 90,
+      "max_label_keep": null,
+      "same_label_nms_iou": 0.45,
+      "any_label_nms_iou": 0.75
+    },
+    "precision": 0.511338,
+    "recall": 0.539474,
+    "f1": 0.525029,
+    "center_recall": 0.657496,
+    "tiny_center_recall": 0.467514,
+    "inflation": 1.055024
+  },
+  "north_star_targets": {
+    "near": "official F1 >= 0.55 with inflation <= 1.5",
+    "strong": "F1 >= 0.60 with inflation <= 2.0 and center >= 0.72",
+    "stretch": "F1 >= 0.65 or center >= 0.80 without inflation > 3.0",
+    "not_required": "Do not require F1 >= 0.95 for detector metrics; focus on credible, defensible improvement."
+  },
+  "recovery_lanes": [
+    {
+      "id": "P155A",
+      "priority": "P0",
+      "name": "materialize_and_officially_validate_p140",
+      "goal": "Make P140 an actual overlay JSONL and rerun the official P101 evaluator. This is mandatory before any manuscript claim.",
+      "why_it_can_help": "Confirms that the sweep metric is not an artifact of a custom evaluator.",
+      "target": "official F1 >=0.50, inflation <=1.20, delta from sweep <=0.02 F1",
+      "artifact": "reports/vlm/symbol_p140_official_eval_p155a.md"
+    },
+    {
+      "id": "P155B",
+      "priority": "P0",
+      "name": "recall_backfill_after_p140_cleanup",
+      "goal": "Starting from P140 clean predictions, add back high-recall candidates only where they do not duplicate selected boxes.",
+      "why_it_can_help": "P140 precision/inflation are strong but recall/center dropped. A second-stage backfill can recover missed symbols while preserving low inflation.",
+      "methods": [
+        "two-tier thresholds: strict core + loose backfill",
+        "per-label backfill caps",
+        "tiny-symbol backfill using center/NWD proxy",
+        "distance-to-selected suppression",
+        "page-level residual budget"
+      ],
+      "target": "F1 >=0.58, center >=0.72, inflation <=1.8",
+      "artifact": "reports/vlm/symbol_p140_recall_backfill_p155b.md"
+    },
+    {
+      "id": "P155C",
+      "priority": "P0",
+      "name": "per_label_error_bucket_rescue",
+      "goal": "Split symbol metrics by predicted label and area bucket, then tune thresholds/NMS separately for easy vs hard labels.",
+      "why_it_can_help": "P140 uses label thresholds but not label-specific objectives. Some classes may tolerate lower thresholds while noisy labels need stricter NMS.",
+      "methods": [
+        "per-label PR curves",
+        "tiny/small/medium/large area buckets",
+        "label-specific max-page and max-label budgets",
+        "class-specific NMS IoU"
+      ],
+      "target": "Improve recall without losing more than 0.03 precision; identify 2-3 easy labels for main-table ablation.",
+      "artifact": "reports/vlm/symbol_per_label_bucket_rescue_p155c.md"
+    },
+    {
+      "id": "P155D",
+      "priority": "P1",
+      "name": "box_calibration_and_merge_rescue",
+      "goal": "Apply existing symbol box calibration/refiner scripts to P140 candidates, then rerun target-level eval.",
+      "why_it_can_help": "Low center and IoU may reflect duplicate/tile boundary boxes and loose boxes, not only missed detections. Existing repo has multiple symbol refiner/calibration scripts.",
+      "candidate_scripts": [
+        "scripts/vlm/apply_symbol_v28_box_calibration_p052.py",
+        "scripts/vlm/apply_symbol_center_only_box_repair_p067.py",
+        "scripts/vlm/apply_symbol_shower_equipment_box_repair_p072.py",
+        "scripts/vlm/apply_symbol_box_refiner_v38.py",
+        "scripts/vlm/apply_symbol_visual_box_refiner_v41.py"
+      ],
+      "target": "F1 +0.03 over P140 or center +0.05 without inflation increase",
+      "artifact": "reports/vlm/symbol_box_calibration_rescue_p155d.md"
+    },
+    {
+      "id": "P155E",
+      "priority": "P1",
+      "name": "off_mount_full_nms_and_search",
+      "goal": "Copy 74-row overlay and eval targets to local temp/off-mount storage and run a wider NMS/threshold/backfill search without SSHFS slowness.",
+      "why_it_can_help": "P140 slow NMS eventually produced the strongest result. Wider search may find another jump.",
+      "target": "Find policy exceeding P140 F1 by >=0.03 or center by >=0.05",
+      "artifact": "reports/vlm/symbol_offmount_wide_search_p155e.md"
+    },
+    {
+      "id": "P155F",
+      "priority": "P1",
+      "name": "subset_generalization_guardrail",
+      "goal": "Check P140/P155 policies against any available P116/P119 expanded subset artifacts before making them main claims.",
+      "why_it_can_help": "Prevents overfitting to 74-row overlay subset and strengthens SCI story.",
+      "target": "No catastrophic collapse; preserve lower inflation than baseline",
+      "artifact": "reports/vlm/symbol_policy_generalization_guardrail_p155f.md"
+    }
+  ],
+  "execution_order": [
+    "P155A official materialization/eval",
+    "P155B recall backfill",
+    "P155C per-label bucket rescue",
+    "P155E off-mount wide search if P155B/C show promise",
+    "P155D box calibration/refiner rescue",
+    "P155F generalization guardrail",
+    "P156 manuscript/table update only after validated symbol gains"
+  ],
+  "paper_policy": "Do not freeze paper. Symbol is now the main metric-recovery story. Only validated P155 outputs can update manuscript v0.5; P140 remains current safe symbol result until P155A confirms it.",
+  "stop_gates": [
+    "If P155A fails official validation, fix materialization/evaluator before any further symbol claims.",
+    "If P155B/C cannot improve F1 by >=0.02 or center by >=0.03, move to box calibration rather than endless threshold search.",
+    "If wider search only improves on the same 74 rows but no generalization artifact exists, keep claim explicitly subset-bound."
+  ]
+}

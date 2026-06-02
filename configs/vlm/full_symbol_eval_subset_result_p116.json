@@ -1,0 +1,58 @@
+{
+  "id": "SCI-P2-116-full-symbol-eval-subset-run",
+  "created_on": "2026-05-16",
+  "decision": "subset_completed_gate_failed_do_not_run_full_for_claim_yet",
+  "claim_boundary": "Subset runtime/evidence expansion only; not a full locked public-raster metric claim.",
+  "artifacts": {
+    "status": "reports/vlm/full_symbol_eval_p113_logs/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010.status.json",
+    "eval_output": "reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010.json",
+    "predictions_output": "reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010_predictions.jsonl"
+  },
+  "run": {
+    "state": "completed",
+    "exit_code": 0,
+    "started_at": "2026-05-16T14:20:10+08:00",
+    "completed_at": "2026-05-16T14:20:35+08:00",
+    "limit_tiles": 2000,
+    "predict_batch": 8,
+    "eval_output_bytes": 11529,
+    "predictions_output_bytes": 3872393
+  },
+  "metrics": {
+    "rows": 603,
+    "tiles": 2000,
+    "symbol_bbox_iou_0_30": {
+      "matched": 6096,
+      "predicted": 17651,
+      "gold": 10200,
+      "precision": 0.345363,
+      "recall": 0.597647,
+      "f1": 0.437758
+    },
+    "symbol_bbox_center_recall": 0.693922,
+    "candidate_inflation": 1.73049,
+    "typed_accuracy_on_iou_matches": 0.934875,
+    "tiny_iou_recall": 0.324482,
+    "tiny_nwd_recall_at_0_70": 0.790833,
+    "gate": {
+      "beats_scaled_faster_rcnn_center_0_851394": false,
+      "beats_scaled_faster_rcnn_tiny_iou_0_393013": false,
+      "candidate_inflation_lte_7_919152": true,
+      "passed": false
+    },
+    "selected_thresholds": {
+      "score_threshold": 0.05,
+      "nms_threshold": 0.45
+    },
+    "memory_audit": {
+      "max_rss_kb": 2032292
+    }
+  },
+  "interpretation": [
+    "Remote subset execution is stable and fast enough for expanded evaluation.",
+    "The selected balanced_f1 operating point keeps candidate inflation under the baseline threshold.",
+    "Center recall and tiny IoU recall still fail the configured scaled Faster R-CNN baselines, so this subset does not justify full-run quality claims.",
+    "Typed accuracy on IoU matches is high, so localization/coverage remains a stronger bottleneck than type classification on matched boxes."
+  ],
+  "next_recommendation": "Do not launch full locked as a quality claim yet; first run P117 subset failure attribution or compare selected thresholds/policies on the subset outputs."
+}

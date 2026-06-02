@@ -1,0 +1,54 @@
+{
+  "id": "SCI-P1-100-symbol-operating-point-rebalance-locked",
+  "created_on": "2026-05-15",
+  "input_report": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_eval_p064_refresh.json",
+  "claim_boundary": "Derived from existing locked raster detector threshold grid; no retraining and no new scene-graph relation claim.",
+  "legacy_locked_selected": {
+    "score_threshold": 0.02,
+    "nms_threshold": 0.55,
+    "precision": 0.116643,
+    "recall": 0.738898,
+    "f1": 0.20148,
+    "center_recall": 0.907484,
+    "candidate_inflation": 6.334704,
+    "tiny_iou_recall": 0.507418,
+    "typed_accuracy_on_iou_matches": 0.965498
+  },
+  "recommended_locked_balanced_f1": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.45,
+    "precision": 0.220954,
+    "recall": 0.676398,
+    "f1": 0.333097,
+    "center_recall": 0.849507,
+    "candidate_inflation": 3.061266,
+    "tiny_iou_recall": 0.402077,
+    "typed_accuracy_on_iou_matches": 0.972644
+  },
+  "recommended_locked_precision_at_recall70": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.55,
+    "precision": 0.188292,
+    "recall": 0.702303,
+    "f1": 0.296966,
+    "center_recall": 0.874178,
+    "candidate_inflation": 3.729852,
+    "tiny_iou_recall": 0.446588,
+    "typed_accuracy_on_iou_matches": 0.971897
+  },
+  "delta_balanced_vs_legacy": {
+    "precision": 0.104311,
+    "recall": -0.0625,
+    "f1": 0.131617,
+    "center_recall": -0.057977,
+    "candidate_inflation": -3.273438
+  },
+  "delta_recall70_vs_legacy": {
+    "precision": 0.071649,
+    "recall": -0.036595,
+    "f1": 0.095486,
+    "center_recall": -0.033306,
+    "candidate_inflation": -2.604852
+  },
+  "decision": "Balanced F1 also holds on locked grid for precision/inflation, but recall drops. Use precision_at_recall70 as safer downstream candidate if recall floor is required."
+}

@@ -1,0 +1,143 @@
+{
+  "id": "SCI-P2-161-symbol-rescued-policy-guardrail",
+  "created_on": "2026-05-17",
+  "decision": "guardrail_passes_relative_delta_but_not_generalization_claim",
+  "claim_boundary": "Guardrail applies P160-style postprocess to an available non-identical CubiCasa locked subset with raw v28 predictions. It is still CubiCasa-only and post-hoc; not a full-raster or cross-dataset claim.",
+  "source_integrity": "Runtime policy uses raw detector predicted bbox/label/score plus fixed P155E/P157/P160 config. Gold targets are included only for evaluation.",
+  "inputs": {
+    "targets": "/home/hugo/codes/CadButEaas/datasets/public_raster_moe_supervision_v19/locked.jsonl",
+    "source_predictions": "/home/hugo/codes/CadButEaas/reports/vlm/full_public_raster_symbol_eval_subset_p113_p116_subset_20260516_142010_predictions.jsonl",
+    "trainlike_overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p160_best.jsonl"
+  },
+  "row_counts": {
+    "source_prediction_rows": 603,
+    "materialized_rows": 603,
+    "overlap_with_p160_74row_subset": 66,
+    "overlap_sample": [
+      "cubicasa5k_locked_00000",
+      "cubicasa5k_locked_00002",
+      "cubicasa5k_locked_00003",
+      "cubicasa5k_locked_00004",
+      "cubicasa5k_locked_00005",
+      "cubicasa5k_locked_00007",
+      "cubicasa5k_locked_00008",
+      "cubicasa5k_locked_00009",
+      "cubicasa5k_locked_00010",
+      "cubicasa5k_locked_00011",
+      "cubicasa5k_locked_00012",
+      "cubicasa5k_locked_00013",
+      "cubicasa5k_locked_00014",
+      "cubicasa5k_locked_00015",
+      "cubicasa5k_locked_00016",
+      "cubicasa5k_locked_00018",
+      "cubicasa5k_locked_00019",
+      "cubicasa5k_locked_00021",
+      "cubicasa5k_locked_00022",
+      "cubicasa5k_locked_00023"
+    ]
+  },
+  "policy": {
+    "p155e": {
+      "thresholds": {
+        "*": 0.02,
+        "appliance": 0.32,
+        "bathtub": 0.32,
+        "column": 0.4,
+        "equipment": 0.24,
+        "generic_symbol": 0.45,
+        "shower": 0.32,
+        "sink": 0.24,
+        "stair": 0.36
+      },
+      "max_page_keep": 80,
+      "max_label_keep": null,
+      "same_label_nms_iou": 0.45,
+      "any_label_nms_iou": 0.75,
+      "pre_nms_keep": 180
+    },
+    "p157_geometry": "small 1.20x/1.05y; medium 1.20x/0.95y; sink/equipment/appliance x1.05",
+    "p160_tiny": "tiny after geometry and score>=0.35 -> 8x8"
+  },
+  "materialization": {
+    "p155e_style": {
+      "rows": 603,
+      "missing_target_rows": [],
+      "missing_target_count": 0
+    },
+    "p160_style": {
+      "rows": 603,
+      "missing_target_rows": [],
+      "missing_target_count": 0
+    }
+  },
+  "outputs": {
+    "p155e_style_overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_guardrail_p161_p155e_style.jsonl",
+    "p160_style_overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_guardrail_p161_p160_style.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_rescued_policy_guardrail_p161.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_rescued_policy_guardrail_p161.md"
+  },
+  "official_eval": "reports/vlm/symbol_rescued_policy_guardrail_p161_eval.json",
+  "official_metrics": {
+    "p161_p155e_style": {
+      "records": 603,
+      "tp": 4544,
+      "predicted": 6594,
+      "gold": 17154,
+      "precision": 0.689111,
+      "recall": 0.264894,
+      "f1": 0.382685,
+      "center_recall": 0.273406,
+      "prediction_inflation": 0.3844,
+      "by_area_iou_recall": {
+        "tiny": 0.104054,
+        "small": 0.332838,
+        "medium": 0.249087,
+        "large": 0.321869
+      },
+      "by_area_center_recall": {
+        "tiny": 0.136396,
+        "small": 0.345991,
+        "medium": 0.250548,
+        "large": 0.313639
+      }
+    },
+    "p161_p160_style": {
+      "records": 603,
+      "tp": 4548,
+      "predicted": 6594,
+      "gold": 17154,
+      "precision": 0.689718,
+      "recall": 0.265128,
+      "f1": 0.383022,
+      "center_recall": 0.27632,
+      "prediction_inflation": 0.3844,
+      "by_area_iou_recall": {
+        "tiny": 0.102648,
+        "small": 0.333475,
+        "medium": 0.249087,
+        "large": 0.322898
+      },
+      "by_area_center_recall": {
+        "tiny": 0.144598,
+        "small": 0.347051,
+        "medium": 0.250548,
+        "large": 0.315109
+      }
+    }
+  },
+  "official_delta_vs_p155e_style": {
+    "policy_id": "p161_p160_style",
+    "baseline_policy": "p161_p155e_style",
+    "delta_precision": 0.000607,
+    "delta_recall": 0.000234,
+    "delta_f1": 0.000337,
+    "delta_center_recall": 0.002914,
+    "delta_prediction_inflation": 0.0
+  },
+  "guardrail_interpretation": {
+    "relative_delta": "P160-style remains slightly positive over P155E-style on the available 603-row subset.",
+    "absolute_quality": "Absolute F1 is lower than the 74-row development overlay because the source prediction artifact has much lower prediction inflation/coverage; this is a guardrail, not a headline metric.",
+    "overlap_limitation": "66 of 603 rows overlap the P160 74-row subset, so this is non-identical but not fully disjoint.",
+    "claim_boundary": "Use P160 as bounded post-hoc operating point; do not claim full-raster or cross-dataset generalization."
+  }
+}

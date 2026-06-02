@@ -1,0 +1,78 @@
+{
+  "id": "SCI-P2-132-final-paper-handoff-package",
+  "created_on": "2026-05-16",
+  "deadline": "2026-05-23",
+  "decision": "final_paper_handoff_package_ready_for_internal_review",
+  "status": "review_package_ready_after_sub095_triage_not_submission_final",
+  "review_order": [
+    {
+      "step": 1,
+      "read": "reports/vlm/manuscript_draft_v0_1_p130.md",
+      "purpose": "Main integrated draft v0.1."
+    },
+    {
+      "step": 2,
+      "read": "reports/vlm/paper_metric_tables_p126.md",
+      "purpose": "Verify all quantitative claims and table scopes."
+    },
+    {
+      "step": 3,
+      "read": "reports/vlm/final_claim_boundary_scan_p131.md",
+      "purpose": "Check overclaim risks and blocked claims."
+    },
+    {
+      "step": 4,
+      "read": "reports/vlm/paper_citation_and_figure_plan_p131.md",
+      "purpose": "Fill citations and create figures."
+    },
+    {
+      "step": 5,
+      "read": "reports/vlm/paper_handoff_index_p129.md",
+      "purpose": "Trace sections/tables/figures back to artifacts."
+    }
+  ],
+  "artifacts": {
+    "primary_manuscript": "reports/vlm/manuscript_draft_v0_1_p130.md",
+    "primary_manuscript_config": "configs/vlm/manuscript_draft_v0_1_p130.json",
+    "metric_tables": "reports/vlm/paper_metric_tables_p126.md",
+    "metric_tables_config": "configs/vlm/paper_metric_tables_p126.json",
+    "methods_source": "reports/vlm/paper_methods_runtime_contract_p127.md",
+    "results_source": "reports/vlm/paper_experiments_results_p128.md",
+    "discussion_source": "reports/vlm/paper_discussion_limitations_p129.md",
+    "handoff_index": "reports/vlm/paper_handoff_index_p129.md",
+    "citation_figure_plan": "reports/vlm/paper_citation_and_figure_plan_p131.md",
+    "claim_scan": "reports/vlm/final_claim_boundary_scan_p131.md"
+  },
+  "must_do_before_submission": [
+    "Replace citation placeholders with verified references.",
+    "Create Figure 1 schematic and optionally Figure 2 metric chart.",
+    "Format tables for target journal template.",
+    "Perform human claim audit after citation/figure edits.",
+    "Decide target journal and adjust length/style."
+  ],
+  "optional_before_submission": [
+    "Select traceable qualitative examples for Figure 3.",
+    "Run full locked public-raster inference if compute/environment is stable and if it can be audited before submission.",
+    "Add human-reviewed real-raster annotations if available."
+  ],
+  "safe_core_message": "Audit-gated MoE floorplan parsing with bounded component evidence, explicit policy handoff, and transparent negative results.",
+  "do_not_claim": [
+    "Full raster scene-graph solved.",
+    "Industrial/real-world generalization.",
+    "Runtime model-output contains robustness.",
+    "Image-only symbol/text readiness.",
+    "P123/P124 selector success."
+  ],
+  "supervisor_summary": "A bounded manuscript draft package is ready after sub-0.95 triage. Use v0.3 as the primary review draft. Symbol rescue failed, room has recall-only >0.95 evidence, and contains relation remains the only above-0.95 positive result under expected-json replay.",
+  "updated_by": "SCI-P2-138-final-paper-metric-triage-update",
+  "primary_review_manuscript": "reports/vlm/manuscript_draft_v0_3_p138.md",
+  "supersedes_primary_manuscript": "reports/vlm/manuscript_draft_v0_1_p130.md",
+  "metric_triage": "reports/vlm/final_metric_triage_update_p138.md",
+  "sub095_rescue_artifacts": [
+    "reports/vlm/sub095_metric_rescue_plan_p134.md",
+    "reports/vlm/sub095_claim_rewrite_p135.md",
+    "reports/vlm/symbol_center_recall_fast_sweep_p136.md",
+    "reports/vlm/room_mask_threshold_fast_sweep_p137.md",
+    "reports/vlm/final_metric_triage_update_p138.md"
+  ]
+}

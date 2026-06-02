@@ -1,0 +1,335 @@
+{
+  "id": "P204_structural_symbol_moe_validation",
+  "claim_boundary": "This is a paired bootstrap validation over the same 74-row P101 overlay rows, not an independent cross-dataset result. It strengthens internal evidence but still must be labeled as P101/bootstrap-bounded in the paper.",
+  "baseline_id": "P197b_detector_fusion_box_refine",
+  "bootstrap_iterations": 300,
+  "seed": 204,
+  "row_count": 74,
+  "stages": [
+    {
+      "id": "P192_box_refiner_baseline",
+      "role": "detector_plus_hand_box_refine_baseline",
+      "overlay": "reports/vlm/symbol_box_refiner_p192_overlay.jsonl",
+      "metrics": {
+        "tp": 1333,
+        "predicted": 2208,
+        "gold": 2508,
+        "precision": 0.603714,
+        "recall": 0.531499,
+        "f1": 0.56531,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.880383,
+        "by_bucket_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.515957,
+          "small": 0.595579,
+          "tiny": 0.216102,
+          "xlarge": 0.522167
+        },
+        "by_bucket_center_recall": {
+          "large": 0.821875,
+          "medium": 0.606383,
+          "small": 0.629389,
+          "tiny": 0.293785,
+          "xlarge": 0.482759
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.812689,
+          "bathtub": 0.5,
+          "column": 0.579365,
+          "equipment": 0.524017,
+          "generic_symbol": 0.926471,
+          "shower": 0.217703,
+          "sink": 0.499272,
+          "stair": 0.299065
+        }
+      }
+    },
+    {
+      "id": "P197b_detector_fusion_box_refine",
+      "role": "clean_box_detector_plus_fusion_plus_box_refine",
+      "overlay": "reports/vlm/symbol_box_refiner_p197b_over_p196c_best_overlay.jsonl",
+      "metrics": {
+        "tp": 1351,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.600711,
+        "recall": 0.538676,
+        "f1": 0.568005,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.89673,
+        "by_bucket_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.607282,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_bucket_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.630689,
+          "tiny": 0.300847,
+          "xlarge": 0.487685
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.818731,
+          "bathtub": 0.5,
+          "column": 0.595238,
+          "equipment": 0.539301,
+          "generic_symbol": 0.926471,
+          "shower": 0.227273,
+          "sink": 0.503639,
+          "stair": 0.299065
+        }
+      }
+    },
+    {
+      "id": "P200_crop_verifier",
+      "role": "crop_level_precision_verifier",
+      "overlay": "reports/vlm/symbol_crop_verifier_p200_overlay.jsonl",
+      "metrics": {
+        "tp": 1329,
+        "predicted": 2137,
+        "gold": 2508,
+        "precision": 0.6219,
+        "recall": 0.529904,
+        "f1": 0.572228,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.852073,
+        "by_bucket_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.531915,
+          "small": 0.582575,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_bucket_center_recall": {
+          "large": 0.823438,
+          "medium": 0.611702,
+          "small": 0.607282,
+          "tiny": 0.298023,
+          "xlarge": 0.487685
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.779456,
+          "bathtub": 0.5,
+          "column": 0.579365,
+          "equipment": 0.532751,
+          "generic_symbol": 0.922794,
+          "shower": 0.22488,
+          "sink": 0.500728,
+          "stair": 0.299065
+        }
+      }
+    },
+    {
+      "id": "P198_over_P200_recall_specialist",
+      "role": "sink_shower_specialist_recall_branch_after_crop_gate",
+      "overlay": "reports/vlm/symbol_sink_shower_specialist_p198_over_p200_best_overlay.jsonl",
+      "metrics": {
+        "tp": 1339,
+        "predicted": 2165,
+        "gold": 2508,
+        "precision": 0.618476,
+        "recall": 0.533892,
+        "f1": 0.573079,
+        "center_recall": 0.569777,
+        "prediction_inflation": 0.863238,
+        "by_bucket_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.531915,
+          "small": 0.592978,
+          "tiny": 0.220339,
+          "xlarge": 0.53202
+        },
+        "by_bucket_center_recall": {
+          "large": 0.823438,
+          "medium": 0.611702,
+          "small": 0.618986,
+          "tiny": 0.299435,
+          "xlarge": 0.487685
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.78852,
+          "bathtub": 0.5,
+          "column": 0.587302,
+          "equipment": 0.537118,
+          "generic_symbol": 0.922794,
+          "shower": 0.232057,
+          "sink": 0.500728,
+          "stair": 0.303738
+        }
+      }
+    },
+    {
+      "id": "P202_context_verifier",
+      "role": "candidate_context_graph_precision_verifier",
+      "overlay": "reports/vlm/symbol_context_verifier_p202_overlay.jsonl",
+      "metrics": {
+        "tp": 1299,
+        "predicted": 1942,
+        "gold": 2508,
+        "precision": 0.668898,
+        "recall": 0.517943,
+        "f1": 0.58382,
+        "center_recall": 0.552632,
+        "prediction_inflation": 0.774322,
+        "by_bucket_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.484043,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_bucket_center_recall": {
+          "large": 0.801562,
+          "medium": 0.574468,
+          "small": 0.60078,
+          "tiny": 0.298023,
+          "xlarge": 0.453202
+        },
+        "by_label_iou_recall": {
+          "appliance": 0.782477,
+          "bathtub": 0.0,
+          "column": 0.571429,
+          "equipment": 0.5131,
+          "generic_symbol": 0.897059,
+          "shower": 0.217703,
+          "sink": 0.496361,
+          "stair": 0.266355
+        }
+      }
+    }
+  ],
+  "bootstrap": {
+    "P192_box_refiner_baseline": {
+      "f1_ci95": [
+        0.537126,
+        0.591824
+      ],
+      "delta_vs_baseline_ci95": [
+        -0.007177,
+        0.001856
+      ],
+      "delta_vs_baseline_mean": -0.002639,
+      "prob_delta_positive": 0.123333
+    },
+    "P197b_detector_fusion_box_refine": {
+      "f1_ci95": [
+        0.540462,
+        0.592922
+      ],
+      "delta_vs_baseline_ci95": [
+        0.0,
+        0.0
+      ],
+      "delta_vs_baseline_mean": 0.0,
+      "prob_delta_positive": 0.0
+    },
+    "P200_crop_verifier": {
+      "f1_ci95": [
+        0.542907,
+        0.598985
+      ],
+      "delta_vs_baseline_ci95": [
+        -0.001063,
+        0.008652
+      ],
+      "delta_vs_baseline_mean": 0.003976,
+      "prob_delta_positive": 0.936667
+    },
+    "P198_over_P200_recall_specialist": {
+      "f1_ci95": [
+        0.543906,
+        0.600125
+      ],
+      "delta_vs_baseline_ci95": [
+        0.000568,
+        0.010202
+      ],
+      "delta_vs_baseline_mean": 0.004829,
+      "prob_delta_positive": 0.983333
+    },
+    "P202_context_verifier": {
+      "f1_ci95": [
+        0.552228,
+        0.613633
+      ],
+      "delta_vs_baseline_ci95": [
+        0.007272,
+        0.027304
+      ],
+      "delta_vs_baseline_mean": 0.016374,
+      "prob_delta_positive": 1.0
+    }
+  },
+  "best_stage_id": "P202_context_verifier",
+  "best_stage_residual_labels": [
+    {
+      "label": "sink",
+      "gold": 687,
+      "tp": 341,
+      "fn": 346,
+      "recall": 0.496361
+    },
+    {
+      "label": "shower",
+      "gold": 418,
+      "tp": 91,
+      "fn": 327,
+      "recall": 0.217703
+    },
+    {
+      "label": "equipment",
+      "gold": 458,
+      "tp": 235,
+      "fn": 223,
+      "recall": 0.5131
+    },
+    {
+      "label": "stair",
+      "gold": 214,
+      "tp": 57,
+      "fn": 157,
+      "recall": 0.266355
+    },
+    {
+      "label": "appliance",
+      "gold": 331,
+      "tp": 259,
+      "fn": 72,
+      "recall": 0.782477
+    },
+    {
+      "label": "column",
+      "gold": 126,
+      "tp": 72,
+      "fn": 54,
+      "recall": 0.571429
+    },
+    {
+      "label": "generic_symbol",
+      "gold": 272,
+      "tp": 244,
+      "fn": 28,
+      "recall": 0.897059
+    },
+    {
+      "label": "bathtub",
+      "gold": 2,
+      "tp": 0,
+      "fn": 2,
+      "recall": 0.0
+    }
+  ],
+  "interpretation": [
+    "P202 remains the best P101/bootstrap-bounded stage by F1, mostly by precision and inflation reduction.",
+    "Because the lower confidence bound of the P202 delta should be checked before paper use, this report is safer than a single locked point estimate.",
+    "Residual labels identify where P205 should spend GPU budget: high-FN classes rather than global detector scaling."
+  ],
+  "outputs": {
+    "json": "configs/vlm/symbol_structural_moe_p204_validation.json",
+    "md": "reports/vlm/symbol_structural_moe_p204_validation.md"
+  }
+}

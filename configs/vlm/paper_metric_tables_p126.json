@@ -1,0 +1,399 @@
+{
+  "id": "SCI-P2-126-paper-draft-outline-and-table-extraction",
+  "created_on": "2026-05-16",
+  "deadline": "2026-05-23",
+  "decision": "paper_tables_ready_for_bounded_manuscript_draft",
+  "global_claim_boundary": "Use these metrics for a bounded manuscript draft only. Keep target-level model-output metrics, image-only diagnostics, expected-json relation replay, and negative selector probes separate.",
+  "source_artifacts": {
+    "public_raster_symbol": "reports/vlm/raster_moe_target_level_eval_p101.json",
+    "image_only_space": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+    "image_only_symbol_peak": "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json",
+    "mask_quality": "reports/vlm/image_only_mask_quality_audit_p105.json",
+    "contains_relation": "reports/vlm/contains_relation_policy_validation_p095_summary.json",
+    "rule_compressor": "configs/vlm/symbol_support_rule_compressor_p123.json",
+    "lightweight_selector": "configs/vlm/symbol_selector_p124.json"
+  },
+  "claim_evidence_matrix": [
+    {
+      "claim_id": "C1",
+      "paper_claim": "Audit-gated opt-in can trade a small recall loss for better public-raster symbol precision/F1 and lower inflation.",
+      "status": "ready_limited",
+      "primary_evidence": "P100/P101",
+      "safe_scope": "74-row locked public-raster overlay subset; symbol target-level boxes only."
+    },
+    {
+      "claim_id": "C2",
+      "paper_claim": "Image-only raster path has useful room/space signal after mask-to-box repair.",
+      "status": "ready_limited",
+      "primary_evidence": "P106/P105",
+      "safe_scope": "61-row 256x256 multifamily target-level evaluation; no relation-graph claim."
+    },
+    {
+      "claim_id": "C3",
+      "paper_claim": "Contains relation policy can close expected-json replay errors under explicit opt-in.",
+      "status": "bounded_oracle",
+      "primary_evidence": "P095",
+      "safe_scope": "Expected-json/oracle replay paths only; not runtime default or model-output robustness."
+    },
+    {
+      "claim_id": "C4",
+      "paper_claim": "Image-only symbol/text remain bottlenecks and should be reported as negative/diagnostic results.",
+      "status": "negative_diagnostic",
+      "primary_evidence": "P105/P107",
+      "safe_scope": "Symbol weak despite pixel signal; text branch not ready."
+    },
+    {
+      "claim_id": "C5",
+      "paper_claim": "Support-aware rule compression and lightweight selector are informative but do not yet pass gates.",
+      "status": "negative_diagnostic",
+      "primary_evidence": "P123/P124",
+      "safe_scope": "Train/dev or subset probes only; do not claim runtime adoption."
+    }
+  ],
+  "tables": {
+    "public_raster_symbol_target_level": [
+      {
+        "policy_id": "v28_frozen_detector_baseline",
+        "records": 74,
+        "tp": 1789,
+        "predicted": 15406,
+        "gold": 2508,
+        "precision": 0.116124,
+        "recall": 0.713317,
+        "f1": 0.199732,
+        "center_recall": 0.864434,
+        "prediction_inflation": 6.142743,
+        "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+        "delta_vs_v28": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "center_recall": 0.0,
+          "prediction_inflation": 0.0
+        }
+      },
+      {
+        "policy_id": "p076_balanced_opt_in",
+        "records": 74,
+        "tp": 1841,
+        "predicted": 15828,
+        "gold": 2508,
+        "precision": 0.116313,
+        "recall": 0.734051,
+        "f1": 0.200807,
+        "center_recall": 0.866427,
+        "prediction_inflation": 6.311005,
+        "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+        "delta_vs_v28": {
+          "precision": 0.000189,
+          "recall": 0.020734,
+          "f1": 0.001075,
+          "center_recall": 0.001993,
+          "prediction_inflation": 0.168262
+        }
+      },
+      {
+        "policy_id": "p100_precision_at_recall70",
+        "records": 74,
+        "tp": 1709,
+        "predicted": 9071,
+        "gold": 2508,
+        "precision": 0.188403,
+        "recall": 0.681419,
+        "f1": 0.29519,
+        "center_recall": 0.824163,
+        "prediction_inflation": 3.616826,
+        "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+        "delta_vs_v28": {
+          "precision": 0.072279,
+          "recall": -0.031898,
+          "f1": 0.095458,
+          "center_recall": -0.040271,
+          "prediction_inflation": -2.525917
+        }
+      }
+    ],
+    "image_only_target_level": [
+      {
+        "artifact": "p106_space_repair",
+        "family": "boundary",
+        "matched_rows": 61,
+        "tp": 421,
+        "predicted": 4409,
+        "gold": 5339,
+        "precision": 0.095487,
+        "recall": 0.078854,
+        "f1": 0.086377,
+        "center_recall": 0.176438,
+        "prediction_inflation": 0.82581,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p106_space_repair",
+        "family": "space",
+        "matched_rows": 61,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629,
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "prediction_inflation": 2.08744,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p106_space_repair",
+        "family": "symbol",
+        "matched_rows": 61,
+        "tp": 29,
+        "predicted": 1598,
+        "gold": 1574,
+        "precision": 0.018148,
+        "recall": 0.018424,
+        "f1": 0.018285,
+        "center_recall": 0.052732,
+        "prediction_inflation": 1.015248,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p106_space_repair",
+        "family": "text",
+        "matched_rows": 61,
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.0,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p107_symbol_peak",
+        "family": "boundary",
+        "matched_rows": 61,
+        "tp": 421,
+        "predicted": 4409,
+        "gold": 5339,
+        "precision": 0.095487,
+        "recall": 0.078854,
+        "f1": 0.086377,
+        "center_recall": 0.176438,
+        "prediction_inflation": 0.82581,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p107_symbol_peak",
+        "family": "space",
+        "matched_rows": 61,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629,
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "prediction_inflation": 2.08744,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p107_symbol_peak",
+        "family": "symbol",
+        "matched_rows": 61,
+        "tp": 115,
+        "predicted": 3334,
+        "gold": 1574,
+        "precision": 0.034493,
+        "recall": 0.073062,
+        "f1": 0.046862,
+        "center_recall": 0.243964,
+        "prediction_inflation": 2.11817,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      },
+      {
+        "artifact": "p107_symbol_peak",
+        "family": "text",
+        "matched_rows": 61,
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.0,
+        "claim_boundary": "256x256 image-only raster supervision target-level boxes; no relation-graph claim"
+      }
+    ],
+    "image_only_mask_pixel_quality": [
+      {
+        "family": "wall",
+        "records": 61,
+        "threshold": 96,
+        "precision": 0.456029,
+        "recall": 0.769331,
+        "f1": 0.572627,
+        "iou": 0.401175,
+        "pred_to_gold_ratio": 1.687023,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "opening",
+        "records": 61,
+        "threshold": 96,
+        "precision": 0.064235,
+        "recall": 0.188173,
+        "f1": 0.095776,
+        "iou": 0.050297,
+        "pred_to_gold_ratio": 2.929422,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "window",
+        "records": 61,
+        "threshold": 32,
+        "precision": 0.085863,
+        "recall": 0.254162,
+        "f1": 0.128361,
+        "iou": 0.068582,
+        "pred_to_gold_ratio": 2.960099,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "room",
+        "records": 61,
+        "threshold": 160,
+        "precision": 0.443126,
+        "recall": 0.959362,
+        "f1": 0.606234,
+        "iou": 0.434962,
+        "pred_to_gold_ratio": 2.164986,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "room_boundary",
+        "records": 61,
+        "threshold": 32,
+        "precision": 0.240062,
+        "recall": 0.458211,
+        "f1": 0.31506,
+        "iou": 0.186986,
+        "pred_to_gold_ratio": 1.908724,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "symbol",
+        "records": 61,
+        "threshold": 192,
+        "precision": 0.124164,
+        "recall": 0.689501,
+        "f1": 0.210434,
+        "iou": 0.117589,
+        "pred_to_gold_ratio": 5.55313,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      },
+      {
+        "family": "text",
+        "records": 61,
+        "threshold": 16,
+        "precision": 0.00437,
+        "recall": 0.08706,
+        "f1": 0.008322,
+        "iou": 0.004178,
+        "pred_to_gold_ratio": 19.922905,
+        "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs"
+      }
+    ],
+    "contains_relation_expected_json": [
+      {
+        "split": "primary_dev",
+        "input": "datasets/cadstruct_cubicasa5k_moe/dev.jsonl",
+        "records": 493,
+        "baseline_relation_f1": 0.926172,
+        "candidate_relation_f1": 1.0,
+        "relation_f1_delta": 0.073828,
+        "missing_contains": "2035 -> 0",
+        "extra_contains": "277 -> 0",
+        "all_gates_pass": true,
+        "claim_boundary": {
+          "can_claim": "center_ratio_1_top4 opt-in contains policy validated on primary dev and secondary smoke expected-json paths",
+          "cannot_claim_yet": [
+            "runtime default promotion",
+            "model-output robustness",
+            "cross-dataset/industrial drawing generalization",
+            "SCI2-ready evidence without baselines/ablations"
+          ]
+        }
+      },
+      {
+        "split": "secondary_real_v3_smoke",
+        "input": "datasets/cadstruct_real_world_benchmark_v3/smoke.jsonl",
+        "records": 64,
+        "baseline_relation_f1": 0.918303,
+        "candidate_relation_f1": 1.0,
+        "relation_f1_delta": 0.081697,
+        "missing_contains": "335 -> 0",
+        "extra_contains": "52 -> 0",
+        "all_gates_pass": true,
+        "claim_boundary": {
+          "can_claim": "center_ratio_1_top4 opt-in contains policy validated on primary dev and secondary smoke expected-json paths",
+          "cannot_claim_yet": [
+            "runtime default promotion",
+            "model-output robustness",
+            "cross-dataset/industrial drawing generalization",
+            "SCI2-ready evidence without baselines/ablations"
+          ]
+        }
+      }
+    ],
+    "selector_and_compression_bottlenecks": [
+      {
+        "probe": "p123_rule_compressor",
+        "decision": "rule_compressor_does_not_pass_subset_gates",
+        "policy": "s0.008_p90_l45_same0.75",
+        "precision": 0.174682,
+        "recall": 0.648824,
+        "f1": 0.275257,
+        "center_recall": 0.790882,
+        "tiny_iou_recall": 0.398327,
+        "candidate_inflation": 3.714314,
+        "passes_all_gates": false,
+        "claim_boundary": "Rule-compressor subset baseline only; no runtime adoption or full locked claim."
+      },
+      {
+        "probe": "p124_lightweight_selector",
+        "decision": "selector_does_not_pass_dev_subset_gates",
+        "policy": "thr0.14_p220_l45",
+        "precision": 0.078622,
+        "recall": 0.697029,
+        "f1": 0.141305,
+        "center_recall": 0.851437,
+        "tiny_iou_recall": 0.455373,
+        "candidate_inflation": 8.865563,
+        "passes_all_gates": false,
+        "roc_auc": 0.854388,
+        "average_precision": 0.63725,
+        "claim_boundary": "P122 train/dev selector probe only; no locked/full runtime adoption claim."
+      }
+    ]
+  },
+  "recommended_main_tables": [
+    "claim_evidence_matrix",
+    "public_raster_symbol_target_level",
+    "image_only_target_level",
+    "contains_relation_expected_json"
+  ],
+  "recommended_appendix_tables": [
+    "image_only_mask_pixel_quality",
+    "selector_and_compression_bottlenecks"
+  ],
+  "do_not_claim": [
+    "full raster scene-graph solved",
+    "industrial/real-world generalization",
+    "runtime-default contains relation robustness",
+    "image-only symbol/text readiness",
+    "P123/P124 positive selector success"
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "id": "P0-88-symbol-downstream-policy-handoff",
+  "created_on": "2026-05-15",
+  "status": "handoff_complete_stop_symbol_gate_iteration",
+  "decision": {
+    "default_policy": "v28_frozen_detector_baseline",
+    "downstream_opt_in": "p076_balanced_opt_in",
+    "do_not_promote_default": true,
+    "reason": "P0-76 improves downstream symbol IoU recall on the P0-85 overlay smoke without graph-health regression, but it increases prediction inflation; keep explicit opt-in rather than changing default."
+  },
+  "handoff_chain": [
+    {
+      "id": "P0-83",
+      "role": "Identified downstream MoE symbol consumers and defined integration contract.",
+      "artifacts": [
+        "reports/vlm/symbol_downstream_integration_plan_p083.md",
+        "configs/vlm/symbol_downstream_policy_eval_p083.json"
+      ]
+    },
+    {
+      "id": "P0-84",
+      "role": "Materialized detector-policy overlays for MoE-compatible downstream smoke inputs.",
+      "artifacts": [
+        "scripts/vlm/prepare_symbol_policy_moe_overlay_p084.py",
+        "reports/vlm/symbol_policy_moe_overlay_p084_summary.json",
+        "reports/vlm/symbol_policy_moe_overlay_p084.md",
+        "reports/vlm/symbol_policy_moe_overlay_p084/v28_frozen_detector_baseline.jsonl",
+        "reports/vlm/symbol_policy_moe_overlay_p084/p076_balanced_opt_in.jsonl"
+      ]
+    },
+    {
+      "id": "P0-85",
+      "role": "Compared v28 vs P0-76 overlays with spatial symbol matching and fusion graph-health checks.",
+      "artifacts": [
+        "scripts/vlm/evaluate_symbol_policy_moe_overlay_p085.py",
+        "reports/vlm/symbol_policy_moe_overlay_p085_summary.json",
+        "reports/vlm/symbol_policy_moe_overlay_p085.md"
+      ]
+    },
+    {
+      "id": "P0-86",
+      "role": "Packaged downstream selection contract while preserving v28 default behavior.",
+      "artifacts": [
+        "configs/vlm/symbol_downstream_policy_switch_p086.json",
+        "reports/vlm/symbol_downstream_policy_switch_p086.md"
+      ]
+    },
+    {
+      "id": "P0-87",
+      "role": "Implemented resolver wrapper for CLI/config/env/default policy selection.",
+      "artifacts": [
+        "scripts/vlm/resolve_symbol_policy_overlay_p087.py",
+        "reports/vlm/symbol_policy_overlay_resolver_p087_summary.json",
+        "reports/vlm/symbol_policy_overlay_resolver_p087.md"
+      ]
+    }
+  ],
+  "key_metrics": {
+    "p085_records": 74,
+    "v28_frozen_detector_baseline": {
+      "symbol_iou_recall": 0.712121,
+      "symbol_iou_precision": 0.115929,
+      "label_exact_iou_recall": 0.699362,
+      "center_recall": 0.825359,
+      "prediction_inflation": 6.142743,
+      "invalid_graph_rate": 0.0,
+      "warnings_total": 4357
+    },
+    "p076_balanced_opt_in": {
+      "symbol_iou_recall": 0.732855,
+      "symbol_iou_precision": 0.116123,
+      "label_exact_iou_recall": 0.720494,
+      "center_recall": 0.825758,
+      "prediction_inflation": 6.311005,
+      "invalid_graph_rate": 0.0,
+      "warnings_total": 4357
+    },
+    "delta_p076_vs_v28": {
+      "symbol_iou_recall": 0.020734,
+      "symbol_iou_precision": 0.000194,
+      "label_exact_iou_recall": 0.021132,
+      "center_recall": 0.000399,
+      "prediction_inflation": 0.168262,
+      "invalid_graph_rate": 0.0,
+      "warnings_total": 0
+    }
+  },
+  "runtime_contract": {
+    "switch_config": "configs/vlm/symbol_downstream_policy_switch_p086.json",
+    "resolver": "scripts/vlm/resolve_symbol_policy_overlay_p087.py",
+    "default_resolution": "v28_frozen_detector_baseline",
+    "opt_in_resolution_examples": [
+      "python scripts/vlm/resolve_symbol_policy_overlay_p087.py --symbol-policy p076_balanced_opt_in",
+      "CADSTRUCT_SYMBOL_POLICY=p076_balanced_opt_in python scripts/vlm/resolve_symbol_policy_overlay_p087.py"
+    ],
+    "fusion_v2_default_modified": false
+  },
+  "stop_conditions": {
+    "stop_hand_tuned_symbol_gates": true,
+    "stop_reason": "Detector/policy hand-tuned phase is saturated and downstream opt-in path is packaged.",
+    "reopen_symbol_work_only_if": "A downstream end-to-end metric with P0-76 opt-in still identifies symbol recall as the dominant bottleneck.",
+    "recommended_next_area": "Move to non-symbol downstream bottleneck analysis, e.g. boundary/room/text relation errors, if project work continues."
+  }
+}

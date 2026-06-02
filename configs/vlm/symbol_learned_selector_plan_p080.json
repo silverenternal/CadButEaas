@@ -1,0 +1,107 @@
+{
+  "version": "symbol_learned_selector_plan_p080",
+  "status": "implementation_plan_not_yet_training",
+  "created": "2026-05-15",
+  "decision": "implement_only_after_downstream_needs_or_new_image_context_budget",
+  "why": "P0-79 closed hand-tuned policy work. P0-78 showed only micro gains from runtime metadata gates, so the next meaningful selector must add image/crop context or a real learned/listwise objective.",
+  "runtime_input_boundary": {
+    "allowed": [
+      "raster image pixels / crops",
+      "detector prediction JSONL fields: bbox, label, score, source_policy",
+      "candidate neighborhood features computed from predictions",
+      "model weights and runtime config"
+    ],
+    "forbidden": [
+      "gold labels at runtime",
+      "expected_json",
+      "annotation paths",
+      "SVG/parser geometry",
+      "CAD vector primitives",
+      "offline semantic ids"
+    ]
+  },
+  "base_policies": {
+    "default": "v28_frozen_detector_baseline",
+    "recall_opt_in": "p070_precision_gated_policy",
+    "balanced_opt_in": "p076_balanced_policy",
+    "micro_balanced_optional": "p078_micro_balanced_selector"
+  },
+  "dataset_plan": {
+    "candidate_sources": [
+      "reports/vlm/symbol_balanced_policy_p076_smoke_v30_predictions.jsonl",
+      "reports/vlm/symbol_balanced_policy_p076_locked_predictions.jsonl",
+      "reports/vlm/symbol_p076_selector_p078_smoke_v30_rows.jsonl",
+      "reports/vlm/symbol_p070_selector_integration_p074_locked_added_candidates.jsonl"
+    ],
+    "labels_offline_only": [
+      "unique_recovery",
+      "matched_baseline",
+      "duplicate_of_v28",
+      "support_negative_or_background",
+      "wrong_type_near_gold"
+    ],
+    "runtime_features": [
+      "score",
+      "label_id / label embedding",
+      "bbox width, height, area, aspect",
+      "source_policy",
+      "overlap with v28 candidates",
+      "same-class neighbor counts",
+      "nearest candidate score and IoU",
+      "page-level candidate density",
+      "optional raster crop embedding"
+    ],
+    "image_context": {
+      "crop_sizes": [64, 96, 128],
+      "context_scale": [1.5, 2.0],
+      "model_options": [
+        "tiny CNN over grayscale crop",
+        "frozen lightweight ConvNeXt/MobileNet embedding + MLP",
+        "metadata-only MLP baseline"
+      ]
+    }
+  },
+  "validation_plan": {
+    "smoke_first": true,
+    "locked_tuning_forbidden": true,
+    "primary_compare_against": [
+      "v28_frozen_detector_baseline",
+      "p076_balanced_policy",
+      "p078_micro_balanced_selector"
+    ],
+    "smoke_gate": {
+      "retain_p076_iou_gain_min_fraction": 0.9,
+      "precision_must_improve_vs_p076": true,
+      "inflation_must_not_exceed_p076": true,
+      "tiny_iou_not_regress_more_than": 0.005,
+      "sink_iou_not_regress_more_than": 0.005
+    },
+    "locked_gate": {
+      "run_only_if_smoke_passes": true,
+      "retain_p076_iou_gain_min_fraction": 0.9,
+      "precision_must_improve_vs_p076": true,
+      "inflation_must_not_exceed_p076": true
+    }
+  },
+  "implementation_options": [
+    {
+      "id": "metadata_mlp_baseline",
+      "cost": "low",
+      "expected_gain": "small",
+      "when_to_use": "first implementation if no crop extraction budget is available"
+    },
+    {
+      "id": "crop_cnn_selector",
+      "cost": "medium",
+      "expected_gain": "moderate",
+      "when_to_use": "preferred if continuing symbol work, because hand metadata gates have saturated"
+    },
+    {
+      "id": "listwise_page_selector",
+      "cost": "medium_high",
+      "expected_gain": "unknown",
+      "when_to_use": "after crop/metadata selector shows useful candidate ranking signal"
+    }
+  ],
+  "next_recommendation": "Do not start training immediately unless the next project phase needs symbol recall beyond P0-76. If continuing, implement metadata_mlp_baseline plus crop_cnn_selector smoke experiment as P0-81."
+}

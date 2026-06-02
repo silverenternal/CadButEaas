@@ -1,0 +1,92 @@
+{
+  "id": "SCI-P2-179-symbol-greedy-precision-prune-rescue",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p179_official_eval_confirmed",
+  "claim_boundary": "Runtime-safe greedy low-yield label/bucket prune over P165; gold only for offline greedy selection/evaluation.",
+  "baseline_metrics": {
+    "p165_best": {
+      "tp": 1318,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.54757,
+      "recall": 0.525518,
+      "f1": 0.536317,
+      "center_recall": 0.585726,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.809375,
+        "medium": 0.558511,
+        "small": 0.572172,
+        "tiny": 0.218927,
+        "xlarge": 0.492611
+      },
+      "by_area_center_recall": {
+        "large": 0.810937,
+        "medium": 0.617021,
+        "small": 0.613784,
+        "tiny": 0.371469,
+        "xlarge": 0.487685
+      }
+    }
+  },
+  "best_policy": {
+    "name": "p179_greedy_precision_prune_score0.65",
+    "drop_label_buckets": [
+      "sink|medium",
+      "generic_symbol|medium",
+      "appliance|small",
+      "sink|large",
+      "stair|xlarge",
+      "appliance|large",
+      "column|xlarge",
+      "column|large",
+      "equipment|tiny",
+      "bathtub|xlarge"
+    ],
+    "max_score": 0.65
+  },
+  "best_metrics": {
+    "tp": 1289,
+    "predicted": 2127,
+    "gold": 2508,
+    "precision": 0.606018,
+    "recall": 0.513955,
+    "f1": 0.556203,
+    "center_recall": 0.554625,
+    "prediction_inflation": 0.848086,
+    "by_area_iou_recall": {
+      "large": 0.785937,
+      "medium": 0.531915,
+      "small": 0.570871,
+      "tiny": 0.218927,
+      "xlarge": 0.453202
+    },
+    "by_area_center_recall": {
+      "large": 0.785937,
+      "medium": 0.595745,
+      "small": 0.603381,
+      "tiny": 0.314972,
+      "xlarge": 0.438424
+    }
+  },
+  "delta_vs_p165": {
+    "precision": 0.058448,
+    "recall": -0.011563,
+    "f1": 0.019886,
+    "center_recall": -0.031101,
+    "prediction_inflation": -0.111643
+  },
+  "outputs": {
+    "overlay": "reports/vlm/symbol_policy_moe_overlay_p179_best.jsonl",
+    "config_json": "configs/vlm/symbol_greedy_precision_prune_p179.json",
+    "report_md": "reports/vlm/symbol_greedy_precision_prune_p179.md"
+  },
+  "official_eval": "reports/vlm/symbol_greedy_precision_prune_p179_eval.json",
+  "delta_vs_p178": {
+    "precision": 0.002545,
+    "recall": 0.001196,
+    "f1": 0.001773,
+    "center_recall": -0.000798,
+    "prediction_inflation": -0.001595
+  }
+}

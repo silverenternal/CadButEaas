@@ -1,0 +1,74 @@
+{
+  "id": "SCI-P1-104-non-oracle-proposal-preserving-policy",
+  "created_on": "2026-05-15",
+  "decision": "negative_mask_component_policy_does_not_recover_p103_ceiling",
+  "claim_boundary": "Non-oracle connected components from predicted raster masks; no gold boxes, target ids, or SVG geometry used at runtime.",
+  "script": "scripts/vlm/build_image_only_mask_proposal_policy_p104.py",
+  "baseline_eval": "reports/vlm/image_only_multifamily_target_eval_p102.json",
+  "diagnostic_ceiling_eval": "reports/vlm/image_only_multifamily_target_eval_p103_passthrough.json",
+  "variant_evals": {
+    "mask_t128": "reports/vlm/image_only_multifamily_target_eval_p104_mask_policy.json",
+    "prob_t32": "reports/vlm/image_only_multifamily_target_eval_p104_prob_t32.json",
+    "prob_t64": "reports/vlm/image_only_multifamily_target_eval_p104_prob_t64.json",
+    "prob_t96": "reports/vlm/image_only_multifamily_target_eval_p104_prob_t96.json"
+  },
+  "best_non_oracle_by_family": {
+    "space": {
+      "variant": "mask_t128",
+      "eval": "reports/vlm/image_only_multifamily_target_eval_p104_mask_policy.json",
+      "metrics": {
+        "tp": 3,
+        "predicted": 75,
+        "gold": 629,
+        "precision": 0.04,
+        "recall": 0.004769,
+        "f1": 0.008523
+      },
+      "center": {
+        "hit": 63,
+        "gold": 629,
+        "recall": 0.100159
+      }
+    },
+    "symbol": {
+      "variant": "prob_t64",
+      "eval": "reports/vlm/image_only_multifamily_target_eval_p104_prob_t64.json",
+      "metrics": {
+        "tp": 1,
+        "predicted": 269,
+        "gold": 1574,
+        "precision": 0.003717,
+        "recall": 0.000635,
+        "f1": 0.001085
+      },
+      "center": {
+        "hit": 63,
+        "gold": 1574,
+        "recall": 0.040025
+      }
+    },
+    "text": {
+      "variant": "mask_t128",
+      "eval": "reports/vlm/image_only_multifamily_target_eval_p104_mask_policy.json",
+      "metrics": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "center": {
+        "hit": 0,
+        "gold": 523,
+        "recall": 0.0
+      }
+    }
+  },
+  "interpretation": [
+    "P103 showed proposal/gold box passthrough ceiling is high, but those boxes are offline gold/proposal geometry and cannot be used as runtime evidence.",
+    "P104 extracts components only from predicted raster masks/prob masks and remains near-zero for symbol/text and very weak for space.",
+    "Therefore the usable non-oracle bottleneck is the image-only mask/proposal generator itself, not only downstream candidate filtering."
+  ],
+  "next_recommendation": "Train or repair image-only proposal generation for symbol/text/space masks; do not rely on simple connected components over current v15 masks."
+}

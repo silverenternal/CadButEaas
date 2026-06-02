@@ -1,0 +1,50 @@
+{
+  "contract_version": "image_only_moe_contract_v1",
+  "required_row_fields": [
+    "image",
+    "image_size",
+    "source_integrity",
+    "route_trace",
+    "scene_graph"
+  ],
+  "required_source_integrity": {
+    "source_mode": "image_only_raster_moe",
+    "svg_candidate_ids_used": false,
+    "annotation_geometry_used_at_inference": false,
+    "model_input": "raster_image_only"
+  },
+  "forbidden_field_names": [
+    "expected_json",
+    "annotation",
+    "annotation_path",
+    "raw_label",
+    "base_raw_label",
+    "raw_text_type",
+    "parser_raw_label",
+    "gold_candidate",
+    "source_canvas_bbox",
+    "unclipped_bbox"
+  ],
+  "forbidden_value_fragments": [
+    "cubicasa5k_svg",
+    "svg_candidate",
+    "expected_json",
+    "parser",
+    "oracle",
+    "raw_label",
+    "gold_adapter",
+    "text_aware_gold",
+    "missing_svg",
+    "svg_symbol_candidate",
+    "svg_room_candidate"
+  ],
+  "allowed_training_label_sources": [
+    "offline_svg_rasterized_gold",
+    "manual_locked_gold"
+  ],
+  "notes": [
+    "SVG annotations may be used to create offline training/evaluation labels.",
+    "Inference rows validated by this contract must not carry annotation geometry or parser candidate labels.",
+    "Parser-assisted streams are allowed only as oracle/debug baselines outside image-only model-credit metrics."
+  ]
+}

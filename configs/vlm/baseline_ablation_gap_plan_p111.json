@@ -1,0 +1,123 @@
+{
+  "id": "SCI-P2-111-baseline-ablation-gap-plan",
+  "created_on": "2026-05-15",
+  "decision": "minimum_submission_path_requires_validation_and_baselines_before_more_writing",
+  "priority_order": [
+    {
+      "rank": 1,
+      "id": "P111-A-full-public-raster-symbol-eval",
+      "experiment": "Full public-raster symbol evaluation",
+      "sci_value": "high",
+      "implementation_cost": "medium_high",
+      "why": "Current P100 claim is limited to 74 overlay rows; full coverage is the most obvious reviewer concern.",
+      "inputs": [
+        "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+        "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+        "configs/vlm/symbol_detector_operating_points_p100.json"
+      ],
+      "outputs": [
+        "reports/vlm/full_public_raster_symbol_eval_locked_p111.json",
+        "reports/vlm/full_public_raster_symbol_eval_locked_p111.md"
+      ],
+      "success_gate": [
+        "reports full 992-row or clearly explains unavailable subsets",
+        "compares v28/p076/p100 operating points",
+        "reports precision/recall/F1/inflation/by-source/by-size"
+      ]
+    },
+    {
+      "rank": 2,
+      "id": "P111-B-baseline-ablation-matrix",
+      "experiment": "Strong baselines and ablations",
+      "sci_value": "high",
+      "implementation_cost": "medium",
+      "why": "Without baselines/ablations, the audit-gated MoE contribution is hard to defend.",
+      "inputs": [
+        "configs/vlm/paper_baseline_ablation_suite_p096.json",
+        "reports/vlm/raster_evidence_consolidation_p108.md"
+      ],
+      "outputs": [
+        "reports/vlm/paper_baseline_ablation_full_matrix_p111.json",
+        "reports/vlm/paper_baseline_ablation_full_matrix_p111.md"
+      ],
+      "success_gate": [
+        "includes no-MoE/simple baseline",
+        "includes v28 vs p076 vs p100",
+        "separates oracle/expected-json from model-output metrics"
+      ]
+    },
+    {
+      "rank": 3,
+      "id": "P111-C-human-reviewed-real-pilot",
+      "experiment": "Human-reviewed real-raster pilot",
+      "sci_value": "high",
+      "implementation_cost": "human_time",
+      "why": "Real-raster evidence is required for credible generalization claims.",
+      "inputs": [
+        "datasets/annotations/real_scene_graph_pilot_p097c_ai_draft.jsonl",
+        "reports/vlm/real_scene_graph_pilot_ai_draft_p097d.md"
+      ],
+      "outputs": [
+        "datasets/annotations/real_scene_graph_pilot_human_reviewed.jsonl",
+        "reports/vlm/real_scene_graph_pilot_review_summary_p111.md"
+      ],
+      "success_gate": [
+        "at least first 10 rows human-reviewed",
+        "review status and reviewer recorded",
+        "AI draft not used directly as ground truth"
+      ]
+    },
+    {
+      "rank": 4,
+      "id": "P111-D-model-output-contains-validation",
+      "experiment": "Model-output contains relation validation",
+      "sci_value": "medium_high",
+      "implementation_cost": "medium",
+      "why": "Contains policy is strong in expected-json replay but not proven on true model-output raster predictions.",
+      "inputs": [
+        "reports/vlm/symbol_policy_moe_overlay_p084/p100_precision_at_recall70.jsonl",
+        "configs/vlm/contains_relation_policy_p092.json"
+      ],
+      "outputs": [
+        "reports/vlm/model_output_contains_relation_eval_p111.json",
+        "reports/vlm/model_output_contains_relation_eval_p111.md"
+      ],
+      "success_gate": [
+        "runs on model-output graph rows",
+        "reports missing/extra contains",
+        "does not promote runtime default unless graph health passes"
+      ]
+    },
+    {
+      "rank": 5,
+      "id": "P111-E-symbol-ocr-branch-or-scopeout",
+      "experiment": "Dedicated symbol/OCR branch or documented failure boundary",
+      "sci_value": "medium",
+      "implementation_cost": "high_if_training",
+      "why": "Image-only symbol/text are weak; either improve them or explicitly scope them out.",
+      "inputs": [
+        "reports/vlm/symbol_proposal_localization_repair_p107.md",
+        "reports/vlm/image_only_mask_quality_audit_p105.md"
+      ],
+      "outputs": [
+        "reports/vlm/symbol_ocr_branch_eval_or_scopeout_p111.md"
+      ],
+      "success_gate": [
+        "either improves symbol/text materially or documents exclusion with evidence",
+        "does not hide negative results"
+      ]
+    }
+  ],
+  "minimum_submission_gate": [
+    "P111-A completed or a justified smaller locked coverage with reviewer-safe explanation",
+    "P111-B completed with at least one credible no-MoE/simple baseline",
+    "P111-C at least partial human-reviewed real-raster pilot",
+    "All claims in manuscript trace to evidence artifacts and explicit limitations"
+  ],
+  "recommended_next_task": "SCI-P2-112-full-public-raster-symbol-eval-scout",
+  "not_recommended_now": [
+    "More handcrafted image-only symbol/text postprocessing",
+    "Claiming full scene-graph quality from target-level metrics",
+    "Promoting contains policy to default without model-output validation"
+  ]
+}

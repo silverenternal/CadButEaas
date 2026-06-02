@@ -1,0 +1,985 @@
+{
+  "id": "SCI-P2-123-symbol-support-rule-compressor-baseline",
+  "claim_boundary": "Rule-compressor subset baseline only; no runtime adoption or full locked claim.",
+  "inputs": {
+    "eval": "reports/vlm/full_public_raster_symbol_eval_subset_p119_expanded_grid.json",
+    "dataset": "datasets/symbol_selector_subset_p122/all.jsonl"
+  },
+  "baseline_gates": {
+    "center_recall_gt": 0.851394,
+    "tiny_iou_recall_gt": 0.393013,
+    "candidate_inflation_lte": 7.919152
+  },
+  "policies_evaluated": 189,
+  "passing_rows": [],
+  "best_row": {
+    "policy": {
+      "name": "s0.008_p90_l45_same0.75",
+      "min_score": 0.008,
+      "max_page_rank": 90,
+      "max_label_rank": 45,
+      "drop_same_label_iou_ge": 0.75,
+      "drop_any_label_iou_ge": null,
+      "drop_same_label_higher_overlap_count_ge": 8
+    },
+    "matched": 6618,
+    "predicted": 37886,
+    "gold": 10200,
+    "precision": 0.174682,
+    "recall": 0.648824,
+    "f1": 0.275257,
+    "center_recall": 0.790882,
+    "tiny_iou_recall": 0.398327,
+    "candidate_inflation": 3.714314,
+    "typed_accuracy_on_iou_matches": 0.928377,
+    "area_iou_recall": {
+      "large_le_4096": 0.831173,
+      "medium_le_1024": 0.766265,
+      "small_le_256": 0.704428,
+      "tiny_le_64": 0.398327,
+      "xlarge_gt_4096": 0.513078
+    },
+    "selected_offline_label_counts": {
+      "keep_any": 16155,
+      "negative": 21731
+    },
+    "selected_label_counts": {
+      "equipment": 7955,
+      "shower": 7348,
+      "sink": 6011,
+      "column": 5525,
+      "generic_symbol": 5281,
+      "appliance": 3606,
+      "stair": 1909,
+      "bathtub": 251
+    },
+    "passes_center": false,
+    "passes_tiny_iou": true,
+    "passes_inflation": true,
+    "passes_all_gates": false
+  },
+  "top_rows": [
+    {
+      "policy": {
+        "name": "s0.008_p90_l45_same0.75",
+        "min_score": 0.008,
+        "max_page_rank": 90,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6618,
+      "predicted": 37886,
+      "gold": 10200,
+      "precision": 0.174682,
+      "recall": 0.648824,
+      "f1": 0.275257,
+      "center_recall": 0.790882,
+      "tiny_iou_recall": 0.398327,
+      "candidate_inflation": 3.714314,
+      "typed_accuracy_on_iou_matches": 0.928377,
+      "area_iou_recall": {
+        "large_le_4096": 0.831173,
+        "medium_le_1024": 0.766265,
+        "small_le_256": 0.704428,
+        "tiny_le_64": 0.398327,
+        "xlarge_gt_4096": 0.513078
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16155,
+        "negative": 21731
+      },
+      "selected_label_counts": {
+        "equipment": 7955,
+        "shower": 7348,
+        "sink": 6011,
+        "column": 5525,
+        "generic_symbol": 5281,
+        "appliance": 3606,
+        "stair": 1909,
+        "bathtub": 251
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.007_p90_l45_same0.75",
+        "min_score": 0.007,
+        "max_page_rank": 90,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6626,
+      "predicted": 38695,
+      "gold": 10200,
+      "precision": 0.171237,
+      "recall": 0.649608,
+      "f1": 0.27103,
+      "center_recall": 0.791961,
+      "tiny_iou_recall": 0.39869,
+      "candidate_inflation": 3.793627,
+      "typed_accuracy_on_iou_matches": 0.928011,
+      "area_iou_recall": {
+        "large_le_4096": 0.831874,
+        "medium_le_1024": 0.766265,
+        "small_le_256": 0.705973,
+        "tiny_le_64": 0.39869,
+        "xlarge_gt_4096": 0.515091
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16267,
+        "negative": 22428
+      },
+      "selected_label_counts": {
+        "equipment": 8103,
+        "shower": 7466,
+        "sink": 6079,
+        "column": 5689,
+        "generic_symbol": 5459,
+        "appliance": 3684,
+        "stair": 1957,
+        "bathtub": 258
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.006_p90_l45_same0.75",
+        "min_score": 0.006,
+        "max_page_rank": 90,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6634,
+      "predicted": 39621,
+      "gold": 10200,
+      "precision": 0.167436,
+      "recall": 0.650392,
+      "f1": 0.266313,
+      "center_recall": 0.793137,
+      "tiny_iou_recall": 0.399054,
+      "candidate_inflation": 3.884412,
+      "typed_accuracy_on_iou_matches": 0.928248,
+      "area_iou_recall": {
+        "large_le_4096": 0.832574,
+        "medium_le_1024": 0.76747,
+        "small_le_256": 0.707518,
+        "tiny_le_64": 0.399054,
+        "xlarge_gt_4096": 0.515091
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16404,
+        "negative": 23217
+      },
+      "selected_label_counts": {
+        "equipment": 8273,
+        "shower": 7648,
+        "sink": 6144,
+        "column": 5859,
+        "generic_symbol": 5626,
+        "appliance": 3781,
+        "stair": 2020,
+        "bathtub": 270
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.008_p120_l30_same0.75",
+        "min_score": 0.008,
+        "max_page_rank": 120,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6673,
+      "predicted": 40577,
+      "gold": 10200,
+      "precision": 0.164453,
+      "recall": 0.654216,
+      "f1": 0.262836,
+      "center_recall": 0.800098,
+      "tiny_iou_recall": 0.399418,
+      "candidate_inflation": 3.978137,
+      "typed_accuracy_on_iou_matches": 0.92597,
+      "area_iou_recall": {
+        "large_le_4096": 0.836077,
+        "medium_le_1024": 0.778313,
+        "small_le_256": 0.712152,
+        "tiny_le_64": 0.399418,
+        "xlarge_gt_4096": 0.516097
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16832,
+        "negative": 23745
+      },
+      "selected_label_counts": {
+        "equipment": 8109,
+        "shower": 7132,
+        "sink": 6592,
+        "generic_symbol": 6103,
+        "column": 5965,
+        "appliance": 4128,
+        "stair": 2235,
+        "bathtub": 313
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.005_p90_l45_same0.75",
+        "min_score": 0.005,
+        "max_page_rank": 90,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6639,
+      "predicted": 40557,
+      "gold": 10200,
+      "precision": 0.163696,
+      "recall": 0.650882,
+      "f1": 0.261599,
+      "center_recall": 0.793529,
+      "tiny_iou_recall": 0.399782,
+      "candidate_inflation": 3.976176,
+      "typed_accuracy_on_iou_matches": 0.928152,
+      "area_iou_recall": {
+        "large_le_4096": 0.832574,
+        "medium_le_1024": 0.768072,
+        "small_le_256": 0.708033,
+        "tiny_le_64": 0.399782,
+        "xlarge_gt_4096": 0.516097
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16500,
+        "negative": 24057
+      },
+      "selected_label_counts": {
+        "equipment": 8406,
+        "shower": 7824,
+        "sink": 6214,
+        "column": 6072,
+        "generic_symbol": 5789,
+        "appliance": 3892,
+        "stair": 2080,
+        "bathtub": 280
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.007_p120_l30_same0.75",
+        "min_score": 0.007,
+        "max_page_rank": 120,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6681,
+      "predicted": 41634,
+      "gold": 10200,
+      "precision": 0.16047,
+      "recall": 0.655,
+      "f1": 0.257784,
+      "center_recall": 0.801569,
+      "tiny_iou_recall": 0.399782,
+      "candidate_inflation": 4.081765,
+      "typed_accuracy_on_iou_matches": 0.92576,
+      "area_iou_recall": {
+        "large_le_4096": 0.836778,
+        "medium_le_1024": 0.778916,
+        "small_le_256": 0.713697,
+        "tiny_le_64": 0.399782,
+        "xlarge_gt_4096": 0.517103
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16985,
+        "negative": 24649
+      },
+      "selected_label_counts": {
+        "equipment": 8292,
+        "shower": 7280,
+        "sink": 6689,
+        "generic_symbol": 6345,
+        "column": 6153,
+        "appliance": 4250,
+        "stair": 2298,
+        "bathtub": 327
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.004_p90_l45_same0.75",
+        "min_score": 0.004,
+        "max_page_rank": 90,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6654,
+      "predicted": 41671,
+      "gold": 10200,
+      "precision": 0.159679,
+      "recall": 0.652353,
+      "f1": 0.25656,
+      "center_recall": 0.794902,
+      "tiny_iou_recall": 0.400146,
+      "candidate_inflation": 4.085392,
+      "typed_accuracy_on_iou_matches": 0.927262,
+      "area_iou_recall": {
+        "large_le_4096": 0.833275,
+        "medium_le_1024": 0.772892,
+        "small_le_256": 0.709578,
+        "tiny_le_64": 0.400146,
+        "xlarge_gt_4096": 0.517103
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 16653,
+        "negative": 25018
+      },
+      "selected_label_counts": {
+        "equipment": 8583,
+        "shower": 8026,
+        "column": 6323,
+        "sink": 6295,
+        "generic_symbol": 5985,
+        "appliance": 4010,
+        "stair": 2160,
+        "bathtub": 289
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.006_p120_l30_same0.75",
+        "min_score": 0.006,
+        "max_page_rank": 120,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6689,
+      "predicted": 42901,
+      "gold": 10200,
+      "precision": 0.155917,
+      "recall": 0.655784,
+      "f1": 0.251935,
+      "center_recall": 0.803137,
+      "tiny_iou_recall": 0.400146,
+      "candidate_inflation": 4.20598,
+      "typed_accuracy_on_iou_matches": 0.925998,
+      "area_iou_recall": {
+        "large_le_4096": 0.837828,
+        "medium_le_1024": 0.78012,
+        "small_le_256": 0.714727,
+        "tiny_le_64": 0.400146,
+        "xlarge_gt_4096": 0.517103
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17176,
+        "negative": 25725
+      },
+      "selected_label_counts": {
+        "equipment": 8507,
+        "shower": 7492,
+        "sink": 6796,
+        "generic_symbol": 6605,
+        "column": 6364,
+        "appliance": 4407,
+        "stair": 2389,
+        "bathtub": 341
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.008_p120_l45_same0.75",
+        "min_score": 0.008,
+        "max_page_rank": 120,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6746,
+      "predicted": 43578,
+      "gold": 10200,
+      "precision": 0.154803,
+      "recall": 0.661373,
+      "f1": 0.250883,
+      "center_recall": 0.807157,
+      "tiny_iou_recall": 0.411786,
+      "candidate_inflation": 4.272353,
+      "typed_accuracy_on_iou_matches": 0.925882,
+      "area_iou_recall": {
+        "large_le_4096": 0.838179,
+        "medium_le_1024": 0.78253,
+        "small_le_256": 0.720906,
+        "tiny_le_64": 0.411786,
+        "xlarge_gt_4096": 0.525151
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17516,
+        "negative": 26062
+      },
+      "selected_label_counts": {
+        "equipment": 8961,
+        "shower": 8355,
+        "sink": 6811,
+        "column": 6479,
+        "generic_symbol": 6188,
+        "appliance": 4180,
+        "stair": 2291,
+        "bathtub": 313
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.008_p160_l30_same0.75",
+        "min_score": 0.008,
+        "max_page_rank": 160,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6729,
+      "predicted": 44265,
+      "gold": 10200,
+      "precision": 0.152016,
+      "recall": 0.659706,
+      "f1": 0.247094,
+      "center_recall": 0.809118,
+      "tiny_iou_recall": 0.402692,
+      "candidate_inflation": 4.339706,
+      "typed_accuracy_on_iou_matches": 0.923763,
+      "area_iou_recall": {
+        "large_le_4096": 0.842382,
+        "medium_le_1024": 0.785542,
+        "small_le_256": 0.716272,
+        "tiny_le_64": 0.402692,
+        "xlarge_gt_4096": 0.525151
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17645,
+        "negative": 26620
+      },
+      "selected_label_counts": {
+        "equipment": 8589,
+        "shower": 7610,
+        "sink": 7059,
+        "generic_symbol": 6877,
+        "column": 6612,
+        "appliance": 4577,
+        "stair": 2571,
+        "bathtub": 370
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.005_p120_l30_same0.75",
+        "min_score": 0.005,
+        "max_page_rank": 120,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6697,
+      "predicted": 44162,
+      "gold": 10200,
+      "precision": 0.151646,
+      "recall": 0.656569,
+      "f1": 0.246385,
+      "center_recall": 0.80402,
+      "tiny_iou_recall": 0.401601,
+      "candidate_inflation": 4.329608,
+      "typed_accuracy_on_iou_matches": 0.925788,
+      "area_iou_recall": {
+        "large_le_4096": 0.838179,
+        "medium_le_1024": 0.780723,
+        "small_le_256": 0.715242,
+        "tiny_le_64": 0.401601,
+        "xlarge_gt_4096": 0.518109
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17324,
+        "negative": 26838
+      },
+      "selected_label_counts": {
+        "equipment": 8695,
+        "shower": 7709,
+        "sink": 6904,
+        "generic_symbol": 6861,
+        "column": 6619,
+        "appliance": 4553,
+        "stair": 2465,
+        "bathtub": 356
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.007_p120_l45_same0.75",
+        "min_score": 0.007,
+        "max_page_rank": 120,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6756,
+      "predicted": 44785,
+      "gold": 10200,
+      "precision": 0.150854,
+      "recall": 0.662353,
+      "f1": 0.24574,
+      "center_recall": 0.808922,
+      "tiny_iou_recall": 0.412514,
+      "candidate_inflation": 4.390686,
+      "typed_accuracy_on_iou_matches": 0.925696,
+      "area_iou_recall": {
+        "large_le_4096": 0.838879,
+        "medium_le_1024": 0.783133,
+        "small_le_256": 0.722451,
+        "tiny_le_64": 0.412514,
+        "xlarge_gt_4096": 0.527163
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17686,
+        "negative": 27099
+      },
+      "selected_label_counts": {
+        "equipment": 9170,
+        "shower": 8547,
+        "sink": 6918,
+        "column": 6705,
+        "generic_symbol": 6439,
+        "appliance": 4313,
+        "stair": 2366,
+        "bathtub": 327
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.007_p160_l30_same0.75",
+        "min_score": 0.007,
+        "max_page_rank": 160,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6742,
+      "predicted": 45761,
+      "gold": 10200,
+      "precision": 0.147331,
+      "recall": 0.66098,
+      "f1": 0.240954,
+      "center_recall": 0.811275,
+      "tiny_iou_recall": 0.403419,
+      "candidate_inflation": 4.486373,
+      "typed_accuracy_on_iou_matches": 0.923465,
+      "area_iou_recall": {
+        "large_le_4096": 0.843433,
+        "medium_le_1024": 0.786747,
+        "small_le_256": 0.718332,
+        "tiny_le_64": 0.403419,
+        "xlarge_gt_4096": 0.527163
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17856,
+        "negative": 27905
+      },
+      "selected_label_counts": {
+        "equipment": 8834,
+        "shower": 7811,
+        "generic_symbol": 7217,
+        "sink": 7197,
+        "column": 6876,
+        "appliance": 4760,
+        "stair": 2678,
+        "bathtub": 388
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.004_p120_l30_same0.75",
+        "min_score": 0.004,
+        "max_page_rank": 120,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6712,
+      "predicted": 45603,
+      "gold": 10200,
+      "precision": 0.147183,
+      "recall": 0.658039,
+      "f1": 0.240561,
+      "center_recall": 0.805784,
+      "tiny_iou_recall": 0.401964,
+      "candidate_inflation": 4.470882,
+      "typed_accuracy_on_iou_matches": 0.92506,
+      "area_iou_recall": {
+        "large_le_4096": 0.838879,
+        "medium_le_1024": 0.785542,
+        "small_le_256": 0.716787,
+        "tiny_le_64": 0.401964,
+        "xlarge_gt_4096": 0.519115
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17522,
+        "negative": 28081
+      },
+      "selected_label_counts": {
+        "equipment": 8905,
+        "shower": 7956,
+        "generic_symbol": 7135,
+        "sink": 7036,
+        "column": 6907,
+        "appliance": 4725,
+        "stair": 2570,
+        "bathtub": 369
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.006_p120_l45_same0.75",
+        "min_score": 0.006,
+        "max_page_rank": 120,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6765,
+      "predicted": 46241,
+      "gold": 10200,
+      "precision": 0.146299,
+      "recall": 0.663235,
+      "f1": 0.239719,
+      "center_recall": 0.810588,
+      "tiny_iou_recall": 0.412877,
+      "candidate_inflation": 4.533431,
+      "typed_accuracy_on_iou_matches": 0.925942,
+      "area_iou_recall": {
+        "large_le_4096": 0.83993,
+        "medium_le_1024": 0.784337,
+        "small_le_256": 0.723996,
+        "tiny_le_64": 0.412877,
+        "xlarge_gt_4096": 0.527163
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 17904,
+        "negative": 28337
+      },
+      "selected_label_counts": {
+        "equipment": 9424,
+        "shower": 8810,
+        "sink": 7027,
+        "column": 6963,
+        "generic_symbol": 6711,
+        "appliance": 4494,
+        "stair": 2471,
+        "bathtub": 341
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.006_p160_l30_same0.75",
+        "min_score": 0.006,
+        "max_page_rank": 160,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6750,
+      "predicted": 47469,
+      "gold": 10200,
+      "precision": 0.142198,
+      "recall": 0.661765,
+      "f1": 0.234095,
+      "center_recall": 0.813431,
+      "tiny_iou_recall": 0.404147,
+      "candidate_inflation": 4.653824,
+      "typed_accuracy_on_iou_matches": 0.923704,
+      "area_iou_recall": {
+        "large_le_4096": 0.844483,
+        "medium_le_1024": 0.787952,
+        "small_le_256": 0.718847,
+        "tiny_le_64": 0.404147,
+        "xlarge_gt_4096": 0.527163
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 18102,
+        "negative": 29367
+      },
+      "selected_label_counts": {
+        "equipment": 9106,
+        "shower": 8062,
+        "generic_symbol": 7596,
+        "sink": 7337,
+        "column": 7165,
+        "appliance": 4988,
+        "stair": 2806,
+        "bathtub": 409
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.005_p120_l45_same0.75",
+        "min_score": 0.005,
+        "max_page_rank": 120,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6774,
+      "predicted": 47677,
+      "gold": 10200,
+      "precision": 0.142081,
+      "recall": 0.664118,
+      "f1": 0.234083,
+      "center_recall": 0.811569,
+      "tiny_iou_recall": 0.414332,
+      "candidate_inflation": 4.674216,
+      "typed_accuracy_on_iou_matches": 0.925893,
+      "area_iou_recall": {
+        "large_le_4096": 0.84028,
+        "medium_le_1024": 0.785542,
+        "small_le_256": 0.724511,
+        "tiny_le_64": 0.414332,
+        "xlarge_gt_4096": 0.528169
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 18070,
+        "negative": 29607
+      },
+      "selected_label_counts": {
+        "equipment": 9650,
+        "shower": 9076,
+        "column": 7260,
+        "sink": 7139,
+        "generic_symbol": 6984,
+        "appliance": 4656,
+        "stair": 2556,
+        "bathtub": 356
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.008_p160_l45_same0.75",
+        "min_score": 0.008,
+        "max_page_rank": 160,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6826,
+      "predicted": 48373,
+      "gold": 10200,
+      "precision": 0.141112,
+      "recall": 0.669216,
+      "f1": 0.233077,
+      "center_recall": 0.818137,
+      "tiny_iou_recall": 0.418698,
+      "candidate_inflation": 4.742451,
+      "typed_accuracy_on_iou_matches": 0.923674,
+      "area_iou_recall": {
+        "large_le_4096": 0.845534,
+        "medium_le_1024": 0.790964,
+        "small_le_256": 0.72966,
+        "tiny_le_64": 0.418698,
+        "xlarge_gt_4096": 0.534205
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 18603,
+        "negative": 29770
+      },
+      "selected_label_counts": {
+        "equipment": 9666,
+        "shower": 9123,
+        "sink": 7484,
+        "column": 7331,
+        "generic_symbol": 7034,
+        "appliance": 4693,
+        "stair": 2672,
+        "bathtub": 370
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.004_p120_l45_same0.75",
+        "min_score": 0.004,
+        "max_page_rank": 120,
+        "max_label_rank": 45,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6790,
+      "predicted": 49290,
+      "gold": 10200,
+      "precision": 0.137756,
+      "recall": 0.665686,
+      "f1": 0.228274,
+      "center_recall": 0.813333,
+      "tiny_iou_recall": 0.414696,
+      "candidate_inflation": 4.832353,
+      "typed_accuracy_on_iou_matches": 0.925037,
+      "area_iou_recall": {
+        "large_le_4096": 0.840981,
+        "medium_le_1024": 0.790964,
+        "small_le_256": 0.726056,
+        "tiny_le_64": 0.414696,
+        "xlarge_gt_4096": 0.529175
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 18283,
+        "negative": 31007
+      },
+      "selected_label_counts": {
+        "equipment": 9904,
+        "shower": 9374,
+        "column": 7599,
+        "sink": 7276,
+        "generic_symbol": 7269,
+        "appliance": 4832,
+        "stair": 2667,
+        "bathtub": 369
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    },
+    {
+      "policy": {
+        "name": "s0.005_p160_l30_same0.75",
+        "min_score": 0.005,
+        "max_page_rank": 160,
+        "max_label_rank": 30,
+        "drop_same_label_iou_ge": 0.75,
+        "drop_any_label_iou_ge": null,
+        "drop_same_label_higher_overlap_count_ge": 8
+      },
+      "matched": 6762,
+      "predicted": 49226,
+      "gold": 10200,
+      "precision": 0.137366,
+      "recall": 0.662941,
+      "f1": 0.227577,
+      "center_recall": 0.814804,
+      "tiny_iou_recall": 0.405966,
+      "candidate_inflation": 4.826078,
+      "typed_accuracy_on_iou_matches": 0.923248,
+      "area_iou_recall": {
+        "large_le_4096": 0.845184,
+        "medium_le_1024": 0.788554,
+        "small_le_256": 0.719361,
+        "tiny_le_64": 0.405966,
+        "xlarge_gt_4096": 0.530181
+      },
+      "selected_offline_label_counts": {
+        "keep_any": 18311,
+        "negative": 30915
+      },
+      "selected_label_counts": {
+        "equipment": 9365,
+        "shower": 8336,
+        "generic_symbol": 7963,
+        "column": 7503,
+        "sink": 7491,
+        "appliance": 5214,
+        "stair": 2920,
+        "bathtub": 434
+      },
+      "passes_center": false,
+      "passes_tiny_iou": true,
+      "passes_inflation": true,
+      "passes_all_gates": false
+    }
+  ],
+  "decision": "rule_compressor_does_not_pass_subset_gates",
+  "recommendation": "Rule baseline is insufficient; train/evaluate a lightweight selector on P122 train/dev."
+}

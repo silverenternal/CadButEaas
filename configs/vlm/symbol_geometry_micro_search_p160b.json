@@ -1,0 +1,146 @@
+{
+  "id": "SCI-P2-160B-symbol-geometry-micro-search",
+  "created_on": "2026-05-17",
+  "decision": "negative_keep_p160_no_additional_geometry_gain",
+  "claim_boundary": "Fast-only post-hoc geometry micro-search on 74-row public-raster overlay subset. Runtime policy uses predicted bbox/label/score only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.810937,
+        "medium": 0.558511,
+        "small": 0.563069,
+        "tiny": 0.218927,
+        "xlarge": 0.497537
+      },
+      "by_area_center_recall": {
+        "large": 0.8125,
+        "medium": 0.617021,
+        "small": 0.605982,
+        "tiny": 0.372881,
+        "xlarge": 0.492611
+      }
+    }
+  },
+  "searched_policy_count": 325,
+  "passing_policy_count": 1,
+  "best_policy": {
+    "name": "p160b_noop",
+    "tiny_score_min": 2.0,
+    "tiny_width": 0,
+    "tiny_height": 0,
+    "small_sx": 1.0,
+    "small_sy": 1.0,
+    "medium_sx": 1.0,
+    "medium_sy": 1.0,
+    "fixture_sx": 1.0
+  },
+  "best_metrics": {
+    "tp": 1313,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.545492,
+    "recall": 0.523525,
+    "f1": 0.534283,
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.563069,
+      "tiny": 0.218927,
+      "xlarge": 0.497537
+    },
+    "by_area_center_recall": {
+      "large": 0.8125,
+      "medium": 0.617021,
+      "small": 0.605982,
+      "tiny": 0.372881,
+      "xlarge": 0.492611
+    }
+  },
+  "delta_vs_p157": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "center_recall": 0.0,
+    "prediction_inflation": 0.0
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p160b_noop",
+        "tiny_score_min": 2.0,
+        "tiny_width": 0,
+        "tiny_height": 0,
+        "small_sx": 1.0,
+        "small_sy": 1.0,
+        "medium_sx": 1.0,
+        "medium_sy": 1.0,
+        "fixture_sx": 1.0
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p160b_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_geometry_micro_search_p160b.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_geometry_micro_search_p160b.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_geometry_micro_search_p160b_eval.json",
+  "official_comparisons": [
+    {
+      "policy_id": "p157_best",
+      "baseline_policy": "p160_best",
+      "delta_precision": -0.000831,
+      "delta_recall": -0.000797,
+      "delta_f1": -0.000814,
+      "delta_center_recall": -0.000797,
+      "delta_prediction_inflation": 0.0
+    },
+    {
+      "policy_id": "p160b_best",
+      "baseline_policy": "p160_best",
+      "delta_precision": -0.000831,
+      "delta_recall": -0.000797,
+      "delta_f1": -0.000814,
+      "delta_center_recall": -0.000797,
+      "delta_prediction_inflation": 0.0
+    }
+  ],
+  "recommendation": {
+    "keep_current_best": "p160_best",
+    "reason": "P160B fast geometry micro-search found no candidate above P160; best materialized candidate is effectively P157/no-op and underperforms P160 by 0.000814 F1.",
+    "next": "Proceed to P161 guardrail, then manuscript/table update with P160 as current best bounded symbol policy."
+  }
+}

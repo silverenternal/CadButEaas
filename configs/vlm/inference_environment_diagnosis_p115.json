@@ -1,0 +1,274 @@
+{
+  "id": "SCI-P2-115-inference-environment-diagnosis",
+  "created_at_utc": "2026-05-16T06:15:06.188897+00:00",
+  "cwd": "/home/hugo/codes/zhao_projects/CadButEaas",
+  "system": {
+    "platform": "Linux-7.0.7-zen2-1-zen-x86_64-with-glibc2.43",
+    "machine": "x86_64",
+    "processor": "",
+    "env_cuda_visible_devices": null,
+    "path": "/home/hugo/.codex/tmp/arg0/codex-arg0v2MoUc:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/opt/rocm/bin:/home/hugo/.vscode/extensions/openai.chatgpt-26.5513.21555-linux-x64/bin/linux-x86_64"
+  },
+  "python": {
+    "diagnostic_executable": "/usr/bin/python",
+    "diagnostic_version": "3.14.5 (main, May 10 2026, 18:26:20) [GCC 16.1.1 20260430]",
+    "probe_executable": "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+    "probe_executable_exists": true,
+    "probe_version_check": {
+      "command": [
+        "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+        "--version"
+      ],
+      "timeout_seconds": 10.0,
+      "elapsed_seconds": 12.33,
+      "returncode": 0,
+      "timed_out": false,
+      "stdout_tail": [
+        "Python 3.14.5"
+      ],
+      "stderr_tail": []
+    }
+  },
+  "packages": {
+    "torch": {
+      "import_name": "torch",
+      "distribution_name": "torch",
+      "metadata_check": {
+        "command": [
+          "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+          "-c",
+          "import json\nfrom importlib import metadata\nfrom importlib.util import find_spec\nimport_name = 'torch'\ndistribution_name = 'torch'\nspec = find_spec(import_name)\ntry:\n    version = metadata.version(distribution_name)\nexcept metadata.PackageNotFoundError:\n    version = None\nprint(json.dumps({'find_spec_found': spec is not None, 'origin': getattr(spec, 'origin', None) if spec is not None else None, 'version_without_import': version}, ensure_ascii=False))\n"
+        ],
+        "timeout_seconds": 10.0,
+        "elapsed_seconds": 24.063,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      },
+      "find_spec_found": null,
+      "origin": null,
+      "version_without_import": null,
+      "import_check": {
+        "command": [
+          "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+          "-c",
+          "import importlib, json, time\nname = 'torch'\nstarted = time.perf_counter()\nmod = importlib.import_module(name)\nelapsed = time.perf_counter() - started\nprint(json.dumps({'import_name': name, 'elapsed_seconds': round(elapsed, 3), 'version': getattr(mod, '__version__', None), 'file': getattr(mod, '__file__', None)}, ensure_ascii=False))\n"
+        ],
+        "timeout_seconds": 20.0,
+        "elapsed_seconds": 31.059,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      },
+      "import_result": null,
+      "status": "timeout"
+    },
+    "ultralytics": {
+      "import_name": "ultralytics",
+      "distribution_name": "ultralytics",
+      "metadata_check": {
+        "command": [
+          "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+          "-c",
+          "import json\nfrom importlib import metadata\nfrom importlib.util import find_spec\nimport_name = 'ultralytics'\ndistribution_name = 'ultralytics'\nspec = find_spec(import_name)\ntry:\n    version = metadata.version(distribution_name)\nexcept metadata.PackageNotFoundError:\n    version = None\nprint(json.dumps({'find_spec_found': spec is not None, 'origin': getattr(spec, 'origin', None) if spec is not None else None, 'version_without_import': version}, ensure_ascii=False))\n"
+        ],
+        "timeout_seconds": 10.0,
+        "elapsed_seconds": 19.545,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      },
+      "find_spec_found": null,
+      "origin": null,
+      "version_without_import": null,
+      "import_check": {
+        "command": [
+          "/home/hugo/codes/zhao_projects/CadButEaas/.venv/bin/python",
+          "-c",
+          "import importlib, json, time\nname = 'ultralytics'\nstarted = time.perf_counter()\nmod = importlib.import_module(name)\nelapsed = time.perf_counter() - started\nprint(json.dumps({'import_name': name, 'elapsed_seconds': round(elapsed, 3), 'version': getattr(mod, '__version__', None), 'file': getattr(mod, '__file__', None)}, ensure_ascii=False))\n"
+        ],
+        "timeout_seconds": 20.0,
+        "elapsed_seconds": 31.938,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      },
+      "import_result": null,
+      "status": "timeout"
+    }
+  },
+  "commands": {
+    "nvidia_smi": {
+      "found": false,
+      "path": null,
+      "check": null
+    },
+    "remote_ctl": {
+      "exists": true,
+      "doctor_ran": true,
+      "doctor": {
+        "command": [
+          "/home/hugo/codes/zhao_projects/CadButEaas/scripts/remote_ctl.sh",
+          "doctor"
+        ],
+        "timeout_seconds": 20.0,
+        "elapsed_seconds": 28.468,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    }
+  },
+  "p113_inputs": {
+    "data": {
+      "path": "datasets/symbol_tile_detector_tiny_sahi_v21",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21 && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21 && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21 && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21 || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 4.341,
+        "returncode": 0,
+        "timed_out": false,
+        "stdout_tail": [
+          "exists",
+          "dir",
+          "0"
+        ],
+        "stderr_tail": []
+      }
+    },
+    "yolo_dir": {
+      "path": "datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full",
+      "exists": false,
+      "is_file": false,
+      "is_dir": false,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 5.008,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    },
+    "weights": {
+      "path": "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+      "exists": false,
+      "is_file": false,
+      "is_dir": false,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 5.005,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    },
+    "eval_script": {
+      "path": "scripts/vlm/eval_symbol_yolo_tile_detector_v22.py",
+      "exists": false,
+      "is_file": false,
+      "is_dir": false,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/eval_symbol_yolo_tile_detector_v22.py; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/eval_symbol_yolo_tile_detector_v22.py && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/eval_symbol_yolo_tile_detector_v22.py && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/eval_symbol_yolo_tile_detector_v22.py && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/eval_symbol_yolo_tile_detector_v22.py || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 5.978,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    },
+    "runner": {
+      "path": "scripts/vlm/run_full_symbol_eval_p113.sh",
+      "exists": false,
+      "is_file": false,
+      "is_dir": false,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/run_full_symbol_eval_p113.sh; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/run_full_symbol_eval_p113.sh && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/run_full_symbol_eval_p113.sh && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/run_full_symbol_eval_p113.sh && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/run_full_symbol_eval_p113.sh || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 5.006,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    },
+    "status_checker": {
+      "path": "scripts/vlm/check_full_symbol_eval_p113.py",
+      "exists": false,
+      "is_file": false,
+      "is_dir": false,
+      "check": {
+        "command": [
+          "bash",
+          "-lc",
+          "if test -e /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/check_full_symbol_eval_p113.py; then kind=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/check_full_symbol_eval_p113.py && echo file || (test -d /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/check_full_symbol_eval_p113.py && echo dir || echo other)); size=$(test -f /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/check_full_symbol_eval_p113.py && wc -c < /home/hugo/codes/zhao_projects/CadButEaas/scripts/vlm/check_full_symbol_eval_p113.py || echo 0); printf 'exists\\n%s\\n%s\\n' \"$kind\" \"$size\"; else printf 'missing\\nmissing\\n0\\n'; fi"
+        ],
+        "timeout_seconds": 5.0,
+        "elapsed_seconds": 5.006,
+        "returncode": 124,
+        "timed_out": true,
+        "stdout_tail": [],
+        "stderr_tail": []
+      }
+    }
+  },
+  "latest_p113_status": {
+    "exists": false,
+    "check": {
+      "command": [
+        "bash",
+        "-lc",
+        "ls -1t /home/hugo/codes/zhao_projects/CadButEaas/reports/vlm/full_symbol_eval_p113_logs/*.status.json 2>/dev/null | head -n 1"
+      ],
+      "timeout_seconds": 5.0,
+      "elapsed_seconds": 5.006,
+      "returncode": 124,
+      "timed_out": true,
+      "stdout_tail": [],
+      "stderr_tail": []
+    }
+  },
+  "gate_decision": "blocked_do_not_retry_p113",
+  "blockers": [
+    "torch import status is timeout",
+    "ultralytics import status is timeout",
+    "missing P113 inputs: datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full, runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt, scripts/vlm/eval_symbol_yolo_tile_detector_v22.py, scripts/vlm/run_full_symbol_eval_p113.sh, scripts/vlm/check_full_symbol_eval_p113.py"
+  ],
+  "recommendations": [
+    "Do not retry P113 until torch imports within the timeout.",
+    "Do not retry P113 until ultralytics imports within the timeout.",
+    "nvidia-smi is not available in this session; use CPU/device=cpu or run on a GPU-visible remote shell."
+  ]
+}

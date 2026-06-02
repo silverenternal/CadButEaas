@@ -1,0 +1,69 @@
+{
+  "id": "SCI-P2-115-inference-environment-diagnosis-and-sanity-retry",
+  "created_on": "2026-05-16",
+  "decision": "remote_environment_healthy_retry_sanity_completed",
+  "claim_boundary": "Environment and execution sanity only; 20-tile sanity metrics are not final quality claims.",
+  "environment_gate": "blocked_do_not_retry_p113",
+  "environment_blockers": [
+    "torch import status is timeout",
+    "ultralytics import status is timeout",
+    "missing P113 inputs: datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full, runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt, scripts/vlm/eval_symbol_yolo_tile_detector_v22.py, scripts/vlm/run_full_symbol_eval_p113.sh, scripts/vlm/check_full_symbol_eval_p113.py"
+  ],
+  "diagnosis_artifacts": [
+    "configs/vlm/inference_environment_diagnosis_p115.json",
+    "reports/vlm/inference_environment_diagnosis_p115.md"
+  ],
+  "sanity_run": {
+    "status": "reports/vlm/full_symbol_eval_p113_logs/full_public_raster_symbol_eval_sanity_p113_p115_sanity_20260516_141750.status.json",
+    "eval_output": "reports/vlm/full_public_raster_symbol_eval_sanity_p113_p115_sanity_20260516_141750.json",
+    "predictions_output": "reports/vlm/full_public_raster_symbol_eval_sanity_p113_p115_sanity_20260516_141750_predictions.jsonl",
+    "state": "completed",
+    "exit_code": 0,
+    "started_at": "2026-05-16T14:17:50+08:00",
+    "completed_at": "2026-05-16T14:17:54+08:00",
+    "eval_output_exists": true,
+    "predictions_output_exists": true,
+    "eval_output_bytes": 11011,
+    "predictions_output_bytes": 47334,
+    "gate": {
+      "beats_scaled_faster_rcnn_center_0_851394": false,
+      "beats_scaled_faster_rcnn_tiny_iou_0_393013": false,
+      "candidate_inflation_lte_7_919152": true,
+      "passed": false
+    },
+    "selected_thresholds": {
+      "score_threshold": 0.05,
+      "nms_threshold": 0.45
+    },
+    "selection_mode": "balanced_f1",
+    "config": {
+      "data": "/home/hugo/codes/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21",
+      "yolo_dir": "/home/hugo/codes/CadButEaas/datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full",
+      "weights": "/home/hugo/codes/CadButEaas/runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+      "split": "locked",
+      "eval_output": "/home/hugo/codes/CadButEaas/reports/vlm/full_public_raster_symbol_eval_sanity_p113_p115_sanity_20260516_141750.json",
+      "predictions_output": "/home/hugo/codes/CadButEaas/reports/vlm/full_public_raster_symbol_eval_sanity_p113_p115_sanity_20260516_141750_predictions.jsonl",
+      "limit_tiles": 20,
+      "positive_ratio": 0.85,
+      "small_positive_ratio": 0.75,
+      "imgsz": 640,
+      "decode_conf": 0.001,
+      "decode_iou": 0.7,
+      "max_det_per_tile": 300,
+      "predict_batch": 4,
+      "score_threshold_grid": "0.02,0.05",
+      "nms_threshold_grid": "0.45,0.55",
+      "max_per_page": 500,
+      "device": "0",
+      "seed": 20260510,
+      "selection_mode": "balanced_f1"
+    }
+  },
+  "interpretation": [
+    "P114 failure was not caused by missing P113 inputs or a broken server inference environment.",
+    "Server-local torch and ultralytics imports pass quickly and nvidia-smi is visible.",
+    "Local SSHFS-mounted execution can still enter uninterruptible IO waits during package imports or artifact writes; run inference jobs on the remote server shell via ssh/remote_ctl.",
+    "P113 sanity output exists, so subset execution is now allowed as the next runtime check."
+  ],
+  "next_recommendation": "Run P116 subset evaluation remotely with LIMIT_TILES=2000 before attempting full locked evaluation."
+}

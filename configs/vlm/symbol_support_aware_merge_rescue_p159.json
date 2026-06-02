@@ -1,0 +1,144 @@
+{
+  "id": "SCI-P2-159-symbol-support-aware-duplicate-merge-rescue",
+  "created_on": "2026-05-17",
+  "decision": "negative_keep_p157_support_merge_not_adopted",
+  "claim_boundary": "Post-hoc support-merge sweep on 74-row public-raster overlay subset. Runtime policy uses raw detector candidates and P157 predictions only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.810937,
+        "medium": 0.558511,
+        "small": 0.563069,
+        "tiny": 0.218927,
+        "xlarge": 0.497537
+      },
+      "by_area_center_recall": {
+        "large": 0.8125,
+        "medium": 0.617021,
+        "small": 0.605982,
+        "tiny": 0.372881,
+        "xlarge": 0.492611
+      },
+      "support_count_histogram": {
+        "0": 2407
+      }
+    }
+  },
+  "searched_policy_count": 17,
+  "passing_policy_count": 1,
+  "best_policy": {
+    "name": "p159_noop",
+    "same_label_only": true,
+    "max_center_dist": 0.0,
+    "min_iou": 2.0,
+    "min_support_score": 1.1,
+    "max_support": 1,
+    "min_support": 99,
+    "score_power": 1.0,
+    "pred_weight": 1.0
+  },
+  "best_metrics": {
+    "tp": 1313,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.545492,
+    "recall": 0.523525,
+    "f1": 0.534283,
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.563069,
+      "tiny": 0.218927,
+      "xlarge": 0.497537
+    },
+    "by_area_center_recall": {
+      "large": 0.8125,
+      "medium": 0.617021,
+      "small": 0.605982,
+      "tiny": 0.372881,
+      "xlarge": 0.492611
+    },
+    "support_count_histogram": {
+      "0": 2407
+    }
+  },
+  "delta_vs_p157": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "center_recall": 0.0,
+    "prediction_inflation": 0.0
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p159_noop",
+        "same_label_only": true,
+        "max_center_dist": 0.0,
+        "min_iou": 2.0,
+        "min_support_score": 1.1,
+        "max_support": 1,
+        "min_support": 99,
+        "score_power": 1.0,
+        "pred_weight": 1.0
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "support_count_histogram": {
+          "0": 2407
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p159_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_support_aware_merge_rescue_p159.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_support_aware_merge_rescue_p159.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_support_aware_merge_rescue_p159_eval.json",
+  "official_comparison": {
+    "policy_id": "p159_best",
+    "baseline_policy": "p157_best",
+    "delta_precision": 0.0,
+    "delta_recall": 0.0,
+    "delta_f1": 0.0,
+    "delta_center_recall": 0.0,
+    "delta_prediction_inflation": 0.0
+  },
+  "recommendation": {
+    "keep_current_best": "p157_best",
+    "reason": "focused support-merge candidates failed precision/F1 gate; best passing policy is no-op.",
+    "next": "Proceed to P160 tiny-symbol specialist because tiny center-hit IoU-fail remains the largest recoverable bucket."
+  }
+}

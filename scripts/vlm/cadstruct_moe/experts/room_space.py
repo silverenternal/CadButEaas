@@ -463,7 +463,25 @@ class RoomSpaceExpert(PassthroughExpert):
     """
 
     def __init__(self) -> None:
-        super().__init__(name="room_space", family="space")
+        super().__init__(
+            name="room_space",
+            family="space",
+            label_space=(
+                "room",
+                "bedroom",
+                "living_room",
+                "kitchen",
+                "bathroom",
+                "toilet",
+                "corridor",
+                "balcony",
+                "closet",
+                "office",
+                "storage",
+                "unknown_room",
+            ),
+            checkpoint_hint=str(_MODEL_DIR),
+        )
         self.default_label = "room"
         self._model: Any = None
         self._label_encoder: Any = None
@@ -496,6 +514,9 @@ class RoomSpaceExpert(PassthroughExpert):
                 self._feature_set = data.get("feature_set", "enhanced")
         except Exception:
             self._model = None
+
+    def is_loaded(self) -> bool:
+        return self._model is not None
 
     def predict(self, candidates: list[RoutedCandidate]) -> list[ExpertPrediction]:
         if self._model is None:

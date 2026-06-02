@@ -55,10 +55,12 @@ def predictions_from_record(record: dict[str, Any], source: str) -> list[ExpertP
 
     graph = ((record.get("request_hints") or {}).get("primitive_graph") or {})
     boundary_bbox_by_id = {str(node.get("id")): node.get("bbox") for node in graph.get("nodes") or [] if isinstance(node, dict)}
+    boundary_geometry_by_id = {str(node.get("id")): node.get("geometry") for node in graph.get("nodes") or [] if isinstance(node, dict)}
     boundary_relations_by_id = boundary_relations(graph)
     for item in expected.get("semantic_candidates") or []:
         target_id = str(item.get("target_id"))
         label = str(item.get("semantic_type") or "unknown")
+        geometry = dict(item.get("geometry") or boundary_geometry_by_id.get(target_id) or {})
         predictions.append(
             ExpertPrediction(
                 candidate_id=f"boundary_{target_id}",
@@ -66,10 +68,18 @@ def predictions_from_record(record: dict[str, Any], source: str) -> list[ExpertP
                 family="boundary",
                 label=label,
                 confidence=safe_float(item.get("confidence"), 1.0),
-                bbox=normalize_bbox(boundary_bbox_by_id.get(target_id)),
+                bbox=normalize_bbox(item.get("bbox") or boundary_bbox_by_id.get(target_id)),
+                geometry=geometry,
                 relations=boundary_relations_by_id.get(target_id, []),
                 source=str(item.get("source") or "expected_json"),
-                metadata={"target_id": target_id},
+                metadata={
+                    "target_id": target_id,
+                    "raw_label": item.get("raw_label") or item.get("semantic_type"),
+                    "source_id": item.get("source_id"),
+                    "tag": item.get("tag"),
+                    "shape_features": item.get("shape_features") or {},
+                    "source": item.get("source") or "expected_json",
+                },
             )
         )
 
@@ -83,8 +93,15 @@ def predictions_from_record(record: dict[str, Any], source: str) -> list[ExpertP
                 label=str(item.get("room_type") or "room"),
                 confidence=safe_float(item.get("confidence"), 1.0),
                 bbox=normalize_bbox(item.get("bbox")),
+                geometry=dict(item.get("geometry") or {}),
                 relations=room_relations(room_id, item, predictions),
                 source=str(item.get("source") or "expected_json"),
+                metadata={
+                    "raw_label": item.get("raw_label") or item.get("room_type"),
+                    "tag": item.get("tag"),
+                    "source": item.get("source") or "expected_json",
+                    "shape_features": item.get("shape_features") or {},
+                },
             )
         )
 
@@ -98,8 +115,16 @@ def predictions_from_record(record: dict[str, Any], source: str) -> list[ExpertP
                 label=str(item.get("symbol_type") or "generic_symbol"),
                 confidence=safe_float(item.get("confidence"), 1.0),
                 bbox=normalize_bbox(item.get("bbox")),
+                geometry=dict(item.get("geometry") or {}),
                 relations=symbol_relations(symbol_id, item, predictions),
                 source=str(item.get("source") or "expected_json"),
+                metadata={
+                    "raw_label": item.get("raw_label") or item.get("symbol_type"),
+                    "tag": item.get("tag"),
+                    "shape_features": item.get("shape_features") or {},
+                    "source": item.get("source") or "expected_json",
+                    "rotation": item.get("rotation"),
+                },
             )
         )
 
@@ -114,8 +139,18 @@ def predictions_from_record(record: dict[str, Any], source: str) -> list[ExpertP
                 label=str(item.get("text_type") or "note_text"),
                 confidence=safe_float(item.get("confidence"), 1.0),
                 bbox=normalize_bbox(item.get("bbox")),
+                geometry=dict(item.get("geometry") or {}),
                 relations=text_relations_by_id.get(text_id, []),
                 source=str(item.get("source") or "expected_json"),
+                metadata={
+                    "text": item.get("text") or "",
+                    "font_size": item.get("font_size"),
+                    "raw_text_type": item.get("text_type"),
+                    "raw_label": item.get("raw_label") or item.get("text_type"),
+                    "tag": item.get("tag"),
+                    "geometry": item.get("geometry") or {},
+                    "source": item.get("source") or "expected_json",
+                },
             )
         )
     return predictions
@@ -184,7 +219,7 @@ def symbol_relations(symbol_id: str, symbol: dict[str, Any], predictions: list[E
     if symbol_bbox is None:
         return []
     containing_rooms = [
-        pred for pred in predictions if pred.family == "space" and pred.bbox and bbox_contains(pred.bbox, symbol_bbox)
+        pred for pred in predictions if pred.family == "space" and pred.bbox and bbox_hosts_symbol(pred.bbox, symbol_bbox)
     ]
     if not containing_rooms:
         return []
@@ -226,6 +261,25 @@ def bbox_intersects(left: list[float], right: list[float]) -> bool:
 
 def bbox_contains(left: list[float], right: list[float]) -> bool:
     return left[0] <= right[0] and left[1] <= right[1] and left[2] >= right[2] and left[3] >= right[3]
+
+
+def bbox_hosts_symbol(room_bbox: list[float], symbol_bbox: list[float], min_overlap: float = 0.2) -> bool:
+    if bbox_contains(room_bbox, symbol_bbox):
+        return True
+    cx = (symbol_bbox[0] + symbol_bbox[2]) / 2.0
+    cy = (symbol_bbox[1] + symbol_bbox[3]) / 2.0
+    if room_bbox[0] <= cx <= room_bbox[2] and room_bbox[1] <= cy <= room_bbox[3]:
+        return True
+    return bbox_overlap_ratio(room_bbox, symbol_bbox) >= min_overlap
+
+
+def bbox_overlap_ratio(left: list[float], right: list[float]) -> float:
+    ix1 = max(left[0], right[0])
+    iy1 = max(left[1], right[1])
+    ix2 = min(left[2], right[2])
+    iy2 = min(left[3], right[3])
+    intersection = bbox_area([ix1, iy1, ix2, iy2])
+    return intersection / max(bbox_area(right), 1.0)
 
 
 def bbox_area(bbox: list[float]) -> float:

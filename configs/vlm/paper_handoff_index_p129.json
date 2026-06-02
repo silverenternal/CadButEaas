@@ -1,0 +1,134 @@
+{
+  "id": "SCI-P2-129-discussion-limitations-and-handoff-index",
+  "created_on": "2026-05-16",
+  "deadline": "2026-05-23",
+  "decision": "paper_handoff_package_core_draft_ready",
+  "package_status": "core manuscript draft components are ready for integration and polishing",
+  "artifacts": {
+    "outline": "reports/vlm/paper_draft_outline_p126.md",
+    "metric_tables_md": "reports/vlm/paper_metric_tables_p126.md",
+    "metric_tables_json": "configs/vlm/paper_metric_tables_p126.json",
+    "methods_md": "reports/vlm/paper_methods_runtime_contract_p127.md",
+    "methods_json": "configs/vlm/paper_methods_runtime_contract_p127.json",
+    "results_md": "reports/vlm/paper_experiments_results_p128.md",
+    "results_json": "configs/vlm/paper_experiments_results_p128.json",
+    "discussion_md": "reports/vlm/paper_discussion_limitations_p129.md"
+  },
+  "paper_sections": [
+    {
+      "section": "Abstract",
+      "source": "reports/vlm/paper_draft_outline_p126.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Introduction",
+      "source": "reports/vlm/paper_draft_outline_p126.md",
+      "status": "outlined"
+    },
+    {
+      "section": "Related Work",
+      "source": "reports/vlm/paper_draft_outline_p126.md",
+      "status": "outlined_needs_citations"
+    },
+    {
+      "section": "Data and Runtime Contract",
+      "source": "reports/vlm/paper_methods_runtime_contract_p127.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Audit-Gated MoE Pipeline",
+      "source": "reports/vlm/paper_methods_runtime_contract_p127.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Experiments",
+      "source": "reports/vlm/paper_experiments_results_p128.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Negative Evidence",
+      "source": "reports/vlm/paper_experiments_results_p128.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Discussion and Limitations",
+      "source": "reports/vlm/paper_discussion_limitations_p129.md",
+      "status": "drafted"
+    },
+    {
+      "section": "Conclusion",
+      "source": "reports/vlm/paper_discussion_limitations_p129.md",
+      "status": "drafted"
+    }
+  ],
+  "tables": [
+    {
+      "table": "Table 1 Claim-evidence matrix",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "after Introduction or before Experiments"
+    },
+    {
+      "table": "Table 2 Public-raster symbol target-level results",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "Section 5.2"
+    },
+    {
+      "table": "Table 3 Image-only target-level diagnostics",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "Section 5.3"
+    },
+    {
+      "table": "Table 4 Pixel mask quality audit",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "Appendix"
+    },
+    {
+      "table": "Table 5 Contains relation expected-json replay",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "Section 5.4"
+    },
+    {
+      "table": "Table 6 Selector/compression bottlenecks",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "placement": "Section 6 or Appendix"
+    }
+  ],
+  "figures": [
+    {
+      "figure": "Figure 1 Audit-gated MoE runtime contract and policy handoff",
+      "source": "reports/vlm/paper_methods_runtime_contract_p127.md",
+      "status": "caption_and_panel_spec_ready"
+    },
+    {
+      "figure": "Figure 2 Symbol policy precision/recall/inflation trade-off",
+      "source": "reports/vlm/paper_metric_tables_p126.md",
+      "status": "needs_plot_or_bar_chart"
+    },
+    {
+      "figure": "Figure 3 Image-only room success and symbol/text failure examples",
+      "source": "reports/vlm/paper_experiments_results_p128.md",
+      "status": "needs_visual_case_selection"
+    }
+  ],
+  "safe_claims": [
+    "Audit-gated MoE/policy handoff is the main methodological contribution.",
+    "P100 improves symbol target-level F1 and reduces inflation on the 74-row public-raster overlay subset.",
+    "P106 shows useful image-only room/space target-level signal on 61 matched rows.",
+    "P095 validates contains relation logic under expected-json replay only.",
+    "P123/P124 are negative evidence for candidate selection bottlenecks."
+  ],
+  "blocked_claims": [
+    "Full public-raster locked-set model-output performance.",
+    "Full end-to-end raster scene-graph robustness.",
+    "Runtime model-output contains relation robustness.",
+    "Image-only symbol/text readiness.",
+    "Industrial/real-world generalization."
+  ],
+  "remaining_before_2026_05_23": [
+    "Integrate section drafts into a single manuscript draft.",
+    "Add citation placeholders and related-work bullets.",
+    "Create at least Figure 1 schematic; optionally Figure 2 metric chart.",
+    "Run final claim audit against P126 metric table scopes.",
+    "Prepare final artifact/readme package for handoff."
+  ]
+}

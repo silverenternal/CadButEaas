@@ -1,0 +1,133 @@
+{
+  "id": "SCI-P2-148-second-wave-metric-rescue-roadmap",
+  "created_on": "2026-05-17",
+  "decision": "pause_delivery_again_and_start_second_wave_metric_rescue",
+  "rationale": "P140 proved that additional bounded engineering can materially improve metrics. Before freezing the manuscript, run a second-wave rescue focused on validation, artifact materialization, and higher-leverage model/postprocess improvements.",
+  "current_best_facts": {
+    "symbol_p140": {
+      "precision": 0.511338,
+      "recall": 0.539474,
+      "f1": 0.525029,
+      "center_recall": 0.657496,
+      "inflation": 1.055024,
+      "policy": {
+        "name": "t6_p90_lNone_same0.45_any0.75",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.32,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.24,
+          "sink": 0.24,
+          "stair": 0.24
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75
+      }
+    },
+    "room_p141": "Best box F1 remains 0.370752; high-center variant reaches center 0.922099 but inflation 4.977742.",
+    "relation_p142": "Expected-json F1 1.0, but best model-output contains-symbol F1 0.036225.",
+    "selector_p143": "No all-gate selector rescue from P124 top rows."
+  },
+  "second_wave_lanes": [
+    {
+      "id": "P148A",
+      "priority": "P0",
+      "name": "materialize_and_validate_p140_symbol_policy",
+      "goal": "Turn the P140 post-hoc best policy into an actual prediction artifact and rerun the official P101-style evaluator to verify F1 0.525029/inflation 1.055024 outside the sweep script.",
+      "why": "P140 is now the strongest metric. It must be materialized and independently evaluated before becoming a main paper table result.",
+      "target": "official-eval F1 >=0.50 and inflation <=1.20 on the same 74-row subset",
+      "stop_gate": "If official evaluator disagrees by >0.02 F1, debug schema/matching before manuscript update.",
+      "artifacts": [
+        "reports/vlm/symbol_policy_moe_overlay_p148_p140_best.jsonl",
+        "reports/vlm/symbol_p140_official_eval_p148.json",
+        "reports/vlm/symbol_p140_official_eval_p148.md"
+      ]
+    },
+    {
+      "id": "P148B",
+      "priority": "P0",
+      "name": "symbol_policy_generalization_check",
+      "goal": "Check whether the P140 operating point generalizes beyond the 74-row overlay subset using any available P116/P119 subset/full prediction artifacts.",
+      "why": "P140 may be overfit to the 74-row subset; a small independent/subset check greatly improves paper credibility.",
+      "target": "Maintain lower inflation and no catastrophic F1 drop on an available non-identical subset; exact target depends on available artifacts.",
+      "stop_gate": "If no compatible predictions exist, write an explicit generalization gap and do not overclaim P140.",
+      "artifacts": [
+        "reports/vlm/symbol_p140_generalization_check_p149.md",
+        "configs/vlm/symbol_p140_generalization_check_p149.json"
+      ]
+    },
+    {
+      "id": "P148C",
+      "priority": "P0",
+      "name": "room_postprocess_fast_native_sweep",
+      "goal": "Move P141 room sweep off slow mounted IO by pre-materializing masks or running on remote/local temp storage, then complete a real postprocess grid.",
+      "why": "P141 was inconclusive because IO was too slow. Room is likely postprocess-limited and still worth rescuing.",
+      "target": "space box F1 >=0.45 or center >=0.85 with inflation <=2.5",
+      "stop_gate": "Stop if best F1 remains <=0.38 after a real grid; keep as diagnostic.",
+      "artifacts": [
+        "reports/vlm/room_native_postprocess_grid_p150.md",
+        "configs/vlm/room_native_postprocess_grid_p150.json"
+      ]
+    },
+    {
+      "id": "P148D",
+      "priority": "P1",
+      "name": "combine_p140_symbol_with_relation_smoke",
+      "goal": "If feasible, rerun/approximate contains-symbol relation smoke using cleaner P140 symbol candidates to test whether relation model-output F1 improves.",
+      "why": "P142 relation failure is likely upstream symbol/room noise; P140 cleaner symbols may reduce relation overproduction.",
+      "target": "Any clear model-output contains-symbol F1 improvement over 0.036225; stretch >=0.10",
+      "stop_gate": "If schemas do not join quickly, write protocol and defer.",
+      "artifacts": [
+        "reports/vlm/p140_symbol_relation_smoke_p151.md",
+        "configs/vlm/p140_symbol_relation_smoke_p151.json"
+      ]
+    },
+    {
+      "id": "P148E",
+      "priority": "P1",
+      "name": "selector_exact_evaluator_offmount",
+      "goal": "Rerun exact selector evaluator on copied local/off-mount dev files with a finer budget grid, instead of relying only on P124 top_rows.",
+      "why": "P143 used existing top rows because full join was slow. A local/off-mount run may find pass-all budget settings.",
+      "target": "Pass center/tiny/inflation gates simultaneously, or prove no pass-all in a richer grid.",
+      "stop_gate": "Stop after bounded grid if no pass-all; preserve negative result.",
+      "artifacts": [
+        "reports/vlm/selector_exact_budget_grid_p152.md",
+        "configs/vlm/selector_exact_budget_grid_p152.json"
+      ]
+    },
+    {
+      "id": "P148F",
+      "priority": "P2",
+      "name": "text_ocr_external_option_audit",
+      "goal": "Check whether any existing OCR/text artifacts can provide a nonzero text result; otherwise formalize text as out-of-scope negative evidence.",
+      "why": "Text F1 is 0.0 and drags perceived completeness; a small OCR smoke could help, but should not block main paper.",
+      "target": "Nonzero text recall smoke if existing OCR outputs exist; otherwise clean limitation.",
+      "stop_gate": "No new OCR training before main metric rescues are done.",
+      "artifacts": [
+        "reports/vlm/text_ocr_option_audit_p153.md",
+        "configs/vlm/text_ocr_option_audit_p153.json"
+      ]
+    }
+  ],
+  "execution_order": [
+    "P148A materialize/officially validate P140",
+    "P148B generalization check for P140",
+    "P148C real room native/off-mount postprocess sweep",
+    "P148E selector exact off-mount grid",
+    "P148D relation smoke with cleaner P140 symbols if schema feasible",
+    "P148F text OCR option audit",
+    "P154 manuscript v0.5 only after second-wave decisions"
+  ],
+  "paper_policy": "Keep manuscript v0.4 as safe baseline. Do not update main tables again until P148A validates P140 and at least one of P148B/P148C/P148E completes.",
+  "risk_controls": [
+    "Every second-wave metric must have an official or clearly labeled evaluator.",
+    "Do not silently change evaluation target definitions.",
+    "Separate materialized policy results from post-hoc sweep diagnostics.",
+    "Prefer local/off-mount temp copies for large IO sweeps."
+  ]
+}

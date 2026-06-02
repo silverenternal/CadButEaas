@@ -192,7 +192,7 @@ CadStruct-MoE combines deterministic domain-structured expert routing, explicit 
         "version": "sci2_final_submission_evidence_pack_v2",
         "created": "2026-05-04",
         "metric_manifest": "reports/vlm/paper_metric_table_manifest_v4.json",
-        "core_contribution_doc": "docs/cadstruct-paper-core-contributions-v2.md",
+        "core_contribution_doc": "docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md",
         "main_metrics": metrics,
         "lie_se2": manifest["lie_se2_gated_residual"],
         "domain_structured_moe": manifest["domain_structured_moe"],

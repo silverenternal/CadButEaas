@@ -1,0 +1,105 @@
+{
+  "id": "SCI-P2-134-sub-095-metric-rescue-plan",
+  "created_on": "2026-05-16",
+  "deadline": "2026-05-23",
+  "decision": "do_not_try_to_force_all_metrics_above_0_95; rescue only metrics that are scientifically plausible and paper-critical",
+  "threshold_policy": {
+    "hard_rule": "Do not present component metrics below 0.95 as solved or final if the manuscript wording implies near-perfect performance.",
+    "paper_strategy": "Either rescue with bounded experiments, move to diagnostic/negative evidence, or change the claim to an operating-point/ablation claim.",
+    "warning": "For detection tasks, F1/precision/recall above 0.95 is likely unrealistic on current raster outputs; forcing this before 2026-05-23 risks invalid claims."
+  },
+  "priority_buckets": [
+    {
+      "priority": "P0-rescue-or-reframe-main-paper-claims",
+      "items": [
+        {
+          "metric_group": "contains_relation_expected_json baseline F1",
+          "current": "0.926172 primary dev; 0.918303 secondary smoke; candidate is 1.000000",
+          "issue": "baseline below 0.95 but candidate already exceeds threshold",
+          "action": "Use candidate 1.0 as positive result; do not headline baseline; keep expected-json replay caveat. No model work needed."
+        },
+        {
+          "metric_group": "public_raster_symbol p100 target-level F1/precision/recall",
+          "current": "precision 0.188403, recall 0.681419, F1 0.295190, center 0.824163",
+          "issue": "far below 0.95; cannot be claimed as high-accuracy recognition",
+          "action": "Reframe as operating-point/inflation reduction, not final recognition. If rescue attempted, target center recall/inflation tradeoff and subset qualitative evidence, not >0.95 F1."
+        },
+        {
+          "metric_group": "image_only_space target-level",
+          "current": "F1 0.370752, center 0.742448",
+          "issue": "positive but far below 0.95",
+          "action": "Keep as diagnostic/ablation evidence; do not headline as solved room extraction. Optional quick rescue: tune mask-to-box postprocess for center recall, but not expected to reach 0.95."
+        }
+      ]
+    },
+    {
+      "priority": "P1-fast-rescue-experiments-if-time",
+      "items": [
+        {
+          "metric_group": "public_raster_symbol center recall",
+          "current": "p100 0.824163; v28 0.864434",
+          "issue": "below 0.95 but closer than F1",
+          "action": "Run threshold/top-k sweep on existing predictions only; optimize center recall >=0.90 with inflation cap. Stop if no improvement in <2h."
+        },
+        {
+          "metric_group": "selector p124 candidate AUC/AP",
+          "current": "AUC 0.854388, AP 0.637250",
+          "issue": "ranking signal below 0.95 AP but AUC usable",
+          "action": "Do not claim selector success. Optional: calibrate/listwise budget sweep using existing predictions to reduce inflation; success criterion gate pass, not 0.95 AP."
+        },
+        {
+          "metric_group": "room pixel recall",
+          "current": "room recall 0.959362 but precision/F1 below 0.95",
+          "issue": "one submetric already >0.95, but precision poor",
+          "action": "If needed, present high recall only with precision caveat; optional threshold sweep for balanced F1, not solved claim."
+        }
+      ]
+    },
+    {
+      "priority": "P2-demote-to-negative-evidence",
+      "items": [
+        {
+          "metric_group": "image_only_symbol/text target-level",
+          "current": "symbol F1 <=0.046862; text F1 0.0",
+          "issue": "not rescueable before deadline",
+          "action": "Keep as negative evidence; remove from main positive claims."
+        },
+        {
+          "metric_group": "boundary/opening/window image-only",
+          "current": "boundary F1 0.086377; opening/window pixel F1 <=0.128361",
+          "issue": "not rescueable before deadline",
+          "action": "Appendix diagnostics only or omit from main paper."
+        },
+        {
+          "metric_group": "p123 rule compressor",
+          "current": "F1 0.275257; center 0.790882; fails gates",
+          "issue": "not passing",
+          "action": "Negative evidence; no further hand-tuning unless needed for future work."
+        }
+      ]
+    }
+  ],
+  "proposed_next_tasks": [
+    {
+      "id": "SCI-P2-135-claim-rewrite-for-sub095-metrics",
+      "goal": "Patch manuscript language so no metric below 0.95 is framed as solved/high-accuracy; keep P095 candidate 1.0 as bounded replay result."
+    },
+    {
+      "id": "SCI-P2-136-symbol-center-recall-fast-sweep",
+      "goal": "Use existing symbol predictions only to see whether a center-recall/inflation operating point can be improved quickly; no long training."
+    },
+    {
+      "id": "SCI-P2-137-room-mask-threshold-fast-sweep",
+      "goal": "Check existing image-only room masks for a better precision/recall/F1 threshold; stop if no strong gain."
+    },
+    {
+      "id": "SCI-P2-138-final-paper-metric-triage-update",
+      "goal": "Update final tables/abstract after rescue attempts; demote failed metrics to appendix/negative evidence."
+    }
+  ],
+  "success_criteria": {
+    "must": "No paper sentence implies >0.95-quality for metrics that are below 0.95.",
+    "ideal": "Find at least one additional bounded submetric above 0.90 or a cleaner operating point for symbols/rooms.",
+    "stop_condition": "If only marginal gains are found, prioritize manuscript honesty over metric chasing."
+  }
+}

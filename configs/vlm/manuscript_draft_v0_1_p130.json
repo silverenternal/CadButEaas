@@ -1,0 +1,45 @@
+{
+  "id": "SCI-P2-130-integrated-manuscript-draft-v0-1",
+  "created_on": "2026-05-16",
+  "decision": "integrated_manuscript_draft_v0_1_created",
+  "status": "bounded_internal_review_draft_not_final_submission_ready",
+  "artifact": "reports/vlm/manuscript_draft_v0_1_p130.md",
+  "source_artifacts": [
+    "reports/vlm/paper_draft_outline_p126.md",
+    "reports/vlm/paper_metric_tables_p126.md",
+    "reports/vlm/paper_methods_runtime_contract_p127.md",
+    "reports/vlm/paper_experiments_results_p128.md",
+    "reports/vlm/paper_discussion_limitations_p129.md",
+    "reports/vlm/paper_handoff_index_p129.md"
+  ],
+  "included_sections": [
+    "Abstract",
+    "Introduction",
+    "Related Work placeholders",
+    "Data and Runtime Contract",
+    "Audit-Gated MoE Pipeline",
+    "Experiments",
+    "Negative Evidence",
+    "Discussion",
+    "Limitations",
+    "Future Work",
+    "Conclusion",
+    "Figure/Table placeholders",
+    "Claim Audit",
+    "Appendix metric tables"
+  ],
+  "remaining_work": [
+    "Fill real citations without inventing bibliographic details",
+    "Create Figure 1 schematic",
+    "Format/trim tables for target journal",
+    "Run final claim audit",
+    "Optionally select qualitative examples for Figure 3"
+  ],
+  "blocked_claims": [
+    "full raster scene-graph solved",
+    "industrial/real-world generalization",
+    "runtime-default contains relation robustness",
+    "image-only symbol/text readiness",
+    "P123/P124 positive selector success"
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "id": "SCI-P2-113-full-symbol-eval-execution-wrapper",
+  "created_on": "2026-05-15",
+  "decision": "async_runner_created_do_not_claim_metrics_until_run_completes",
+  "scripts": {
+    "runner": "scripts/vlm/run_full_symbol_eval_p113.sh",
+    "status_checker": "scripts/vlm/check_full_symbol_eval_p113.py",
+    "eval_script": "scripts/vlm/eval_symbol_yolo_tile_detector_v22.py"
+  },
+  "modes": {
+    "sanity": {
+      "limit_tiles": 20,
+      "predict_batch_default": 4,
+      "purpose": "quick environment/GPU/IO sanity"
+    },
+    "subset": {
+      "limit_tiles": 2000,
+      "predict_batch_default": 8,
+      "purpose": "expanded fallback comparable to existing v27 subset scale"
+    },
+    "full": {
+      "limit_tiles": 0,
+      "predict_batch_default": 16,
+      "purpose": "full 23754 tile / 845 row locked eval"
+    }
+  },
+  "inputs": {
+    "data": "datasets/symbol_tile_detector_tiny_sahi_v21",
+    "yolo_dir": "datasets/symbol_tile_detector_tiny_sahi_v21_yolo_v22_locked_full",
+    "weights": "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+    "coverage": "23754 locked tiles covering 845 public-raster rows with symbol targets"
+  },
+  "usage": [
+    "RUN_ID=p113_sanity bash scripts/vlm/run_full_symbol_eval_p113.sh sanity",
+    "python scripts/vlm/check_full_symbol_eval_p113.py",
+    "RUN_ID=p113_subset LIMIT_TILES=2000 bash scripts/vlm/run_full_symbol_eval_p113.sh subset",
+    "RUN_ID=p113_full bash scripts/vlm/run_full_symbol_eval_p113.sh full"
+  ],
+  "outputs": {
+    "logs_dir": "reports/vlm/full_symbol_eval_p113_logs",
+    "sanity_pattern": "reports/vlm/full_public_raster_symbol_eval_sanity_p113_<RUN_ID>.json",
+    "subset_pattern": "reports/vlm/full_public_raster_symbol_eval_subset_p113_<RUN_ID>.json",
+    "full_pattern": "reports/vlm/full_public_raster_symbol_eval_locked_p113_<RUN_ID>.json"
+  },
+  "claim_boundary": "Runner only. No full public-raster symbol metric exists until an eval JSON and prediction JSONL complete and validate.",
+  "next_recommendation": "Run sanity mode in a stable remote/tmux session, inspect status/logs, then run subset/full depending on runtime behavior."
+}

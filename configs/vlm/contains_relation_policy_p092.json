@@ -1,0 +1,75 @@
+{
+  "id": "P0-92-contains-relation-policy-opt-in-validation-plan",
+  "created_on": "2026-05-15",
+  "status": "opt_in_candidate_packaged_not_runtime_default",
+  "default_behavior": {
+    "fusion_v2_default_modified": false,
+    "runtime_policy": "existing_fusion_v2_contains_behavior"
+  },
+  "candidate_policy": {
+    "policy_id": "center_ratio_1_top4",
+    "role": "contains_relation_opt_in_validation_candidate",
+    "source_probe": "reports/vlm/contains_relation_policy_probe_p091.json",
+    "config": {
+      "require_center": true,
+      "min_containment": 1.0,
+      "max_edges_per_symbol": 4,
+      "allow_multi_when_ambiguous": false,
+      "max_top2_gap": null,
+      "min_room_area": 0.0
+    },
+    "interpretation": "For every symbol node, add contains edges from up to four room nodes whose bbox strictly contains the symbol bbox and whose center also contains the symbol center."
+  },
+  "oracle_smoke_metrics": {
+    "input": "datasets/cadstruct_cubicasa5k_moe_locked/smoke.jsonl",
+    "records": 64,
+    "baseline": {
+      "relation_f1": 0.934673,
+      "contains_precision": 0.984127,
+      "contains_recall": 0.889952,
+      "contains_missing": 253,
+      "contains_extra": 33
+    },
+    "candidate": {
+      "relation_f1": 1.0,
+      "contains_precision": 1.0,
+      "contains_recall": 1.0,
+      "contains_missing": 0,
+      "contains_extra": 0
+    },
+    "delta": {
+      "relation_f1": 0.065327,
+      "contains_precision": 0.015873,
+      "contains_recall": 0.110048,
+      "contains_missing": -253,
+      "contains_extra": -33
+    }
+  },
+  "validation_plan": {
+    "required_before_runtime_promotion": [
+      "Replay on a separate split or non-overlapping locked validation set.",
+      "Compare against existing fusion_v2 contains behavior with identical nodes.",
+      "Audit cases where the candidate adds multiple room contains edges per symbol.",
+      "Verify no increase in invalid graph rate or downstream warning count.",
+      "Confirm gains persist when symbol policy uses v28 default and P0-76 opt-in overlays."
+    ],
+    "promotion_gates": {
+      "relation_f1_delta_min": 0.01,
+      "contains_recall_delta_min": 0.03,
+      "contains_precision_drop_max": 0.005,
+      "extra_contains_delta_max": 0,
+      "invalid_graph_rate_delta_max": 0.0,
+      "warning_count_delta_max": 0
+    },
+    "failure_conditions": [
+      "Candidate improves recall only by adding many extra contains edges.",
+      "Candidate creates multi-room containment conflicts that downstream consumers cannot support.",
+      "Candidate only works on oracle SVG smoke and fails on model/detector overlays."
+    ]
+  },
+  "implementation_guidance": {
+    "do_not_patch": "scripts/vlm/fuse_scene_graph_v2.py",
+    "preferred_next_step": "Create an opt-in replay wrapper that applies this policy to fusion_v2 output and writes comparison metrics.",
+    "future_cli_flag_if_promoted": "--contains-policy center_ratio_1_top4"
+  }
+}

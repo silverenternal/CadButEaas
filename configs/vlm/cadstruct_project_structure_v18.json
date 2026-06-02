@@ -1,0 +1,189 @@
+{
+  "schema_version": "cadstruct_project_structure_config_v18",
+  "purpose": "Machine-readable governance for the raster-only CadStruct MoE project. This file classifies entrypoints and scripts so active work is not confused with diagnostics or offline label conversion.",
+  "hard_contract": {
+    "runtime_input": "raster_image_only",
+    "forbidden_runtime_sources": [
+      "svg_paths",
+      "cad_dxf_primitives",
+      "parser_geometry",
+      "expected_json",
+      "gold_labels",
+      "offline_semantic_labels"
+    ],
+    "offline_allowed_sources": [
+      "svg_or_polygon_labels_for_training",
+      "locked_eval_labels",
+      "audit_labels",
+      "upper_bound_analysis_labels"
+    ]
+  },
+  "script_classes": {
+    "canonical_or_core_asset": {
+      "explicit_paths": [
+        "scripts/vlm/audit_project_structure_v18.py",
+        "scripts/vlm/run_cadstruct_moe_smoke_v18.py",
+        "scripts/vlm/run_cadstruct_moe_locked_v18.py",
+        "scripts/vlm/image_only_moe_v17_pipeline.py",
+        "scripts/vlm/candidate_contract.py",
+        "scripts/vlm/validate_image_only_moe_stream.py",
+        "scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py",
+        "scripts/vlm/build_relation_graph_scored_rows_cache_v18.py",
+        "scripts/vlm/select_relation_graph_from_scored_cache_v18.py",
+        "scripts/vlm/audit_relation_graph_reconstruction_v18.py",
+        "scripts/vlm/audit_relation_graph_drop_reasons_v18.py"
+      ],
+      "description": "Current canonical control plane, schema validation, and auditable replay assets."
+    },
+    "diagnostic_or_review_helper": {
+      "filename_prefixes": [
+        "audit_",
+        "attribute_",
+        "benchmark_",
+        "decide_",
+        "diagnose_",
+        "mine_",
+        "compare_",
+        "reconcile_",
+        "render_",
+        "summarize_",
+        "select_patch_",
+        "repair_",
+        "overlay_",
+        "profile_",
+        "sweep_",
+        "update_",
+        "client_smoke_",
+        "estimate_",
+        "generate_paper_",
+        "generate_review_"
+      ],
+      "description": "Debug, review, oracle, ablation, report, and failure-analysis helpers. Useful, but not canonical product flow unless explicitly promoted."
+    },
+    "legacy_svg_or_offline_label_helper": {
+      "path_contains": [
+        "svg",
+        "parser",
+        "vectorize_"
+      ],
+      "explicit_paths": [
+        "scripts/vlm/convert_cubicasa5k_svg.py",
+        "scripts/vlm/apply_room_proposal_recovery_v14.py"
+      ],
+      "description": "Offline dataset conversion or legacy helper code. May read structured labels only outside runtime inference."
+    },
+    "model_pipeline_candidate": {
+      "filename_prefixes": [
+        "adapt_",
+        "augment_",
+        "bootstrap_",
+        "train_",
+        "build_",
+        "run_",
+        "evaluate_",
+        "apply_",
+        "fuse_",
+        "merge_",
+        "export_",
+        "extract_",
+        "generate_",
+        "rerank_",
+        "nms_",
+        "rebuild_",
+        "reconstruct_",
+        "select_",
+        "pretrain_",
+        "calibrate_",
+        "prepare_",
+        "create_",
+        "split_",
+        "convert_"
+      ],
+      "explicit_paths": [
+        "scripts/vlm/decode_polygon_sequence_v11.py",
+        "scripts/vlm/degrade_floorplan_images.py",
+        "scripts/vlm/eval_symbol_v9_classification.py",
+        "scripts/vlm/image_only_structured_v16_pipeline.py",
+        "scripts/vlm/image_only_v14_pipeline.py",
+        "scripts/vlm/image_only_v15_pipeline.py",
+        "scripts/vlm/v9_raster_pipeline.py",
+        "scripts/vlm/v10_raster_pipeline.py",
+        "scripts/vlm/v11_frontier_pipeline.py"
+      ],
+      "description": "Potential model or pipeline code. Must be promoted explicitly before becoming canonical."
+    },
+    "shared_library_or_test": {
+      "filename_prefixes": [
+        "test_"
+      ],
+      "explicit_paths": [
+        "scripts/vlm/compression_layers.py",
+        "scripts/vlm/eval_metrics.py",
+        "scripts/vlm/graph_node_model.py",
+        "scripts/vlm/output_contract.py",
+        "scripts/vlm/relation_graph_reconstruction_v18.py",
+        "scripts/vlm/room_text_lexicon.py",
+        "scripts/vlm/roomspace_geometry.py",
+        "scripts/vlm/scene_graph_schema.py",
+        "scripts/vlm/sft_utils.py",
+        "scripts/vlm/training_audit.py",
+        "scripts/vlm/v5_pipeline_utils.py",
+        "scripts/vlm/v8_raster_e2e_utils.py",
+        "scripts/vlm/download_model.py",
+        "scripts/vlm/server.py"
+      ],
+      "description": "Reusable helpers and tests. These support canonical or diagnostic paths but are not standalone pipeline entrypoints."
+    }
+  },
+  "module_ownership": {
+    "candidate_frontend": {
+      "canonical_assets": [
+        "scripts/vlm/image_only_moe_v17_pipeline.py",
+        "scripts/vlm/candidate_contract.py",
+        "scripts/vlm/validate_image_only_moe_stream.py"
+      ],
+      "next_required_work": "Fold v17 image-only candidate/frontend execution behind run_cadstruct_moe_smoke_v18.py and emit a manifest."
+    },
+    "moe_experts": {
+      "canonical_assets": [
+        "scripts/vlm/cadstruct_moe",
+        "scripts/vlm/image_only_moe_v17_pipeline.py"
+      ],
+      "next_required_work": "Report room/boundary/symbol/text gates separately before downstream relation tuning resumes."
+    },
+    "relation_topology": {
+      "canonical_assets": [
+        "scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py",
+        "scripts/vlm/build_relation_graph_scored_rows_cache_v18.py",
+        "scripts/vlm/select_relation_graph_from_scored_cache_v18.py",
+        "scripts/vlm/audit_relation_graph_reconstruction_v18.py",
+        "scripts/vlm/audit_relation_graph_drop_reasons_v18.py"
+      ],
+      "status": "diagnostic_until_upstream_expert_gates_improve",
+      "next_required_work": "Do not resume contains_symbol cap/threshold/overflow tuning as P0."
+    },
+    "scene_graph_export": {
+      "canonical_assets": [
+        "scripts/vlm/export_moe_scene_graph.py",
+        "scripts/vlm/fuse_scene_graph.py"
+      ],
+      "status": "candidate_needs_manifest_and_gate"
+    }
+  },
+  "required_entrypoints": {
+    "smoke_runner": {
+      "path": "scripts/vlm/run_cadstruct_moe_smoke_v18.py",
+      "manifest": "reports/vlm/cadstruct_moe_smoke_manifest_v18.json"
+    },
+    "locked_runner": {
+      "path": "scripts/vlm/run_cadstruct_moe_locked_v18.py",
+      "manifest": "reports/vlm/cadstruct_moe_locked_manifest_v18.json"
+    }
+  },
+  "gate_policy": {
+    "production_metric_floor": 0.98,
+    "relative_improvement_is_not_success": true,
+    "manifest_required_for_canonical_metrics": true,
+    "relation_cap_tuning_frozen_as_p0": true
+  }
+}

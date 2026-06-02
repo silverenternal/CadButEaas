@@ -1,0 +1,253 @@
+{
+  "schema_version": "cadstruct_structure_audit_v2",
+  "updated": "2026-05-09",
+  "target_file": "struct.json",
+  "target_schema_version": "cadstruct_model_structure_v2_2",
+  "audit_summary": {
+    "overall_assessment": "struct.json v2_2 is now executable for the active relation-graph path: pipeline_entrypoints, artifact_manifest_contract, and validator_registry are connected to scripts/vlm/run_struct_pipeline.py. The v18 relation-graph smoke and locked paths can be run with one command and emit manifests plus runner/validator audits. Remaining weaknesses are narrower: graph-reconstruction submodules, model registry paths, candidate-source registry, gate levels, and review-pack contracts still need more executable detail.",
+    "what_is_now_good": [
+      "Developer experience is explicitly protected: logical decoupling is not allowed to become physical fragmentation.",
+      "The graph reconstruction bottleneck is correctly first-class, not hidden as a cap/reranker tweak.",
+      "Symbol objectness, instance split, and type classification are structurally separated.",
+      "Relation taxonomy now maps candidate relations to final scene-graph relations.",
+      "Feature leakage and offline-only labels are explicitly called out."
+    ],
+    "highest_priority_remaining_change": "Continue turning the remaining architecture sections into executable contracts without fragmenting developer workflows: graph-reconstruction submodule status, candidate-source registry, gate levels, and review-pack schema are next."
+  },
+  "implemented_since_previous_audit": [
+    {
+      "previous_id": "SA2-P0-001",
+      "status": "implemented_for_relation_graph_v18",
+      "evidence": [
+        "struct.json:pipeline_entrypoints.relation_graph_v18_smoke",
+        "struct.json:pipeline_entrypoints.relation_graph_v18_locked",
+        "scripts/vlm/run_struct_pipeline.py",
+        "reports/vlm/relation_graph_v18_smoke_manifest.json",
+        "reports/vlm/relation_graph_v18_locked_manifest.json"
+      ]
+    },
+    {
+      "previous_id": "SA2-P0-002",
+      "status": "implemented",
+      "evidence": [
+        "struct.json:artifact_manifest_contract",
+        "reports/vlm/relation_graph_v18_smoke_manifest.json",
+        "reports/vlm/relation_graph_v18_locked_manifest.json"
+      ]
+    },
+    {
+      "previous_id": "SA2-P0-003",
+      "status": "implemented_partial_with_runtime_audit",
+      "evidence": [
+        "struct.json:validator_registry",
+        "reports/vlm/struct_validator_registry_audit.json"
+      ],
+      "remaining_gap": "DetectorCandidate validates current v18 candidate_stream shape but still warns that legacy candidates lack provenance/audit_trace. SceneGraph and FeatureLeakage remain planned lightweight validators."
+    }
+  ],
+  "resolved_from_previous_audit": [
+    {
+      "previous_id": "SA-P0-001",
+      "status": "partially_resolved",
+      "resolution": "module_contracts now exist with producers, consumers, required fields, and validation notes.",
+      "remaining_gap": "Most validations are still natural-language strings, not reusable validators with command paths and pass/fail artifact outputs."
+    },
+    {
+      "previous_id": "SA-P0-002",
+      "status": "partially_resolved",
+      "resolution": "relation_aware_compression was reframed as graph_reconstruction with explicit submodules.",
+      "remaining_gap": "No graph-reconstruction command bundle or artifact manifest is defined for the active v18 scripts."
+    },
+    {
+      "previous_id": "SA-P0-003",
+      "status": "partially_resolved",
+      "resolution": "candidate_frontend now lists objectness, panoptic/segment, primitive, canonicalizer, and budgeter submodules.",
+      "remaining_gap": "Those submodules are not yet mapped to concrete current scripts or future implementation status."
+    },
+    {
+      "previous_id": "SA-P0-004",
+      "status": "resolved_at_architecture_level",
+      "resolution": "symbol_instance_and_type_path was added as a separate stage from legacy symbol_fixture."
+    },
+    {
+      "previous_id": "SA-P0-005",
+      "status": "resolved_at_architecture_level",
+      "resolution": "relation_taxonomy now maps bounded_by, contains_symbol, labeled_by_text, and adjacent_to to canonical final relations."
+    },
+    {
+      "previous_id": "SA-P1-006",
+      "status": "partially_resolved",
+      "resolution": "feature_sources now separates inference_available, offline_only, and derived_from_inference_available.",
+      "remaining_gap": "No validator exists yet to scan actual artifact fields against feature_sources."
+    },
+    {
+      "previous_id": "SA-P1-007",
+      "status": "partially_resolved",
+      "resolution": "model_registry now lists experts and relation_graph_policy_v18.",
+      "remaining_gap": "Several registry entries still lack concrete checkpoint paths, training dataset paths, eval report paths, and calibration report paths."
+    },
+    {
+      "previous_id": "SA-P1-008",
+      "status": "resolved_at_architecture_level",
+      "resolution": "uncertainty_contract now declares abstain/review fields and triggers."
+    },
+    {
+      "previous_id": "SA-P1-009",
+      "status": "partially_resolved",
+      "resolution": "runtime_budgets now define candidate, edge, graph-reduction, invalid-graph, and latency/resource targets.",
+      "remaining_gap": "Budgets are not yet connected to a manifest or CI-style gate."
+    },
+    {
+      "previous_id": "SA-P1-010",
+      "status": "resolved_at_architecture_level",
+      "resolution": "evaluation_protocol now defines split policy, promotion gates, required reports, and known bad proxy metrics."
+    }
+  ],
+  "new_structural_findings": [
+    {
+      "id": "SA2-P0-001",
+      "severity": "P0",
+      "area": "developer execution path",
+      "status": "resolved_for_relation_graph_v18",
+      "finding": "developer_experience_policy requires smoke_pipeline and locked_pipeline. This is now implemented for the active v18 relation-graph path through scripts/vlm/run_struct_pipeline.py.",
+      "why_it_matters": "The project can still drift into manual multi-command workflows for the most important current work: relation_graph_reconstruction_v18/listwise policy. That undermines both developer convenience and reproducibility.",
+      "recommended_change": "Keep using the one-command runner for relation_graph_v18_smoke and relation_graph_v18_locked; extend the same pattern to full_raster_moe_v18_locked when the downstream modules are ready.",
+      "local_evidence": [
+        "scripts/vlm/run_struct_pipeline.py --pipeline relation_graph_v18_smoke",
+        "scripts/vlm/run_struct_pipeline.py --pipeline relation_graph_v18_locked",
+        "reports/vlm/struct_pipeline_runner_audit.json"
+      ]
+    },
+    {
+      "id": "SA2-P0-002",
+      "severity": "P0",
+      "area": "artifact manifest",
+      "status": "resolved",
+      "finding": "The file now defines artifact_manifest_contract and the runner emits manifests for smoke and locked relation-graph runs.",
+      "why_it_matters": "Without a manifest schema, every pipeline will keep inventing report paths. Developers will still need to search scripts and todo.json to understand what a run produced.",
+      "recommended_change": "Keep manifest generation mandatory for new aggregated entrypoints; avoid duplicating volatile metric snapshots outside eval/audit artifacts.",
+      "local_evidence": [
+        "struct.json:artifact_manifest_contract.required_fields",
+        "reports/vlm/relation_graph_v18_smoke_manifest.json",
+        "reports/vlm/relation_graph_v18_locked_manifest.json"
+      ]
+    },
+    {
+      "id": "SA2-P0-003",
+      "severity": "P0",
+      "area": "schema validation",
+      "status": "partially_resolved",
+      "finding": "validator_registry exists and scripts/vlm/run_struct_pipeline.py now dispatches DetectorCandidate, RelationEdgeCandidate, SelectedRelationEdge, and SourceIntegrity checks into reports/vlm/struct_validator_registry_audit.json.",
+      "why_it_matters": "Natural-language validators are useful documentation, but they cannot be run in CI or reused by scripts. This keeps contract drift likely.",
+      "recommended_change": "Promote SceneGraph and FeatureLeakage from planned to lightweight executable validators; tighten DetectorCandidate warnings once v18 candidate_stream emits provenance/audit_trace.",
+      "local_evidence": [
+        "struct.json:validator_registry",
+        "scripts/vlm/run_struct_pipeline.py",
+        "reports/vlm/struct_validator_registry_audit.json"
+      ]
+    },
+    {
+      "id": "SA2-P0-004",
+      "severity": "P0",
+      "area": "relation graph flow",
+      "finding": "graph_reconstruction is structurally strong, but its submodules are not connected to current files, missing status, or planned files.",
+      "why_it_matters": "It is hard to tell what is already implemented, what is planned, and what is still conceptual. That hurts prioritization.",
+      "recommended_change": "For every graph_reconstruction submodule, add implementation_status, current_owner_files, expected_artifacts, and next_missing_piece. For example wall_segment_duplicate_collapse should be status=planned_next with owner scripts/vlm/relation_graph_reconstruction_v18.py.",
+      "local_evidence": [
+        "struct.json:end_to_end_dataflow[graph_reconstruction]",
+        "todo.json:Next add wall-segment duplicate collapse"
+      ]
+    },
+    {
+      "id": "SA2-P1-005",
+      "severity": "P1",
+      "area": "model registry completeness",
+      "finding": "model_registry is useful but uneven: relation_graph_policy_v18 has concrete paths, while most expert entries only have prose summaries.",
+      "why_it_matters": "A replacement contract is only actionable if the registry points to actual datasets, checkpoints, eval reports, and calibration reports.",
+      "recommended_change": "Add optional nullable fields for checkpoint, training_dataset, eval_report, calibration_report, and status. Use null with reason when a path is unknown or not applicable, rather than prose-only summaries.",
+      "local_evidence": ["struct.json:model_registry"]
+    },
+    {
+      "id": "SA2-P1-006",
+      "severity": "P1",
+      "area": "candidate frontend submodule mapping",
+      "finding": "candidate_frontend lists desired submodules, but does not map current proposal sources to those submodules.",
+      "why_it_matters": "Developers cannot quickly see whether a candidate came from primitive recall, Hough wall, fallback room, patch heatmap, or room-wall repair.",
+      "recommended_change": "Add candidate_source_registry mapping proposal_source values to submodule, family, expected payload fields, known failure modes, and audit counters.",
+      "local_evidence": [
+        "struct.json:end_to_end_dataflow[candidate_frontend]",
+        "scripts/vlm/image_only_moe_v17_pipeline.py proposal_source values"
+      ]
+    },
+    {
+      "id": "SA2-P1-007",
+      "severity": "P1",
+      "area": "quality gates versus development gates",
+      "finding": "evaluation_protocol promotion gates are production-grade, but the file does not define lighter development gates for quick iteration.",
+      "why_it_matters": "A 0.98 production target is correct, but developers need smoke-level and regression-level gates that fail fast without requiring a full locked run.",
+      "recommended_change": "Add gate_levels: smoke, dev_regression, locked_candidate, production_promotion. Each level should define allowed runtime, sample scope, blocking metrics, and whether failure blocks merge/adoption.",
+      "local_evidence": ["struct.json:evaluation_protocol", "struct.json:developer_experience_policy.required_entrypoints"]
+    },
+    {
+      "id": "SA2-P1-008",
+      "severity": "P1",
+      "area": "data object versioning",
+      "finding": "The architecture has schema_version globally and DetectorCandidate has a contract version, but other object types have no per-object schema version.",
+      "why_it_matters": "RelationEdgeCandidate and SceneGraph are likely to evolve. Without per-object versions, old artifacts become ambiguous.",
+      "recommended_change": "Add schema_version to every module_contract object. Require readers to accept current and one previous minor version or fail with a clear migration error.",
+      "local_evidence": ["struct.json:module_contracts"]
+    },
+    {
+      "id": "SA2-P2-009",
+      "severity": "P2",
+      "area": "review UX",
+      "finding": "review_and_export says visual overlays/failure gallery, but the architecture does not define what a review pack must contain.",
+      "why_it_matters": "Review packs can become inconsistent across modules, making human diagnosis slower.",
+      "recommended_change": "Add review_pack_contract with overlay image paths, top failure buckets, sampled false positives/false negatives, source artifact links, and per-module trace summaries.",
+      "local_evidence": ["struct.json:end_to_end_dataflow[review_and_export]"]
+    },
+    {
+      "id": "SA2-P2-010",
+      "severity": "P2",
+      "area": "documentation maintenance",
+      "finding": "struct.json now overlaps with todo.json and README on metrics and current status.",
+      "why_it_matters": "Status values can go stale quickly in multiple places.",
+      "recommended_change": "Keep struct.json as mostly stable architecture and contract. Move volatile metrics into artifact manifests and reports, and keep only references plus latest-known snapshot fields where necessary.",
+      "local_evidence": ["struct.json:current_metrics", "todo.json:current_state_summary", "README.md metrics tables"]
+    }
+  ],
+  "recommended_next_struct_changes": [
+    "Expand graph_reconstruction submodules with implementation_status/current_owner_files/expected_artifacts/next_missing_piece.",
+    "Normalize model_registry entries to use explicit path fields with null plus reason when unavailable.",
+    "Add candidate_source_registry for primitive, Hough, fallback room, patch heatmap, room-wall repair, and future panoptic sources.",
+    "Add gate_levels for smoke/dev_regression/locked_candidate/production_promotion.",
+    "Add per-object schema_version to all module_contracts.",
+    "Add review_pack_contract.",
+    "Promote SceneGraph and FeatureLeakage validator_registry entries from planned to executable lightweight scans.",
+    "Reduce volatile metric duplication in struct.json once artifact manifests exist."
+  ],
+  "reference_patterns_to_keep": [
+    {
+      "pattern": "run-all style aggregated command",
+      "source": "scripts/vlm/image_only_moe_v17_pipeline.py",
+      "why": "This is the right developer-experience pattern: many modules internally, one command for normal execution."
+    },
+    {
+      "pattern": "manifest per generated dataset",
+      "source_examples": [
+        "datasets/cadstruct_room_proposals_v1/manifest.json",
+        "datasets/cadstruct_symbols_v1/manifest.json",
+        "scripts/vlm/build_symbol_detector_dataset_v18.py"
+      ],
+      "why": "Dataset builders already use manifests; pipeline runs should use the same idea."
+    },
+    {
+      "pattern": "separate audit JSON outputs",
+      "source_examples": [
+        "reports/vlm/relation_graph_listwise_reconstruction_v18_audit.json",
+        "reports/vlm/image_only_moe_candidate_stream_v17_audit.json"
+      ],
+      "why": "Keep detailed audits as separate artifacts, but collect them under one run manifest."
+    }
+  ]
+}

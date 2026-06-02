@@ -1,0 +1,46 @@
+{
+  "id": "SCI-P2-138-final-paper-metric-triage-update",
+  "created_on": "2026-05-16",
+  "decision": "final_metric_triage_complete_keep_bounded_claims",
+  "source": "reports/vlm/manuscript_draft_v0_2_p135.md",
+  "artifact": "reports/vlm/manuscript_draft_v0_3_p138.md",
+  "inputs": [
+    "reports/vlm/symbol_center_recall_fast_sweep_p136.md",
+    "reports/vlm/room_mask_threshold_fast_sweep_p137.md"
+  ],
+  "final_metric_positions": [
+    {
+      "area": "contains relation",
+      "position": "positive but bounded",
+      "evidence": "candidate relation F1 1.0 under expected-json replay only"
+    },
+    {
+      "area": "public-raster symbol",
+      "position": "operating-point / no high-accuracy rescue",
+      "evidence": "P136 found no center>=0.90 operating point; best balanced F1 0.367019/center 0.766348/inflation 2.578549"
+    },
+    {
+      "area": "image-only room",
+      "position": "recall-rich diagnostic, not solved extraction",
+      "evidence": "room pixel recall 0.959362 at best-F1 threshold, but precision 0.443126/F1 0.606234; box F1 0.370752"
+    },
+    {
+      "area": "image-only symbol/text/boundary",
+      "position": "negative evidence or appendix",
+      "evidence": "metrics remain far below 0.95"
+    },
+    {
+      "area": "selector/compressor",
+      "position": "negative evidence",
+      "evidence": "P123/P124 fail all-gate promotion"
+    }
+  ],
+  "do_not_claim": [
+    "symbol high-accuracy recognition",
+    "solved room extraction",
+    "runtime contains robustness",
+    "industrial generalization",
+    "selector success"
+  ],
+  "next_step": "final package is review-safe; only human citations/figures/template remain unless user wants more experiments"
+}

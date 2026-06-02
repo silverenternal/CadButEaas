@@ -1,0 +1,1422 @@
+{
+  "id": "SCI-P2-164-symbol-f1-oracle-and-dual-policy-rescue",
+  "created_on": "2026-05-17",
+  "decision": "negative_keep_p160_but_oracle_headroom_exists",
+  "claim_boundary": "Post-hoc dual-policy union/backfill sweep on 74-row public-raster overlay subset. Runtime policy uses predicted boxes/labels/scores and overlap to P160 core only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p160_best": {
+      "tp": 1315,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.546323,
+      "recall": 0.524322,
+      "f1": 0.535097,
+      "center_recall": 0.585327,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.810937,
+        "medium": 0.558511,
+        "small": 0.564369,
+        "tiny": 0.220339,
+        "xlarge": 0.497537
+      },
+      "by_area_center_recall": {
+        "large": 0.8125,
+        "medium": 0.617021,
+        "small": 0.604681,
+        "tiny": 0.377119,
+        "xlarge": 0.492611
+      }
+    },
+    "p155a_p140": {
+      "tp": 1350,
+      "predicted": 2646,
+      "gold": 2508,
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "prediction_inflation": 1.055024,
+      "by_area_iou_recall": {
+        "large": 0.815625,
+        "medium": 0.56383,
+        "small": 0.590377,
+        "tiny": 0.228814,
+        "xlarge": 0.522167
+      },
+      "by_area_center_recall": {
+        "large": 0.81875,
+        "medium": 0.611702,
+        "small": 0.63459,
+        "tiny": 0.384181,
+        "xlarge": 0.517241
+      }
+    }
+  },
+  "oracle_analysis": {
+    "totals": {
+      "gold": 2508,
+      "p160_hit": 1315,
+      "p155a_hit": 1350,
+      "union_hit": 1365,
+      "p155a_only": 50,
+      "p160_only": 15
+    },
+    "by_area": {
+      "large": {
+        "gold": 640,
+        "p160_hit": 519,
+        "p155a_hit": 522,
+        "union_hit": 524,
+        "p155a_only": 5
+      },
+      "medium": {
+        "gold": 188,
+        "p160_hit": 105,
+        "p155a_hit": 106,
+        "union_hit": 107,
+        "p155a_only": 2
+      },
+      "small": {
+        "gold": 769,
+        "p160_hit": 434,
+        "p155a_hit": 454,
+        "union_hit": 461,
+        "p155a_only": 27
+      },
+      "tiny": {
+        "gold": 708,
+        "p160_hit": 156,
+        "p155a_hit": 162,
+        "union_hit": 167,
+        "p155a_only": 11
+      },
+      "xlarge": {
+        "gold": 203,
+        "p160_hit": 101,
+        "p155a_hit": 106,
+        "union_hit": 106,
+        "p155a_only": 5
+      }
+    }
+  },
+  "searched_policy_count": 145,
+  "passing_policy_count": 145,
+  "best_policy": {
+    "name": "p164_l4_b0_s0.5_miou0.05_d8.0_add1",
+    "labels": [
+      "sink",
+      "equipment",
+      "appliance",
+      "generic_symbol"
+    ],
+    "buckets": [],
+    "min_score": 0.5,
+    "max_iou_with_core": 0.05,
+    "min_center_dist": 8.0,
+    "max_add_per_page": 1,
+    "append_nms_iou": 0.75
+  },
+  "best_metrics": {
+    "tp": 1315,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.546323,
+    "recall": 0.524322,
+    "f1": 0.535097,
+    "center_recall": 0.585327,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.564369,
+      "tiny": 0.220339,
+      "xlarge": 0.497537
+    },
+    "by_area_center_recall": {
+      "large": 0.8125,
+      "medium": 0.617021,
+      "small": 0.604681,
+      "tiny": 0.377119,
+      "xlarge": 0.492611
+    }
+  },
+  "delta_vs_p160": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "center_recall": 0.0,
+    "prediction_inflation": 0.0
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.05_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.05_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.05_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.05_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.15_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.15_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.15_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.5_miou0.15_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.05_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.05_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.05_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.05_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.15_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.15_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.15_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.65_miou0.15_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.65,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.05_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.05_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.05_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.05_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.15_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.15_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.15_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b0_s0.75_miou0.15_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [],
+        "min_score": 0.75,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.05_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.05_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.05_d16.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.05_d16.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.05,
+        "min_center_dist": 16.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.15_d8.0_add1",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p164_l4_b2_s0.5_miou0.15_d8.0_add2",
+        "labels": [
+          "sink",
+          "equipment",
+          "appliance",
+          "generic_symbol"
+        ],
+        "buckets": [
+          "tiny",
+          "small"
+        ],
+        "min_score": 0.5,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 8.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1315,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.546323,
+        "recall": 0.524322,
+        "f1": 0.535097,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.377119,
+          "xlarge": 0.492611
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p164_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_f1_oracle_and_dual_policy_rescue_p164.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_f1_oracle_and_dual_policy_rescue_p164.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_f1_oracle_and_dual_policy_rescue_p164_eval.json",
+  "official_comparison": {
+    "policy_id": "p164_best",
+    "baseline_policy": "p160_best",
+    "delta_precision": 0.0,
+    "delta_recall": 0.0,
+    "delta_f1": 0.0,
+    "delta_center_recall": 0.0,
+    "delta_prediction_inflation": 0.0
+  },
+  "recommendation": {
+    "keep_current_best": "p160_best",
+    "reason": "Focused runtime-safe dual-policy union did not improve over P160; best materialized policy is effectively no-op.",
+    "important_headroom": "Oracle analysis shows P155A has 50 P155A-only hits and union would reach 1365 hits versus P160 1315, so recall headroom exists but requires smarter disagreement/backfill gates.",
+    "next": "Proceed to P165 disagreement-based recall backfill using oracle-derived feature diagnostics, not global union."
+  }
+}

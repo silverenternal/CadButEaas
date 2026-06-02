@@ -12,3 +12,4 @@ sentencepiece
 protobuf
 einops
 python-multipart
+pytest

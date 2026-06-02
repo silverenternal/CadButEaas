@@ -1,0 +1,198 @@
+{
+  "id": "SCI-P2-155D-box-calibration-refiner-symbol-rescue",
+  "created_on": "2026-05-17",
+  "decision": "small_positive_label_cleanup_adopt_as_precision_ablation_not_final_freeze",
+  "claim_boundary": "P155D evaluates runtime-safe transformations on the same 74-row public-raster overlay subset. Transformations use only predicted bbox/label/score; offline targets are used only for evaluation and threshold selection provenance must be reported as post-hoc.",
+  "source_integrity": "No SVG/parser geometry, expected_json, gold labels, or annotation paths are used by the materialized runtime transform; gold targets are evaluation-only.",
+  "script": "scripts/vlm/apply_symbol_box_calibration_rescue_p155d.py",
+  "inputs": [
+    "reports/vlm/symbol_policy_moe_overlay_p155a_p140_best.jsonl",
+    "reports/vlm/symbol_per_label_bucket_rescue_p155c.md"
+  ],
+  "outputs": {
+    "aniso_overlay": "reports/vlm/symbol_policy_moe_overlay_p155d_aniso120_095.jsonl",
+    "label_cleanup_overlay": "reports/vlm/symbol_policy_moe_overlay_p155d_label_cleanup.jsonl",
+    "eval_json": "reports/vlm/symbol_box_calibration_rescue_p155d_eval.json",
+    "eval_md": "reports/vlm/symbol_box_calibration_rescue_p155d_eval.md",
+    "report_md": "reports/vlm/symbol_box_calibration_rescue_p155d.md",
+    "config_json": "configs/vlm/symbol_box_calibration_rescue_p155d.json"
+  },
+  "variants": {
+    "p155d_aniso120_095": {
+      "transform": "scale each predicted bbox around its center with sx=1.20, sy=0.95",
+      "metrics": {
+        "input": "reports/vlm/symbol_policy_moe_overlay_p155d_aniso120_095.jsonl",
+        "records": 74,
+        "missing_target_rows": 0,
+        "missing_target_row_ids_sample": [],
+        "symbol_iou_any": {
+          "tp": 1354,
+          "predicted": 2646,
+          "gold": 2508,
+          "precision": 0.511716,
+          "recall": 0.539872,
+          "f1": 0.525417
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1332,
+          "predicted": 2646,
+          "gold": 2508,
+          "precision": 0.503401,
+          "recall": 0.5311,
+          "f1": 0.51688
+        },
+        "symbol_center_any": {
+          "hit": 1522,
+          "gold": 2508,
+          "recall": 0.606858
+        },
+        "prediction_inflation": 1.055024,
+        "by_source_dataset": {
+          "cubicasa5k": {
+            "records": 74,
+            "symbol_iou_any": {
+              "tp": 1354,
+              "predicted": 2646,
+              "gold": 2508,
+              "precision": 0.511716,
+              "recall": 0.539872,
+              "f1": 0.525417
+            },
+            "symbol_center_any": {
+              "hit": 1522,
+              "gold": 2508,
+              "recall": 0.606858
+            },
+            "prediction_inflation": 1.055024
+          }
+        },
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.492063,
+          "equipment": 0.537118,
+          "generic_symbol": 0.867647,
+          "shower": 0.23445,
+          "sink": 0.513828,
+          "stair": 0.341121
+        },
+        "by_area_iou_recall": {
+          "tiny": 0.230226,
+          "small": 0.590377,
+          "medium": 0.569149,
+          "large": 0.747331
+        },
+        "by_area_center_recall": {
+          "tiny": 0.396893,
+          "small": 0.642393,
+          "medium": 0.638298,
+          "large": 0.743772
+        },
+        "policy_id": "p155d_aniso120_095"
+      },
+      "delta_vs_current_p101_baseline": {
+        "policy_id": "p155d_aniso120_095",
+        "baseline_policy": "p155a_p140",
+        "delta_precision": 0.001512,
+        "delta_recall": 0.001594,
+        "delta_f1": 0.001552,
+        "delta_center_recall": 0.007177,
+        "delta_prediction_inflation": 0.0
+      }
+    },
+    "p155d_label_cleanup": {
+      "transform": "drop low-score predictions only for low-precision labels: shower<0.34, stair<0.40, column<0.40; bathtub threshold retained at 0.02/no effective pruning",
+      "removed_predictions": 272,
+      "metrics": {
+        "input": "reports/vlm/symbol_policy_moe_overlay_p155d_label_cleanup.jsonl",
+        "records": 74,
+        "missing_target_rows": 0,
+        "missing_target_row_ids_sample": [],
+        "symbol_iou_any": {
+          "tp": 1295,
+          "predicted": 2374,
+          "gold": 2508,
+          "precision": 0.545493,
+          "recall": 0.516348,
+          "f1": 0.53052
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1275,
+          "predicted": 2374,
+          "gold": 2508,
+          "precision": 0.537068,
+          "recall": 0.508373,
+          "f1": 0.522327
+        },
+        "symbol_center_any": {
+          "hit": 1425,
+          "gold": 2508,
+          "recall": 0.568182
+        },
+        "prediction_inflation": 0.946571,
+        "by_source_dataset": {
+          "cubicasa5k": {
+            "records": 74,
+            "symbol_iou_any": {
+              "tp": 1295,
+              "predicted": 2374,
+              "gold": 2508,
+              "precision": 0.545493,
+              "recall": 0.516348,
+              "f1": 0.53052
+            },
+            "symbol_center_any": {
+              "hit": 1425,
+              "gold": 2508,
+              "recall": 0.568182
+            },
+            "prediction_inflation": 0.946571
+          }
+        },
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.428571,
+          "equipment": 0.528384,
+          "generic_symbol": 0.871324,
+          "shower": 0.141148,
+          "sink": 0.518195,
+          "stair": 0.294393
+        },
+        "by_area_iou_recall": {
+          "tiny": 0.216102,
+          "small": 0.544863,
+          "medium": 0.558511,
+          "large": 0.733096
+        },
+        "by_area_center_recall": {
+          "tiny": 0.34322,
+          "small": 0.583875,
+          "medium": 0.606383,
+          "large": 0.734282
+        },
+        "policy_id": "p155d_label_cleanup"
+      },
+      "delta_vs_current_p101_baseline": {
+        "policy_id": "p155d_label_cleanup",
+        "baseline_policy": "p155a_p140",
+        "delta_precision": 0.035289,
+        "delta_recall": -0.02193,
+        "delta_f1": 0.006655,
+        "delta_center_recall": -0.031499,
+        "delta_prediction_inflation": -0.108453
+      }
+    }
+  },
+  "baseline_note": {
+    "p155a_archived_materialized_eval": "reports/vlm/symbol_p140_official_eval_p155a.json reports F1 0.525029 / center 0.801834 using the P155A materialized-eval artifact.",
+    "current_p101_rerun_baseline": "The current P101 evaluator rerun reports P155A F1 0.523865 / center 0.599681; P155D comparisons in this artifact use this same rerun evaluator for apples-to-apples deltas.",
+    "interpretation": "Use deltas within the same evaluator as the safe comparison. Do not mix center-recall definitions across P155A/P155C and current P101 reruns."
+  },
+  "recommendation": {
+    "best_f1_variant": "p155d_label_cleanup",
+    "best_f1": 0.53052,
+    "tradeoff": "precision and inflation improve, recall and center decline; useful for paper as a precision operating point, not a full recall rescue.",
+    "next": "Run P155E wider off-mount threshold/NMS search, focusing on retaining P155D precision cleanup while recovering recall."
+  }
+}

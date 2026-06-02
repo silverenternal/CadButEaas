@@ -1,0 +1,845 @@
+{
+  "id": "SCI-P2-155C-per-label-area-bucket-symbol-rescue",
+  "created_on": "2026-05-17",
+  "decision": "bucket_analysis_points_to_box_calibration_and_label_cleanup",
+  "claim_boundary": "Diagnostic analysis of P155A materialized P140 best overlay on the same 74-row subset. No new metric claim until a rescue policy is evaluated.",
+  "label_precision_rows": [
+    {
+      "label": "sink",
+      "predicted": 676,
+      "tp": 359,
+      "precision": 0.531065,
+      "fp": 317
+    },
+    {
+      "label": "equipment",
+      "predicted": 444,
+      "tp": 244,
+      "precision": 0.54955,
+      "fp": 200
+    },
+    {
+      "label": "appliance",
+      "predicted": 441,
+      "tp": 269,
+      "precision": 0.609977,
+      "fp": 172
+    },
+    {
+      "label": "generic_symbol",
+      "predicted": 409,
+      "tp": 246,
+      "precision": 0.601467,
+      "fp": 163
+    },
+    {
+      "label": "shower",
+      "predicted": 324,
+      "tp": 96,
+      "precision": 0.296296,
+      "fp": 228
+    },
+    {
+      "label": "stair",
+      "predicted": 186,
+      "tp": 71,
+      "precision": 0.38172,
+      "fp": 115
+    },
+    {
+      "label": "column",
+      "predicted": 152,
+      "tp": 62,
+      "precision": 0.407895,
+      "fp": 90
+    },
+    {
+      "label": "bathtub",
+      "predicted": 14,
+      "tp": 2,
+      "precision": 0.142857,
+      "fp": 12
+    }
+  ],
+  "area_bucket_rows": [
+    {
+      "bucket": "tiny",
+      "gold": 708,
+      "tp": 162,
+      "iou_recall": 0.228814,
+      "center_hit": 575,
+      "center_recall": 0.812147,
+      "missed": 546
+    },
+    {
+      "bucket": "small",
+      "gold": 769,
+      "tp": 454,
+      "iou_recall": 0.590377,
+      "center_hit": 565,
+      "center_recall": 0.73472,
+      "missed": 315
+    },
+    {
+      "bucket": "medium",
+      "gold": 188,
+      "tp": 109,
+      "iou_recall": 0.579787,
+      "center_hit": 145,
+      "center_recall": 0.771277,
+      "missed": 79
+    },
+    {
+      "bucket": "large",
+      "gold": 640,
+      "tp": 522,
+      "iou_recall": 0.815625,
+      "center_hit": 571,
+      "center_recall": 0.892188,
+      "missed": 118
+    },
+    {
+      "bucket": "xlarge",
+      "gold": 203,
+      "tp": 102,
+      "iou_recall": 0.502463,
+      "center_hit": 155,
+      "center_recall": 0.763547,
+      "missed": 101
+    }
+  ],
+  "missed_by_bucket": {
+    "large": 118,
+    "tiny": 546,
+    "small": 315,
+    "medium": 79,
+    "xlarge": 101
+  },
+  "false_positive_by_label": {
+    "sink": 317,
+    "shower": 228,
+    "generic_symbol": 163,
+    "appliance": 172,
+    "equipment": 200,
+    "column": 90,
+    "stair": 115,
+    "bathtub": 12
+  },
+  "rescue_candidates": [
+    {
+      "bucket": "tiny",
+      "type": "box_calibration_candidate",
+      "reason": "center recall 0.812147 much higher than IoU recall 0.228814"
+    },
+    {
+      "bucket": "medium",
+      "type": "box_calibration_candidate",
+      "reason": "center recall 0.771277 much higher than IoU recall 0.579787"
+    },
+    {
+      "bucket": "xlarge",
+      "type": "box_calibration_candidate",
+      "reason": "center recall 0.763547 much higher than IoU recall 0.502463"
+    },
+    {
+      "label": "shower",
+      "type": "precision_cleanup_candidate",
+      "reason": "228 FP among 324 predictions, precision 0.296296"
+    }
+  ],
+  "sample_missed": [
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "bucket": "large",
+      "area": 1027.197,
+      "bbox": [
+        39.23,
+        836.17,
+        56.33,
+        896.24
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        675.706,
+        689.498,
+        679.706,
+        693.498
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "bucket": "tiny",
+      "area": 19.52,
+      "bbox": [
+        733.386,
+        670.622,
+        736.586,
+        676.722
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "bucket": "tiny",
+      "area": 15.39,
+      "bbox": [
+        745.086,
+        685.422,
+        753.186,
+        687.322
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        743.566,
+        569.069,
+        747.566,
+        573.069
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        459.626,
+        768.249,
+        463.626,
+        772.249
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 20.74,
+      "bbox": [
+        592.158,
+        783.376,
+        595.558,
+        789.476
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 19.52,
+      "bbox": [
+        620.558,
+        783.376,
+        623.758,
+        789.476
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "small",
+      "area": 85.0,
+      "bbox": [
+        603.758,
+        771.476,
+        612.258,
+        781.476
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 15.39,
+      "bbox": [
+        603.958,
+        772.776,
+        612.058,
+        774.676
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 21.6,
+      "bbox": [
+        606.658,
+        781.476,
+        609.358,
+        789.476
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        115.167,
+        594.633,
+        119.167,
+        598.633
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "bucket": "small",
+      "area": 171.585,
+      "bbox": [
+        564.044,
+        721.342,
+        566.544,
+        789.976
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        1291.6,
+        1489.66,
+        1301.6,
+        1499.83
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        310.55,
+        1193.17,
+        320.55,
+        1203.34
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        310.56,
+        1006.01,
+        320.56,
+        1016.18
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        310.56,
+        816.31,
+        320.56,
+        826.48
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        806.52,
+        -55.67,
+        816.52,
+        -45.5
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 153.14,
+      "bbox": [
+        1764.16,
+        1488.05,
+        1777.16,
+        1499.83
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 101.7,
+      "bbox": [
+        2008.02,
+        1488.78,
+        2018.02,
+        1498.95
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 140.66,
+      "bbox": [
+        2750.41,
+        1191.08,
+        2763.41,
+        1201.9
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 140.66,
+      "bbox": [
+        2750.41,
+        997.68,
+        2763.41,
+        1008.5
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 140.66,
+      "bbox": [
+        2750.4,
+        806.56,
+        2763.4,
+        817.38
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 140.66,
+      "bbox": [
+        2252.2,
+        -55.79,
+        2265.2,
+        -44.97
+      ],
+      "center_hit": false
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "tiny",
+      "area": 49.0,
+      "bbox": [
+        1320.12,
+        541.843,
+        1327.12,
+        548.843
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        1321.62,
+        543.343,
+        1325.62,
+        547.343
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "tiny",
+      "area": 49.0,
+      "bbox": [
+        1745.143,
+        542.078,
+        1752.143,
+        549.078
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        1746.643,
+        543.578,
+        1750.643,
+        547.578
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "small",
+      "area": 84.0,
+      "bbox": [
+        1746.546,
+        534.445,
+        1752.546,
+        548.445
+      ],
+      "center_hit": true
+    },
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "bucket": "tiny",
+      "area": 16.0,
+      "bbox": [
+        1333.301,
+        953.859,
+        1337.301,
+        957.859
+      ],
+      "center_hit": true
+    }
+  ],
+  "sample_false_positives": [
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "sink",
+      "score": 0.5945655107498169,
+      "bbox": [
+        720.3415222167969,
+        576.1328613311052,
+        773.2052154541016,
+        600.1441688537598
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "shower",
+      "score": 0.46674633026123047,
+      "bbox": [
+        754.99560546875,
+        671.2206497192383,
+        765.4168701171875,
+        678.0515823364258
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "shower",
+      "score": 0.42539235949516296,
+      "bbox": [
+        740.3652954101562,
+        671.4394226074219,
+        751.8372192382812,
+        678.3388977050781
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "sink",
+      "score": 0.3870326578617096,
+      "bbox": [
+        721.9981689453125,
+        543.3885498046875,
+        749.1621704101562,
+        575.881591796875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "shower",
+      "score": 0.3152250051498413,
+      "bbox": [
+        757.5661163330078,
+        671.534309387207,
+        761.2617034912109,
+        677.4183731079102
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "shower",
+      "score": 0.2705048620700836,
+      "bbox": [
+        749.86962890625,
+        678.9949951171875,
+        759.2998657226562,
+        689.1482696533203
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "sink",
+      "score": 0.2662968933582306,
+      "bbox": [
+        742.5297241210938,
+        561.1995849609375,
+        751.5263519287109,
+        570.79833984375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00000",
+      "label": "shower",
+      "score": 0.2423878163099289,
+      "bbox": [
+        751.4835205078125,
+        671.1772537231445,
+        756.0621948242188,
+        679.3141174316406
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "sink",
+      "score": 0.8173208832740784,
+      "bbox": [
+        18.24112319946289,
+        687.1507568359375,
+        56.39665222167969,
+        733.1361389160156
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "generic_symbol",
+      "score": 0.7814100980758667,
+      "bbox": [
+        14.752968788146973,
+        624.5125274658203,
+        68.99281311035156,
+        675.8409729003906
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "appliance",
+      "score": 0.7533544898033142,
+      "bbox": [
+        14.391057968139648,
+        558.1791381835938,
+        67.88777923583984,
+        615.6874389648438
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "appliance",
+      "score": 0.6335621476173401,
+      "bbox": [
+        43.87413024902344,
+        593.0414428710938,
+        60.53083801269531,
+        609.5983276367188
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "appliance",
+      "score": 0.6290812492370605,
+      "bbox": [
+        15.485625267028809,
+        566.25341796875,
+        31.26862907409668,
+        583.2884521484375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "sink",
+      "score": 0.6199432015419006,
+      "bbox": [
+        14.420027732849121,
+        560.6324462890625,
+        61.72293472290039,
+        575.8649291992188
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "appliance",
+      "score": 0.6127942800521851,
+      "bbox": [
+        43.935401916503906,
+        565.9988403320312,
+        60.565834045410156,
+        582.5560913085938
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "generic_symbol",
+      "score": 0.6115750670433044,
+      "bbox": [
+        703.1770629882812,
+        523.0086822509766,
+        767.9099731445312,
+        618.9084930419922
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "appliance",
+      "score": 0.566541850566864,
+      "bbox": [
+        14.242294311523438,
+        593.4683837890625,
+        28.222543716430664,
+        610.3407440185547
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "equipment",
+      "score": 0.516172468662262,
+      "bbox": [
+        48.00397491455078,
+        705.8513641357422,
+        62.199100494384766,
+        712.6943206787109
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "sink",
+      "score": 0.489149808883667,
+      "bbox": [
+        95.01522827148438,
+        571.2401123046875,
+        138.00347900390625,
+        575.8409729003906
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.4057703912258148,
+      "bbox": [
+        604.6543502807617,
+        782.146240234375,
+        615.6654663085938,
+        789.4517822265625
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.34187981486320496,
+      "bbox": [
+        591.078351020813,
+        781.5921325683594,
+        602.5869750976562,
+        789.5479736328125
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.34163203835487366,
+      "bbox": [
+        597.17551612854,
+        769.3010559082031,
+        607.7709789276123,
+        780.71337890625
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.32510149478912354,
+      "bbox": [
+        586.4405822753906,
+        781.1253662109375,
+        597.3432922363281,
+        788.0936279296875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.3132000267505646,
+      "bbox": [
+        592.3132934570312,
+        780.8204345703125,
+        599.5654907226562,
+        787.5740966796875
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "sink",
+      "score": 0.30729833245277405,
+      "bbox": [
+        115.67861938476562,
+        587.9296875,
+        122.37313842773438,
+        596.994140625
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "sink",
+      "score": 0.30285540223121643,
+      "bbox": [
+        432.8669738769531,
+        752.8917541503906,
+        487.8901672363281,
+        767.88427734375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.2995142340660095,
+      "bbox": [
+        613.4907760620117,
+        782.05810546875,
+        618.649097442627,
+        789.6181640625
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.2790442705154419,
+      "bbox": [
+        599.93603515625,
+        781.413330078125,
+        607.999755859375,
+        788.28173828125
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.2663164734840393,
+      "bbox": [
+        584.2461738586426,
+        781.4205627441406,
+        593.4207515716553,
+        789.68505859375
+      ]
+    },
+    {
+      "row_id": "cubicasa5k_locked_00002",
+      "label": "shower",
+      "score": 0.26004981994628906,
+      "bbox": [
+        582.966796875,
+        782.550537109375,
+        589.476806640625,
+        788.601318359375
+      ]
+    }
+  ],
+  "recommendation": "Prioritize P155D box calibration because center recall is substantially higher than IoU recall in tiny/small/medium buckets; also consider stricter cleanup for low-precision labels such as shower/stair if needed."
+}

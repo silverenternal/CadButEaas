@@ -1,0 +1,308 @@
+{
+  "title": "CadStruct raster-only Symbol expert rebuild plan",
+  "updated": "2026-05-10",
+  "priority": "P0",
+  "target": {
+    "expert": "symbol_body_type",
+    "product_goal": "Recognize drawing symbols from non-vector raster floorplan images such as PNG scans/renders inside the MoE architecture.",
+    "runtime_contract": "Raster image only. No SVG geometry, CAD parser entities, expected_json, raw_label, semantic_type, gold labels, annotation paths, or offline metadata may be runtime features.",
+    "offline_label_use": "Structured labels from CubiCasa5K/FloorPlanCAD/internal assets may be used only for dataset conversion, training, dev selection, locked evaluation, error mining, and audit.",
+    "audit_goal": "Separate body localization, type classification, candidate inflation, and MoE export safety so weak stages are visible."
+  },
+  "current_evidence": {
+    "historical_svg_candidate_classifier": {
+      "report": "reports/vlm/symbol_fixture_contract_audit_v14.json",
+      "finding": "symbol_fixture_expert_v13 locked macro F1 0.883069 is reproducible but is a CubiCasa/SVG candidate-level classifier with a 9D feature contract and label-derived is_equipment_like feature.",
+      "decision": "Do not claim v13 as non-SVG raster-only symbol performance."
+    },
+    "raster_symbol_dataset_ready": {
+      "manifest": "datasets/symbol_expert_public_raster_v19/manifest.json",
+      "audit": "reports/vlm/symbol_public_raster_v19_dataset_audit.json",
+      "train_targets": 149396,
+      "dev_targets": 18837,
+      "locked_targets": 19057,
+      "labels": [
+        "appliance",
+        "bathtub",
+        "column",
+        "equipment",
+        "generic_symbol",
+        "shower",
+        "sink",
+        "stair",
+        "table"
+      ]
+    },
+    "legacy_detector_smoke": {
+      "report": "reports/vlm/symbol_public_raster_v19_smoke_eval.json",
+      "locked_rows": 24,
+      "center_recall": 0.220663,
+      "iou_0_30_recall": 0.081633,
+      "iou_0_30_precision": 0.000833,
+      "candidate_inflation": 98.019133,
+      "decision": "Dark connected-component/anchor enumeration is structurally inadequate."
+    },
+    "oracle_type_head_smokes": {
+      "handcrafted_crop_report": "reports/vlm/symbol_public_raster_v19_gold_crop_type_smoke_eval.json",
+      "handcrafted_crop_locked_macro_f1": 0.436258,
+      "tiny_online_cnn_report": "reports/vlm/symbol_public_raster_v19_crop_cnn_type_smoke_eval.json",
+      "tiny_online_cnn_locked_macro_f1": 0.078402,
+      "decision": "Type recognition is also weak. It needs cached multi-scale crop/context training, not simple crop statistics or online full-image decoding."
+    }
+  },
+  "model_decision": {
+    "recommended_architecture": "Two-stage auditable expert: tile-based symbol body detector plus cached multi-scale crop/context type head.",
+    "body_detector_candidates": [
+      {
+        "name": "YOLO11_or_YOLOv10_tile_detector",
+        "role": "First engineering baseline for small symbol body localization.",
+        "why": "Fast training/inference, simple data conversion, mature tooling, good for iterative audit.",
+        "risk": "Requires careful tile overlap, NMS/WBF merge, and candidate inflation control."
+      },
+      {
+        "name": "RT-DETR_or_RT-DETRv2_tile_detector",
+        "role": "Second candidate if YOLO-style detector has too much duplicate/candidate inflation.",
+        "why": "End-to-end detector with less reliance on hand-tuned NMS.",
+        "risk": "Heavier integration and may need more careful hyperparameter tuning."
+      },
+      {
+        "name": "Faster_R-CNN_or_RetinaNet_FPN",
+        "role": "Conservative fallback for small-data/small-object stability.",
+        "why": "FPN detectors are stable for small objects and easy to audit in torchvision/MMDetection.",
+        "risk": "Slower and less convenient for production."
+      }
+    ],
+    "type_head_candidates": [
+      {
+        "name": "ConvNeXt-Tiny_or_EfficientNetV2-S_multi_scale_crop_encoder",
+        "role": "Primary type classifier after body proposals.",
+        "inputs": [
+          "tight symbol crop",
+          "padded symbol crop",
+          "surrounding context crop",
+          "bbox geometry",
+          "tile/page normalized location"
+        ],
+        "why": "Gold-box crop smokes show hand-crafted features are too weak; a pretrained visual encoder is needed."
+      },
+      {
+        "name": "context_augmented_type_head",
+        "role": "Add MoE context once crop-only type head is stable.",
+        "inputs": [
+          "nearby wall/opening features",
+          "room/space context when available",
+          "nearby text/OCR context when reliable"
+        ],
+        "why": "Some classes such as bathtub, table, equipment, and column are visually/contextually ambiguous."
+      }
+    ],
+    "not_recommended": [
+      "Continue tuning dark component/anchor candidate enumeration.",
+      "Use symbol_fixture_expert_v13 as proof of raster-only symbol ability.",
+      "Use raw_label/semantic_type/SVG-derived candidate type as runtime features.",
+      "Rely on a large VLM as the primary coordinate detector for tiny symbols.",
+      "Train online full-page crop CNN without a crop cache."
+    ]
+  },
+  "execution_plan": [
+    {
+      "id": "SYMBOL-P0-001",
+      "priority": "P0",
+      "status": "next",
+      "owner_area": "symbol_data_cache",
+      "goal": "Build cached multi-scale symbol crop/context dataset from datasets/symbol_expert_public_raster_v19.",
+      "inputs": [
+        "datasets/symbol_expert_public_raster_v19/train.jsonl",
+        "datasets/symbol_expert_public_raster_v19/dev.jsonl",
+        "datasets/symbol_expert_public_raster_v19/locked.jsonl"
+      ],
+      "implementation_steps": [
+        "Create a cache builder that crops tight, padded, and context windows for each symbol target.",
+        "Resize cached crops to fixed sizes such as 64 or 96 while preserving enough context.",
+        "Write records with image crop paths, original page id, bbox, label_id, split, source_dataset, area bucket, and stress buckets.",
+        "Add rare-class oversampling metadata for bathtub, table, and column.",
+        "Add source-integrity audit proving raw_label/semantic_type are labels only, not runtime features.",
+        "Avoid repeated full-page decoding during training."
+      ],
+      "deliverables": [
+        "scripts/vlm/build_symbol_crop_context_cache_v20.py",
+        "datasets/symbol_crop_context_cache_v20/manifest.json",
+        "datasets/symbol_crop_context_cache_v20/train.jsonl",
+        "datasets/symbol_crop_context_cache_v20/dev.jsonl",
+        "datasets/symbol_crop_context_cache_v20/locked.jsonl",
+        "reports/vlm/symbol_crop_context_cache_v20_audit.json"
+      ],
+      "gate": {
+        "all_splits_present": true,
+        "locked_targets_cached_min": 18000,
+        "forbidden_runtime_feature_violations": 0
+      }
+    },
+    {
+      "id": "SYMBOL-P0-002",
+      "priority": "P0",
+      "status": "pending_after_SYMBOL-P0-001",
+      "owner_area": "symbol_type_head",
+      "goal": "Train a cached multi-scale crop/context type classifier and establish a real type-head baseline.",
+      "inputs": [
+        "datasets/symbol_crop_context_cache_v20/manifest.json"
+      ],
+      "implementation_steps": [
+        "Start with ConvNeXt-Tiny or EfficientNetV2-S pretrained on ImageNet if available locally through torch/torchvision.",
+        "Use balanced sampling and rare-class oversampling for bathtub/table/column.",
+        "Train on tight+padded+context crops; include bbox geometry and page/tile normalized location as non-semantic numeric features.",
+        "Select on dev macro F1 and rare-class F1, then evaluate locked once.",
+        "Export abstain/fail-closed policy for low-confidence typed labels."
+      ],
+      "deliverables": [
+        "scripts/vlm/train_symbol_crop_context_type_head_v20.py",
+        "checkpoints/symbol_crop_context_type_head_v20/",
+        "reports/vlm/symbol_crop_context_type_head_v20_eval.json",
+        "reports/vlm/symbol_crop_context_type_head_v20_error_buckets.json"
+      ],
+      "gate": {
+        "stage_1_locked_macro_f1_min": 0.65,
+        "stage_2_locked_macro_f1_min": 0.85,
+        "production_target_macro_f1": 0.98,
+        "must_report_per_label_f1": true,
+        "must_report_abstain_precision_recall": true
+      }
+    },
+    {
+      "id": "SYMBOL-P0-003",
+      "priority": "P0",
+      "status": "pending_after_SYMBOL-P0-001",
+      "owner_area": "symbol_body_detector",
+      "goal": "Train a tile-based symbol body detector for raster-only localization.",
+      "inputs": [
+        "datasets/symbol_expert_public_raster_v19/manifest.json"
+      ],
+      "implementation_steps": [
+        "Create tile training records from full raster pages with overlap and target clipping.",
+        "Train a YOLO11/YOLOv10/RTMDet/RT-DETR-style detector depending on available local dependencies.",
+        "Evaluate body recall at center coverage and IoU thresholds separately.",
+        "Report candidate inflation, duplicate rate, per-class recall, small-object recall, and large-page stress buckets.",
+        "Use WBF/NMS merge only as a transparent postprocessor with audited effects."
+      ],
+      "deliverables": [
+        "scripts/vlm/build_symbol_tile_detector_dataset_v20.py",
+        "datasets/symbol_tile_detector_v20/manifest.json",
+        "scripts/vlm/train_symbol_tile_detector_v20.py",
+        "checkpoints/symbol_tile_detector_v20/",
+        "reports/vlm/symbol_tile_detector_v20_eval.json",
+        "reports/vlm/symbol_tile_detector_v20_error_buckets.json"
+      ],
+      "gate": {
+        "stage_1_center_recall_min": 0.7,
+        "stage_1_candidate_inflation_max": 30,
+        "stage_2_center_recall_min": 0.9,
+        "stage_2_candidate_inflation_max": 12,
+        "production_target_body_precision_recall_f1": 0.98
+      }
+    },
+    {
+      "id": "SYMBOL-P0-004",
+      "priority": "P0",
+      "status": "pending_after_SYMBOL-P0-002_and_SYMBOL-P0-003",
+      "owner_area": "symbol_body_type_integration",
+      "goal": "Integrate body detector and type head into an auditable MoE symbol expert.",
+      "inputs": [
+        "reports/vlm/symbol_tile_detector_v20_eval.json",
+        "reports/vlm/symbol_crop_context_type_head_v20_eval.json"
+      ],
+      "implementation_steps": [
+        "Run detector proposals through cached type head equivalent at inference.",
+        "Export typed labels only when confidence/abstain policy meets precision floor.",
+        "Otherwise export generic_symbol or weak_typed_symbol with explicit fail-closed metadata.",
+        "Evaluate full locked body+type metrics and contains_symbol recoverable recall.",
+        "Update cadstruct_moe symbol wrapper only after locked gates are met."
+      ],
+      "deliverables": [
+        "scripts/vlm/evaluate_symbol_body_type_v20.py",
+        "reports/vlm/symbol_body_type_v20_eval.json",
+        "reports/vlm/symbol_body_type_v20_routed_candidates.jsonl",
+        "checkpoints/symbol_body_type_v20/",
+        "scripts/vlm/cadstruct_moe/experts/symbol_body_type.py"
+      ],
+      "gate": {
+        "stage_1_typed_f1_min": 0.5,
+        "stage_1_body_center_recall_min": 0.7,
+        "stage_2_typed_f1_min": 0.8,
+        "stage_2_body_center_recall_min": 0.9,
+        "production_target_all_core_metrics": 0.98
+      }
+    }
+  ],
+  "metrics_protocol": {
+    "must_report": [
+      "body_center_recall",
+      "body_iou_recall_at_0_30",
+      "body_precision",
+      "body_f1",
+      "candidate_inflation",
+      "duplicate_rate",
+      "typed_precision",
+      "typed_recall",
+      "typed_f1",
+      "type_macro_f1",
+      "per_label_precision_recall_f1",
+      "rare_class_f1",
+      "abstain_rate",
+      "safe_export_precision",
+      "source_integrity"
+    ],
+    "locked_rule": "Use dev for selection and locked for final evaluation. Locked labels may be used only for evaluation and error mining.",
+    "adoption_rule": "No symbol model becomes the default MoE export unless it improves locked metrics materially and passes raster-only source-integrity checks."
+  },
+  "research_references": [
+    {
+      "topic": "Floorplan symbol spotting with tile-based detection",
+      "reference": "A Symbol Spotting Approach in Graphical Documents by Pixel-Level Matching, arXiv:2006.00684",
+      "lesson": "Architectural symbols are tiny relative to full pages; tile-based training/inference is necessary."
+    },
+    {
+      "topic": "Real-time detection transformer",
+      "reference": "RT-DETR / DETRs Beat YOLOs on Real-time Object Detection, CVPR 2024",
+      "lesson": "End-to-end detection can reduce reliance on hand-tuned NMS if YOLO-style detector creates too many duplicates."
+    },
+    {
+      "topic": "YOLO family",
+      "reference": "Ultralytics YOLO documentation",
+      "lesson": "Fast engineering baseline for detection/segmentation with mature tooling."
+    },
+    {
+      "topic": "Stable FPN detectors",
+      "reference": "Torchvision Faster R-CNN, RetinaNet, FCOS model documentation",
+      "lesson": "Useful conservative fallback for small-object detection if YOLO/RT-DETR integration is unstable."
+    }
+  ],
+  "immediate_next_steps": [
+    {
+      "step": 1,
+      "task_id": "SYMBOL-P0-001",
+      "action": "Implement scripts/vlm/build_symbol_crop_context_cache_v20.py and generate a smoke cache first."
+    },
+    {
+      "step": 2,
+      "task_id": "SYMBOL-P0-001",
+      "action": "Validate cache counts, crop readability, source-integrity, and per-label support in reports/vlm/symbol_crop_context_cache_v20_audit.json."
+    },
+    {
+      "step": 3,
+      "task_id": "SYMBOL-P0-002",
+      "action": "Train the first cached crop/context type head using the cache; compare against the current 0.436258 gold-box handcrafted baseline."
+    },
+    {
+      "step": 4,
+      "task_id": "SYMBOL-P0-003",
+      "action": "After cache is stable, start tile detector dataset conversion and choose YOLO/RT-DETR/FPN based on local dependency availability."
+    }
+  ],
+  "management_rules": [
+    "Do not optimize relation/contains_symbol before symbol body and type metrics improve.",
+    "Do not report oracle gold-box type-head scores as full detector scores.",
+    "Do not use raw_label, semantic_type, SVG class names, or expected_json as runtime features.",
+    "Prefer reusable auditable scripts and JSON reports under reports/vlm/.",
+    "Completed items should be moved into evidence and removed from active execution_plan in future updates."
+  ]
+}

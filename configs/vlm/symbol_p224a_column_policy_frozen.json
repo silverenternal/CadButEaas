@@ -1,0 +1,22 @@
+{
+  "id": "P224a_column_policy_frozen",
+  "base_overlay": "reports/vlm/symbol_p222_p221a_frozen_overlay.jsonl",
+  "p224_predictions": "reports/vlm/symbol_p224_detector_pages_s384_predictions.jsonl",
+  "rule": {
+    "name": "p224_narrow_column_t0.85_a3_iou0.35_d0",
+    "allowed_label": "column",
+    "score_threshold": 0.85,
+    "max_add_per_row": 3,
+    "max_add_per_label": 3,
+    "max_iou_to_existing_same_label": 0.35,
+    "min_center_dist_to_existing_same_label": 0.0,
+    "same_label_only": true
+  },
+  "outputs": {
+    "overlay": "reports/vlm/symbol_p224a_column_frozen_overlay.jsonl",
+    "eval": "reports/vlm/symbol_p224a_column_frozen_eval.json",
+    "bootstrap_md": "reports/vlm/symbol_p224a_column_bootstrap_validation.md",
+    "bootstrap_json": "reports/vlm/symbol_p224a_column_bootstrap_validation.json"
+  },
+  "claim_boundary": "Frozen runtime-safe P224a column-only policy over P222 and P224 s384 raster detector predictions; internal P101/bootstrap-bounded, not reviewer-grade final recognition."
+}

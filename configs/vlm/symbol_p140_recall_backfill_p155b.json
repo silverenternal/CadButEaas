@@ -1,0 +1,1515 @@
+{
+  "id": "SCI-P2-155B-recall-backfill-after-p140-cleanup",
+  "created_on": "2026-05-17",
+  "claim_boundary": "Fast precomputed-hit recall backfill over materialized P140 core on same 74-row overlay subset. Operating-point diagnostic only.",
+  "core_metric": {
+    "matched": 1351,
+    "predicted": 2646,
+    "gold": 2508,
+    "precision": 0.510582,
+    "recall": 0.538676,
+    "f1": 0.524253,
+    "center_recall": 0.801834,
+    "inflation": 1.055024,
+    "added_total": 0
+  },
+  "policy_count": 2646,
+  "best_f1_top30": [
+    {
+      "policy": {
+        "name": "t6_cap3_mtNone_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt100_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt110_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt120_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt130_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt150_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt180_ov0.1",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1389,
+      "predicted": 2848,
+      "gold": 2508,
+      "precision": 0.487711,
+      "recall": 0.553828,
+      "f1": 0.518671,
+      "center_recall": 0.819378,
+      "inflation": 1.135566,
+      "added_total": 202,
+      "objective": 0.5778974800000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mtNone_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt100_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt110_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt120_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt130_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt150_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt180_ov0.05",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.05
+      },
+      "matched": 1384,
+      "predicted": 2841,
+      "gold": 2508,
+      "precision": 0.487152,
+      "recall": 0.551834,
+      "f1": 0.51748,
+      "center_recall": 0.818979,
+      "inflation": 1.132775,
+      "added_total": 195,
+      "objective": 0.5767224000000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mtNone_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt100_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt110_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt120_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt130_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt150_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt180_ov0.2",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1386,
+      "predicted": 2855,
+      "gold": 2508,
+      "precision": 0.485464,
+      "recall": 0.552632,
+      "f1": 0.516875,
+      "center_recall": 0.818581,
+      "inflation": 1.138357,
+      "added_total": 209,
+      "objective": 0.57596596
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mtNone_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt100_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt110_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt120_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt130_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt150_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t6_cap3_mt180_ov0.03",
+        "thresholds": {
+          "*": 0.06,
+          "generic_symbol": 0.32,
+          "shower": 0.14,
+          "equipment": 0.14,
+          "sink": 0.14,
+          "appliance": 0.18,
+          "column": 0.18,
+          "bathtub": 0.18,
+          "stair": 0.14
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.03
+      },
+      "matched": 1380,
+      "predicted": 2834,
+      "gold": 2508,
+      "precision": 0.486944,
+      "recall": 0.550239,
+      "f1": 0.51666,
+      "center_recall": 0.818182,
+      "inflation": 1.129984,
+      "added_total": 188,
+      "objective": 0.5758785200000001
+    },
+    {
+      "policy": {
+        "name": "t5_cap3_mtNone_ov0.1",
+        "thresholds": {
+          "*": 0.08,
+          "generic_symbol": 0.24,
+          "shower": 0.12,
+          "equipment": 0.12,
+          "sink": 0.12
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1386,
+      "predicted": 2863,
+      "gold": 2508,
+      "precision": 0.484108,
+      "recall": 0.552632,
+      "f1": 0.516105,
+      "center_recall": 0.816587,
+      "inflation": 1.141547,
+      "added_total": 217,
+      "objective": 0.57493276
+    },
+    {
+      "policy": {
+        "name": "t5_cap3_mt100_ov0.1",
+        "thresholds": {
+          "*": 0.08,
+          "generic_symbol": 0.24,
+          "shower": 0.12,
+          "equipment": 0.12,
+          "sink": 0.12
+        },
+        "backfill_cap_per_page": 3,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.1
+      },
+      "matched": 1386,
+      "predicted": 2863,
+      "gold": 2508,
+      "precision": 0.484108,
+      "recall": 0.552632,
+      "f1": 0.516105,
+      "center_recall": 0.816587,
+      "inflation": 1.141547,
+      "added_total": 217,
+      "objective": 0.57493276
+    }
+  ],
+  "best_center_top30": [
+    {
+      "policy": {
+        "name": "t4_cap60_mt120_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1579,
+      "predicted": 5940,
+      "gold": 2508,
+      "precision": 0.265825,
+      "recall": 0.629585,
+      "f1": 0.373816,
+      "center_recall": 0.87799,
+      "inflation": 2.368421,
+      "added_total": 3294,
+      "objective": 0.41424658
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt130_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1580,
+      "predicted": 5965,
+      "gold": 2508,
+      "precision": 0.264878,
+      "recall": 0.629984,
+      "f1": 0.372949,
+      "center_recall": 0.87799,
+      "inflation": 2.378389,
+      "added_total": 3319,
+      "objective": 0.41318022
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mtNone_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1581,
+      "predicted": 6004,
+      "gold": 2508,
+      "precision": 0.263324,
+      "recall": 0.630383,
+      "f1": 0.371476,
+      "center_recall": 0.87799,
+      "inflation": 2.393939,
+      "added_total": 3358,
+      "objective": 0.41139622
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt150_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1581,
+      "predicted": 6004,
+      "gold": 2508,
+      "precision": 0.263324,
+      "recall": 0.630383,
+      "f1": 0.371476,
+      "center_recall": 0.87799,
+      "inflation": 2.393939,
+      "added_total": 3358,
+      "objective": 0.41139622
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt180_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1581,
+      "predicted": 6004,
+      "gold": 2508,
+      "precision": 0.263324,
+      "recall": 0.630383,
+      "f1": 0.371476,
+      "center_recall": 0.87799,
+      "inflation": 2.393939,
+      "added_total": 3358,
+      "objective": 0.41139622
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt120_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1550,
+      "predicted": 5541,
+      "gold": 2508,
+      "precision": 0.279733,
+      "recall": 0.618022,
+      "f1": 0.385141,
+      "center_recall": 0.877592,
+      "inflation": 2.20933,
+      "added_total": 2895,
+      "objective": 0.42871360000000003
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt130_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1550,
+      "predicted": 5565,
+      "gold": 2508,
+      "precision": 0.278527,
+      "recall": 0.618022,
+      "f1": 0.383996,
+      "center_recall": 0.877592,
+      "inflation": 2.2189,
+      "added_total": 2919,
+      "objective": 0.4273772
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mtNone_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1551,
+      "predicted": 5602,
+      "gold": 2508,
+      "precision": 0.276865,
+      "recall": 0.618421,
+      "f1": 0.382491,
+      "center_recall": 0.877592,
+      "inflation": 2.233652,
+      "added_total": 2956,
+      "objective": 0.42557716
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt150_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1551,
+      "predicted": 5602,
+      "gold": 2508,
+      "precision": 0.276865,
+      "recall": 0.618421,
+      "f1": 0.382491,
+      "center_recall": 0.877592,
+      "inflation": 2.233652,
+      "added_total": 2956,
+      "objective": 0.42557716
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt180_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1551,
+      "predicted": 5602,
+      "gold": 2508,
+      "precision": 0.276865,
+      "recall": 0.618421,
+      "f1": 0.382491,
+      "center_recall": 0.877592,
+      "inflation": 2.233652,
+      "added_total": 2956,
+      "objective": 0.42557716
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt110_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1576,
+      "predicted": 5853,
+      "gold": 2508,
+      "precision": 0.269264,
+      "recall": 0.628389,
+      "f1": 0.376988,
+      "center_recall": 0.877592,
+      "inflation": 2.333732,
+      "added_total": 3207,
+      "objective": 0.41807256000000004
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt110_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1546,
+      "predicted": 5485,
+      "gold": 2508,
+      "precision": 0.28186,
+      "recall": 0.616427,
+      "f1": 0.386838,
+      "center_recall": 0.877193,
+      "inflation": 2.187002,
+      "added_total": 2839,
+      "objective": 0.43081726000000004
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt100_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1543,
+      "predicted": 5360,
+      "gold": 2508,
+      "precision": 0.287873,
+      "recall": 0.615231,
+      "f1": 0.392222,
+      "center_recall": 0.876396,
+      "inflation": 2.137161,
+      "added_total": 2714,
+      "objective": 0.43711838
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt100_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1568,
+      "predicted": 5678,
+      "gold": 2508,
+      "precision": 0.276154,
+      "recall": 0.625199,
+      "f1": 0.383093,
+      "center_recall": 0.876396,
+      "inflation": 2.263955,
+      "added_total": 3032,
+      "objective": 0.4254535
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt110_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1561,
+      "predicted": 5401,
+      "gold": 2508,
+      "precision": 0.289021,
+      "recall": 0.622408,
+      "f1": 0.39474,
+      "center_recall": 0.875199,
+      "inflation": 2.153509,
+      "added_total": 2755,
+      "objective": 0.43918971999999995
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt120_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1563,
+      "predicted": 5421,
+      "gold": 2508,
+      "precision": 0.288323,
+      "recall": 0.623206,
+      "f1": 0.394249,
+      "center_recall": 0.875199,
+      "inflation": 2.161483,
+      "added_total": 2775,
+      "objective": 0.43853924
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt130_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1564,
+      "predicted": 5441,
+      "gold": 2508,
+      "precision": 0.287447,
+      "recall": 0.623604,
+      "f1": 0.393509,
+      "center_recall": 0.875199,
+      "inflation": 2.169458,
+      "added_total": 2795,
+      "objective": 0.43763974
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mtNone_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1564,
+      "predicted": 5450,
+      "gold": 2508,
+      "precision": 0.286972,
+      "recall": 0.623604,
+      "f1": 0.393064,
+      "center_recall": 0.875199,
+      "inflation": 2.173046,
+      "added_total": 2804,
+      "objective": 0.43712298
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt150_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1564,
+      "predicted": 5450,
+      "gold": 2508,
+      "precision": 0.286972,
+      "recall": 0.623604,
+      "f1": 0.393064,
+      "center_recall": 0.875199,
+      "inflation": 2.173046,
+      "added_total": 2804,
+      "objective": 0.43712298
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt180_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1564,
+      "predicted": 5450,
+      "gold": 2508,
+      "precision": 0.286972,
+      "recall": 0.623604,
+      "f1": 0.393064,
+      "center_recall": 0.875199,
+      "inflation": 2.173046,
+      "added_total": 2804,
+      "objective": 0.43712298
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt100_ov0.45",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.45
+      },
+      "matched": 1558,
+      "predicted": 5355,
+      "gold": 2508,
+      "precision": 0.290943,
+      "recall": 0.621212,
+      "f1": 0.396286,
+      "center_recall": 0.874402,
+      "inflation": 2.135167,
+      "added_total": 2709,
+      "objective": 0.44102286000000007
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt110_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 110,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1535,
+      "predicted": 5193,
+      "gold": 2508,
+      "precision": 0.29559,
+      "recall": 0.612041,
+      "f1": 0.39865,
+      "center_recall": 0.874003,
+      "inflation": 2.070574,
+      "added_total": 2547,
+      "objective": 0.44463882
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt120_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1537,
+      "predicted": 5213,
+      "gold": 2508,
+      "precision": 0.29484,
+      "recall": 0.612839,
+      "f1": 0.398135,
+      "center_recall": 0.874003,
+      "inflation": 2.078549,
+      "added_total": 2567,
+      "objective": 0.44396431999999997
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt130_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1537,
+      "predicted": 5233,
+      "gold": 2508,
+      "precision": 0.293713,
+      "recall": 0.612839,
+      "f1": 0.397106,
+      "center_recall": 0.874003,
+      "inflation": 2.086523,
+      "added_total": 2587,
+      "objective": 0.44277584
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mtNone_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": null,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1538,
+      "predicted": 5242,
+      "gold": 2508,
+      "precision": 0.293399,
+      "recall": 0.613238,
+      "f1": 0.396903,
+      "center_recall": 0.874003,
+      "inflation": 2.090112,
+      "added_total": 2596,
+      "objective": 0.44250106
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt150_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 150,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1538,
+      "predicted": 5242,
+      "gold": 2508,
+      "precision": 0.293399,
+      "recall": 0.613238,
+      "f1": 0.396903,
+      "center_recall": 0.874003,
+      "inflation": 2.090112,
+      "added_total": 2596,
+      "objective": 0.44250106
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt180_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 180,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1538,
+      "predicted": 5242,
+      "gold": 2508,
+      "precision": 0.293399,
+      "recall": 0.613238,
+      "f1": 0.396903,
+      "center_recall": 0.874003,
+      "inflation": 2.090112,
+      "added_total": 2596,
+      "objective": 0.44250106
+    },
+    {
+      "policy": {
+        "name": "t4_cap45_mt100_ov0.3",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 45,
+        "max_total_per_page": 100,
+        "max_overlap_with_core": 0.3
+      },
+      "matched": 1533,
+      "predicted": 5147,
+      "gold": 2508,
+      "precision": 0.297843,
+      "recall": 0.611244,
+      "f1": 0.400523,
+      "center_recall": 0.873604,
+      "inflation": 2.052233,
+      "added_total": 2501,
+      "objective": 0.44683874
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt120_ov0.2",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 120,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1518,
+      "predicted": 5221,
+      "gold": 2508,
+      "precision": 0.290749,
+      "recall": 0.605263,
+      "f1": 0.392806,
+      "center_recall": 0.873604,
+      "inflation": 2.081738,
+      "added_total": 2575,
+      "objective": 0.43853164
+    },
+    {
+      "policy": {
+        "name": "t4_cap60_mt130_ov0.2",
+        "thresholds": {
+          "*": 0.06
+        },
+        "backfill_cap_per_page": 60,
+        "max_total_per_page": 130,
+        "max_overlap_with_core": 0.2
+      },
+      "matched": 1519,
+      "predicted": 5245,
+      "gold": 2508,
+      "precision": 0.289609,
+      "recall": 0.605662,
+      "f1": 0.391848,
+      "center_recall": 0.873604,
+      "inflation": 2.091308,
+      "added_total": 2599,
+      "objective": 0.43738224
+    }
+  ],
+  "decision": "p155b_no_meaningful_backfill_gain",
+  "recommendation": "Do not backfill; P140 core remains cleaner. Move to per-label bucket/box calibration."
+}

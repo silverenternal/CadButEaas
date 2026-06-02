@@ -1,0 +1,1334 @@
+{
+  "id": "P205_high_recall_proposal_rescue_probe",
+  "claim_boundary": "Offline P101 proposal-fusion probe. Uses raster-only materialized proposal artifacts at runtime, with gold only for evaluation/policy selection.",
+  "inputs": {
+    "base_overlay": "reports/vlm/symbol_context_verifier_p202_overlay.jsonl",
+    "proposals": [
+      "reports/vlm/symbol_center_size_p201_crop_verified_predictions.jsonl",
+      "reports/vlm/symbol_sink_shower_specialist_p198_p101_predictions.jsonl"
+    ],
+    "checkpoint": "checkpoints/symbol_context_verifier_p202/model.pt"
+  },
+  "baseline_metrics": {
+    "tp": 1299,
+    "predicted": 1942,
+    "gold": 2508,
+    "precision": 0.668898,
+    "recall": 0.517943,
+    "f1": 0.58382,
+    "center_recall": 0.552632,
+    "prediction_inflation": 0.774322,
+    "by_area_iou_recall": {
+      "large": 0.790625,
+      "medium": 0.484043,
+      "small": 0.577373,
+      "tiny": 0.220339,
+      "xlarge": 0.502463
+    },
+    "by_area_center_recall": {
+      "large": 0.801562,
+      "medium": 0.574468,
+      "small": 0.60078,
+      "tiny": 0.298023,
+      "xlarge": 0.453202
+    }
+  },
+  "best_policy": {
+    "name": "p205_s0.25_a4_l3_t0.2_r0.15",
+    "min_score": 0.25,
+    "max_add_per_row": 4,
+    "labels": [
+      "bathtub",
+      "shower",
+      "sink"
+    ],
+    "context_threshold": 0.2,
+    "rescue_threshold": 0.15,
+    "novelty_iou": 0.2
+  },
+  "best_metrics": {
+    "tp": 1316,
+    "predicted": 2175,
+    "gold": 2508,
+    "precision": 0.605057,
+    "recall": 0.524721,
+    "f1": 0.562033,
+    "center_recall": 0.560606,
+    "prediction_inflation": 0.867225,
+    "by_area_iou_recall": {
+      "large": 0.790625,
+      "medium": 0.510638,
+      "small": 0.582575,
+      "tiny": 0.231638,
+      "xlarge": 0.502463
+    },
+    "by_area_center_recall": {
+      "large": 0.801562,
+      "medium": 0.585106,
+      "small": 0.605982,
+      "tiny": 0.316384,
+      "xlarge": 0.458128
+    }
+  },
+  "delta_vs_baseline": {
+    "precision": -0.063841,
+    "recall": 0.006778,
+    "f1": -0.021787,
+    "center_recall": 0.007974,
+    "prediction_inflation": 0.092903
+  },
+  "decision": "no_promotion_keep_P202",
+  "top_policies": [
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l3_t0.2_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1316,
+        "predicted": 2175,
+        "gold": 2508,
+        "precision": 0.605057,
+        "recall": 0.524721,
+        "f1": 0.562033,
+        "center_recall": 0.560606,
+        "prediction_inflation": 0.867225,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.510638,
+          "small": 0.582575,
+          "tiny": 0.231638,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.316384,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 274
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l3_t0.2_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1316,
+        "predicted": 2175,
+        "gold": 2508,
+        "precision": 0.605057,
+        "recall": 0.524721,
+        "f1": 0.562033,
+        "center_recall": 0.560606,
+        "prediction_inflation": 0.867225,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.510638,
+          "small": 0.582575,
+          "tiny": 0.231638,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.316384,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 273
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l3_t0.25_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1295,
+        "predicted": 2111,
+        "gold": 2508,
+        "precision": 0.613453,
+        "recall": 0.516348,
+        "f1": 0.560727,
+        "center_recall": 0.551834,
+        "prediction_inflation": 0.841707,
+        "by_area_iou_recall": {
+          "large": 0.78125,
+          "medium": 0.505319,
+          "small": 0.56827,
+          "tiny": 0.228814,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.579787,
+          "small": 0.591678,
+          "tiny": 0.310734,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 274
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l3_t0.25_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1295,
+        "predicted": 2111,
+        "gold": 2508,
+        "precision": 0.613453,
+        "recall": 0.516348,
+        "f1": 0.560727,
+        "center_recall": 0.551834,
+        "prediction_inflation": 0.841707,
+        "by_area_iou_recall": {
+          "large": 0.78125,
+          "medium": 0.505319,
+          "small": 0.56827,
+          "tiny": 0.228814,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.579787,
+          "small": 0.591678,
+          "tiny": 0.310734,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 273
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l3_t0.2_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1317,
+        "predicted": 2191,
+        "gold": 2508,
+        "precision": 0.601095,
+        "recall": 0.52512,
+        "f1": 0.560545,
+        "center_recall": 0.561005,
+        "prediction_inflation": 0.873604,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.510638,
+          "small": 0.582575,
+          "tiny": 0.233051,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.317797,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 273
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l3_t0.2_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1317,
+        "predicted": 2192,
+        "gold": 2508,
+        "precision": 0.600821,
+        "recall": 0.52512,
+        "f1": 0.560426,
+        "center_recall": 0.561005,
+        "prediction_inflation": 0.874003,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.510638,
+          "small": 0.582575,
+          "tiny": 0.233051,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.317797,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 274
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l3_t0.25_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2127,
+        "gold": 2508,
+        "precision": 0.609309,
+        "recall": 0.516746,
+        "f1": 0.559223,
+        "center_recall": 0.552233,
+        "prediction_inflation": 0.848086,
+        "by_area_iou_recall": {
+          "large": 0.78125,
+          "medium": 0.505319,
+          "small": 0.56827,
+          "tiny": 0.230226,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.579787,
+          "small": 0.591678,
+          "tiny": 0.312147,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 273
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l3_t0.25_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2128,
+        "gold": 2508,
+        "precision": 0.609023,
+        "recall": 0.516746,
+        "f1": 0.559103,
+        "center_recall": 0.552233,
+        "prediction_inflation": 0.848485,
+        "by_area_iou_recall": {
+          "large": 0.78125,
+          "medium": 0.505319,
+          "small": 0.56827,
+          "tiny": 0.230226,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.579787,
+          "small": 0.591678,
+          "tiny": 0.312147,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 274
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l6_t0.2_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2194,
+        "gold": 2508,
+        "precision": 0.59845,
+        "recall": 0.523525,
+        "f1": 0.558486,
+        "center_recall": 0.559809,
+        "prediction_inflation": 0.874801,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.515957,
+          "small": 0.582575,
+          "tiny": 0.228814,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.314972,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l6_t0.2_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2194,
+        "gold": 2508,
+        "precision": 0.59845,
+        "recall": 0.523525,
+        "f1": 0.558486,
+        "center_recall": 0.559809,
+        "prediction_inflation": 0.874801,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.515957,
+          "small": 0.582575,
+          "tiny": 0.228814,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.314972,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l6_t0.2_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2207,
+        "gold": 2508,
+        "precision": 0.594925,
+        "recall": 0.523525,
+        "f1": 0.556946,
+        "center_recall": 0.559809,
+        "prediction_inflation": 0.879984,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.515957,
+          "small": 0.582575,
+          "tiny": 0.228814,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.314972,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l6_t0.2_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2207,
+        "gold": 2508,
+        "precision": 0.594925,
+        "recall": 0.523525,
+        "f1": 0.556946,
+        "center_recall": 0.559809,
+        "prediction_inflation": 0.879984,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.515957,
+          "small": 0.582575,
+          "tiny": 0.228814,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.314972,
+          "xlarge": 0.458128
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l6_t0.25_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2120,
+        "gold": 2508,
+        "precision": 0.607075,
+        "recall": 0.513158,
+        "f1": 0.55618,
+        "center_recall": 0.549043,
+        "prediction_inflation": 0.845295,
+        "by_area_iou_recall": {
+          "large": 0.776563,
+          "medium": 0.505319,
+          "small": 0.56567,
+          "tiny": 0.225989,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.789062,
+          "medium": 0.574468,
+          "small": 0.590377,
+          "tiny": 0.30791,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l6_t0.25_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2120,
+        "gold": 2508,
+        "precision": 0.607075,
+        "recall": 0.513158,
+        "f1": 0.55618,
+        "center_recall": 0.549043,
+        "prediction_inflation": 0.845295,
+        "by_area_iou_recall": {
+          "large": 0.776563,
+          "medium": 0.505319,
+          "small": 0.56567,
+          "tiny": 0.225989,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.789062,
+          "medium": 0.574468,
+          "small": 0.590377,
+          "tiny": 0.30791,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a4_l6_t0.25_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2133,
+        "gold": 2508,
+        "precision": 0.603376,
+        "recall": 0.513158,
+        "f1": 0.554622,
+        "center_recall": 0.549043,
+        "prediction_inflation": 0.850478,
+        "by_area_iou_recall": {
+          "large": 0.776563,
+          "medium": 0.505319,
+          "small": 0.56567,
+          "tiny": 0.225989,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.789062,
+          "medium": 0.574468,
+          "small": 0.590377,
+          "tiny": 0.30791,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a4_l6_t0.25_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 4,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2133,
+        "gold": 2508,
+        "precision": 0.603376,
+        "recall": 0.513158,
+        "f1": 0.554622,
+        "center_recall": 0.549043,
+        "prediction_inflation": 0.850478,
+        "by_area_iou_recall": {
+          "large": 0.776563,
+          "medium": 0.505319,
+          "small": 0.56567,
+          "tiny": 0.225989,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.789062,
+          "medium": 0.574468,
+          "small": 0.590377,
+          "tiny": 0.30791,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 294
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l3_t0.2_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1316,
+        "predicted": 2367,
+        "gold": 2508,
+        "precision": 0.555978,
+        "recall": 0.524721,
+        "f1": 0.539897,
+        "center_recall": 0.562201,
+        "prediction_inflation": 0.94378,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.581274,
+          "tiny": 0.237288,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.322034,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 516
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l3_t0.2_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 2362,
+        "gold": 2508,
+        "precision": 0.556308,
+        "recall": 0.523923,
+        "f1": 0.53963,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.941786,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.581274,
+          "tiny": 0.234463,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.319209,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 511
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l3_t0.25_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2289,
+        "gold": 2508,
+        "precision": 0.562254,
+        "recall": 0.513158,
+        "f1": 0.536585,
+        "center_recall": 0.549442,
+        "prediction_inflation": 0.912679,
+        "by_area_iou_recall": {
+          "large": 0.778125,
+          "medium": 0.489362,
+          "small": 0.559168,
+          "tiny": 0.234463,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.569149,
+          "small": 0.581274,
+          "tiny": 0.316384,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 516
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l3_t0.25_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1285,
+        "predicted": 2286,
+        "gold": 2508,
+        "precision": 0.562117,
+        "recall": 0.51236,
+        "f1": 0.536087,
+        "center_recall": 0.549043,
+        "prediction_inflation": 0.911483,
+        "by_area_iou_recall": {
+          "large": 0.778125,
+          "medium": 0.489362,
+          "small": 0.559168,
+          "tiny": 0.231638,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.569149,
+          "small": 0.582575,
+          "tiny": 0.313559,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 511
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l3_t0.2_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1316,
+        "predicted": 2403,
+        "gold": 2508,
+        "precision": 0.547649,
+        "recall": 0.524721,
+        "f1": 0.53594,
+        "center_recall": 0.562201,
+        "prediction_inflation": 0.958134,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.581274,
+          "tiny": 0.235876,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.320621,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 511
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l3_t0.2_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1317,
+        "predicted": 2408,
+        "gold": 2508,
+        "precision": 0.546927,
+        "recall": 0.52512,
+        "f1": 0.535801,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.960128,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.581274,
+          "tiny": 0.237288,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.322034,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 516
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l3_t0.25_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1288,
+        "predicted": 2330,
+        "gold": 2508,
+        "precision": 0.55279,
+        "recall": 0.513557,
+        "f1": 0.532451,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.929027,
+        "by_area_iou_recall": {
+          "large": 0.779687,
+          "medium": 0.489362,
+          "small": 0.559168,
+          "tiny": 0.234463,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.569149,
+          "small": 0.581274,
+          "tiny": 0.316384,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 516
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l3_t0.25_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2327,
+        "gold": 2508,
+        "precision": 0.553073,
+        "recall": 0.513158,
+        "f1": 0.532368,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.927831,
+        "by_area_iou_recall": {
+          "large": 0.779687,
+          "medium": 0.489362,
+          "small": 0.559168,
+          "tiny": 0.233051,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.569149,
+          "small": 0.582575,
+          "tiny": 0.314972,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 511
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l6_t0.2_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2435,
+        "gold": 2508,
+        "precision": 0.537577,
+        "recall": 0.52193,
+        "f1": 0.529638,
+        "center_recall": 0.561005,
+        "prediction_inflation": 0.970893,
+        "by_area_iou_recall": {
+          "large": 0.784375,
+          "medium": 0.505319,
+          "small": 0.579974,
+          "tiny": 0.233051,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.579787,
+          "small": 0.604681,
+          "tiny": 0.320621,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 586
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l6_t0.2_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2435,
+        "gold": 2508,
+        "precision": 0.537577,
+        "recall": 0.52193,
+        "f1": 0.529638,
+        "center_recall": 0.561005,
+        "prediction_inflation": 0.970893,
+        "by_area_iou_recall": {
+          "large": 0.784375,
+          "medium": 0.505319,
+          "small": 0.579974,
+          "tiny": 0.233051,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.579787,
+          "small": 0.604681,
+          "tiny": 0.320621,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 586
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l6_t0.2_r0.1",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1310,
+        "predicted": 2466,
+        "gold": 2508,
+        "precision": 0.531225,
+        "recall": 0.522329,
+        "f1": 0.526739,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.983254,
+        "by_area_iou_recall": {
+          "large": 0.785937,
+          "medium": 0.505319,
+          "small": 0.579974,
+          "tiny": 0.233051,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.585106,
+          "small": 0.604681,
+          "tiny": 0.320621,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 586
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l6_t0.2_r0.1",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.2,
+        "rescue_threshold": 0.1,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1310,
+        "predicted": 2466,
+        "gold": 2508,
+        "precision": 0.531225,
+        "recall": 0.522329,
+        "f1": 0.526739,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.983254,
+        "by_area_iou_recall": {
+          "large": 0.785937,
+          "medium": 0.505319,
+          "small": 0.579974,
+          "tiny": 0.233051,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.585106,
+          "small": 0.604681,
+          "tiny": 0.320621,
+          "xlarge": 0.463054
+        }
+      },
+      "added_candidates": 586
+    },
+    {
+      "policy": {
+        "name": "p205_s0.25_a8_l6_t0.25_r0.15",
+        "min_score": 0.25,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1278,
+        "predicted": 2351,
+        "gold": 2508,
+        "precision": 0.543598,
+        "recall": 0.509569,
+        "f1": 0.526034,
+        "center_recall": 0.546252,
+        "prediction_inflation": 0.9374,
+        "by_area_iou_recall": {
+          "large": 0.775,
+          "medium": 0.484043,
+          "small": 0.556567,
+          "tiny": 0.230226,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.569149,
+          "small": 0.578674,
+          "tiny": 0.310734,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 586
+    },
+    {
+      "policy": {
+        "name": "p205_s0.35_a8_l6_t0.25_r0.15",
+        "min_score": 0.35,
+        "max_add_per_row": 8,
+        "labels": [
+          "appliance",
+          "bathtub",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "context_threshold": 0.25,
+        "rescue_threshold": 0.15,
+        "novelty_iou": 0.2
+      },
+      "metrics": {
+        "tp": 1278,
+        "predicted": 2351,
+        "gold": 2508,
+        "precision": 0.543598,
+        "recall": 0.509569,
+        "f1": 0.526034,
+        "center_recall": 0.546252,
+        "prediction_inflation": 0.9374,
+        "by_area_iou_recall": {
+          "large": 0.775,
+          "medium": 0.484043,
+          "small": 0.556567,
+          "tiny": 0.230226,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.569149,
+          "small": 0.578674,
+          "tiny": 0.310734,
+          "xlarge": 0.453202
+        }
+      },
+      "added_candidates": 586
+    }
+  ],
+  "interpretation": [
+    "This tests whether existing high-recall branches can recover P202 false negatives without retraining.",
+    "If no policy promotes, P205 should move to true tiled/SAHI retraining rather than adding more low-quality candidates."
+  ],
+  "outputs": {
+    "json": "configs/vlm/symbol_high_recall_proposals_p205.json",
+    "md": "reports/vlm/symbol_high_recall_proposals_p205_eval.md",
+    "overlay": "reports/vlm/symbol_high_recall_proposals_p205_overlay.jsonl"
+  }
+}

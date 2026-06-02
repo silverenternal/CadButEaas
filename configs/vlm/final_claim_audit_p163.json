@@ -1,0 +1,644 @@
+{
+  "id": "SCI-P1-163-final-claim-audit-after-p165-freeze",
+  "created_on": "2026-05-17",
+  "decision": "claim_audit_completed_p174_manuscript_sync_required",
+  "current_best": {
+    "policy": "p165_best",
+    "precision": 0.54757,
+    "recall": 0.525518,
+    "f1": 0.536317,
+    "center_recall": 0.585726,
+    "prediction_inflation": 0.959729,
+    "scope": "74-row public-raster overlay subset; P101 target-level evaluator"
+  },
+  "summary": {
+    "must_fix_count": 19,
+    "watch_count": 47,
+    "safe_caveat_count": 8,
+    "main_issue": "P162 manuscript and P162 table artifacts still describe P160/F1 0.535097 as current best; P168/P165 artifacts supersede them.",
+    "unsafe_high_accuracy_claim_found": false,
+    "relation_replay_boundary_present": true
+  },
+  "required_edits_for_p174": [
+    "Update manuscript title/status/abstract/conclusion from P160/P161 current-best wording to P165 current-best wording.",
+    "Replace paper-facing symbol metric row with P165: precision 0.547570, recall 0.525518, F1 0.536317, center 0.585726, inflation 0.959729.",
+    "Keep P160 only as historical progression/baseline row, not current best.",
+    "Keep P161 as a P160-style relative guardrail and explicitly state it is not direct P165 cross-dataset generalization evidence.",
+    "Preserve expected-json relation replay caveat: relation F1 1.000000 is not runtime model-output robustness.",
+    "Add P169 related-work framing: future symbol gains likely need tiled/sliced detector, duplicate suppression, and context-aware selector."
+  ],
+  "findings": [
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 3,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "Manuscript draft: **v0.5 / P162 after extended symbol rescue through P160/P161**  "
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 5,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "Status: **bounded draft for internal review; P160 is the current best symbol operating point, but all symbol claims remain subset-bound and post-hoc**"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 9,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "Raster floorplan understanding remains difficult because architectural symbols, room regions, text, and relations have different visual scales and failure modes. We present an audit-gated mixture-of-experts pipeline for raster floorplan scene-graph parsing tha"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 9,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "Raster floorplan understanding remains difficult because architectural symbols, room regions, text, and relations have different visual scales and failure modes. We present an audit-gated mixture-of-experts pipeline for raster floorplan scene-graph parsing tha"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 9,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "Raster floorplan understanding remains difficult because architectural symbols, room regions, text, and relations have different visual scales and failure modes. We present an audit-gated mixture-of-experts pipeline for raster floorplan scene-graph parsing tha"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 9,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "Raster floorplan understanding remains difficult because architectural symbols, room regions, text, and relations have different visual scales and failure modes. We present an audit-gated mixture-of-experts pipeline for raster floorplan scene-graph parsing tha"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 13,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "Most visual detection metrics in this draft are below 0.95. They are therefore treated as operating-point, ablation, diagnostic, or negative-evidence results rather than near-perfect recognition claims. The only paper-facing metric above 0.95 is the contains-r"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 20,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "The final symbol-rescue sequence did not solve symbol recognition, but it did continue to move the operating point. P157 converted some center-hit/IoU-fail cases through bucket- and label-conditioned box resizing, improving F1 to 0.534283 without increasing in"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 20,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "The final symbol-rescue sequence did not solve symbol recognition, but it did continue to move the operating point. P157 converted some center-hit/IoU-fail cases through bucket- and label-conditioned box resizing, improving F1 to 0.534283 without increasing in"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 22,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "Room/space post-processing did not improve F1 beyond 0.370752; one high-center variant reached center recall 0.922099 but with inflation 4.977742 and F1 0.266489. Selector-budget rescue failed to pass all gates, and model-output contains-symbol relation qualit"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 32,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "This manuscript makes four bounded contributions. First, it defines a runtime contract and audit-gated MoE pipeline for raster floorplan scene-graph parsing. Second, it reports a public-raster symbol policy handoff where a precision-oriented opt-in policy impr"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 50,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "We organize evaluation into three explicitly separated modes. The first mode is **target-level model-output evaluation**, where predicted boxes or masks are compared against locked target annotations. This mode supports the public-raster symbol evaluation and "
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 52,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The public-raster symbol study uses a locked supervision target set with 992 target records, but the current model-output overlays cover 74 rows. Therefore, symbol results are reported as target-level evidence on the 74-row overlay subset. The image-only multi"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 66,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The fourth stage is the relation layer. Relation policies are evaluated separately from visual detection policies because relations can appear strong under expected-json replay while still depending on upstream model-output quality at runtime. The contains-rel"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 80,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "Panel D should show the audit outputs: target-level metrics, expected-json replay metrics, negative-evidence tables, and claim labels such as ready-limited, bounded-oracle, and negative-diagnostic."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 88,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "We evaluate the audit-gated MoE pipeline under the runtime contract defined in Section 3. The experiments are intentionally separated by evidence type. Public-raster symbol policies are evaluated as target-level model-output boxes on the locked overlay subset."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 90,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "For target-level box metrics, predictions are matched to gold targets at IoU threshold 0.3. We report precision, recall, F1, center recall, and prediction inflation. Prediction inflation is included because floorplan parsers can achieve high recall by emitting"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 96,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "The final symbol rescue uses the same audit-gated principle but adds post-hoc policy selection and geometry-specialized box repair. P155A/P140 materialization raises the P101-rerun symbol F1 to 0.523865 with inflation 1.055024. P155E improves the precision/inf"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 98,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "This experiment supports a bounded operating-point claim: named opt-in symbol policies can trade candidate inflation and localization quality under an explicit runtime contract. It does not support a high-accuracy symbol-recognition claim. The strongest result"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 98,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "This experiment supports a bounded operating-point claim: named opt-in symbol policies can trade candidate inflation and localization quality under an explicit runtime contract. It does not support a high-accuracy symbol-recognition claim. The strongest result"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 110,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The contains-relation policy is evaluated under expected-json replay. On the primary development split, relation F1 increases from 0.926172 to 1.000000. Missing contains edges change from 2035 -> 0, and extra contains edges change from 277 -> 0. On the seconda"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 117,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "After the initial sub-0.95 audit, we ran a bounded rescue sprint without long training or hidden target-definition changes. The symbol branch became the main rescue target. P140/P155A showed that label-specific thresholds, NMS, and page budgeting could raise s"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 119,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The negative rescue results are also important. P158 label-threshold/relabel cleanup did not beat P157; P159 support-aware duplicate merge did not improve under fixed-count precision constraints; P160B did not find an additional fast geometry gain. Room/space "
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 137,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The contains-relation replay result is strong numerically, but its evidence type is bounded. The paper should explicitly state that expected-json replay isolates relation policy behavior from upstream visual errors. This makes the result appropriate for valida"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 149,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "The public-raster symbol results demonstrate the value of audited policy handoff, but not high-accuracy symbol recognition. The precision-oriented opt-in policy improves target-level symbol F1 and reduces prediction inflation on the locked overlay subset, whil"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 153,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "The contains-relation replay result illustrates a complementary point. A deterministic relation policy can remove missing and extra contains errors under expected-json replay, with candidate F1 above 0.95, but this result is only meaningful under its input ass"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 167,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "Fifth, current real-world/industrial generalization is not established. Existing real-raster annotation work is pilot-level and needs human review before it can support claims about industrial drawings or deployment beyond the public/multifamily evidence used "
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 177,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "For relations, the expected-json contains policy should be evaluated on model-output graphs after upstream visual predictions are frozen. This would measure whether relation improvements survive realistic detector noise. Finally, real-raster annotations should"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 181,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "We presented an audit-gated mixture-of-experts framework for raster floorplan scene-graph parsing with explicit treatment of sub-0.95 component metrics. The framework separates model-output target evaluation, expected-json relation replay, opt-in policy handof"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 197,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "**Table 4. Contains relation expected-json replay.** Place in Section 5.4."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 205,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "- Safe: claim P160 is the current best bounded symbol operating point on the 74-row public-raster overlay subset, with F1 0.535097 and inflation 0.959729."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 207,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- Safe: claim P161 is a relative guardrail showing no catastrophic drop versus P155E-style policy on an available 603-row CubiCasa subset."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 209,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "- Safe: claim P095 validates contains relation logic under expected-json replay."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 211,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "- Unsafe: claim >0.95 symbol recognition, full public-raster locked-set symbol quality, or cross-dataset symbol generalization from P160/P161."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 211,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- Unsafe: claim >0.95 symbol recognition, full public-raster locked-set symbol quality, or cross-dataset symbol generalization from P160/P161."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 217,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "The P162 table artifact (`reports/vlm/paper_metric_tables_p162.md`) supersedes the earlier P126 symbol table for the current best policy. The key paper-facing symbol row is `P160 tiny specialist`: precision 0.546323, recall 0.524322, F1 0.535097, center recall"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 217,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "The P162 table artifact (`reports/vlm/paper_metric_tables_p162.md`) supersedes the earlier P126 symbol table for the current best policy. The key paper-facing symbol row is `P160 tiny specialist`: precision 0.546323, recall 0.524322, F1 0.535097, center recall"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 235,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "| C3: Contains relation policy can close expected-json replay errors under explicit opt-in. | bounded_oracle | P095 | Expected-json/oracle replay paths only; not runtime default or model-output robustness. |"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 288,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "| primary_dev | 493 | 0.926172 | 1.000000 | 0.073828 | 2035 -> 0 | 277 -> 0 | True |"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 289,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "| secondary_real_v3_smoke | 64 | 0.918303 | 1.000000 | 0.081697 | 335 -> 0 | 52 -> 0 | True |"
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 301,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- Do not claim: industrial/real-world generalization."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 306,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "- Treat P095 as a relation-policy validation under expected-json replay, not an end-to-end model result."
+    },
+    {
+      "file": "reports/vlm/manuscript_draft_v0_5_p162.md",
+      "line": 312,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "- The claim boundaries from P126-P129 are preserved: target-level, image-only diagnostic, expected-json replay, and negative-probe evidence are not merged into a single end-to-end claim."
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 7,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "P160 is a bounded 74-row public-raster overlay-subset, post-hoc geometry/tiny-specialist operating point. P161 is a relative guardrail on an available 603-row CubiCasa subset with 66-row overlap; neither supports full-raster high-accuracy or cross-dataset symb"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 7,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "P160 is a bounded 74-row public-raster overlay-subset, post-hoc geometry/tiny-specialist operating point. P161 is a relative guardrail on an available 603-row CubiCasa subset with 66-row overlap; neither supports full-raster high-accuracy or cross-dataset symb"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 18,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "| `P160 tiny specialist` | 74-row public-raster overlay subset; P101 rerun evaluator | 0.546323 | 0.524322 | 0.535097 | 0.585327 | 0.959729 |"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 24,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "| `P161 P155E-style` | 603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset | 0.689111 | 0.264894 | 0.382685 | 0.273406 | 0.384400 |"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 25,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "| `P161 P160-style` | 603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset | 0.689718 | 0.265128 | 0.383022 | 0.276320 | 0.384400 |"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 32,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "| `contains relation` | expected-json replay F1 1.000000 on primary and secondary smoke | not runtime model-output; model-output contains-symbol smoke remains negative |"
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 37,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "- Use “bounded symbol operating point” for P160, not “solved symbol recognition”."
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 39,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- Disclose P161 as relative CubiCasa guardrail with overlap, not cross-dataset generalization."
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p162.md",
+      "line": 40,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "- Do not claim >0.95 symbol, full-raster symbol, or end-to-end scene-graph accuracy."
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 5,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "  \"claim_boundary\": \"P160 is a bounded 74-row public-raster overlay-subset, post-hoc geometry/tiny-specialist operating point. P161 is a relative guardrail on an available 603-row CubiCasa subset with 66-row overlap; neither supports full-raster high-accuracy "
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 5,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "  \"claim_boundary\": \"P160 is a bounded 74-row public-raster overlay-subset, post-hoc geometry/tiny-specialist operating point. P161 is a relative guardrail on an available 603-row CubiCasa subset with 66-row overlap; neither supports full-raster high-accuracy "
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 6,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "  \"headline_symbol_policy\": \"p160_best\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 11,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "    \"precision\": 0.546323,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 12,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "    \"recall\": 0.524322,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 14,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "    \"center_recall\": 0.585327,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 81,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "      \"policy\": \"P160 tiny specialist\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 83,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "      \"precision\": 0.546323,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 84,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "      \"recall\": 0.524322,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 86,
+      "category": "stale_p160_current_best",
+      "severity": "must_fix",
+      "action": "replace paper-facing P160 current-best wording/metrics with P165; keep P160 only as historical progression row",
+      "text": "      \"center_recall\": 0.585327,"
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 91,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "  \"guardrail_rows\": ["
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 93,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "      \"policy\": \"P161 P155E-style\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 94,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "      \"scope\": \"603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 102,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "      \"policy\": \"P161 P160-style\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 103,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "      \"scope\": \"603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 119,
+      "category": "relation_replay_boundary",
+      "severity": "watch",
+      "action": "ensure expected-json replay is never described as runtime model-output",
+      "text": "      \"best_metric\": \"expected-json replay F1 1.000000 on primary and secondary smoke\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 129,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "    \"Use “bounded symbol operating point” for P160, not “solved symbol recognition”.\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 131,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "    \"Disclose P161 as relative CubiCasa guardrail with overlap, not cross-dataset generalization.\","
+    },
+    {
+      "file": "configs/vlm/paper_metric_tables_p162.json",
+      "line": 132,
+      "category": "unsafe_symbol_overclaim",
+      "severity": "safe_caveat",
+      "action": "keep caveat, update P160 references to P165 if needed",
+      "text": "    \"Do not claim >0.95 symbol, full-raster symbol, or end-to-end scene-graph accuracy.\""
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p168_p165_freeze.md",
+      "line": 5,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "P165 supersedes P160 as the bounded 74-row public-raster overlay-subset, post-hoc runtime-safe disagreement-backfill operating point. P161 remains only a P160-style relative guardrail and is not a P165 generalization proof."
+    },
+    {
+      "file": "reports/vlm/paper_metric_tables_p168_p165_freeze.md",
+      "line": 25,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- P165 should be reported as post-hoc runtime-safe disagreement backfill on the 74-row overlay subset; do not treat P161 as a direct P165 generalization guardrail."
+    },
+    {
+      "file": "reports/vlm/symbol_f1_rescue_final_decision_p168.md",
+      "line": 24,
+      "category": "stale_p160_current_best",
+      "severity": "info",
+      "action": "keep_with_boundary",
+      "text": "- Update paper metric tables from P160 F1 0.535097 to P165 F1 0.536317 for symbol public-raster overlay subset."
+    },
+    {
+      "file": "reports/vlm/symbol_f1_rescue_final_decision_p168.md",
+      "line": 25,
+      "category": "generalization_boundary",
+      "severity": "watch",
+      "action": "ensure P161 remains relative guardrail, not P165 generalization proof",
+      "text": "- Keep caveat that P161 guardrail was run for P160-style vs P155E-style; P165 should be described as post-hoc runtime-safe overlay rescue unless a new guardrail is run."
+    }
+  ],
+  "inputs": [
+    "reports/vlm/manuscript_draft_v0_5_p162.md",
+    "reports/vlm/paper_metric_tables_p162.md",
+    "configs/vlm/paper_metric_tables_p162.json",
+    "reports/vlm/paper_metric_tables_p168_p165_freeze.md",
+    "reports/vlm/symbol_f1_rescue_final_decision_p168.md",
+    "reports/vlm/literature_symbol_painpoint_survey_p169.md"
+  ],
+  "outputs": {
+    "report_md": "reports/vlm/final_claim_audit_p163.md",
+    "config_json": "configs/vlm/final_claim_audit_p163.json"
+  }
+}

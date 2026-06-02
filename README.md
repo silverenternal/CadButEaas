@@ -200,7 +200,7 @@
 | **C6** | 可审计训练与复现性 | `reports/vlm/training_contract_coverage_v2.json` |
 | **C7** | 投稿证据包 — v2 final evidence pack + zero-blocking overclaim scan | `reports/vlm/sci2_final_submission_evidence_pack_v2.json`, `reports/vlm/sci2_overclaim_scan_v2.json` |
 
-完整指标边界详见 [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)。论文核心贡献详见 [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md)。
+完整指标边界详见 [docs/cadstruct/paper/real-world-capability-boundary-v3.md](docs/cadstruct/paper/real-world-capability-boundary-v3.md)。论文核心贡献详见 [docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md](docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md)。
 
 ## 📚 文档导航
 
@@ -209,14 +209,14 @@
 | 需求 | 文档 |
 |------|------|
 | 了解架构和服务职责 | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| 对接后端 API | [API.md](API.md)、[docs/后端 API 概览.md](docs/后端%20API%20概览.md) |
+| 对接后端 API | [API.md](API.md)、[docs/product/后端 API 概览.md](docs/product/后端%20API%20概览.md) |
 | 开发 Web 前端 | [cad-web/README.md](cad-web/README.md) |
 | 运行测试和贡献代码 | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | 做性能基准和回归测试 | [BENCHMARK_GUIDE.md](BENCHMARK_GUIDE.md) |
-| 准备交付验收 | [docs/功能介绍.md](docs/功能介绍.md)、[docs/交付目标对照表.md](docs/交付目标对照表.md) |
-| 接入光栅多模态 VLM 后端 | [docs/multimodal-vlm-plan.md](docs/multimodal-vlm-plan.md)、[scripts/vlm/README.md](scripts/vlm/README.md) |
-| 了解图纸识别研究边界 | [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md)、[docs/cadstruct-sci2-paper-plan-v3.md](docs/cadstruct-sci2-paper-plan-v3.md) |
-| CadStruct-MoE 论文核心贡献 | [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md) |
+| 准备交付验收 | [docs/product/功能介绍.md](docs/product/功能介绍.md)、[docs/product/交付目标对照表.md](docs/product/交付目标对照表.md) |
+| 接入光栅多模态 VLM 后端 | [docs/research/multimodal-vlm-plan.md](docs/research/multimodal-vlm-plan.md)、[scripts/vlm/README.md](scripts/vlm/README.md) |
+| 了解图纸识别研究边界 | [docs/cadstruct/paper/real-world-capability-boundary-v3.md](docs/cadstruct/paper/real-world-capability-boundary-v3.md)、[docs/cadstruct/paper/cadstruct-sci2-paper-plan-v3.md](docs/cadstruct/paper/cadstruct-sci2-paper-plan-v3.md) |
+| CadStruct-MoE 论文核心贡献 | [docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md](docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md) |
 
 ## 🚀 快速开始
 
@@ -505,10 +505,10 @@ CAD/
 ├── CONTRIBUTING.md
 ├── docs/
 │   ├── INDEX.md                    # 文档索引
-│   ├── 功能介绍.md                  # 面向甲方的功能介绍
-│   ├── 后端 API 概览.md               # 后端 API 功能概览
-│   ├── 交付目标对照表.md             # 与交付目标的对应关系
-│   ├── web-ui-*.md                 # Web UI 相关文档
+│   ├── product/                    # 功能介绍、后端 API 概览、交付对照
+│   ├── web-ui/                     # Web UI 相关文档
+│   ├── cadstruct/                  # CadStruct/MoE 图纸识别文档
+│   ├── research/                   # VLM 训练和研究计划
 │   └── archive/                    # 历史文档归档
 ├── dxfs/                           # DXF 测试文件 (9 个)
 ├── testpdf/                        # PDF 测试文件 (4 个)
@@ -876,4 +876,4 @@ The main MoE claim is domain-structured deterministic routing, not generic spars
 
 Lie/SE(2) is now supported as an explicit gated core geometry accuracy component by `reports/vlm/lie_se2_core_claim_decision_v9.json`: h512 matched smoke macro-F1 mean gain=+1.822pp, h1024 gain=+1.121pp, and seed30 identity gains are +1.227pp vs ungated full-Lie and +3.319pp vs no-Lie. This does not support image-level transform generalization.
 
-External OCR and cross-source symbol generalization remain blocked by `reports/vlm/external_generalization_claim_decision_v3.json`: annotation packs are ready, but external OCR drawings with gold=0 and cross-source symbol human-gold annotations=0. Repair-enabled relation F1=0.923 remains appendix-only / ID-space sanity check. Full capability boundary: [docs/real-world-capability-boundary-v3.md](docs/real-world-capability-boundary-v3.md); current core contribution summary: [docs/cadstruct-paper-core-contributions-v2.md](docs/cadstruct-paper-core-contributions-v2.md).
+External OCR and cross-source symbol generalization remain blocked by `reports/vlm/external_generalization_claim_decision_v3.json`: annotation packs are ready, but external OCR drawings with gold=0 and cross-source symbol human-gold annotations=0. Repair-enabled relation F1=0.923 remains appendix-only / ID-space sanity check. Full capability boundary: [docs/cadstruct/paper/real-world-capability-boundary-v3.md](docs/cadstruct/paper/real-world-capability-boundary-v3.md); current core contribution summary: [docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md](docs/cadstruct/paper/cadstruct-paper-core-contributions-v2.md).

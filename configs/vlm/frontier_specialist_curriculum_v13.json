@@ -1,0 +1,34 @@
+{
+  "version": "frontier_specialist_curriculum_v13",
+  "boundary": {
+    "source_mix": [
+      "floorplancad",
+      "cubicasa5k"
+    ],
+    "hard_case_ratio": 0.7,
+    "target_family": "line_like_geometry"
+  },
+  "room_space": {
+    "source_mix": [
+      "cubicasa5k",
+      "resplan"
+    ],
+    "hard_case_ratio": 0.5,
+    "target_family": "polygon_completion"
+  },
+  "symbol_fixture": {
+    "source_mix": [
+      "cubicasa5k"
+    ],
+    "hard_case_ratio": 0.6,
+    "target_family": "long_tail_symbols"
+  },
+  "text_dimension": {
+    "source_mix": [
+      "cubicasa5k"
+    ],
+    "hard_case_ratio": 0.5,
+    "target_family": "ocr_and_linking"
+  },
+  "claim_boundary": "Curriculum is an explicit training contract only; it does not consume locked examples for fitting."
+}

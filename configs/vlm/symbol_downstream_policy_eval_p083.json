@@ -1,0 +1,88 @@
+{
+  "id": "P0-83-downstream-symbol-policy-eval-config",
+  "created_on": "2026-05-15",
+  "purpose": "Define how downstream CadStruct-MoE scene-graph integration should compare final symbol policies without changing the default runtime policy.",
+  "default_policy": "v28_frozen_detector_baseline",
+  "recommended_opt_in_for_downstream_smoke": "p076_balanced_opt_in",
+  "policy_registry": "configs/vlm/symbol_final_policy_registry_p079.json",
+  "downstream_entrypoints": {
+    "oracle_contract_export": {
+      "script": "scripts/vlm/export_moe_scene_graph.py",
+      "role": "Maps expected_json.symbol_candidates into ExpertPrediction(family=symbol, expert=symbol_fixture) and fuses a scene graph.",
+      "status": "contract_reference_only"
+    },
+    "real_expert_runner": {
+      "script": "scripts/vlm/run_all_experts_on_dev.py",
+      "role": "Builds RoutedCandidate rows from expected_json.symbol_candidates, runs SymbolFixtureExpert, and writes normalized ExpertPrediction JSONL.",
+      "status": "historical_svg_candidate_runner_not_raster_detector_runtime"
+    },
+    "fusion_v2": {
+      "script": "scripts/vlm/fuse_scene_graph_v2.py",
+      "role": "Fuses real upstream expert outputs and evaluates node/edge F1; candidate generation is internal to the script today.",
+      "status": "needs_adapter_for_raster_symbol_policy_inputs"
+    }
+  },
+  "symbol_policy_inputs": {
+    "v28_default_locked_predictions": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_predictions_p064_refresh.jsonl",
+    "p070_recall_locked_predictions": "reports/vlm/symbol_precision_gated_policy_p070_locked_predictions.jsonl",
+    "p076_balanced_locked_predictions": "reports/vlm/symbol_balanced_policy_p076_locked_predictions.jsonl",
+    "p078_micro_balanced_locked_predictions": "reports/vlm/symbol_p076_selector_p078_locked_predictions.jsonl"
+  },
+  "locked_policy_metrics": {
+    "v28_frozen_detector_baseline": {
+      "center_recall": 0.907484,
+      "iou_recall_at_0_30": 0.738898,
+      "precision_proxy": 0.116643,
+      "prediction_inflation": 6.334704,
+      "tiny_iou_recall_at_0_30": 0.507418
+    },
+    "p070_recall_opt_in": {
+      "center_recall": 0.908306,
+      "iou_recall_at_0_30": 0.769737,
+      "precision_proxy": 0.116898,
+      "prediction_inflation": 6.584704,
+      "tiny_iou_recall_at_0_30": 0.617211
+    },
+    "p076_balanced_opt_in": {
+      "center_recall": 0.908306,
+      "iou_recall_at_0_30": 0.766036,
+      "precision_proxy": 0.117703,
+      "prediction_inflation": 6.508224,
+      "tiny_iou_recall_at_0_30": 0.603858
+    },
+    "p078_micro_balanced_optional": {
+      "iou_recall_at_0_30": 0.765625,
+      "precision_proxy": 0.11793,
+      "prediction_inflation": 6.492188
+    }
+  },
+  "integration_contract": {
+    "input_schema": "symbol page predictions JSONL with row_id and predicted_symbols[{bbox,label,label_id,score,tile_id,...}]",
+    "adapter_target": "RoutedCandidate/ExpertPrediction compatible symbol_candidates for CadStruct-MoE fusion",
+    "source_metadata_required": [
+      "symbol_policy_id",
+      "policy_registry",
+      "base_detector",
+      "candidate_source",
+      "score",
+      "tile_id"
+    ],
+    "default_behavior": "Use v28 unless --symbol-policy or config explicitly selects p070, p076, or p078.",
+    "matching_note": "Current MoE smoke rows do not carry the detector row_id; adapter must use a stable row_id manifest or image-path mapping before an end-to-end run is valid."
+  },
+  "smoke_eval_plan": [
+    "Create a small manifest that maps MoE smoke records to detector row_id/image_path.",
+    "Convert v28 and p076 page predictions into symbol_candidates or ExpertPrediction rows with identical non-symbol inputs.",
+    "Run fusion on both variants and compare scene-graph node F1, symbol-family node F1, invalid graph rate, and warning deltas.",
+    "Keep v28 default unless downstream P076 improves symbol-family F1 without materially increasing invalid graphs or warnings."
+  ],
+  "promotion_gate": {
+    "must_not_change_default": true,
+    "required_for_opt_in_recommendation": [
+      "symbol_family_node_f1_p076 >= symbol_family_node_f1_v28",
+      "invalid_graph_rate_p076 <= invalid_graph_rate_v28 + 0.005",
+      "warning_count_p076 <= warning_count_v28 + 5_percent_relative"
+    ],
+    "reopen_symbol_work_only_if": "Downstream deltas show symbol quality is still the bottleneck after p076/p078 comparison."
+  }
+}

@@ -1,0 +1,711 @@
+{
+  "id": "SCI-P2-168-symbol-f1-rescue-final-decision",
+  "created_on": "2026-05-17",
+  "decision": "freeze_p165_as_symbol_current_best_for_paper_tables",
+  "reason": "P165 produced a verified positive official P101 improvement over P160; P166 adaptive budget and P167 lightweight selector both tied P165 and did not justify superseding it. Remaining oracle headroom exists but recent runtime-safe sweeps show diminishing returns before the paper deadline.",
+  "current_best": {
+    "policy": "p165_best",
+    "tp": 1318,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.54757,
+    "recall": 0.525518,
+    "f1": 0.536317,
+    "center_recall": 0.585726,
+    "prediction_inflation": 0.959729,
+    "delta_vs_p160": {
+      "precision": 0.001247,
+      "recall": 0.001196,
+      "f1": 0.00122,
+      "center_recall": 0.000399,
+      "prediction_inflation": 0.0
+    }
+  },
+  "rescue_sequence": [
+    {
+      "id": "P164",
+      "decision": "negative_oracle_headroom",
+      "summary": "P160 hit 1315, P155A hit 1350, oracle union hit 1365; simple runtime union did not beat P160."
+    },
+    {
+      "id": "P165",
+      "decision": "positive_adopt_p165",
+      "metrics": {
+        "tp": 1318,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.54757,
+        "recall": 0.525518,
+        "f1": 0.536317,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.810937,
+          "medium": 0.617021,
+          "small": 0.613784,
+          "tiny": 0.371469,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p160": {
+        "precision": 0.001247,
+        "recall": 0.001196,
+        "f1": 0.00122,
+        "center_recall": 0.000399,
+        "prediction_inflation": 0.0
+      },
+      "best_policy": {
+        "name": "p165_l3_b3_s0.29_i0.08_d20_a1_drop_lowest_global",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "small",
+          "tiny",
+          "medium"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75,
+        "replace_mode": "drop_lowest_global"
+      }
+    },
+    {
+      "id": "P166",
+      "decision": "negative_keep_p165",
+      "metrics": {
+        "tp": 1318,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.54757,
+        "recall": 0.525518,
+        "f1": 0.536317,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.810937,
+          "medium": 0.617021,
+          "small": 0.613784,
+          "tiny": 0.371469,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.0
+      }
+    },
+    {
+      "id": "P167",
+      "decision": "negative_keep_p165",
+      "metrics": {
+        "tp": 1318,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.54757,
+        "recall": 0.525518,
+        "f1": 0.536317,
+        "center_recall": 0.585726,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.810937,
+          "medium": 0.617021,
+          "small": 0.613784,
+          "tiny": 0.371469,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.0
+      }
+    }
+  ],
+  "paper_update_required": [
+    "Update paper metric tables from P160 F1 0.535097 to P165 F1 0.536317 for symbol public-raster overlay subset.",
+    "Keep caveat that P161 guardrail was run for P160-style vs P155E-style; P165 should be described as post-hoc runtime-safe overlay rescue unless a new guardrail is run.",
+    "Run P163 final claim audit before calling manuscript review-ready."
+  ],
+  "guardrails": {
+    "runtime_safe": true,
+    "runtime_forbidden_inputs_used": false,
+    "official_eval_confirmed": true,
+    "broad_sweep_after_p167_recommended": false,
+    "next_task": "SCI-P1-163-final-claim-audit-after-p165-table-update"
+  },
+  "inputs": {
+    "p165_config": "configs/vlm/symbol_disagreement_backfill_p165.json",
+    "p165_eval": "reports/vlm/symbol_disagreement_backfill_p165_eval.json",
+    "p166_config": "configs/vlm/symbol_adaptive_page_budget_p166.json",
+    "p166_eval": "reports/vlm/symbol_adaptive_page_budget_p166_eval.json",
+    "p167_config": "configs/vlm/symbol_lightweight_selector_rescue_p167.json",
+    "p167_eval": "reports/vlm/symbol_lightweight_selector_rescue_p167_eval.json"
+  },
+  "official_eval_snapshots": {
+    "p165": {
+      "id": "SCI-P1-101-raster-moe-target-level-evaluation",
+      "target_records": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+      "target_record_count": 992,
+      "evaluated_record_count": 74,
+      "coverage_boundary": "model-output overlays currently cover a 74-row locked subset; full 992-row target set is counted for availability only unless predictions exist",
+      "iou_threshold": 0.3,
+      "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+      "family_availability": {
+        "cubicasa5k": {
+          "records": 493,
+          "boundary": 46109,
+          "space": 5221,
+          "symbol": 16550,
+          "text": 4671
+        },
+        "floorplancad": {
+          "records": 499,
+          "boundary": 1953,
+          "space": 0,
+          "symbol": 2875,
+          "text": 0
+        }
+      },
+      "policies": [
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p160_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1315,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.546323,
+            "recall": 0.524322,
+            "f1": 0.535097
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1293,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.537183,
+            "recall": 0.51555,
+            "f1": 0.526144
+          },
+          "symbol_center_any": {
+            "hit": 1468,
+            "gold": 2508,
+            "recall": 0.585327
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1315,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.546323,
+                "recall": 0.524322,
+                "f1": 0.535097
+              },
+              "symbol_center_any": {
+                "hit": 1468,
+                "gold": 2508,
+                "recall": 0.585327
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.452381,
+            "equipment": 0.532751,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.516739,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.220339,
+            "small": 0.564369,
+            "medium": 0.558511,
+            "large": 0.735469
+          },
+          "by_area_center_recall": {
+            "tiny": 0.377119,
+            "small": 0.604681,
+            "medium": 0.617021,
+            "large": 0.735469
+          },
+          "policy_id": "p160_best"
+        },
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p165_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1318,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.54757,
+            "recall": 0.525518,
+            "f1": 0.536317
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1296,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.53843,
+            "recall": 0.516746,
+            "f1": 0.527365
+          },
+          "symbol_center_any": {
+            "hit": 1469,
+            "gold": 2508,
+            "recall": 0.585726
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1318,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.54757,
+                "recall": 0.525518,
+                "f1": 0.536317
+              },
+              "symbol_center_any": {
+                "hit": 1469,
+                "gold": 2508,
+                "recall": 0.585726
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.507937,
+            "equipment": 0.526201,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.515284,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.218927,
+            "small": 0.572172,
+            "medium": 0.558511,
+            "large": 0.733096
+          },
+          "by_area_center_recall": {
+            "tiny": 0.371469,
+            "small": 0.613784,
+            "medium": 0.617021,
+            "large": 0.733096
+          },
+          "policy_id": "p165_best"
+        }
+      ],
+      "comparisons": [
+        {
+          "policy_id": "p165_best",
+          "baseline_policy": "p160_best",
+          "delta_precision": 0.001247,
+          "delta_recall": 0.001196,
+          "delta_f1": 0.00122,
+          "delta_center_recall": 0.000399,
+          "delta_prediction_inflation": 0.0
+        }
+      ]
+    },
+    "p166": {
+      "id": "SCI-P1-101-raster-moe-target-level-evaluation",
+      "target_records": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+      "target_record_count": 992,
+      "evaluated_record_count": 74,
+      "coverage_boundary": "model-output overlays currently cover a 74-row locked subset; full 992-row target set is counted for availability only unless predictions exist",
+      "iou_threshold": 0.3,
+      "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+      "family_availability": {
+        "cubicasa5k": {
+          "records": 493,
+          "boundary": 46109,
+          "space": 5221,
+          "symbol": 16550,
+          "text": 4671
+        },
+        "floorplancad": {
+          "records": 499,
+          "boundary": 1953,
+          "space": 0,
+          "symbol": 2875,
+          "text": 0
+        }
+      },
+      "policies": [
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p165_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1318,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.54757,
+            "recall": 0.525518,
+            "f1": 0.536317
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1296,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.53843,
+            "recall": 0.516746,
+            "f1": 0.527365
+          },
+          "symbol_center_any": {
+            "hit": 1469,
+            "gold": 2508,
+            "recall": 0.585726
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1318,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.54757,
+                "recall": 0.525518,
+                "f1": 0.536317
+              },
+              "symbol_center_any": {
+                "hit": 1469,
+                "gold": 2508,
+                "recall": 0.585726
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.507937,
+            "equipment": 0.526201,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.515284,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.218927,
+            "small": 0.572172,
+            "medium": 0.558511,
+            "large": 0.733096
+          },
+          "by_area_center_recall": {
+            "tiny": 0.371469,
+            "small": 0.613784,
+            "medium": 0.617021,
+            "large": 0.733096
+          },
+          "policy_id": "p165_best"
+        },
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p166_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1318,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.54757,
+            "recall": 0.525518,
+            "f1": 0.536317
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1296,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.53843,
+            "recall": 0.516746,
+            "f1": 0.527365
+          },
+          "symbol_center_any": {
+            "hit": 1469,
+            "gold": 2508,
+            "recall": 0.585726
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1318,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.54757,
+                "recall": 0.525518,
+                "f1": 0.536317
+              },
+              "symbol_center_any": {
+                "hit": 1469,
+                "gold": 2508,
+                "recall": 0.585726
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.507937,
+            "equipment": 0.526201,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.515284,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.218927,
+            "small": 0.572172,
+            "medium": 0.558511,
+            "large": 0.733096
+          },
+          "by_area_center_recall": {
+            "tiny": 0.371469,
+            "small": 0.613784,
+            "medium": 0.617021,
+            "large": 0.733096
+          },
+          "policy_id": "p166_best"
+        }
+      ],
+      "comparisons": [
+        {
+          "policy_id": "p166_best",
+          "baseline_policy": "p165_best",
+          "delta_precision": 0.0,
+          "delta_recall": 0.0,
+          "delta_f1": 0.0,
+          "delta_center_recall": 0.0,
+          "delta_prediction_inflation": 0.0
+        }
+      ]
+    },
+    "p167": {
+      "id": "SCI-P1-101-raster-moe-target-level-evaluation",
+      "target_records": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+      "target_record_count": 992,
+      "evaluated_record_count": 74,
+      "coverage_boundary": "model-output overlays currently cover a 74-row locked subset; full 992-row target set is counted for availability only unless predictions exist",
+      "iou_threshold": 0.3,
+      "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+      "family_availability": {
+        "cubicasa5k": {
+          "records": 493,
+          "boundary": 46109,
+          "space": 5221,
+          "symbol": 16550,
+          "text": 4671
+        },
+        "floorplancad": {
+          "records": 499,
+          "boundary": 1953,
+          "space": 0,
+          "symbol": 2875,
+          "text": 0
+        }
+      },
+      "policies": [
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p165_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1318,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.54757,
+            "recall": 0.525518,
+            "f1": 0.536317
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1296,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.53843,
+            "recall": 0.516746,
+            "f1": 0.527365
+          },
+          "symbol_center_any": {
+            "hit": 1469,
+            "gold": 2508,
+            "recall": 0.585726
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1318,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.54757,
+                "recall": 0.525518,
+                "f1": 0.536317
+              },
+              "symbol_center_any": {
+                "hit": 1469,
+                "gold": 2508,
+                "recall": 0.585726
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.507937,
+            "equipment": 0.526201,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.515284,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.218927,
+            "small": 0.572172,
+            "medium": 0.558511,
+            "large": 0.733096
+          },
+          "by_area_center_recall": {
+            "tiny": 0.371469,
+            "small": 0.613784,
+            "medium": 0.617021,
+            "large": 0.733096
+          },
+          "policy_id": "p165_best"
+        },
+        {
+          "input": "reports/vlm/symbol_policy_moe_overlay_p167_best.jsonl",
+          "records": 74,
+          "missing_target_rows": 0,
+          "missing_target_row_ids_sample": [],
+          "symbol_iou_any": {
+            "tp": 1318,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.54757,
+            "recall": 0.525518,
+            "f1": 0.536317
+          },
+          "symbol_iou_label_exact": {
+            "tp": 1296,
+            "predicted": 2407,
+            "gold": 2508,
+            "precision": 0.53843,
+            "recall": 0.516746,
+            "f1": 0.527365
+          },
+          "symbol_center_any": {
+            "hit": 1469,
+            "gold": 2508,
+            "recall": 0.585726
+          },
+          "prediction_inflation": 0.959729,
+          "by_source_dataset": {
+            "cubicasa5k": {
+              "records": 74,
+              "symbol_iou_any": {
+                "tp": 1318,
+                "predicted": 2407,
+                "gold": 2508,
+                "precision": 0.54757,
+                "recall": 0.525518,
+                "f1": 0.536317
+              },
+              "symbol_center_any": {
+                "hit": 1469,
+                "gold": 2508,
+                "recall": 0.585726
+              },
+              "prediction_inflation": 0.959729
+            }
+          },
+          "by_label_recall": {
+            "appliance": 0.791541,
+            "bathtub": 1.0,
+            "column": 0.507937,
+            "equipment": 0.526201,
+            "generic_symbol": 0.867647,
+            "shower": 0.172249,
+            "sink": 0.515284,
+            "stair": 0.303738
+          },
+          "by_area_iou_recall": {
+            "tiny": 0.218927,
+            "small": 0.572172,
+            "medium": 0.558511,
+            "large": 0.733096
+          },
+          "by_area_center_recall": {
+            "tiny": 0.371469,
+            "small": 0.613784,
+            "medium": 0.617021,
+            "large": 0.733096
+          },
+          "policy_id": "p167_best"
+        }
+      ],
+      "comparisons": [
+        {
+          "policy_id": "p167_best",
+          "baseline_policy": "p165_best",
+          "delta_precision": 0.0,
+          "delta_recall": 0.0,
+          "delta_f1": 0.0,
+          "delta_center_recall": 0.0,
+          "delta_prediction_inflation": 0.0
+        }
+      ]
+    }
+  }
+}

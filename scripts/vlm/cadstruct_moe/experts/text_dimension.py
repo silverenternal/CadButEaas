@@ -139,7 +139,12 @@ class TextDimensionExpert(PassthroughExpert):
     """
 
     def __init__(self) -> None:
-        super().__init__(name="text_dimension", family="text")
+        super().__init__(
+            name="text_dimension",
+            family="text",
+            label_space=("dimension_line", "dimension_text", "leader_line", "note_text", "room_label"),
+            checkpoint_hint=str(_MODEL_DIR),
+        )
         self.default_label = "dimension_text"
         self._model: Any = None
         self._encoder: Any = None
@@ -158,6 +163,9 @@ class TextDimensionExpert(PassthroughExpert):
             self._class_names = list(data.get("feature_names", FEATURE_NAMES))
         except Exception:
             self._model = None
+
+    def is_loaded(self) -> bool:
+        return self._model is not None
 
     def predict(self, candidates: list[RoutedCandidate]) -> list[ExpertPrediction]:
         if self._model is None:

@@ -1,0 +1,134 @@
+{
+  "id": "SCI-P2-162-paper-metric-tables-after-symbol-rescue",
+  "created_on": "2026-05-17",
+  "decision": "use_p160_as_current_best_bounded_symbol_operating_point",
+  "claim_boundary": "P160 is a bounded 74-row public-raster overlay-subset, post-hoc geometry/tiny-specialist operating point. P161 is a relative guardrail on an available 603-row CubiCasa subset with 66-row overlap; neither supports full-raster high-accuracy or cross-dataset symbol recognition claims.",
+  "headline_symbol_policy": "p160_best",
+  "headline_symbol_metrics": {
+    "tp": 1315,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.546323,
+    "recall": 0.524322,
+    "f1": 0.535097,
+    "center_recall": 0.585327,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "tiny": 0.220339,
+      "small": 0.564369,
+      "medium": 0.558511,
+      "large": 0.735469
+    },
+    "by_area_center_recall": {
+      "tiny": 0.377119,
+      "small": 0.604681,
+      "medium": 0.617021,
+      "large": 0.735469
+    }
+  },
+  "symbol_progression_rows": [
+    {
+      "policy": "v28 baseline",
+      "scope": "74-row public-raster overlay subset",
+      "precision": 0.116124,
+      "recall": 0.713317,
+      "f1": 0.199732,
+      "center_recall": 0.864434,
+      "inflation": 6.142743,
+      "source": "reports/vlm/raster_moe_target_level_eval_p101.json"
+    },
+    {
+      "policy": "P100 precision-at-recall70",
+      "scope": "74-row public-raster overlay subset",
+      "precision": 0.188403,
+      "recall": 0.681419,
+      "f1": 0.29519,
+      "center_recall": 0.824163,
+      "inflation": 3.616826,
+      "source": "reports/vlm/raster_moe_target_level_eval_p101.json"
+    },
+    {
+      "policy": "P155A/P140 materialized",
+      "scope": "74-row public-raster overlay subset; P101 rerun evaluator",
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "inflation": 1.055024,
+      "source": "reports/vlm/symbol_center_hit_box_resize_rescue_p157_eval.json"
+    },
+    {
+      "policy": "P155E precision cleanup",
+      "scope": "74-row public-raster overlay subset; P101 rerun evaluator",
+      "precision": 0.542169,
+      "recall": 0.520335,
+      "f1": 0.531027,
+      "center_recall": 0.573764,
+      "inflation": 0.959729,
+      "source": "reports/vlm/symbol_offmount_wide_search_p155e_eval.json"
+    },
+    {
+      "policy": "P157 center-hit resize",
+      "scope": "74-row public-raster overlay subset; P101 rerun evaluator",
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "inflation": 0.959729,
+      "source": "reports/vlm/symbol_center_hit_box_resize_rescue_p157_eval.json"
+    },
+    {
+      "policy": "P160 tiny specialist",
+      "scope": "74-row public-raster overlay subset; P101 rerun evaluator",
+      "precision": 0.546323,
+      "recall": 0.524322,
+      "f1": 0.535097,
+      "center_recall": 0.585327,
+      "inflation": 0.959729,
+      "source": "reports/vlm/symbol_tiny_specialist_rescue_p160_eval.json"
+    }
+  ],
+  "guardrail_rows": [
+    {
+      "policy": "P161 P155E-style",
+      "scope": "603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset",
+      "precision": 0.689111,
+      "recall": 0.264894,
+      "f1": 0.382685,
+      "center_recall": 0.273406,
+      "inflation": 0.3844
+    },
+    {
+      "policy": "P161 P160-style",
+      "scope": "603-row available CubiCasa guardrail subset; 66-row overlap with P160 subset",
+      "precision": 0.689718,
+      "recall": 0.265128,
+      "f1": 0.383022,
+      "center_recall": 0.27632,
+      "inflation": 0.3844
+    }
+  ],
+  "non_symbol_anchor_rows": [
+    {
+      "family": "image-only room/space",
+      "best_metric": "box-level target F1 0.370752; center recall 0.742448",
+      "claim": "diagnostic only; pixel recall may exceed 0.95 but precision/F1 do not"
+    },
+    {
+      "family": "contains relation",
+      "best_metric": "expected-json replay F1 1.000000 on primary and secondary smoke",
+      "claim": "not runtime model-output; model-output contains-symbol smoke remains negative"
+    },
+    {
+      "family": "selector/text/boundary runtime gaps",
+      "best_metric": "negative probes retained",
+      "claim": "reported as bottleneck/negative evidence"
+    }
+  ],
+  "required_claim_language": [
+    "Use “bounded symbol operating point” for P160, not “solved symbol recognition”.",
+    "Disclose 74-row overlay subset and post-hoc geometry/tiny-specialist policy.",
+    "Disclose P161 as relative CubiCasa guardrail with overlap, not cross-dataset generalization.",
+    "Do not claim >0.95 symbol, full-raster symbol, or end-to-end scene-graph accuracy."
+  ]
+}

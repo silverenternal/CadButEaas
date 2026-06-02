@@ -1,0 +1,139 @@
+{
+  "id": "P207_symbol_paper_assets",
+  "scope": "P101/bootstrap-bounded 74-row symbol overlay evidence",
+  "current_best": {
+    "stage": "P206g",
+    "tp": 1332,
+    "predicted": 1994,
+    "gold": 2508,
+    "precision": 0.668004,
+    "recall": 0.5311,
+    "f1": 0.591737,
+    "center_recall": 0.565789,
+    "prediction_inflation": 0.795056,
+    "by_area_iou_recall": {
+      "large": 0.798438,
+      "medium": 0.505319,
+      "small": 0.598179,
+      "tiny": 0.223164,
+      "xlarge": 0.53202
+    },
+    "by_area_center_recall": {
+      "large": 0.80625,
+      "medium": 0.585106,
+      "small": 0.620286,
+      "tiny": 0.306497,
+      "xlarge": 0.487685
+    }
+  },
+  "bootstrap": {
+    "p206f_vs_p206e": {
+      "f1_delta": {
+        "mean": 0.003476,
+        "ci95": [
+          0.000189,
+          0.007334
+        ],
+        "prob_positive": 0.98
+      },
+      "precision_delta": {
+        "mean": -0.003254,
+        "ci95": [
+          -0.007659,
+          0.000689
+        ],
+        "prob_positive": 0.048
+      },
+      "recall_delta": {
+        "mean": 0.007573,
+        "ci95": [
+          0.003408,
+          0.012259
+        ],
+        "prob_positive": 1.0
+      },
+      "center_delta": {
+        "mean": 0.007991,
+        "ci95": [
+          0.003642,
+          0.012883
+        ],
+        "prob_positive": 1.0
+      }
+    },
+    "p206g_vs_p206f": {
+      "f1_delta": {
+        "mean": 0.001627,
+        "ci95": [
+          0.000388,
+          0.003054
+        ],
+        "prob_positive": 0.998
+      },
+      "precision_delta": {
+        "mean": 0.00218,
+        "ci95": [
+          -1.1e-05,
+          0.005138
+        ],
+        "prob_positive": 0.972
+      },
+      "recall_delta": {
+        "mean": 0.001242,
+        "ci95": [
+          0.0,
+          0.002752
+        ],
+        "prob_positive": 0.967
+      },
+      "center_delta": {
+        "mean": 0.000832,
+        "ci95": [
+          -0.000446,
+          0.002492
+        ],
+        "prob_positive": 0.803
+      }
+    },
+    "p206g_vs_p202": {
+      "f1_delta": {
+        "mean": 0.008016,
+        "ci95": [
+          0.003063,
+          0.013714
+        ],
+        "prob_positive": 1.0
+      },
+      "precision_delta": {
+        "mean": -0.000862,
+        "ci95": [
+          -0.004591,
+          0.003077
+        ],
+        "prob_positive": 0.331
+      },
+      "recall_delta": {
+        "mean": 0.013281,
+        "ci95": [
+          0.007039,
+          0.020897
+        ],
+        "prob_positive": 1.0
+      },
+      "center_delta": {
+        "mean": 0.013253,
+        "ci95": [
+          0.007393,
+          0.01974
+        ],
+        "prob_positive": 1.0
+      }
+    }
+  },
+  "outputs": [
+    "paper_assets/symbol_moe_ablation_table_p207.md",
+    "paper_assets/symbol_moe_pipeline_p203.md",
+    "paper_assets/symbol_claim_boundary_p207.md"
+  ],
+  "claim_boundary": "Internal P101/bootstrap-bounded evidence only; no full-raster, cross-dataset, or >0.95 symbol-F1 claim."
+}

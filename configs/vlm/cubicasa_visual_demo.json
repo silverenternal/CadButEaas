@@ -1,0 +1,122 @@
+{
+  "version": "cadstruct_moe_visual_demo_config_v1",
+  "created": "2026-05-06",
+  "default_predictions": "reports/vlm/e2e_cubicasa_visual_demo_model_predictions.jsonl",
+  "default_output_dir": "reports/vlm/visual_demo",
+  "source_dataset": "cubicasa5k",
+  "sample_id_prefix": "cubicasa5k",
+  "clean_stale_sample_dirs": true,
+  "limit": 5,
+  "max_labels": 28,
+  "min_box_pixels": 2.0,
+  "manifest_version": "cadstruct_moe_visual_demo_manifest_v2",
+  "coverage_version": "cadstruct_moe_visual_coverage_audit_v2",
+  "source_dataset_policy": "Only CubiCasa5K/CubiCasa samples are used in this visual demo.",
+  "review_pack_name": "review_pack_v2",
+  "paper_candidate_figure": "paper_candidate_figure_v2",
+  "review_pack": {
+    "title": "CadStruct-MoE CubiCasa5K Visual Review Pack",
+    "versioned_title": "CadStruct-MoE CubiCasa5K Visual Review Pack v2",
+    "coverage_title": "CadStruct-MoE CubiCasa5K Visual Coverage Audit v2",
+    "purpose": "show input floorplans next to MoE scene-graph recognition overlays, with a short note on recognized and uncertain parts.",
+    "legend_text": "Blue=wall boundary, cyan=door/opening, teal=window/glass, green=space, orange=symbol, purple=visible text labels, brown=dimension/leader aids, gray=sheet, red=warning / needs review. Source is limited to CubiCasa5K samples.",
+    "input_panel_title": "Input CubiCasa5K floorplan",
+    "overlay_panel_title": "MoE scene graph overlay",
+    "scope_text": "samples are selected from CubiCasa5K. The current run uses saved real upstream expert model predictions for labels and SVG/parser candidates for geometry proposals.",
+    "question_text": "This review pack answers the advisor-facing question: what floorplan is used as input, what the model pipeline recognizes, and which parts remain uncertain."
+  },
+  "canvas_policy": {
+    "prefer_svg_viewbox": true,
+    "svg_image_fit": "stretch",
+    "source_canvas_tolerance": 0.0
+  },
+  "background_policy": {
+    "mode": "annotation_render",
+    "reference_input": true,
+    "annotation_render_name": "input_aligned_from_svg.png"
+  },
+  "image_alignment_policy": {
+    "enabled": false,
+    "dark_threshold": 210,
+    "min_component_delta": 28,
+    "min_coverage": 0.2,
+    "margin_pixels": 0
+  },
+  "suspicious_bbox_policy": {
+    "families": ["boundary"],
+    "semantic_types": ["door", "opening", "window"],
+    "large_local_semantic_types": ["door", "opening"],
+    "max_side_over_canvas_side": 0.25,
+    "max_area_over_canvas_area": 0.08,
+    "max_aspect_ratio": 60.0,
+    "min_area_over_canvas_area_for_aspect_rule": 0.01,
+    "skip_reason": "suspect_large_boundary_bbox"
+  },
+  "family_styles": {
+    "boundary": {"stroke": "#1f77b4", "fill": "#1f77b4", "name": "Boundary fallback", "short_name": "Boundary", "order": 1, "fill_opacity": 0.08, "stroke_width": 1.8, "summary_label": "boundary fallback items"},
+    "wall": {"stroke": "#1f77b4", "fill": "#1f77b4", "name": "Wall boundary", "short_name": "Wall", "order": 1, "fill_opacity": 0.07, "stroke_width": 1.9, "summary_label": "walls"},
+    "opening": {"stroke": "#17becf", "fill": "#17becf", "name": "Door / opening", "short_name": "Door/Open", "order": 2, "fill_opacity": 0.06, "stroke_width": 1.5, "summary_label": "doors/openings"},
+    "window": {"stroke": "#007f7f", "fill": "#007f7f", "name": "Window / glass", "short_name": "Window", "order": 3, "fill_opacity": 0.06, "stroke_width": 1.4, "summary_label": "windows/glass"},
+    "space": {"stroke": "#2ca02c", "fill": "#2ca02c", "name": "Space: rooms / regions", "short_name": "Space", "order": 0, "fill_opacity": 0.12, "stroke_width": 1.8, "summary_label": "rooms/spaces"},
+    "symbol": {"stroke": "#ff7f0e", "fill": "#ff7f0e", "name": "Symbol: fixtures / equipment", "short_name": "Symbol", "order": 4, "fill_opacity": 0.08, "stroke_width": 1.3, "summary_label": "fixtures/symbols"},
+    "text": {"stroke": "#9467bd", "fill": "#9467bd", "name": "Visible text: room / dimension labels", "short_name": "Text", "order": 5, "fill_opacity": 0.08, "stroke_width": 1.3, "summary_label": "visible text labels"},
+    "dimension": {"stroke": "#8c564b", "fill": "#8c564b", "name": "Dimension aids: lines / leaders", "short_name": "Dimension", "order": 6, "fill_opacity": 0.06, "stroke_width": 1.1, "summary_label": "dimension/leader aids"},
+    "sheet": {"stroke": "#7f7f7f", "fill": "#7f7f7f", "name": "Sheet: title block / layout", "short_name": "Sheet", "order": 7, "fill_opacity": 0.08, "stroke_width": 1.3, "summary_label": "sheet-layout items"},
+    "warning": {"stroke": "#d62728", "fill": "#d62728", "name": "Warning / needs review", "short_name": "Warning", "order": 8, "fill_opacity": 0.08, "stroke_width": 2.2},
+    "unknown": {"stroke": "#444444", "fill": "#444444", "name": "Unknown family", "short_name": "Unknown", "order": 9, "fill_opacity": 0.08, "stroke_width": 1.3}
+  },
+  "legend": {
+    "family_order": ["wall", "opening", "window", "space", "symbol", "text", "dimension", "sheet", "warning"],
+    "compact_item_width": 120,
+    "full_item_width": 185,
+    "full_warning_item_width": 160,
+    "overlay_extra_height": 58,
+    "side_by_side_extra_height": 64,
+    "row_height": 18
+  },
+  "label_policy": {
+    "family_priority": ["space", "symbol", "wall", "opening", "window", "boundary", "text", "dimension", "sheet"],
+    "min_x_gap": 52,
+    "min_y_gap": 16,
+    "max_label_chars": 28
+  },
+  "semantic_display_family": {
+    "hard_wall": "wall",
+    "partition_wall": "wall",
+    "door": "opening",
+    "opening": "opening",
+    "window": "window",
+    "curtain_wall": "window",
+    "dimension_line": "dimension",
+    "leader_line": "dimension"
+  },
+  "needs_review_policy": {
+    "symbol_requires_room": ["equipment"]
+  },
+  "selection_policy": {
+    "symbol_dense_threshold": 50,
+    "text_dense_threshold": 100,
+    "warning_reason": "Includes warning/uncertain cases so the review pack does not only show best-case recognition.",
+    "symbol_dense_reason": "Symbol-dense CubiCasa5K drawing, useful for fixture/equipment recognition visualization.",
+    "text_dense_reason": "Text/dimension-dense CubiCasa5K drawing, useful for TextDimensionExpert visualization.",
+    "default_reason": "Representative CubiCasa5K drawing with boundary, room, symbol, and text outputs."
+  },
+  "todo_readiness": "Executed. CubiCasa5K visual demo artifacts, coverage audit, review pack, and claim-boundary notes are generated.",
+  "notes": {
+    "title": "CadStruct-MoE Visual Result Demo Notes",
+    "claim_boundary": "This note records the claim boundary for the CubiCasa5K visual result demo.",
+    "dataset_line": "this demo uses CubiCasa5K/CubiCasa floorplan samples only.",
+    "pipeline_line": "each visual is generated from `scene_graph.nodes` and `scene_graph.edges` emitted by `scripts/vlm/run_real_drawing_pipeline.py`.",
+    "source_mode_line": "the current visual run uses saved real upstream expert model predictions for node labels, with SVG/parser candidate geometry proposals.",
+    "interpretation_line": "colored overlays show recognized scene-graph elements. Red marks warnings or elements that need review. Skipped/missing bbox counts in the audit are treated as limitations.",
+    "evaluation_line": "quantitative claims should remain tied to locked evaluation reports; the visual pack is for advisor review and qualitative communication."
+  },
+  "boundary_overlay_audit": {
+    "title": "Boundary Overlay Audit",
+    "finding": "oversized blue outer boxes can come from SVG conversion/visualization artifacts, not necessarily from a new MoE image-model prediction.",
+    "evidence": "affected legacy nodes have `source_expert=cubicasa5k_svg` and `source_mode=expected_json`. Some CubiCasa SVG door paths use relative curve commands; older conversion treated relative path numbers as absolute coordinates, producing page-scale door boxes.",
+    "parser_fix": "`scripts/vlm/convert_cubicasa5k_svg.py` parses basic SVG path commands (`M/L/H/V/Q/C/S/T/A/Z`, absolute and relative) before computing path bboxes.",
+    "renderer_fix": "`scripts/vlm/render_scene_graph_visual_demo.py` now prefers the CubiCasa SVG `viewBox` as the source canvas, skips boxes outside that source canvas, and audits suspicious page-scale `door` / `opening` boundary bboxes as `suspect_large_boundary_bbox`.",
+    "residual_interpretation": "broad blue lines that remain after filtering are generally `hard_wall` structural boundary nodes from CubiCasa SVG, including exterior wall spans; describe them as SVG structural boundaries rather than only indoor room perimeter."
+  }
+}

@@ -1,0 +1,1068 @@
+{
+  "id": "SCI-P2-155E-offmount-wide-threshold-nms-recall-recovery",
+  "created_on": "2026-05-17",
+  "decision": "positive_micro_recall_recovery_over_p155d_keep_as_current_best_precision_point",
+  "claim_boundary": "Bounded post-hoc threshold/NMS sweep on the same 74-row public-raster overlay subset. Runtime policy uses only predicted bbox/label/score; gold targets are evaluation-only.",
+  "source_integrity": "No SVG/parser geometry or gold labels are used by materialized runtime policy. Offline targets are used only for sweep scoring.",
+  "inputs": {
+    "source_overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p084/v28_frozen_detector_baseline.jsonl",
+    "base_overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p155a_p140_best.jsonl"
+  },
+  "baseline_metrics": {
+    "p155a_p140_rerun": {
+      "tp": 1350,
+      "predicted": 2646,
+      "gold": 2508,
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "prediction_inflation": 1.055024
+    },
+    "p155d_label_cleanup_replay": {
+      "tp": 1300,
+      "predicted": 2486,
+      "gold": 2508,
+      "precision": 0.522928,
+      "recall": 0.518341,
+      "f1": 0.520625,
+      "center_recall": 0.575359,
+      "prediction_inflation": 0.991228
+    }
+  },
+  "best_policy": {
+    "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p80_same0.45_any0.75_lNone",
+    "thresholds": {
+      "*": 0.02,
+      "appliance": 0.32,
+      "bathtub": 0.32,
+      "column": 0.4,
+      "equipment": 0.24,
+      "generic_symbol": 0.45,
+      "shower": 0.32,
+      "sink": 0.24,
+      "stair": 0.36
+    },
+    "max_page_keep": 80,
+    "max_label_keep": null,
+    "same_label_nms_iou": 0.45,
+    "any_label_nms_iou": 0.75,
+    "pre_nms_keep": 180
+  },
+  "best_metrics": {
+    "tp": 1305,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.542169,
+    "recall": 0.520335,
+    "f1": 0.531027,
+    "center_recall": 0.573764,
+    "prediction_inflation": 0.959729
+  },
+  "delta_vs_p155d": {
+    "precision": 0.019241,
+    "recall": 0.001994,
+    "f1": 0.010402,
+    "center_recall": -0.001595,
+    "prediction_inflation": -0.031499
+  },
+  "delta_vs_p155a": {
+    "precision": 0.031965,
+    "recall": -0.017943,
+    "f1": 0.007162,
+    "center_recall": -0.025917,
+    "prediction_inflation": -0.095295
+  },
+  "searched_policy_count": 288,
+  "passing_policy_count": 144,
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.542169,
+        "recall": 0.520335,
+        "f1": 0.531027,
+        "center_recall": 0.573764,
+        "prediction_inflation": 0.959729
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.542169,
+        "recall": 0.520335,
+        "f1": 0.531027,
+        "center_recall": 0.573764,
+        "prediction_inflation": 0.959729
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.542917,
+        "recall": 0.519537,
+        "f1": 0.53097,
+        "center_recall": 0.572568,
+        "prediction_inflation": 0.956938
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.542917,
+        "recall": 0.519537,
+        "f1": 0.53097,
+        "center_recall": 0.572568,
+        "prediction_inflation": 0.956938
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p90_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2417,
+        "gold": 2508,
+        "precision": 0.540753,
+        "recall": 0.521132,
+        "f1": 0.530761,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.963716
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p90_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2417,
+        "gold": 2508,
+        "precision": 0.540753,
+        "recall": 0.521132,
+        "f1": 0.530761,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.963716
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2376,
+        "gold": 2508,
+        "precision": 0.545455,
+        "recall": 0.516746,
+        "f1": 0.530713,
+        "center_recall": 0.568581,
+        "prediction_inflation": 0.947368
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2376,
+        "gold": 2508,
+        "precision": 0.545455,
+        "recall": 0.516746,
+        "f1": 0.530713,
+        "center_recall": 0.568581,
+        "prediction_inflation": 0.947368
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p90_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2410,
+        "gold": 2508,
+        "precision": 0.541494,
+        "recall": 0.520335,
+        "f1": 0.530704,
+        "center_recall": 0.574163,
+        "prediction_inflation": 0.960925
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p90_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 90,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2410,
+        "gold": 2508,
+        "precision": 0.541494,
+        "recall": 0.520335,
+        "f1": 0.530704,
+        "center_recall": 0.574163,
+        "prediction_inflation": 0.960925
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p100_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 100,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2418,
+        "gold": 2508,
+        "precision": 0.540529,
+        "recall": 0.521132,
+        "f1": 0.530654,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.964115
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.4_gen0.45_p100_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 100,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2418,
+        "gold": 2508,
+        "precision": 0.540529,
+        "recall": 0.521132,
+        "f1": 0.530654,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.964115
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1294,
+        "predicted": 2369,
+        "gold": 2508,
+        "precision": 0.546222,
+        "recall": 0.515949,
+        "f1": 0.530654,
+        "center_recall": 0.567384,
+        "prediction_inflation": 0.944577
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1294,
+        "predicted": 2369,
+        "gold": 2508,
+        "precision": 0.546222,
+        "recall": 0.515949,
+        "f1": 0.530654,
+        "center_recall": 0.567384,
+        "prediction_inflation": 0.944577
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p100_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 100,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2411,
+        "gold": 2508,
+        "precision": 0.541269,
+        "recall": 0.520335,
+        "f1": 0.530596,
+        "center_recall": 0.574163,
+        "prediction_inflation": 0.961324
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.4_gen0.45_p100_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 100,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2411,
+        "gold": 2508,
+        "precision": 0.541269,
+        "recall": 0.520335,
+        "f1": 0.530596,
+        "center_recall": 0.574163,
+        "prediction_inflation": 0.961324
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.36_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2419,
+        "gold": 2508,
+        "precision": 0.540306,
+        "recall": 0.521132,
+        "f1": 0.530546,
+        "center_recall": 0.57496,
+        "prediction_inflation": 0.964514
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.36_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2419,
+        "gold": 2508,
+        "precision": 0.540306,
+        "recall": 0.521132,
+        "f1": 0.530546,
+        "center_recall": 0.57496,
+        "prediction_inflation": 0.964514
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.36_gen0.45_p80_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2412,
+        "gold": 2508,
+        "precision": 0.541045,
+        "recall": 0.520335,
+        "f1": 0.530488,
+        "center_recall": 0.573764,
+        "prediction_inflation": 0.961722
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.4_col0.36_gen0.45_p80_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 80,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 2412,
+        "gold": 2508,
+        "precision": 0.541045,
+        "recall": 0.520335,
+        "f1": 0.530488,
+        "center_recall": 0.573764,
+        "prediction_inflation": 0.961722
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p90_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2386,
+        "gold": 2508,
+        "precision": 0.544007,
+        "recall": 0.517544,
+        "f1": 0.530445,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.951356
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p90_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2386,
+        "gold": 2508,
+        "precision": 0.544007,
+        "recall": 0.517544,
+        "f1": 0.530445,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.951356
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p90_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2379,
+        "gold": 2508,
+        "precision": 0.544767,
+        "recall": 0.516746,
+        "f1": 0.530387,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.948565
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p90_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 90,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2379,
+        "gold": 2508,
+        "precision": 0.544767,
+        "recall": 0.516746,
+        "f1": 0.530387,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.948565
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p100_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 100,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2387,
+        "gold": 2508,
+        "precision": 0.543779,
+        "recall": 0.517544,
+        "f1": 0.530337,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.951754
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.36_col0.4_gen0.45_p100_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 100,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2387,
+        "gold": 2508,
+        "precision": 0.543779,
+        "recall": 0.517544,
+        "f1": 0.530337,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.951754
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.36_gen0.45_p90_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2429,
+        "gold": 2508,
+        "precision": 0.538905,
+        "recall": 0.52193,
+        "f1": 0.530282,
+        "center_recall": 0.576555,
+        "prediction_inflation": 0.968501
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.32_st0.36_col0.36_gen0.45_p90_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.36,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.32,
+          "sink": 0.24,
+          "stair": 0.36
+        },
+        "max_page_keep": 90,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2429,
+        "gold": 2508,
+        "precision": 0.538905,
+        "recall": 0.52193,
+        "f1": 0.530282,
+        "center_recall": 0.576555,
+        "prediction_inflation": 0.968501
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p100_same0.45_any0.75_lNone",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 100,
+        "max_label_keep": null,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2380,
+        "gold": 2508,
+        "precision": 0.544538,
+        "recall": 0.516746,
+        "f1": 0.530278,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.948963
+      }
+    },
+    {
+      "policy": {
+        "name": "p155e_sh0.34_st0.4_col0.4_gen0.45_p100_same0.45_any0.75_l60",
+        "thresholds": {
+          "*": 0.02,
+          "appliance": 0.32,
+          "bathtub": 0.32,
+          "column": 0.4,
+          "equipment": 0.24,
+          "generic_symbol": 0.45,
+          "shower": 0.34,
+          "sink": 0.24,
+          "stair": 0.4
+        },
+        "max_page_keep": 100,
+        "max_label_keep": 60,
+        "same_label_nms_iou": 0.45,
+        "any_label_nms_iou": 0.75,
+        "pre_nms_keep": 180
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2380,
+        "gold": 2508,
+        "precision": 0.544538,
+        "recall": 0.516746,
+        "f1": 0.530278,
+        "center_recall": 0.568979,
+        "prediction_inflation": 0.948963
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p155e_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_offmount_wide_search_p155e.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_offmount_wide_search_p155e.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_offmount_wide_search_p155e_eval.json",
+  "official_metrics": {
+    "p155a_p140": {
+      "tp": 1350,
+      "predicted": 2646,
+      "gold": 2508,
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "prediction_inflation": 1.055024
+    },
+    "p155d_label_cleanup": {
+      "tp": 1295,
+      "predicted": 2374,
+      "gold": 2508,
+      "precision": 0.545493,
+      "recall": 0.516348,
+      "f1": 0.53052,
+      "center_recall": 0.568182,
+      "prediction_inflation": 0.946571
+    },
+    "p155e_best": {
+      "tp": 1305,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.542169,
+      "recall": 0.520335,
+      "f1": 0.531027,
+      "center_recall": 0.573764,
+      "prediction_inflation": 0.959729
+    }
+  },
+  "delta_vs_p155d_official": {
+    "precision": -0.003324,
+    "recall": 0.003987,
+    "f1": 0.000507,
+    "center_recall": 0.005582,
+    "prediction_inflation": 0.013158
+  },
+  "delta_vs_p155a_official": {
+    "precision": 0.031965,
+    "recall": -0.017943,
+    "f1": 0.007162,
+    "center_recall": -0.025917,
+    "prediction_inflation": -0.095295
+  },
+  "recommendation": {
+    "current_best": "p155e_best",
+    "reason": "official P101 materialized eval gives the best F1 so far in the P155D/E precision-cleanup family while recovering a small amount of recall over P155D.",
+    "caveat": "仍是 74-row overlay subset 的 post-hoc operating point；recall 仍低于 P155A/P140，不能作为高准确率最终结论。",
+    "next": "P155F should test subset/generalization guardrail or P156 should update manuscript tables with clear bounded claim if no more symbol rescue is attempted."
+  }
+}

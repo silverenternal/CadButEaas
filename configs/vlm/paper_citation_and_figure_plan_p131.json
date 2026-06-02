@@ -1,0 +1,144 @@
+{
+  "id": "SCI-P2-131-citations-figures-formatting-polish",
+  "created_on": "2026-05-16",
+  "decision": "citation_figure_table_polish_plan_ready",
+  "manuscript": "reports/vlm/manuscript_draft_v0_1_p130.md",
+  "citation_checklist": [
+    {
+      "topic": "Raster floorplan parsing datasets and benchmarks",
+      "need": "Cite public floorplan datasets and floorplan parsing benchmarks used to contextualize CubiCasa/public-raster style evaluation.",
+      "placeholder": "[CITE: floorplan dataset / CubiCasa5K / public raster benchmark]"
+    },
+    {
+      "topic": "Raster-to-vector CAD reconstruction",
+      "need": "Cite work converting raster architectural drawings into vector/CAD structures.",
+      "placeholder": "[CITE: raster-to-vector floorplan/CAD reconstruction]"
+    },
+    {
+      "topic": "Architectural symbol detection",
+      "need": "Cite symbol/fixture detection in floorplans or technical drawings.",
+      "placeholder": "[CITE: architectural symbol detection]"
+    },
+    {
+      "topic": "OCR/text in technical drawings",
+      "need": "Cite OCR or text-region recognition for engineering/floorplan drawings.",
+      "placeholder": "[CITE: technical drawing OCR]"
+    },
+    {
+      "topic": "Scene graph generation / structured prediction",
+      "need": "Cite general scene graph or structured relation extraction work for entity-relation framing.",
+      "placeholder": "[CITE: scene graph generation / structured prediction]"
+    },
+    {
+      "topic": "Mixture-of-experts and gating",
+      "need": "Cite MoE/gating literature to support modular expert/policy framing.",
+      "placeholder": "[CITE: mixture-of-experts gating]"
+    },
+    {
+      "topic": "Reproducible evaluation and model auditing",
+      "need": "Cite ML evaluation/audit/benchmarking work for claim-boundary framing.",
+      "placeholder": "[CITE: reproducible ML evaluation / model audit]"
+    }
+  ],
+  "figure_plan": [
+    {
+      "figure": "Figure 1",
+      "title": "Audit-gated MoE runtime contract and policy handoff",
+      "type": "schematic",
+      "status": "ready_to_draw_from_spec",
+      "source": "reports/vlm/paper_methods_runtime_contract_p127.md",
+      "panels": [
+        "A runtime inputs vs forbidden shortcuts",
+        "B expert branches",
+        "C policy registry and opt-in gates",
+        "D audit outputs and claim boundaries"
+      ]
+    },
+    {
+      "figure": "Figure 2",
+      "title": "Symbol operating-point trade-off",
+      "type": "bar_or_grouped_line_chart",
+      "status": "data_ready",
+      "source": "configs/vlm/paper_metric_tables_p126.json",
+      "data": [
+        {
+          "policy_id": "v28_frozen_detector_baseline",
+          "precision": 0.116124,
+          "recall": 0.713317,
+          "f1": 0.199732,
+          "prediction_inflation": 6.142743,
+          "center_recall": 0.864434
+        },
+        {
+          "policy_id": "p076_balanced_opt_in",
+          "precision": 0.116313,
+          "recall": 0.734051,
+          "f1": 0.200807,
+          "prediction_inflation": 6.311005,
+          "center_recall": 0.866427
+        },
+        {
+          "policy_id": "p100_precision_at_recall70",
+          "precision": 0.188403,
+          "recall": 0.681419,
+          "f1": 0.29519,
+          "prediction_inflation": 3.616826,
+          "center_recall": 0.824163
+        }
+      ],
+      "recommendation": "Use grouped bars for precision/recall/F1 and a secondary small panel for prediction inflation."
+    },
+    {
+      "figure": "Figure 3",
+      "title": "Image-only diagnostic examples",
+      "type": "qualitative_grid",
+      "status": "optional_needs_case_selection",
+      "source": "evaluated image-only rows only",
+      "recommendation": "Only include if examples are traceable to evaluated rows; otherwise defer to appendix/future work."
+    }
+  ],
+  "table_formatting_plan": [
+    {
+      "table": "Claim-evidence matrix",
+      "action": "keep_main",
+      "reason": "Clarifies bounded claims early and protects against overclaiming."
+    },
+    {
+      "table": "Public-raster symbol target-level results",
+      "action": "keep_main",
+      "reason": "Main quantitative result."
+    },
+    {
+      "table": "Image-only target-level diagnostics",
+      "action": "keep_main_or_secondary",
+      "reason": "Supports room/space positive claim and symbol/text negative claim."
+    },
+    {
+      "table": "Contains relation expected-json replay",
+      "action": "keep_main_with_boundary_note",
+      "reason": "Strong relation-policy result but needs replay caveat."
+    },
+    {
+      "table": "Pixel mask quality audit",
+      "action": "move_appendix",
+      "reason": "Explains image-only branch behavior but is not main headline."
+    },
+    {
+      "table": "Selector/compression bottlenecks",
+      "action": "appendix_or_negative_section",
+      "reason": "Important negative evidence; can be compressed if page-limited."
+    }
+  ],
+  "formatting_tasks": [
+    "Convert Markdown tables to target journal table style when template is known.",
+    "Shorten appendix tables if page-limited.",
+    "Keep Figure 1 schematic before experiments.",
+    "Use citation placeholders until verified references are selected.",
+    "Run final claim audit after any citation/figure edits."
+  ],
+  "do_not_do": [
+    "Do not fabricate bibliographic details.",
+    "Do not add new metric claims not in P126.",
+    "Do not present Figure 3 qualitative cases as quantitative evidence."
+  ]
+}

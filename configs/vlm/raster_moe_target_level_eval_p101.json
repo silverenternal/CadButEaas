@@ -1,0 +1,20 @@
+{
+  "id": "SCI-P1-101-raster-moe-target-level-evaluation",
+  "created_on": "2026-05-15",
+  "script": "scripts/vlm/evaluate_raster_moe_target_level_p101.py",
+  "target_records": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+  "iou_threshold": 0.3,
+  "policies": {
+    "v28_frozen_detector_baseline": "reports/vlm/symbol_policy_moe_overlay_p084/v28_frozen_detector_baseline.jsonl",
+    "p076_balanced_opt_in": "reports/vlm/symbol_policy_moe_overlay_p084/p076_balanced_opt_in.jsonl",
+    "p100_precision_at_recall70": "reports/vlm/symbol_policy_moe_overlay_p084/p100_precision_at_recall70.jsonl"
+  },
+  "baseline_policy": "v28_frozen_detector_baseline",
+  "outputs": {
+    "summary": "reports/vlm/raster_moe_target_level_eval_p101.json",
+    "report": "reports/vlm/raster_moe_target_level_eval_p101.md"
+  },
+  "claim_boundary": "target-level symbol metrics only; not relation graph quality",
+  "coverage_boundary": "model-output overlays currently cover a 74-row locked subset; full 992-row target set is counted for availability only unless predictions exist",
+  "next_recommendation": "Extend model-output coverage beyond the current 74 CubiCasa overlay rows and add boundary/space/text outputs before claiming full raster MoE quality."
+}

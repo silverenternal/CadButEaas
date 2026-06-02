@@ -1,0 +1,73 @@
+{
+  "id": "SCI-P2-127-methods-runtime-contract-policy-handoff-draft",
+  "created_on": "2026-05-16",
+  "decision": "methods_runtime_contract_draft_ready_for_manuscript_v0_1",
+  "paper_section_targets": [
+    "Section 3 Data and Runtime Contract",
+    "Section 4 Audit-Gated MoE Pipeline"
+  ],
+  "source_artifacts": [
+    "reports/vlm/paper_draft_outline_p126.md",
+    "reports/vlm/paper_metric_tables_p126.md",
+    "reports/vlm/manuscript_skeleton_evidence_map_p110.md",
+    "reports/vlm/raster_evidence_consolidation_p108.md"
+  ],
+  "runtime_contract": {
+    "allowed_runtime_inputs": [
+      "raster floorplan image",
+      "model-generated masks/boxes/scores",
+      "policy registry configuration",
+      "audit/evaluation targets for offline validation only"
+    ],
+    "forbidden_runtime_shortcuts": [
+      "SVG/oracle geometry as model input",
+      "expected-json relations as runtime predictions",
+      "gold target boxes for filtering model outputs",
+      "offline labels for runtime selector decisions"
+    ],
+    "evaluation_modes": {
+      "target_level_model_output": "Used for public-raster symbols and image-only family boxes.",
+      "expected_json_replay": "Used only for contains-relation policy validation.",
+      "negative_probe": "Used for selector/compressor bottleneck analysis without runtime adoption."
+    }
+  },
+  "pipeline_blocks": [
+    {
+      "name": "Input normalization",
+      "purpose": "Prepare raster/image inputs and record IDs for traceable expert outputs."
+    },
+    {
+      "name": "Family experts",
+      "purpose": "Generate boundary, space, symbol, and text candidates or masks."
+    },
+    {
+      "name": "Policy handoff",
+      "purpose": "Select opt-in policies under frozen baselines and explicit promotion gates."
+    },
+    {
+      "name": "Relation layer",
+      "purpose": "Apply relation policies under clearly separated runtime or replay modes."
+    },
+    {
+      "name": "Audit layer",
+      "purpose": "Compute locked metrics, deltas, failure buckets, and claim boundaries."
+    }
+  ],
+  "figure_spec": {
+    "figure_id": "Figure 1",
+    "title": "Audit-gated MoE runtime contract and policy handoff",
+    "panels": [
+      "A: runtime inputs and forbidden shortcuts",
+      "B: expert branches",
+      "C: policy registry and opt-in gates",
+      "D: evaluation modes and claim boundaries"
+    ],
+    "caption_draft": "The proposed pipeline separates model-output experts, opt-in policy handoff, relation replay, and offline audit gates. This prevents expected-json or target-level evidence from being mistaken for runtime end-to-end scene-graph robustness."
+  },
+  "claim_boundaries_to_repeat": [
+    "74-row overlay subset for public-raster symbol target-level metrics",
+    "61-row image-only target-level diagnostics for multifamily boxes",
+    "expected-json/oracle replay only for contains relation policy",
+    "P123/P124 selector/compressor probes failed at least one gate and are not runtime defaults"
+  ]
+}

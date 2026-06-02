@@ -1,0 +1,128 @@
+{
+  "id": "SCI-P1-106-mask-to-box-extraction-repair",
+  "created_on": "2026-05-15",
+  "decision": "positive_for_space_negative_for_symbol_text",
+  "script": "scripts/vlm/build_image_only_mask_to_box_repair_p106.py",
+  "claim_boundary": "non-oracle predicted mask/prob-mask to box extraction on 61-row image-only v15 path; no gold boxes/target masks used at runtime; target-level only",
+  "selected_variant": "s80_sym192_a500",
+  "selected_predictions": "reports/vlm/image_only_moe_predictions_v15_p106_s80_sym192_a500.jsonl",
+  "selected_eval": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+  "variant_evals": {
+    "default": "reports/vlm/image_only_multifamily_target_eval_p106_default.json",
+    "s64_sym192_a100": "reports/vlm/image_only_multifamily_target_eval_p106_s64_sym192_a100.json",
+    "s80_sym192_a250": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a250.json",
+    "s80_sym192_a500": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json"
+  },
+  "metrics": {
+    "baseline": {
+      "space": {
+        "tp": 1,
+        "predicted": 14,
+        "gold": 629,
+        "precision": 0.071429,
+        "recall": 0.00159,
+        "f1": 0.00311
+      },
+      "symbol": {
+        "tp": 0,
+        "predicted": 409,
+        "gold": 1574,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "text": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "p104_best_mask_component": {
+      "space": {
+        "tp": 3,
+        "predicted": 75,
+        "gold": 629,
+        "precision": 0.04,
+        "recall": 0.004769,
+        "f1": 0.008523
+      },
+      "symbol": {
+        "tp": 0,
+        "predicted": 702,
+        "gold": 1574,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      },
+      "text": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "p106_selected": {
+      "space": {
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629,
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752
+      },
+      "symbol": {
+        "tp": 29,
+        "predicted": 1598,
+        "gold": 1574,
+        "precision": 0.018148,
+        "recall": 0.018424,
+        "f1": 0.018285
+      },
+      "text": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 523,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    },
+    "p103_diagnostic_ceiling": {
+      "space": {
+        "tp": 629,
+        "predicted": 643,
+        "gold": 629,
+        "precision": 0.978227,
+        "recall": 1.0,
+        "f1": 0.988994
+      },
+      "symbol": {
+        "tp": 1495,
+        "predicted": 1904,
+        "gold": 1574,
+        "precision": 0.785189,
+        "recall": 0.949809,
+        "f1": 0.859689
+      },
+      "text": {
+        "tp": 523,
+        "predicted": 523,
+        "gold": 523,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  },
+  "interpretation": [
+    "Room/space extraction improves substantially using predicted room mask minus boundary blockers plus grid splitting.",
+    "Symbol remains weak despite pixel-level signal; semantic mask is too diffuse/merged for box recovery by simple components.",
+    "Text remains unsupported and should move to OCR/retraining rather than mask-to-box tuning."
+  ],
+  "next_recommendation": "P107 should focus on symbol proposal localization/suppression or a detector branch; keep P106 room repair as an opt-in diagnostic improvement."
+}

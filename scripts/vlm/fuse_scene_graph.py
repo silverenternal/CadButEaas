@@ -79,12 +79,17 @@ def fuse_record(record: dict[str, Any], source: str, disable_repairs: bool) -> d
         "edges": edges,
     }
     normalize_scene_graph_contract_fields(scene_graph["nodes"], scene_graph["edges"])
+    quality_warnings = apply_quality_flags(scene_graph["nodes"], scene_graph["edges"])
+    warnings.extend(quality_warnings)
+    if warnings:
+        fused["warnings"] = sorted(set(str(item) for item in warnings))
     is_valid, graph_errors = validate_scene_graph(
         {"nodes": nodes, "edges": edges}
     )
     fused["scene_graph"] = scene_graph
     fused["metadata"] = dict(fused.get("metadata") or {})
     fused["metadata"]["scene_graph_warnings"] = warnings
+    fused["metadata"]["structured_warnings"] = structured_warnings(warnings)
     fused["metadata"]["repair_events"] = repair_events
     fused["metadata"]["scene_graph_valid"] = is_valid
     fused["metadata"]["scene_graph_contract_errors"] = graph_errors
@@ -105,6 +110,63 @@ def fuse_record(record: dict[str, Any], source: str, disable_repairs: bool) -> d
             "scene_graph_valid": is_valid,
         },
     }
+
+
+def apply_quality_flags(nodes: list[dict[str, Any]], edges: list[dict[str, Any]]) -> list[str]:
+    warnings: list[str] = []
+    rooms = [node for node in nodes if str(node.get("family")) == "space"]
+    for node in nodes:
+        node.setdefault("quality_flags", [])
+        flags = node["quality_flags"]
+        if not isinstance(flags, list):
+            flags = []
+            node["quality_flags"] = flags
+        node_id = str(node.get("id") or "")
+        bbox = normalize_bbox((node.get("geometry") or {}).get("bbox"))
+        if bbox is None:
+            flags.append("missing_bbox")
+            warnings.append(f"quality_flag:{node_id}:missing_bbox")
+            continue
+        if str(node.get("family")) == "symbol" and str(node.get("semantic_type")) == "equipment":
+            if not any((room_bbox := normalize_bbox((room.get("geometry") or {}).get("bbox"))) and bbox_hosts_symbol(room_bbox, bbox) for room in rooms):
+                flags.append("needs_review_outside_room")
+                warnings.append(f"quality_flag:{node_id}:needs_review_outside_room")
+        if str(node.get("family")) == "text":
+            metadata = node.get("metadata") if isinstance(node.get("metadata"), dict) else {}
+            if not str(metadata.get("text") or "").strip():
+                flags.append("text_without_content")
+                warnings.append(f"quality_flag:{node_id}:text_without_content")
+    for event in repaired_node_ids(edges):
+        node = next((item for item in nodes if str(item.get("id") or "") == event), None)
+        if node is not None:
+            flags = node.setdefault("quality_flags", [])
+            if isinstance(flags, list) and "relation_repaired" not in flags:
+                flags.append("relation_repaired")
+    return sorted(set(warnings))
+
+
+def repaired_node_ids(edges: list[dict[str, Any]]) -> set[str]:
+    result: set[str] = set()
+    for edge in edges:
+        repair = edge.get("repair")
+        if isinstance(repair, dict):
+            for key in ("node_id", "target_id"):
+                if repair.get(key):
+                    result.add(str(repair[key]))
+    return result
+
+
+def structured_warnings(warnings: list[str]) -> list[dict[str, str]]:
+    structured = []
+    for warning in warnings:
+        parts = str(warning).split(":")
+        item = {"rule": parts[0], "severity": "warning", "message": str(warning)}
+        if len(parts) >= 2:
+            item["node_id"] = parts[1]
+        if len(parts) >= 3:
+            item["detail"] = ":".join(parts[2:])
+        structured.append(item)
+    return structured
 
 
 def apply_constraint_repairs(
@@ -631,6 +693,29 @@ def bbox_distance(left: list[float], right: list[float]) -> float:
     dx = max(left[0] - right[2], right[0] - left[2], 0.0)
     dy = max(left[1] - right[3], right[1] - left[3], 0.0)
     return math.hypot(dx, dy)
+
+
+def bbox_contains(left: list[float], right: list[float]) -> bool:
+    return left[0] <= right[0] and left[1] <= right[1] and left[2] >= right[2] and left[3] >= right[3]
+
+
+def bbox_hosts_symbol(room_bbox: list[float], symbol_bbox: list[float], min_overlap: float = 0.2) -> bool:
+    if bbox_contains(room_bbox, symbol_bbox):
+        return True
+    cx = (symbol_bbox[0] + symbol_bbox[2]) / 2.0
+    cy = (symbol_bbox[1] + symbol_bbox[3]) / 2.0
+    if room_bbox[0] <= cx <= room_bbox[2] and room_bbox[1] <= cy <= room_bbox[3]:
+        return True
+    return bbox_overlap_ratio(room_bbox, symbol_bbox) >= min_overlap
+
+
+def bbox_overlap_ratio(left: list[float], right: list[float]) -> float:
+    ix1 = max(left[0], right[0])
+    iy1 = max(left[1], right[1])
+    ix2 = min(left[2], right[2])
+    iy2 = min(left[3], right[3])
+    intersection = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+    return intersection / max((right[2] - right[0]) * (right[3] - right[1]), 1.0)
 
 
 def load_jsonl(path: Path) -> list[dict[str, Any]]:

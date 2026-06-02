@@ -1,0 +1,23 @@
+{
+  "version": "symbol_detector_frontier_view_v47",
+  "output_dir": "datasets/symbol_detector_frontier_v47",
+  "smoke_output": "datasets/symbol_detector_frontier_v47_smoke",
+  "datasets": {
+    "FloorPlanCAD": "datasets/floorplancad_symbol_pretrain_v16/train.jsonl",
+    "CubiCasa_train": "datasets/cadstruct_symbols_v1/train.jsonl",
+    "CubiCasa_dev": "datasets/cadstruct_symbols_v1/dev.jsonl",
+    "CubiCasa_locked": "datasets/cadstruct_symbols_v1/locked.jsonl"
+  },
+  "split_counts": {
+    "floorplancad_train": 1500,
+    "cubi_train": 4426,
+    "cubi_dev": 491,
+    "cubi_locked": 0
+  },
+  "smoke_limit": 250,
+  "source_integrity": {
+    "runtime_input": "raster image only",
+    "offline_supervision": "bbox/type supervision from existing converted datasets only",
+    "svg_or_cad_geometry_at_runtime": false
+  }
+}

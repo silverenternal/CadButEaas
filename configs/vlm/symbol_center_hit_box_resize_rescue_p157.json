@@ -1,0 +1,3088 @@
+{
+  "id": "SCI-P2-157-symbol-center-hit-box-resize-rescue",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p157_current_best_symbol_precision_point",
+  "claim_boundary": "Post-hoc box-resize sweep on 74-row public-raster overlay subset. Runtime transform uses predicted bbox/label/score and fixed config only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p155a_p140": {
+      "tp": 1350,
+      "predicted": 2646,
+      "gold": 2508,
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "prediction_inflation": 1.055024,
+      "by_area_iou_recall": {
+        "large": 0.815625,
+        "medium": 0.56383,
+        "small": 0.590377,
+        "tiny": 0.228814,
+        "xlarge": 0.522167
+      },
+      "by_area_center_recall": {
+        "large": 0.81875,
+        "medium": 0.611702,
+        "small": 0.63459,
+        "tiny": 0.384181,
+        "xlarge": 0.517241
+      },
+      "by_label_precision_proxy": {
+        "appliance": 0.609977,
+        "bathtub": 0.142857,
+        "column": 0.407895,
+        "equipment": 0.547297,
+        "generic_symbol": 0.601467,
+        "shower": 0.296296,
+        "sink": 0.531065,
+        "stair": 0.392473
+      }
+    },
+    "p155e_best": {
+      "tp": 1305,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.542169,
+      "recall": 0.520335,
+      "f1": 0.531027,
+      "center_recall": 0.573764,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.809375,
+        "medium": 0.558511,
+        "small": 0.556567,
+        "tiny": 0.216102,
+        "xlarge": 0.497537
+      },
+      "by_area_center_recall": {
+        "large": 0.8125,
+        "medium": 0.606383,
+        "small": 0.595579,
+        "tiny": 0.34887,
+        "xlarge": 0.492611
+      },
+      "by_label_precision_proxy": {
+        "appliance": 0.609977,
+        "bathtub": 0.142857,
+        "column": 0.469565,
+        "equipment": 0.548753,
+        "generic_symbol": 0.601467,
+        "shower": 0.414634,
+        "sink": 0.532641,
+        "stair": 0.436242
+      }
+    }
+  },
+  "center_gap_diagnostics": {
+    "by_area": {
+      "large": {
+        "center_hit": 564,
+        "center_hit_iou_fail": 11,
+        "fail_rate_among_center_hits": 0.019504
+      },
+      "medium": {
+        "center_hit": 140,
+        "center_hit_iou_fail": 25,
+        "fail_rate_among_center_hits": 0.178571
+      },
+      "small": {
+        "center_hit": 536,
+        "center_hit_iou_fail": 103,
+        "fail_rate_among_center_hits": 0.192164
+      },
+      "tiny": {
+        "center_hit": 554,
+        "center_hit_iou_fail": 383,
+        "fail_rate_among_center_hits": 0.691336
+      },
+      "xlarge": {
+        "center_hit": 149,
+        "center_hit_iou_fail": 4,
+        "fail_rate_among_center_hits": 0.026846
+      }
+    },
+    "by_pred_label": {
+      "appliance": {
+        "center_hit": 284,
+        "center_hit_iou_fail": 11,
+        "fail_rate_among_center_hits": 0.038732
+      },
+      "bathtub": {
+        "center_hit": 12,
+        "center_hit_iou_fail": 10,
+        "fail_rate_among_center_hits": 0.833333
+      },
+      "column": {
+        "center_hit": 62,
+        "center_hit_iou_fail": 7,
+        "fail_rate_among_center_hits": 0.112903
+      },
+      "equipment": {
+        "center_hit": 357,
+        "center_hit_iou_fail": 51,
+        "fail_rate_among_center_hits": 0.142857
+      },
+      "generic_symbol": {
+        "center_hit": 291,
+        "center_hit_iou_fail": 45,
+        "fail_rate_among_center_hits": 0.154639
+      },
+      "shower": {
+        "center_hit": 133,
+        "center_hit_iou_fail": 65,
+        "fail_rate_among_center_hits": 0.488722
+      },
+      "sink": {
+        "center_hit": 692,
+        "center_hit_iou_fail": 313,
+        "fail_rate_among_center_hits": 0.452312
+      },
+      "stair": {
+        "center_hit": 112,
+        "center_hit_iou_fail": 24,
+        "fail_rate_among_center_hits": 0.214286
+      }
+    },
+    "samples": [
+      {
+        "row_id": "cubicasa5k_locked_00000",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2297,
+        "gold_bbox": [
+          675.706,
+          689.498,
+          679.706,
+          693.498
+        ],
+        "pred_bbox": [
+          674.1005935668945,
+          688.161979675293,
+          682.6694717407227,
+          696.2922897338867
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00000",
+        "gold_bucket": "tiny",
+        "pred_label": "shower",
+        "iou": 0.2554,
+        "gold_bbox": [
+          761.586,
+          670.622,
+          764.986,
+          676.722
+        ],
+        "pred_bbox": [
+          754.99560546875,
+          671.2206497192383,
+          765.4168701171875,
+          678.0515823364258
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00000",
+        "gold_bucket": "tiny",
+        "pred_label": "shower",
+        "iou": 0.1689,
+        "gold_bbox": [
+          745.086,
+          685.422,
+          753.186,
+          687.322
+        ],
+        "pred_bbox": [
+          744.9542388916016,
+          678.755126953125,
+          753.9378356933594,
+          688.8986434936523
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00000",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2777,
+        "gold_bbox": [
+          743.566,
+          569.069,
+          747.566,
+          573.069
+        ],
+        "pred_bbox": [
+          743.0521240234375,
+          563.92138671875,
+          749.269775390625,
+          573.189453125
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00002",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2581,
+        "gold_bbox": [
+          459.626,
+          768.249,
+          463.626,
+          772.249
+        ],
+        "pred_bbox": [
+          456.6326675415039,
+          767.1621704101562,
+          464.63258361816406,
+          774.9110412597656
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00002",
+        "gold_bucket": "tiny",
+        "pred_label": "shower",
+        "iou": 0.2265,
+        "gold_bbox": [
+          592.158,
+          783.376,
+          595.558,
+          789.476
+        ],
+        "pred_bbox": [
+          591.078351020813,
+          781.5921325683594,
+          602.5869750976562,
+          789.5479736328125
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00002",
+        "gold_bucket": "tiny",
+        "pred_label": "shower",
+        "iou": 0.2396,
+        "gold_bbox": [
+          606.658,
+          781.476,
+          609.358,
+          789.476
+        ],
+        "pred_bbox": [
+          604.6543502807617,
+          782.146240234375,
+          615.6654663085938,
+          789.4517822265625
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00002",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2897,
+        "gold_bbox": [
+          115.167,
+          594.633,
+          119.167,
+          598.633
+        ],
+        "pred_bbox": [
+          114.43852233886719,
+          591.3881378173828,
+          121.96258544921875,
+          598.7278289794922
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "column",
+        "iou": 0.2682,
+        "gold_bbox": [
+          1291.6,
+          1489.66,
+          1301.6,
+          1499.83
+        ],
+        "pred_bbox": [
+          1284.6314086914062,
+          1485.3631591796875,
+          1297.8767700195312,
+          1499.3106689453125
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "column",
+        "iou": 0.2858,
+        "gold_bbox": [
+          1764.16,
+          1488.05,
+          1777.16,
+          1499.83
+        ],
+        "pred_bbox": [
+          1760.2242431640625,
+          1483.156982421875,
+          1773.654541015625,
+          1495.5224609375
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.059,
+        "gold_bbox": [
+          1320.12,
+          541.843,
+          1327.12,
+          548.843
+        ],
+        "pred_bbox": [
+          1304.4368591308594,
+          537.514892578125,
+          1342.0116271972656,
+          559.6161804199219
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.0193,
+        "gold_bbox": [
+          1321.62,
+          543.343,
+          1325.62,
+          547.343
+        ],
+        "pred_bbox": [
+          1304.4368591308594,
+          537.514892578125,
+          1342.0116271972656,
+          559.6161804199219
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2144,
+        "gold_bbox": [
+          1745.143,
+          542.078,
+          1752.143,
+          549.078
+        ],
+        "pred_bbox": [
+          1740.7137145996094,
+          539.9957275390625,
+          1756.6417388916016,
+          554.3475341796875
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.07,
+        "gold_bbox": [
+          1746.643,
+          543.578,
+          1750.643,
+          547.578
+        ],
+        "pred_bbox": [
+          1740.7137145996094,
+          539.9957275390625,
+          1756.6417388916016,
+          554.3475341796875
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "sink",
+        "iou": 0.1936,
+        "gold_bbox": [
+          1746.546,
+          534.445,
+          1752.546,
+          548.445
+        ],
+        "pred_bbox": [
+          1740.7137145996094,
+          539.9957275390625,
+          1756.6417388916016,
+          554.3475341796875
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2514,
+        "gold_bbox": [
+          1333.301,
+          953.859,
+          1337.301,
+          957.859
+        ],
+        "pred_bbox": [
+          1329.6115417480469,
+          952.7751617431641,
+          1336.733901977539,
+          960.1240997314453
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.2308,
+        "gold_bbox": [
+          1145.412,
+          582.327,
+          1160.225,
+          598.995
+        ],
+        "pred_bbox": [
+          1144.3193664550781,
+          580.8207702636719,
+          1174.6359558105469,
+          616.1034545898438
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.1008,
+        "gold_bbox": [
+          1176.516,
+          629.276,
+          1190.622,
+          644.899
+        ],
+        "pred_bbox": [
+          1144.8226013183594,
+          611.2198333740234,
+          1186.4671630859375,
+          646.6837158203125
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.1152,
+        "gold_bbox": [
+          1170.015,
+          607.343,
+          1183.917,
+          620.851
+        ],
+        "pred_bbox": [
+          1144.3065185546875,
+          597.6241760253906,
+          1179.876220703125,
+          628.6114807128906
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "medium",
+        "pred_label": "equipment",
+        "iou": 0.0788,
+        "gold_bbox": [
+          1011.343,
+          805.662,
+          1027.343,
+          821.662
+        ],
+        "pred_bbox": [
+          1003.8335571289062,
+          800.135326385498,
+          1061.541015625,
+          856.4140167236328
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.0788,
+        "gold_bbox": [
+          1039.343,
+          805.662,
+          1055.343,
+          821.662
+        ],
+        "pred_bbox": [
+          1003.8335571289062,
+          800.135326385498,
+          1061.541015625,
+          856.4140167236328
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "medium",
+        "pred_label": "equipment",
+        "iou": 0.0788,
+        "gold_bbox": [
+          1011.343,
+          833.562,
+          1027.343,
+          849.562
+        ],
+        "pred_bbox": [
+          1003.8335571289062,
+          800.135326385498,
+          1061.541015625,
+          856.4140167236328
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.2616,
+        "gold_bbox": [
+          1487.682,
+          804.319,
+          1491.682,
+          808.319
+        ],
+        "pred_bbox": [
+          1483.9891357421875,
+          803.6134948730469,
+          1491.895751953125,
+          811.3503723144531
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.2744,
+        "gold_bbox": [
+          1502.882,
+          803.525,
+          1516.882,
+          809.525
+        ],
+        "pred_bbox": [
+          1499.8108520507812,
+          806.0075378417969,
+          1514.3196411132812,
+          813.094970703125
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.0225,
+        "gold_bbox": [
+          856.23,
+          916.514,
+          863.23,
+          923.514
+        ],
+        "pred_bbox": [
+          833.2820434570312,
+          893.0954666137695,
+          873.7903747558594,
+          946.8411254882812
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.0073,
+        "gold_bbox": [
+          857.73,
+          918.014,
+          861.73,
+          922.014
+        ],
+        "pred_bbox": [
+          833.2820434570312,
+          893.0954666137695,
+          873.7903747558594,
+          946.8411254882812
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.0902,
+        "gold_bbox": [
+          1730.604,
+          949.567,
+          1737.604,
+          956.567
+        ],
+        "pred_bbox": [
+          1728.0452648177743,
+          929.6883544921875,
+          1746.0045585632324,
+          959.9302062988281
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "tiny",
+        "pred_label": "sink",
+        "iou": 0.0295,
+        "gold_bbox": [
+          1732.104,
+          951.067,
+          1736.104,
+          955.067
+        ],
+        "pred_bbox": [
+          1728.0452648177743,
+          929.6883544921875,
+          1746.0045585632324,
+          959.9302062988281
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.0946,
+        "gold_bbox": [
+          1910.335,
+          628.018,
+          1925.148,
+          644.686
+        ],
+        "pred_bbox": [
+          1878.1986541748047,
+          598.0619201660156,
+          1922.2994537353516,
+          644.7632751464844
+        ]
+      },
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold_bucket": "small",
+        "pred_label": "equipment",
+        "iou": 0.1018,
+        "gold_bbox": [
+          1879.938,
+          582.114,
+          1894.043,
+          597.737
+        ],
+        "pred_bbox": [
+          1875.302978515625,
+          577.6944489479065,
+          1921.7984313964844,
+          624.2537879943848
+        ]
+      }
+    ]
+  },
+  "searched_policy_count": 144,
+  "passing_policy_count": 144,
+  "best_policy": {
+    "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls3",
+    "default_scale": [
+      1.0,
+      1.0
+    ],
+    "bucket_scale": {
+      "tiny": [
+        1.0,
+        1.0
+      ],
+      "small": [
+        1.2,
+        1.05
+      ],
+      "medium": [
+        1.2,
+        0.95
+      ],
+      "large": [
+        1.0,
+        1.0
+      ],
+      "xlarge": [
+        1.0,
+        1.0
+      ]
+    },
+    "label_scale": {
+      "sink": [
+        1.05,
+        1.0
+      ],
+      "equipment": [
+        1.05,
+        1.0
+      ],
+      "appliance": [
+        1.05,
+        1.0
+      ]
+    },
+    "min_size": 0.0
+  },
+  "best_metrics": {
+    "tp": 1313,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.545492,
+    "recall": 0.523525,
+    "f1": 0.534283,
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729,
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.563069,
+      "tiny": 0.218927,
+      "xlarge": 0.497537
+    },
+    "by_area_center_recall": {
+      "large": 0.8125,
+      "medium": 0.617021,
+      "small": 0.605982,
+      "tiny": 0.372881,
+      "xlarge": 0.492611
+    },
+    "by_label_precision_proxy": {
+      "appliance": 0.609977,
+      "bathtub": 0.142857,
+      "column": 0.495652,
+      "equipment": 0.557823,
+      "generic_symbol": 0.599022,
+      "shower": 0.432927,
+      "sink": 0.531157,
+      "stair": 0.436242
+    }
+  },
+  "delta_vs_p155e": {
+    "precision": 0.003323,
+    "recall": 0.00319,
+    "f1": 0.003256,
+    "center_recall": 0.010766,
+    "prediction_inflation": 0.0
+  },
+  "delta_vs_p155a": {
+    "precision": 0.035288,
+    "recall": -0.014753,
+    "f1": 0.010418,
+    "center_recall": -0.015151,
+    "prediction_inflation": -0.095295
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.372881,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.582536,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.553191,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.367232,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.555556,
+          "generic_symbol": 0.601467,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.582536,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.553191,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.367232,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.555556,
+          "generic_symbol": 0.601467,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.581738,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.362994,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.581738,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.362994,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.58134,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.362994,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.58134,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.362994,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.579745,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.604681,
+          "tiny": 0.360169,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545077,
+        "recall": 0.523126,
+        "f1": 0.533876,
+        "center_recall": 0.579745,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.604681,
+          "tiny": 0.360169,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.544661,
+        "recall": 0.522727,
+        "f1": 0.533469,
+        "center_recall": 0.580144,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.807813,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.360169,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.544661,
+        "recall": 0.522727,
+        "f1": 0.533469,
+        "center_recall": 0.580144,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.807813,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.220339,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.360169,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.532641,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls3",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.54383,
+        "recall": 0.52193,
+        "f1": 0.532655,
+        "center_recall": 0.586124,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.379944,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls3",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.54383,
+        "recall": 0.52193,
+        "f1": 0.532655,
+        "center_recall": 0.586124,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.379944,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms8.0_ls3",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1308,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543415,
+        "recall": 0.521531,
+        "f1": 0.532248,
+        "center_recall": 0.584131,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.553191,
+          "small": 0.563069,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.555556,
+          "generic_symbol": 0.601467,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms8.0_ls3",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1308,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543415,
+        "recall": 0.521531,
+        "f1": 0.532248,
+        "center_recall": 0.584131,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.553191,
+          "small": 0.563069,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.374294,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.555556,
+          "generic_symbol": 0.601467,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.589713,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.20904,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.391243,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.523739,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls3",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "sink": [
+            1.05,
+            1.0
+          ],
+          "equipment": [
+            1.05,
+            1.0
+          ],
+          "appliance": [
+            1.05,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.589713,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.564369,
+          "tiny": 0.20904,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.391243,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.523739,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.587321,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.382768,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls1",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.587321,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.605982,
+          "tiny": 0.382768,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.586922,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.382768,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.586922,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.605982,
+          "tiny": 0.382768,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.604681,
+          "tiny": 0.379944,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.4, 1.15)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms0.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.4,
+            1.15
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 0.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.585327,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.211864,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.604681,
+          "tiny": 0.379944,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.426829,
+          "sink": 0.526706,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls1",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.583732,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.371469,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls1",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {
+          "generic_symbol": [
+            1.1,
+            1.0
+          ]
+        },
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.583732,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.617021,
+          "small": 0.604681,
+          "tiny": 0.371469,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.371469,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.2, 0.95)_l(1.0, 1.0)_ms8.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.2,
+            0.95
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.611702,
+          "small": 0.604681,
+          "tiny": 0.371469,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.553288,
+          "generic_symbol": 0.599022,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.0, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms8.0_ls0",
+        "default_scale": [
+          1.0,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.581738,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.603381,
+          "tiny": 0.368644,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p157_d(1.1, 1.0)_t(1.0, 1.0)_s(1.2, 1.05)_m(1.0, 1.0)_l(1.0, 1.0)_ms8.0_ls0",
+        "default_scale": [
+          1.1,
+          1.0
+        ],
+        "bucket_scale": {
+          "tiny": [
+            1.0,
+            1.0
+          ],
+          "small": [
+            1.2,
+            1.05
+          ],
+          "medium": [
+            1.0,
+            1.0
+          ],
+          "large": [
+            1.0,
+            1.0
+          ],
+          "xlarge": [
+            1.0,
+            1.0
+          ]
+        },
+        "label_scale": {},
+        "min_size": 8.0
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.543,
+        "recall": 0.521132,
+        "f1": 0.531841,
+        "center_recall": 0.581738,
+        "prediction_inflation": 0.959729,
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.561769,
+          "tiny": 0.213277,
+          "xlarge": 0.497537
+        },
+        "by_area_center_recall": {
+          "large": 0.8125,
+          "medium": 0.606383,
+          "small": 0.603381,
+          "tiny": 0.368644,
+          "xlarge": 0.492611
+        },
+        "by_label_precision_proxy": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.486957,
+          "equipment": 0.553288,
+          "generic_symbol": 0.601467,
+          "shower": 0.408537,
+          "sink": 0.531157,
+          "stair": 0.436242
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p157_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_center_hit_box_resize_rescue_p157.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_center_hit_box_resize_rescue_p157.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_center_hit_box_resize_rescue_p157_eval.json",
+  "official_metrics": {
+    "p155a_p140": {
+      "tp": 1350,
+      "predicted": 2646,
+      "gold": 2508,
+      "precision": 0.510204,
+      "recall": 0.538278,
+      "f1": 0.523865,
+      "center_recall": 0.599681,
+      "prediction_inflation": 1.055024,
+      "by_area_iou_recall": {
+        "tiny": 0.228814,
+        "small": 0.590377,
+        "medium": 0.56383,
+        "large": 0.744958
+      },
+      "by_area_center_recall": {
+        "tiny": 0.384181,
+        "small": 0.63459,
+        "medium": 0.611702,
+        "large": 0.746145
+      },
+      "by_label_recall": {
+        "appliance": 0.791541,
+        "bathtub": 1.0,
+        "column": 0.492063,
+        "equipment": 0.528384,
+        "generic_symbol": 0.871324,
+        "shower": 0.229665,
+        "sink": 0.518195,
+        "stair": 0.331776
+      }
+    },
+    "p155e_best": {
+      "tp": 1305,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.542169,
+      "recall": 0.520335,
+      "f1": 0.531027,
+      "center_recall": 0.573764,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "tiny": 0.216102,
+        "small": 0.556567,
+        "medium": 0.558511,
+        "large": 0.734282
+      },
+      "by_area_center_recall": {
+        "tiny": 0.34887,
+        "small": 0.595579,
+        "medium": 0.606383,
+        "large": 0.735469
+      },
+      "by_label_recall": {
+        "appliance": 0.791541,
+        "bathtub": 1.0,
+        "column": 0.428571,
+        "equipment": 0.526201,
+        "generic_symbol": 0.871324,
+        "shower": 0.162679,
+        "sink": 0.518195,
+        "stair": 0.303738
+      }
+    },
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "tiny": 0.218927,
+        "small": 0.563069,
+        "medium": 0.558511,
+        "large": 0.735469
+      },
+      "by_area_center_recall": {
+        "tiny": 0.372881,
+        "small": 0.605982,
+        "medium": 0.617021,
+        "large": 0.735469
+      },
+      "by_label_recall": {
+        "appliance": 0.791541,
+        "bathtub": 1.0,
+        "column": 0.452381,
+        "equipment": 0.534934,
+        "generic_symbol": 0.867647,
+        "shower": 0.169856,
+        "sink": 0.516739,
+        "stair": 0.303738
+      }
+    }
+  },
+  "delta_vs_p155e_official": {
+    "precision": 0.003323,
+    "recall": 0.00319,
+    "f1": 0.003256,
+    "center_recall": 0.010766,
+    "prediction_inflation": 0.0
+  },
+  "delta_vs_p155a_official": {
+    "precision": 0.035288,
+    "recall": -0.014753,
+    "f1": 0.010418,
+    "center_recall": -0.015151,
+    "prediction_inflation": -0.095295
+  },
+  "recommendation": {
+    "current_best": "p157_best",
+    "reason": "official materialized P101 eval improves both precision and recall over P155E with no inflation increase.",
+    "next": "Continue with P158 label-conditioned calibration or P159 support-aware merge; P157 did not solve tiny recall enough, so do not freeze yet."
+  }
+}

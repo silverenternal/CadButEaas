@@ -1,0 +1,2396 @@
+{
+  "id": "SCI-P2-178-symbol-combinatorial-prune-rescue",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p178",
+  "claim_boundary": "Runtime-safe combinatorial low-yield group prune over P165; gold only for offline mining/eval.",
+  "baseline_metrics": {
+    "p165_best": {
+      "tp": 1318,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.54757,
+      "recall": 0.525518,
+      "f1": 0.536317,
+      "center_recall": 0.585726,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.809375,
+        "medium": 0.558511,
+        "small": 0.572172,
+        "tiny": 0.218927,
+        "xlarge": 0.492611
+      },
+      "by_area_center_recall": {
+        "large": 0.810937,
+        "medium": 0.617021,
+        "small": 0.613784,
+        "tiny": 0.371469,
+        "xlarge": 0.487685
+      }
+    },
+    "p177_best": {
+      "tp": 1301,
+      "predicted": 2195,
+      "gold": 2508,
+      "precision": 0.592711,
+      "recall": 0.51874,
+      "f1": 0.553264,
+      "center_recall": 0.5626,
+      "prediction_inflation": 0.875199,
+      "by_area_iou_recall": {
+        "large": 0.8,
+        "medium": 0.505319,
+        "small": 0.573472,
+        "tiny": 0.218927,
+        "xlarge": 0.482759
+      },
+      "by_area_center_recall": {
+        "large": 0.803125,
+        "medium": 0.590426,
+        "small": 0.609883,
+        "tiny": 0.310734,
+        "xlarge": 0.477833
+      }
+    }
+  },
+  "group_stats": [
+    {
+      "key": "appliance|small",
+      "n": 26,
+      "tp": 0,
+      "fp": 26,
+      "precision": 0.0
+    },
+    {
+      "key": "column|xlarge",
+      "n": 5,
+      "tp": 0,
+      "fp": 5,
+      "precision": 0.0
+    },
+    {
+      "key": "stair|medium",
+      "n": 3,
+      "tp": 0,
+      "fp": 3,
+      "precision": 0.0
+    },
+    {
+      "key": "appliance|tiny",
+      "n": 2,
+      "tp": 0,
+      "fp": 2,
+      "precision": 0.0
+    },
+    {
+      "key": "bathtub|large",
+      "n": 2,
+      "tp": 0,
+      "fp": 2,
+      "precision": 0.0
+    },
+    {
+      "key": "column|tiny",
+      "n": 2,
+      "tp": 0,
+      "fp": 2,
+      "precision": 0.0
+    },
+    {
+      "key": "generic_symbol|small",
+      "n": 2,
+      "tp": 0,
+      "fp": 2,
+      "precision": 0.0
+    },
+    {
+      "key": "sink|xlarge",
+      "n": 1,
+      "tp": 0,
+      "fp": 1,
+      "precision": 0.0
+    },
+    {
+      "key": "generic_symbol|medium",
+      "n": 36,
+      "tp": 2,
+      "fp": 34,
+      "precision": 0.055556
+    },
+    {
+      "key": "equipment|tiny",
+      "n": 7,
+      "tp": 1,
+      "fp": 6,
+      "precision": 0.142857
+    },
+    {
+      "key": "sink|medium",
+      "n": 145,
+      "tp": 23,
+      "fp": 122,
+      "precision": 0.158621
+    },
+    {
+      "key": "bathtub|xlarge",
+      "n": 12,
+      "tp": 2,
+      "fp": 10,
+      "precision": 0.166667
+    },
+    {
+      "key": "equipment|medium",
+      "n": 36,
+      "tp": 13,
+      "fp": 23,
+      "precision": 0.361111
+    },
+    {
+      "key": "shower|small",
+      "n": 137,
+      "tp": 56,
+      "fp": 81,
+      "precision": 0.408759
+    },
+    {
+      "key": "column|large",
+      "n": 24,
+      "tp": 10,
+      "fp": 14,
+      "precision": 0.416667
+    },
+    {
+      "key": "stair|xlarge",
+      "n": 91,
+      "tp": 39,
+      "fp": 52,
+      "precision": 0.428571
+    },
+    {
+      "key": "column|small",
+      "n": 56,
+      "tp": 24,
+      "fp": 32,
+      "precision": 0.428571
+    },
+    {
+      "key": "stair|large",
+      "n": 57,
+      "tp": 26,
+      "fp": 31,
+      "precision": 0.45614
+    },
+    {
+      "key": "appliance|large",
+      "n": 89,
+      "tp": 42,
+      "fp": 47,
+      "precision": 0.47191
+    },
+    {
+      "key": "shower|medium",
+      "n": 2,
+      "tp": 1,
+      "fp": 1,
+      "precision": 0.5
+    },
+    {
+      "key": "sink|small",
+      "n": 139,
+      "tp": 70,
+      "fp": 69,
+      "precision": 0.503597
+    },
+    {
+      "key": "equipment|small",
+      "n": 253,
+      "tp": 145,
+      "fp": 108,
+      "precision": 0.573123
+    },
+    {
+      "key": "equipment|large",
+      "n": 99,
+      "tp": 57,
+      "fp": 42,
+      "precision": 0.575758
+    },
+    {
+      "key": "shower|tiny",
+      "n": 26,
+      "tp": 15,
+      "fp": 11,
+      "precision": 0.576923
+    },
+    {
+      "key": "sink|tiny",
+      "n": 119,
+      "tp": 69,
+      "fp": 50,
+      "precision": 0.579832
+    },
+    {
+      "key": "column|medium",
+      "n": 47,
+      "tp": 30,
+      "fp": 17,
+      "precision": 0.638298
+    },
+    {
+      "key": "generic_symbol|large",
+      "n": 350,
+      "tp": 227,
+      "fp": 123,
+      "precision": 0.648571
+    },
+    {
+      "key": "appliance|medium",
+      "n": 316,
+      "tp": 220,
+      "fp": 96,
+      "precision": 0.696203
+    },
+    {
+      "key": "sink|large",
+      "n": 259,
+      "tp": 196,
+      "fp": 63,
+      "precision": 0.756757
+    },
+    {
+      "key": "generic_symbol|xlarge",
+      "n": 21,
+      "tp": 16,
+      "fp": 5,
+      "precision": 0.761905
+    },
+    {
+      "key": "equipment|xlarge",
+      "n": 35,
+      "tp": 27,
+      "fp": 8,
+      "precision": 0.771429
+    },
+    {
+      "key": "appliance|xlarge",
+      "n": 8,
+      "tp": 7,
+      "fp": 1,
+      "precision": 0.875
+    }
+  ],
+  "searched_policy_count": 1695,
+  "passing_policy_count": 766,
+  "best_policy": {
+    "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__column-large__stair-xlarge",
+    "drop_label_buckets": [
+      "appliance|small",
+      "column|xlarge",
+      "generic_symbol|medium",
+      "sink|medium",
+      "column|large",
+      "stair|xlarge"
+    ],
+    "max_score": 0.8
+  },
+  "best_metrics": {
+    "tp": 1286,
+    "predicted": 2131,
+    "gold": 2508,
+    "precision": 0.603473,
+    "recall": 0.512759,
+    "f1": 0.55443,
+    "center_recall": 0.555423,
+    "prediction_inflation": 0.849681,
+    "by_area_iou_recall": {
+      "large": 0.795312,
+      "medium": 0.5,
+      "small": 0.572172,
+      "tiny": 0.218927,
+      "xlarge": 0.433498
+    },
+    "by_area_center_recall": {
+      "large": 0.796875,
+      "medium": 0.585106,
+      "small": 0.608583,
+      "tiny": 0.310734,
+      "xlarge": 0.418719
+    }
+  },
+  "delta_vs_p165": {
+    "precision": 0.055903,
+    "recall": -0.012759,
+    "f1": 0.018113,
+    "center_recall": -0.030303,
+    "prediction_inflation": -0.110048
+  },
+  "delta_vs_p177": {
+    "precision": 0.010762,
+    "recall": -0.005981,
+    "f1": 0.001166,
+    "center_recall": -0.007177,
+    "prediction_inflation": -0.025518
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1286,
+        "predicted": 2131,
+        "gold": 2508,
+        "precision": 0.603473,
+        "recall": 0.512759,
+        "f1": 0.55443,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.849681,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.585106,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.055903,
+        "recall": -0.012759,
+        "f1": 0.018113,
+        "center_recall": -0.030303,
+        "prediction_inflation": -0.110048
+      },
+      "delta_vs_p177": {
+        "precision": 0.010762,
+        "recall": -0.005981,
+        "f1": 0.001166,
+        "center_recall": -0.007177,
+        "prediction_inflation": -0.025518
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1285,
+        "predicted": 2129,
+        "gold": 2508,
+        "precision": 0.60357,
+        "recall": 0.51236,
+        "f1": 0.554238,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.848884,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.5,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.798438,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.309322,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.056,
+        "recall": -0.013158,
+        "f1": 0.017921,
+        "center_recall": -0.030702,
+        "prediction_inflation": -0.110845
+      },
+      "delta_vs_p177": {
+        "precision": 0.010859,
+        "recall": -0.00638,
+        "f1": 0.000974,
+        "center_recall": -0.007576,
+        "prediction_inflation": -0.026315
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1284,
+        "predicted": 2126,
+        "gold": 2508,
+        "precision": 0.603951,
+        "recall": 0.511962,
+        "f1": 0.554165,
+        "center_recall": 0.553429,
+        "prediction_inflation": 0.847687,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.423645
+        },
+        "by_area_center_recall": {
+          "large": 0.798438,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.30791,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.056381,
+        "recall": -0.013556,
+        "f1": 0.017848,
+        "center_recall": -0.032297,
+        "prediction_inflation": -0.112042
+      },
+      "delta_vs_p177": {
+        "precision": 0.01124,
+        "recall": -0.006778,
+        "f1": 0.000901,
+        "center_recall": -0.009171,
+        "prediction_inflation": -0.027512
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1288,
+        "predicted": 2141,
+        "gold": 2508,
+        "precision": 0.601588,
+        "recall": 0.513557,
+        "f1": 0.554098,
+        "center_recall": 0.55622,
+        "prediction_inflation": 0.853668,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.309322,
+          "xlarge": 0.423645
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.054018,
+        "recall": -0.011961,
+        "f1": 0.017781,
+        "center_recall": -0.029506,
+        "prediction_inflation": -0.106061
+      },
+      "delta_vs_p177": {
+        "precision": 0.008877,
+        "recall": -0.005183,
+        "f1": 0.000834,
+        "center_recall": -0.00638,
+        "prediction_inflation": -0.021531
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__bathtub-xlarge__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2138,
+        "gold": 2508,
+        "precision": 0.601964,
+        "recall": 0.513158,
+        "f1": 0.554025,
+        "center_recall": 0.554625,
+        "prediction_inflation": 0.852472,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.423645
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.30791,
+          "xlarge": 0.413793
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.054394,
+        "recall": -0.01236,
+        "f1": 0.017708,
+        "center_recall": -0.031101,
+        "prediction_inflation": -0.107257
+      },
+      "delta_vs_p177": {
+        "precision": 0.009253,
+        "recall": -0.005582,
+        "f1": 0.000761,
+        "center_recall": -0.007975,
+        "prediction_inflation": -0.022727
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__sink-medium__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1286,
+        "predicted": 2136,
+        "gold": 2508,
+        "precision": 0.60206,
+        "recall": 0.512759,
+        "f1": 0.553833,
+        "center_recall": 0.555821,
+        "prediction_inflation": 0.851675,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.798438,
+          "medium": 0.585106,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05449,
+        "recall": -0.012759,
+        "f1": 0.017516,
+        "center_recall": -0.029905,
+        "prediction_inflation": -0.108054
+      },
+      "delta_vs_p177": {
+        "precision": 0.009349,
+        "recall": -0.005981,
+        "f1": 0.000569,
+        "center_recall": -0.006779,
+        "prediction_inflation": -0.023524
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1286,
+        "predicted": 2136,
+        "gold": 2508,
+        "precision": 0.60206,
+        "recall": 0.512759,
+        "f1": 0.553833,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.851675,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.423645
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.306497,
+          "xlarge": 0.413793
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05449,
+        "recall": -0.012759,
+        "f1": 0.017516,
+        "center_recall": -0.0315,
+        "prediction_inflation": -0.108054
+      },
+      "delta_vs_p177": {
+        "precision": 0.009349,
+        "recall": -0.005981,
+        "f1": 0.000569,
+        "center_recall": -0.008374,
+        "prediction_inflation": -0.023524
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1289,
+        "predicted": 2148,
+        "gold": 2508,
+        "precision": 0.600093,
+        "recall": 0.513955,
+        "f1": 0.553694,
+        "center_recall": 0.557018,
+        "prediction_inflation": 0.856459,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.423645
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.052523,
+        "recall": -0.011563,
+        "f1": 0.017377,
+        "center_recall": -0.028708,
+        "prediction_inflation": -0.10327
+      },
+      "delta_vs_p177": {
+        "precision": 0.007382,
+        "recall": -0.004785,
+        "f1": 0.00043,
+        "center_recall": -0.005582,
+        "prediction_inflation": -0.01874
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2181,
+        "gold": 2508,
+        "precision": 0.59514,
+        "recall": 0.517544,
+        "f1": 0.553636,
+        "center_recall": 0.562201,
+        "prediction_inflation": 0.869617,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.585106,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.482759
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.04757,
+        "recall": -0.007974,
+        "f1": 0.017319,
+        "center_recall": -0.023525,
+        "prediction_inflation": -0.090112
+      },
+      "delta_vs_p177": {
+        "precision": 0.002429,
+        "recall": -0.001196,
+        "f1": 0.000372,
+        "center_recall": -0.000399,
+        "prediction_inflation": -0.005582
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__bathtub-xlarge__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1297,
+        "predicted": 2178,
+        "gold": 2508,
+        "precision": 0.5955,
+        "recall": 0.517145,
+        "f1": 0.553564,
+        "center_recall": 0.560606,
+        "prediction_inflation": 0.868421,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.472906
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.04793,
+        "recall": -0.008373,
+        "f1": 0.017247,
+        "center_recall": -0.02512,
+        "prediction_inflation": -0.091308
+      },
+      "delta_vs_p177": {
+        "precision": 0.002789,
+        "recall": -0.001595,
+        "f1": 0.0003,
+        "center_recall": -0.001994,
+        "prediction_inflation": -0.006778
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1288,
+        "predicted": 2146,
+        "gold": 2508,
+        "precision": 0.600186,
+        "recall": 0.513557,
+        "f1": 0.553502,
+        "center_recall": 0.556619,
+        "prediction_inflation": 0.855662,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.309322,
+          "xlarge": 0.423645
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.052616,
+        "recall": -0.011961,
+        "f1": 0.017185,
+        "center_recall": -0.029107,
+        "prediction_inflation": -0.104067
+      },
+      "delta_vs_p177": {
+        "precision": 0.007475,
+        "recall": -0.005183,
+        "f1": 0.000238,
+        "center_recall": -0.005981,
+        "prediction_inflation": -0.019537
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2143,
+        "gold": 2508,
+        "precision": 0.60056,
+        "recall": 0.513158,
+        "f1": 0.553429,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.854466,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.423645
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.30791,
+          "xlarge": 0.413793
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05299,
+        "recall": -0.01236,
+        "f1": 0.017112,
+        "center_recall": -0.030702,
+        "prediction_inflation": -0.105263
+      },
+      "delta_vs_p177": {
+        "precision": 0.007849,
+        "recall": -0.005582,
+        "f1": 0.000165,
+        "center_recall": -0.007576,
+        "prediction_inflation": -0.020733
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1296,
+        "predicted": 2176,
+        "gold": 2508,
+        "precision": 0.595588,
+        "recall": 0.516746,
+        "f1": 0.553373,
+        "center_recall": 0.560207,
+        "prediction_inflation": 0.867624,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.472906
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.048018,
+        "recall": -0.008772,
+        "f1": 0.017056,
+        "center_recall": -0.025519,
+        "prediction_inflation": -0.092105
+      },
+      "delta_vs_p177": {
+        "precision": 0.002877,
+        "recall": -0.001994,
+        "f1": 0.000109,
+        "center_recall": -0.002393,
+        "prediction_inflation": -0.007575
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2188,
+        "gold": 2508,
+        "precision": 0.593693,
+        "recall": 0.517943,
+        "f1": 0.553237,
+        "center_recall": 0.562998,
+        "prediction_inflation": 0.872408,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.585106,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.482759
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.046123,
+        "recall": -0.007575,
+        "f1": 0.01692,
+        "center_recall": -0.022728,
+        "prediction_inflation": -0.087321
+      },
+      "delta_vs_p177": {
+        "precision": 0.000982,
+        "recall": -0.000797,
+        "f1": -2.7e-05,
+        "center_recall": 0.000398,
+        "prediction_inflation": -0.002791
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2188,
+        "gold": 2508,
+        "precision": 0.593693,
+        "recall": 0.517943,
+        "f1": 0.553237,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.872408,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.046123,
+        "recall": -0.007575,
+        "f1": 0.01692,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.087321
+      },
+      "delta_vs_p177": {
+        "precision": 0.000982,
+        "recall": -0.000797,
+        "f1": -2.7e-05,
+        "center_recall": -0.001196,
+        "prediction_inflation": -0.002791
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo4_score0.8_appliance-small__generic_symbol-medium__sink-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1289,
+        "predicted": 2153,
+        "gold": 2508,
+        "precision": 0.598699,
+        "recall": 0.513955,
+        "f1": 0.5531,
+        "center_recall": 0.557416,
+        "prediction_inflation": 0.858453,
+        "by_area_iou_recall": {
+          "large": 0.798438,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.423645
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.051129,
+        "recall": -0.011563,
+        "f1": 0.016783,
+        "center_recall": -0.02831,
+        "prediction_inflation": -0.101276
+      },
+      "delta_vs_p177": {
+        "precision": 0.005988,
+        "recall": -0.004785,
+        "f1": -0.000164,
+        "center_recall": -0.005184,
+        "prediction_inflation": -0.016746
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1298,
+        "predicted": 2186,
+        "gold": 2508,
+        "precision": 0.593779,
+        "recall": 0.517544,
+        "f1": 0.553046,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.871611,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.482759
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.046209,
+        "recall": -0.007974,
+        "f1": 0.016729,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.088118
+      },
+      "delta_vs_p177": {
+        "precision": 0.001068,
+        "recall": -0.001196,
+        "f1": -0.000218,
+        "center_recall": 0.0,
+        "prediction_inflation": -0.003588
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1297,
+        "predicted": 2183,
+        "gold": 2508,
+        "precision": 0.594137,
+        "recall": 0.517145,
+        "f1": 0.552974,
+        "center_recall": 0.561005,
+        "prediction_inflation": 0.870415,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.472906
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.046567,
+        "recall": -0.008373,
+        "f1": 0.016657,
+        "center_recall": -0.024721,
+        "prediction_inflation": -0.089314
+      },
+      "delta_vs_p177": {
+        "precision": 0.001426,
+        "recall": -0.001595,
+        "f1": -0.00029,
+        "center_recall": -0.001595,
+        "prediction_inflation": -0.004784
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__sink-medium__equipment-medium__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "equipment|medium",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1274,
+        "predicted": 2100,
+        "gold": 2508,
+        "precision": 0.606667,
+        "recall": 0.507974,
+        "f1": 0.552951,
+        "center_recall": 0.551037,
+        "prediction_inflation": 0.837321,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.457447,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.79375,
+          "medium": 0.542553,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.413793
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.059097,
+        "recall": -0.017544,
+        "f1": 0.016634,
+        "center_recall": -0.034689,
+        "prediction_inflation": -0.122408
+      },
+      "delta_vs_p177": {
+        "precision": 0.013956,
+        "recall": -0.010766,
+        "f1": -0.000313,
+        "center_recall": -0.011563,
+        "prediction_inflation": -0.037878
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2198,
+        "gold": 2508,
+        "precision": 0.591902,
+        "recall": 0.51874,
+        "f1": 0.552911,
+        "center_recall": 0.563796,
+        "prediction_inflation": 0.876396,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.044332,
+        "recall": -0.006778,
+        "f1": 0.016594,
+        "center_recall": -0.02193,
+        "prediction_inflation": -0.083333
+      },
+      "delta_vs_p177": {
+        "precision": -0.000809,
+        "recall": 0.0,
+        "f1": -0.000353,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.001197
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__bathtub-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1300,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592255,
+        "recall": 0.518341,
+        "f1": 0.552839,
+        "center_recall": 0.562201,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.044685,
+        "recall": -0.007177,
+        "f1": 0.016522,
+        "center_recall": -0.023525,
+        "prediction_inflation": -0.08453
+      },
+      "delta_vs_p177": {
+        "precision": -0.000456,
+        "recall": -0.000399,
+        "f1": -0.000425,
+        "center_recall": -0.000399,
+        "prediction_inflation": 0.0
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__equipment-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "equipment|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1277,
+        "predicted": 2112,
+        "gold": 2508,
+        "precision": 0.60464,
+        "recall": 0.509171,
+        "f1": 0.552814,
+        "center_recall": 0.552632,
+        "prediction_inflation": 0.842105,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.462766,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.795312,
+          "medium": 0.553191,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05707,
+        "recall": -0.016347,
+        "f1": 0.016497,
+        "center_recall": -0.033094,
+        "prediction_inflation": -0.117624
+      },
+      "delta_vs_p177": {
+        "precision": 0.011929,
+        "recall": -0.009569,
+        "f1": -0.00045,
+        "center_recall": -0.009968,
+        "prediction_inflation": -0.033094
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo4_score0.8_appliance-small__generic_symbol-medium__sink-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2193,
+        "gold": 2508,
+        "precision": 0.592339,
+        "recall": 0.517943,
+        "f1": 0.552648,
+        "center_recall": 0.563397,
+        "prediction_inflation": 0.874402,
+        "by_area_iou_recall": {
+          "large": 0.796875,
+          "medium": 0.5,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.585106,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.482759
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.044769,
+        "recall": -0.007575,
+        "f1": 0.016331,
+        "center_recall": -0.022329,
+        "prediction_inflation": -0.085327
+      },
+      "delta_vs_p177": {
+        "precision": -0.000372,
+        "recall": -0.000797,
+        "f1": -0.000616,
+        "center_recall": 0.000797,
+        "prediction_inflation": -0.000797
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2193,
+        "gold": 2508,
+        "precision": 0.592339,
+        "recall": 0.517943,
+        "f1": 0.552648,
+        "center_recall": 0.561802,
+        "prediction_inflation": 0.874402,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.044769,
+        "recall": -0.007575,
+        "f1": 0.016331,
+        "center_recall": -0.023924,
+        "prediction_inflation": -0.085327
+      },
+      "delta_vs_p177": {
+        "precision": -0.000372,
+        "recall": -0.000797,
+        "f1": -0.000616,
+        "center_recall": -0.000798,
+        "prediction_inflation": -0.000797
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__equipment-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "equipment|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1276,
+        "predicted": 2110,
+        "gold": 2508,
+        "precision": 0.604739,
+        "recall": 0.508772,
+        "f1": 0.55262,
+        "center_recall": 0.552233,
+        "prediction_inflation": 0.841308,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.462766,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.553191,
+          "small": 0.607282,
+          "tiny": 0.309322,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.057169,
+        "recall": -0.016746,
+        "f1": 0.016303,
+        "center_recall": -0.033493,
+        "prediction_inflation": -0.118421
+      },
+      "delta_vs_p177": {
+        "precision": 0.012028,
+        "recall": -0.009968,
+        "f1": -0.000644,
+        "center_recall": -0.010367,
+        "prediction_inflation": -0.033891
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge__equipment-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1275,
+        "predicted": 2107,
+        "gold": 2508,
+        "precision": 0.605126,
+        "recall": 0.508373,
+        "f1": 0.552546,
+        "center_recall": 0.550638,
+        "prediction_inflation": 0.840112,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.462766,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.423645
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.553191,
+          "small": 0.605982,
+          "tiny": 0.30791,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.057556,
+        "recall": -0.017145,
+        "f1": 0.016229,
+        "center_recall": -0.035088,
+        "prediction_inflation": -0.119617
+      },
+      "delta_vs_p177": {
+        "precision": 0.012415,
+        "recall": -0.010367,
+        "f1": -0.000718,
+        "center_recall": -0.011962,
+        "prediction_inflation": -0.035087
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo4_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 2205,
+        "gold": 2508,
+        "precision": 0.590476,
+        "recall": 0.519139,
+        "f1": 0.552514,
+        "center_recall": 0.564593,
+        "prediction_inflation": 0.879187,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.042906,
+        "recall": -0.006379,
+        "f1": 0.016197,
+        "center_recall": -0.021133,
+        "prediction_inflation": -0.080542
+      },
+      "delta_vs_p177": {
+        "precision": -0.002235,
+        "recall": 0.000399,
+        "f1": -0.00075,
+        "center_recall": 0.001993,
+        "prediction_inflation": 0.003988
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__equipment-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "equipment|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2152,
+        "gold": 2508,
+        "precision": 0.598048,
+        "recall": 0.513158,
+        "f1": 0.552361,
+        "center_recall": 0.558214,
+        "prediction_inflation": 0.858054,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.457447,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.795312,
+          "medium": 0.542553,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.050478,
+        "recall": -0.01236,
+        "f1": 0.016044,
+        "center_recall": -0.027512,
+        "prediction_inflation": -0.101675
+      },
+      "delta_vs_p177": {
+        "precision": 0.005337,
+        "recall": -0.005582,
+        "f1": -0.000903,
+        "center_recall": -0.004386,
+        "prediction_inflation": -0.017145
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo4_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2203,
+        "gold": 2508,
+        "precision": 0.590558,
+        "recall": 0.51874,
+        "f1": 0.552324,
+        "center_recall": 0.564195,
+        "prediction_inflation": 0.878389,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.042988,
+        "recall": -0.006778,
+        "f1": 0.016007,
+        "center_recall": -0.021531,
+        "prediction_inflation": -0.08134
+      },
+      "delta_vs_p177": {
+        "precision": -0.002153,
+        "recall": 0.0,
+        "f1": -0.00094,
+        "center_recall": 0.001595,
+        "prediction_inflation": 0.00319
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo4_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1300,
+        "predicted": 2200,
+        "gold": 2508,
+        "precision": 0.590909,
+        "recall": 0.518341,
+        "f1": 0.552251,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.877193,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.043339,
+        "recall": -0.007177,
+        "f1": 0.015934,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.082536
+      },
+      "delta_vs_p177": {
+        "precision": -0.001802,
+        "recall": -0.000399,
+        "f1": -0.001013,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.001994
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__sink-medium__equipment-medium__stair-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "equipment|medium",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1277,
+        "predicted": 2117,
+        "gold": 2508,
+        "precision": 0.603212,
+        "recall": 0.509171,
+        "f1": 0.552216,
+        "center_recall": 0.55303,
+        "prediction_inflation": 0.844099,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.462766,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.553191,
+          "small": 0.608583,
+          "tiny": 0.310734,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.055642,
+        "recall": -0.016347,
+        "f1": 0.015899,
+        "center_recall": -0.032696,
+        "prediction_inflation": -0.11563
+      },
+      "delta_vs_p177": {
+        "precision": 0.010501,
+        "recall": -0.009569,
+        "f1": -0.001048,
+        "center_recall": -0.00957,
+        "prediction_inflation": -0.0311
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__equipment-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "equipment|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1286,
+        "predicted": 2150,
+        "gold": 2508,
+        "precision": 0.59814,
+        "recall": 0.512759,
+        "f1": 0.552168,
+        "center_recall": 0.557815,
+        "prediction_inflation": 0.857257,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.457447,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.542553,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05057,
+        "recall": -0.012759,
+        "f1": 0.015851,
+        "center_recall": -0.027911,
+        "prediction_inflation": -0.102472
+      },
+      "delta_vs_p177": {
+        "precision": 0.005429,
+        "recall": -0.005981,
+        "f1": -0.001096,
+        "center_recall": -0.004785,
+        "prediction_inflation": -0.017942
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__sink-medium__bathtub-xlarge__equipment-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1285,
+        "predicted": 2147,
+        "gold": 2508,
+        "precision": 0.59851,
+        "recall": 0.51236,
+        "f1": 0.552095,
+        "center_recall": 0.55622,
+        "prediction_inflation": 0.856061,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.457447,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.542553,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.46798
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.05094,
+        "recall": -0.013158,
+        "f1": 0.015778,
+        "center_recall": -0.029506,
+        "prediction_inflation": -0.103668
+      },
+      "delta_vs_p177": {
+        "precision": 0.005799,
+        "recall": -0.00638,
+        "f1": -0.001169,
+        "center_recall": -0.00638,
+        "prediction_inflation": -0.019138
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score1.0_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge"
+        ],
+        "max_score": 1.0
+      },
+      "metrics": {
+        "tp": 1293,
+        "predicted": 2176,
+        "gold": 2508,
+        "precision": 0.59421,
+        "recall": 0.51555,
+        "f1": 0.552092,
+        "center_recall": 0.557815,
+        "prediction_inflation": 0.867624,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.579787,
+          "small": 0.605982,
+          "tiny": 0.303672,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.04664,
+        "recall": -0.009968,
+        "f1": 0.015775,
+        "center_recall": -0.027911,
+        "prediction_inflation": -0.092105
+      },
+      "delta_vs_p177": {
+        "precision": 0.001499,
+        "recall": -0.00319,
+        "f1": -0.001172,
+        "center_recall": -0.004785,
+        "prediction_inflation": -0.007575
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__equipment-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "equipment|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1289,
+        "predicted": 2162,
+        "gold": 2508,
+        "precision": 0.596207,
+        "recall": 0.513955,
+        "f1": 0.552034,
+        "center_recall": 0.55941,
+        "prediction_inflation": 0.862041,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.462766,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.798438,
+          "medium": 0.553191,
+          "small": 0.608583,
+          "tiny": 0.313559,
+          "xlarge": 0.482759
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.048637,
+        "recall": -0.011563,
+        "f1": 0.015717,
+        "center_recall": -0.026316,
+        "prediction_inflation": -0.097688
+      },
+      "delta_vs_p177": {
+        "precision": 0.003496,
+        "recall": -0.004785,
+        "f1": -0.00123,
+        "center_recall": -0.00319,
+        "prediction_inflation": -0.013158
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__column-xlarge__generic_symbol-medium__sink-medium__bathtub-xlarge__equipment-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "column|xlarge",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1288,
+        "predicted": 2159,
+        "gold": 2508,
+        "precision": 0.596572,
+        "recall": 0.513557,
+        "f1": 0.551961,
+        "center_recall": 0.557815,
+        "prediction_inflation": 0.860845,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.462766,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.798438,
+          "medium": 0.553191,
+          "small": 0.607282,
+          "tiny": 0.312147,
+          "xlarge": 0.472906
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.049002,
+        "recall": -0.011961,
+        "f1": 0.015644,
+        "center_recall": -0.027911,
+        "prediction_inflation": -0.098884
+      },
+      "delta_vs_p177": {
+        "precision": 0.003861,
+        "recall": -0.005183,
+        "f1": -0.001303,
+        "center_recall": -0.004785,
+        "prediction_inflation": -0.014354
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo3_score0.8_appliance-small__generic_symbol-medium__sink-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 2210,
+        "gold": 2508,
+        "precision": 0.58914,
+        "recall": 0.519139,
+        "f1": 0.551929,
+        "center_recall": 0.564992,
+        "prediction_inflation": 0.88118,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.804688,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.487685
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.04157,
+        "recall": -0.006379,
+        "f1": 0.015612,
+        "center_recall": -0.020734,
+        "prediction_inflation": -0.078549
+      },
+      "delta_vs_p177": {
+        "precision": -0.003571,
+        "recall": 0.000399,
+        "f1": -0.001335,
+        "center_recall": 0.002392,
+        "prediction_inflation": 0.005981
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo5_score0.8_appliance-small__generic_symbol-medium__sink-medium__equipment-medium__column-large",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "equipment|medium",
+          "column|large"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2157,
+        "gold": 2508,
+        "precision": 0.596662,
+        "recall": 0.513158,
+        "f1": 0.551768,
+        "center_recall": 0.558612,
+        "prediction_inflation": 0.860048,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.457447,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.542553,
+          "small": 0.609883,
+          "tiny": 0.314972,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.049092,
+        "recall": -0.01236,
+        "f1": 0.015451,
+        "center_recall": -0.027114,
+        "prediction_inflation": -0.099681
+      },
+      "delta_vs_p177": {
+        "precision": 0.003951,
+        "recall": -0.005582,
+        "f1": -0.001496,
+        "center_recall": -0.003988,
+        "prediction_inflation": -0.015151
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_appliance-small__generic_symbol-medium__equipment-tiny__sink-medium__bathtub-xlarge__equipment-medium",
+        "drop_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|medium"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1287,
+        "predicted": 2157,
+        "gold": 2508,
+        "precision": 0.596662,
+        "recall": 0.513158,
+        "f1": 0.551768,
+        "center_recall": 0.557416,
+        "prediction_inflation": 0.860048,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.462766,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.8,
+          "medium": 0.553191,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.472906
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.049092,
+        "recall": -0.01236,
+        "f1": 0.015451,
+        "center_recall": -0.02831,
+        "prediction_inflation": -0.099681
+      },
+      "delta_vs_p177": {
+        "precision": 0.003951,
+        "recall": -0.005582,
+        "f1": -0.001496,
+        "center_recall": -0.005184,
+        "prediction_inflation": -0.015151
+      }
+    },
+    {
+      "policy": {
+        "name": "p178_combo6_score0.8_column-xlarge__generic_symbol-medium__equipment-tiny__sink-medium__column-large__stair-xlarge",
+        "drop_label_buckets": [
+          "column|xlarge",
+          "generic_symbol|medium",
+          "equipment|tiny",
+          "sink|medium",
+          "column|large",
+          "stair|xlarge"
+        ],
+        "max_score": 0.8
+      },
+      "metrics": {
+        "tp": 1285,
+        "predicted": 2150,
+        "gold": 2508,
+        "precision": 0.597674,
+        "recall": 0.51236,
+        "f1": 0.551739,
+        "center_recall": 0.554625,
+        "prediction_inflation": 0.857257,
+        "by_area_iou_recall": {
+          "large": 0.795312,
+          "medium": 0.5,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.433498
+        },
+        "by_area_center_recall": {
+          "large": 0.796875,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.309322,
+          "xlarge": 0.418719
+        }
+      },
+      "delta_vs_p165": {
+        "precision": 0.050104,
+        "recall": -0.013158,
+        "f1": 0.015422,
+        "center_recall": -0.031101,
+        "prediction_inflation": -0.102472
+      },
+      "delta_vs_p177": {
+        "precision": 0.004963,
+        "recall": -0.00638,
+        "f1": -0.001525,
+        "center_recall": -0.007975,
+        "prediction_inflation": -0.017942
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p178_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_combinatorial_prune_p178.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_combinatorial_prune_p178.md"
+  }
+}

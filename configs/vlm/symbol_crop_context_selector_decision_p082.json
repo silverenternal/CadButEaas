@@ -1,0 +1,32 @@
+{
+  "version": "symbol_crop_context_selector_decision_p082",
+  "decision": "stop_symbol_selector_work_for_now",
+  "created": "2026-05-15",
+  "why": "P0-81 metadata-only selector failed the locked retain gate by retaining only 0.893949 of P0-76 gain. Crop-context selector is the next meaningful option, but the current candidate set is small and narrow (sink/tiny P0-76 additions), so the expected gain does not justify starting a new image model unless downstream urgently needs it.",
+  "current_endpoints": {
+    "default": "v28_frozen_detector_baseline",
+    "recall_opt_in": "p070_precision_gated_policy",
+    "balanced_opt_in": "p076_balanced_policy",
+    "micro_balanced_optional": "p078_micro_balanced_selector"
+  },
+  "candidate_counts": {
+    "p076_smoke_v30_added_candidates": 192,
+    "p076_locked_added_candidates": 422,
+    "p081_smoke_training_rows": 192
+  },
+  "crop_context_option": {
+    "status": "defer",
+    "minimum_reasonable_scope": "Build crop dataset for P0-76/P0-78 added candidates plus matched v28 baseline candidates, not just the 192 smoke added candidates.",
+    "required_before_start": [
+      "Downstream task requires higher symbol quality than P0-76/P0-78",
+      "Budget to extract raster crops and train/evaluate at least a tiny CNN",
+      "Smoke-only split definition that avoids locked tuning"
+    ],
+    "gates_if_started": {
+      "retain_p076_iou_gain_min_fraction": 0.9,
+      "precision_must_improve_vs_p076": true,
+      "inflation_must_not_exceed_p076": true
+    }
+  },
+  "next_recommendation": "Use P0-76 or P0-78 in downstream integration. Reopen crop-context selector only when downstream evidence shows symbol policy quality is the bottleneck."
+}

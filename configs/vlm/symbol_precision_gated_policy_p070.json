@@ -1,0 +1,41 @@
+{
+  "version": "symbol_precision_gated_policy_p070",
+  "status": "preferred_opt_in_symbol_policy",
+  "default_detector_backbone": "frozen_v28_yolov8s_seg_rect",
+  "runtime_input_boundary": "Consumes detector page predictions generated from raster tile pixels only. No gold labels, parser geometry, SVG, CAD vectors, expected_json, or annotation paths at runtime.",
+  "generation_steps": [
+    {
+      "id": "p065_rtdetr_tiny_sink_complement",
+      "type": "add_rtdetr_candidates",
+      "gate": {
+        "labels": "sink_only",
+        "areas": "tiny_le_64",
+        "score_min": 0.2,
+        "max_iou_with_v28": 1.01,
+        "max_add_per_page": 20
+      }
+    },
+    {
+      "id": "p067_center_only_geometric_repair",
+      "type": "add_scaled_box_copies",
+      "gate": {
+        "labels": "sink_shower_equipment",
+        "areas": "tiny_small",
+        "score_min": 0.1,
+        "scale_x": 0.85,
+        "scale_y": 0.85,
+        "max_add_per_page": 20
+      }
+    }
+  ],
+  "precision_gate": {
+    "sources": "p067_only",
+    "labels": "sink",
+    "areas": "tiny",
+    "score_min": 0.1,
+    "min_iou_with_v28": 0.0,
+    "max_iou_with_v28": 1.01,
+    "max_add_per_page": 20
+  },
+  "promotion_boundary": "Preferred opt-in symbol policy. Frozen v28 remains default baseline; enable P0-70 when recall gain with near-baseline precision is desired."
+}

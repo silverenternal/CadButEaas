@@ -1,0 +1,109 @@
+{
+  "id": "SCI-P2-131-final-claim-boundary-scan",
+  "created_on": "2026-05-16",
+  "manuscript": "reports/vlm/manuscript_draft_v0_1_p130.md",
+  "decision": "claim_boundary_scan_passes_with_known_caveat_language",
+  "unsafe_pattern_counts": [
+    {
+      "pattern": "solved",
+      "count": 1,
+      "risk": "review_context"
+    },
+    {
+      "pattern": "solve raster",
+      "count": 0,
+      "risk": "none"
+    },
+    {
+      "pattern": "full end-to-end",
+      "count": 3,
+      "risk": "review_context"
+    },
+    {
+      "pattern": "industrial generalization",
+      "count": 2,
+      "risk": "review_context"
+    },
+    {
+      "pattern": "runtime robustness",
+      "count": 1,
+      "risk": "review_context"
+    },
+    {
+      "pattern": "submission-ready",
+      "count": 1,
+      "risk": "review_context"
+    },
+    {
+      "pattern": "state-of-the-art",
+      "count": 0,
+      "risk": "none"
+    }
+  ],
+  "required_boundary_counts": [
+    {
+      "boundary": "74-row",
+      "count": 9
+    },
+    {
+      "boundary": "61 matched rows",
+      "count": 4
+    },
+    {
+      "boundary": "expected-json replay",
+      "count": 17
+    },
+    {
+      "boundary": "not claimed",
+      "count": 3
+    },
+    {
+      "boundary": "negative evidence",
+      "count": 10
+    },
+    {
+      "boundary": "target-level",
+      "count": 35
+    }
+  ],
+  "risk_lines_for_manual_review": [
+    {
+      "line": 5,
+      "text": "Status: **bounded draft for internal review; not final submission-ready**"
+    },
+    {
+      "line": 28,
+      "text": "This work is positioned as an audit and policy-handoff contribution rather than a claim that one new detector solves all floorplan recognition tasks. The key distinction is the runtime contract: target-level model-output"
+    },
+    {
+      "line": 37,
+      "text": "We organize evaluation into three explicitly separated modes. The first mode is **target-level model-output evaluation**, where predicted boxes or masks are compared against locked target annotations. This mode supports "
+    },
+    {
+      "line": 139,
+      "text": "Second, the current evidence does not establish full end-to-end raster scene-graph quality. Symbol target-level metrics, image-only family box metrics, and expected-json relation replay are separate evidence modes. They "
+    },
+    {
+      "line": 145,
+      "text": "Fifth, current real-world/industrial generalization is not established. Existing real-raster annotation work is pilot-level and needs human review before it can support claims about industrial drawings or deployment beyo"
+    },
+    {
+      "line": 155,
+      "text": "For relations, the expected-json contains policy should be evaluated on model-output graphs after upstream visual predictions are frozen. This would measure whether relation improvements survive realistic detector noise."
+    },
+    {
+      "line": 188,
+      "text": "- Unsafe: claim full end-to-end raster scene-graph robustness."
+    },
+    {
+      "line": 274,
+      "text": "- Do not claim: full raster scene-graph solved."
+    }
+  ],
+  "conclusion": "No blocking overclaim found in automated scan. Risk terms appear in caveat/blocked-claim contexts; keep them during final human review.",
+  "recommended_edits_before_handoff": [
+    "Replace generic citation placeholders with verified references or keep as explicit TODOs.",
+    "Draw Figure 1 and optionally Figure 2 from P131 plan.",
+    "If page-limited, move pixel mask and selector bottleneck tables to appendix."
+  ]
+}

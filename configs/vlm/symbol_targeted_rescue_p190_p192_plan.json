@@ -1,0 +1,728 @@
+{
+  "id": "P190_P191_symbol_targeted_rescue_execution_plan",
+  "created_on": "2026-05-18",
+  "baseline_to_beat": {
+    "P188": {
+      "precision": 0.601902,
+      "recall": 0.529904,
+      "f1": 0.563613,
+      "center_recall": 0.568182,
+      "prediction_inflation": 0.880383
+    },
+    "promotion_gate": "F1 >= 0.573 or recover >=25 TP with precision >=0.58 and inflation <=1.0"
+  },
+  "p189_findings": {
+    "totals": {
+      "rows": 74,
+      "false_negatives": 1180,
+      "false_positives": 880,
+      "rescued_vs_p182": 66,
+      "regressed_vs_p182": 19,
+      "net_tp_delta_vs_p182": 47
+    },
+    "false_negative_by_label_bucket": [
+      {
+        "key": "sink|tiny",
+        "count": 324
+      },
+      {
+        "key": "shower|tiny",
+        "count": 210
+      },
+      {
+        "key": "shower|small",
+        "count": 112
+      },
+      {
+        "key": "equipment|large",
+        "count": 67
+      },
+      {
+        "key": "stair|small",
+        "count": 65
+      },
+      {
+        "key": "equipment|xlarge",
+        "count": 57
+      },
+      {
+        "key": "equipment|small",
+        "count": 55
+      },
+      {
+        "key": "appliance|small",
+        "count": 51
+      },
+      {
+        "key": "equipment|medium",
+        "count": 43
+      },
+      {
+        "key": "stair|xlarge",
+        "count": 42
+      },
+      {
+        "key": "column|small",
+        "count": 27
+      },
+      {
+        "key": "stair|tiny",
+        "count": 20
+      },
+      {
+        "key": "stair|large",
+        "count": 18
+      },
+      {
+        "key": "generic_symbol|large",
+        "count": 14
+      },
+      {
+        "key": "column|medium",
+        "count": 13
+      },
+      {
+        "key": "sink|medium",
+        "count": 12
+      },
+      {
+        "key": "column|large",
+        "count": 11
+      },
+      {
+        "key": "appliance|medium",
+        "count": 8
+      },
+      {
+        "key": "sink|large",
+        "count": 7
+      },
+      {
+        "key": "stair|medium",
+        "count": 5
+      },
+      {
+        "key": "generic_symbol|medium",
+        "count": 4
+      },
+      {
+        "key": "appliance|large",
+        "count": 3
+      },
+      {
+        "key": "column|xlarge",
+        "count": 2
+      },
+      {
+        "key": "shower|xlarge",
+        "count": 2
+      },
+      {
+        "key": "shower|medium",
+        "count": 2
+      },
+      {
+        "key": "bathtub|xlarge",
+        "count": 1
+      },
+      {
+        "key": "equipment|tiny",
+        "count": 1
+      },
+      {
+        "key": "sink|small",
+        "count": 1
+      },
+      {
+        "key": "generic_symbol|xlarge",
+        "count": 1
+      },
+      {
+        "key": "shower|large",
+        "count": 1
+      }
+    ],
+    "false_positive_by_label_bucket": [
+      {
+        "key": "generic_symbol|large",
+        "count": 149
+      },
+      {
+        "key": "equipment|small",
+        "count": 107
+      },
+      {
+        "key": "appliance|medium",
+        "count": 97
+      },
+      {
+        "key": "shower|small",
+        "count": 86
+      },
+      {
+        "key": "sink|small",
+        "count": 72
+      },
+      {
+        "key": "sink|tiny",
+        "count": 47
+      },
+      {
+        "key": "equipment|large",
+        "count": 39
+      },
+      {
+        "key": "stair|large",
+        "count": 36
+      },
+      {
+        "key": "sink|large",
+        "count": 35
+      },
+      {
+        "key": "appliance|large",
+        "count": 30
+      },
+      {
+        "key": "column|small",
+        "count": 30
+      },
+      {
+        "key": "stair|xlarge",
+        "count": 29
+      },
+      {
+        "key": "equipment|medium",
+        "count": 24
+      },
+      {
+        "key": "column|medium",
+        "count": 22
+      },
+      {
+        "key": "sink|medium",
+        "count": 16
+      },
+      {
+        "key": "shower|tiny",
+        "count": 15
+      },
+      {
+        "key": "equipment|xlarge",
+        "count": 9
+      },
+      {
+        "key": "generic_symbol|xlarge",
+        "count": 7
+      },
+      {
+        "key": "bathtub|xlarge",
+        "count": 6
+      },
+      {
+        "key": "column|large",
+        "count": 4
+      },
+      {
+        "key": "stair|medium",
+        "count": 3
+      },
+      {
+        "key": "shower|xlarge",
+        "count": 2
+      },
+      {
+        "key": "bathtub|large",
+        "count": 2
+      },
+      {
+        "key": "generic_symbol|small",
+        "count": 2
+      },
+      {
+        "key": "generic_symbol|medium",
+        "count": 2
+      },
+      {
+        "key": "appliance|tiny",
+        "count": 2
+      },
+      {
+        "key": "column|tiny",
+        "count": 2
+      },
+      {
+        "key": "appliance|xlarge",
+        "count": 1
+      },
+      {
+        "key": "shower|large",
+        "count": 1
+      },
+      {
+        "key": "appliance|small",
+        "count": 1
+      }
+    ],
+    "false_negative_by_mode": [
+      {
+        "key": "center_hit_iou_fail_box_refine",
+        "count": 451
+      },
+      {
+        "key": "true_miss_or_low_confidence",
+        "count": 388
+      },
+      {
+        "key": "near_iou_0_20_0_30_box_refine",
+        "count": 231
+      },
+      {
+        "key": "close_center_missing_or_small_box",
+        "count": 101
+      },
+      {
+        "key": "nwd_hit_iou_fail_box_refine",
+        "count": 9
+      }
+    ],
+    "false_negative_by_density": [
+      {
+        "key": "dense",
+        "count": 813
+      },
+      {
+        "key": "medium",
+        "count": 343
+      },
+      {
+        "key": "sparse",
+        "count": 24
+      }
+    ],
+    "false_positive_by_density": [
+      {
+        "key": "dense",
+        "count": 490
+      },
+      {
+        "key": "medium",
+        "count": 354
+      },
+      {
+        "key": "sparse",
+        "count": 36
+      }
+    ],
+    "worst_pages": [
+      {
+        "row_id": "cubicasa5k_locked_00003",
+        "gold": 84,
+        "fn": 55,
+        "fp": 19,
+        "rescued_vs_p182": 2,
+        "regressed_vs_p182": 9,
+        "net_tp_delta_vs_p182": -7
+      },
+      {
+        "row_id": "cubicasa5k_locked_00009",
+        "gold": 75,
+        "fn": 58,
+        "fp": 12,
+        "rescued_vs_p182": 2,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 2
+      },
+      {
+        "row_id": "cubicasa5k_locked_00066",
+        "gold": 67,
+        "fn": 39,
+        "fp": 20,
+        "rescued_vs_p182": 1,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 1
+      },
+      {
+        "row_id": "cubicasa5k_locked_00034",
+        "gold": 66,
+        "fn": 43,
+        "fp": 13,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00045",
+        "gold": 59,
+        "fn": 35,
+        "fp": 24,
+        "rescued_vs_p182": 3,
+        "regressed_vs_p182": 1,
+        "net_tp_delta_vs_p182": 2
+      },
+      {
+        "row_id": "cubicasa5k_locked_00029",
+        "gold": 42,
+        "fn": 34,
+        "fp": 33,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00005",
+        "gold": 51,
+        "fn": 24,
+        "fp": 21,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 5,
+        "net_tp_delta_vs_p182": -5
+      },
+      {
+        "row_id": "cubicasa5k_locked_00073",
+        "gold": 59,
+        "fn": 35,
+        "fp": 7,
+        "rescued_vs_p182": 3,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 3
+      },
+      {
+        "row_id": "cubicasa5k_locked_00040",
+        "gold": 45,
+        "fn": 34,
+        "fp": 8,
+        "rescued_vs_p182": 3,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 3
+      },
+      {
+        "row_id": "cubicasa5k_locked_00071",
+        "gold": 38,
+        "fn": 21,
+        "fp": 20,
+        "rescued_vs_p182": 3,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 3
+      },
+      {
+        "row_id": "cubicasa5k_locked_00039",
+        "gold": 51,
+        "fn": 27,
+        "fp": 13,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00070",
+        "gold": 38,
+        "fn": 20,
+        "fp": 27,
+        "rescued_vs_p182": 1,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 1
+      },
+      {
+        "row_id": "cubicasa5k_locked_00065",
+        "gold": 56,
+        "fn": 29,
+        "fp": 10,
+        "rescued_vs_p182": 2,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 2
+      },
+      {
+        "row_id": "cubicasa5k_locked_00062",
+        "gold": 49,
+        "fn": 26,
+        "fp": 12,
+        "rescued_vs_p182": 5,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 5
+      },
+      {
+        "row_id": "cubicasa5k_locked_00046",
+        "gold": 50,
+        "fn": 29,
+        "fp": 8,
+        "rescued_vs_p182": 3,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 3
+      },
+      {
+        "row_id": "cubicasa5k_locked_00031",
+        "gold": 33,
+        "fn": 17,
+        "fp": 20,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00019",
+        "gold": 50,
+        "fn": 25,
+        "fp": 10,
+        "rescued_vs_p182": 2,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 2
+      },
+      {
+        "row_id": "cubicasa5k_locked_00048",
+        "gold": 36,
+        "fn": 23,
+        "fp": 10,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00067",
+        "gold": 35,
+        "fn": 16,
+        "fp": 17,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00030",
+        "gold": 41,
+        "fn": 13,
+        "fp": 20,
+        "rescued_vs_p182": 1,
+        "regressed_vs_p182": 2,
+        "net_tp_delta_vs_p182": -1
+      },
+      {
+        "row_id": "cubicasa5k_locked_00041",
+        "gold": 44,
+        "fn": 27,
+        "fp": 5,
+        "rescued_vs_p182": 5,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 5
+      },
+      {
+        "row_id": "cubicasa5k_locked_00035",
+        "gold": 27,
+        "fn": 15,
+        "fp": 17,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00025",
+        "gold": 30,
+        "fn": 12,
+        "fp": 24,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00015",
+        "gold": 38,
+        "fn": 12,
+        "fp": 21,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      },
+      {
+        "row_id": "cubicasa5k_locked_00069",
+        "gold": 35,
+        "fn": 11,
+        "fp": 24,
+        "rescued_vs_p182": 0,
+        "regressed_vs_p182": 0,
+        "net_tp_delta_vs_p182": 0
+      }
+    ]
+  },
+  "hardcase_manifest": "datasets/symbol_hardcase_rescue_p189/manifest.jsonl",
+  "p190_hardcase_detector": {
+    "intent": "Retrain/fine-tune P185 with hard-case oversampling instead of generic capacity.",
+    "base_model": "checkpoints/symbol_pro5090_yolov8m_seg_rect_p185/model.pt",
+    "preferred_gpu": "RTX PRO 6000 device 0",
+    "data_source": "datasets/symbol_tile_detector_tiny_sahi_v21 + hardcase page/tile ids from P189",
+    "sampling": "oversample_4x priority>=20, oversample_2x priority>=10, include_1x rest; add normal tiles to cap hardcase ratio around 35-45%",
+    "augmentation": "copy-paste/small-object mosaic for sink|tiny, shower|tiny/small, equipment and stair; keep high overlap crops",
+    "eval": "scripts/vlm/eval_symbol_yolo_p101_tiles_p186.py + scripts/vlm/fuse_symbol_detector_with_p182_p186.py using P188-expanded policy search",
+    "planned_outputs": [
+      "checkpoints/symbol_hardcase_yolov8m_p190/model.pt",
+      "reports/vlm/symbol_hardcase_yolov8m_p190_p101_eval.json",
+      "configs/vlm/symbol_hardcase_yolov8m_p190_fusion.json"
+    ]
+  },
+  "p191_tiny_specialist": {
+    "intent": "Separate high-resolution tiny/small specialist because top misses are sink|tiny=324 and shower|tiny=210.",
+    "target_label_buckets": [
+      "sink|tiny",
+      "shower|tiny",
+      "shower|small",
+      "stair|small",
+      "equipment|small",
+      "appliance|small"
+    ],
+    "inference_gate": "Only add specialist predictions when no P188 prediction overlaps by IoU>0.12 and distance>8; strict FP blacklist from P189.",
+    "planned_outputs": [
+      "checkpoints/symbol_tiny_small_specialist_p191/model.pt",
+      "reports/vlm/symbol_tiny_small_specialist_p191_eval.json",
+      "configs/vlm/symbol_tiny_small_specialist_p191_fusion.json"
+    ]
+  },
+  "p192_box_refiner": {
+    "intent": "451 center-hit and 231 near-IoU misses indicate box refinement is likely higher ROI than another detector-only run.",
+    "target_modes": [
+      "center_hit_iou_fail_box_refine",
+      "near_iou_0_20_0_30_box_refine",
+      "nwd_hit_iou_fail_box_refine"
+    ],
+    "first_action": "Fit class/bucket resize policy over P188 predictions on non-runtime gold analysis, then validate through P101 overlay; if stable, replace with train/dev calibrated policy."
+  },
+  "top_manifest_rows": [
+    {
+      "row_id": "cubicasa5k_locked_00003",
+      "priority_score": 444,
+      "hard_target_count": 55,
+      "false_positive_count": 19,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00009",
+      "priority_score": 376,
+      "hard_target_count": 58,
+      "false_positive_count": 11,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00034",
+      "priority_score": 320,
+      "hard_target_count": 43,
+      "false_positive_count": 12,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00066",
+      "priority_score": 318,
+      "hard_target_count": 39,
+      "false_positive_count": 17,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00045",
+      "priority_score": 277,
+      "hard_target_count": 35,
+      "false_positive_count": 23,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00029",
+      "priority_score": 259,
+      "hard_target_count": 34,
+      "false_positive_count": 25,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00040",
+      "priority_score": 236,
+      "hard_target_count": 34,
+      "false_positive_count": 7,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00073",
+      "priority_score": 233,
+      "hard_target_count": 35,
+      "false_positive_count": 6,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00039",
+      "priority_score": 227,
+      "hard_target_count": 27,
+      "false_positive_count": 11,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00065",
+      "priority_score": 219,
+      "hard_target_count": 29,
+      "false_positive_count": 9,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00046",
+      "priority_score": 207,
+      "hard_target_count": 29,
+      "false_positive_count": 7,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00062",
+      "priority_score": 202,
+      "hard_target_count": 26,
+      "false_positive_count": 11,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00042",
+      "priority_score": 197,
+      "hard_target_count": 27,
+      "false_positive_count": 3,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00070",
+      "priority_score": 194,
+      "hard_target_count": 20,
+      "false_positive_count": 22,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00005",
+      "priority_score": 184,
+      "hard_target_count": 24,
+      "false_positive_count": 21,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00048",
+      "priority_score": 180,
+      "hard_target_count": 23,
+      "false_positive_count": 8,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00059",
+      "priority_score": 180,
+      "hard_target_count": 21,
+      "false_positive_count": 5,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00071",
+      "priority_score": 177,
+      "hard_target_count": 21,
+      "false_positive_count": 17,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00041",
+      "priority_score": 166,
+      "hard_target_count": 27,
+      "false_positive_count": 4,
+      "recommended_sampling": "oversample_4x"
+    },
+    {
+      "row_id": "cubicasa5k_locked_00019",
+      "priority_score": 161,
+      "hard_target_count": 25,
+      "false_positive_count": 6,
+      "recommended_sampling": "oversample_4x"
+    }
+  ]
+}

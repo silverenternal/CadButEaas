@@ -1,0 +1,2650 @@
+{
+  "id": "SCI-P2-177-symbol-prune-then-backfill-rescue",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p177",
+  "claim_boundary": "Runtime-safe P155A backfill over P176 precision-pruned core; gold only for offline sweep/evaluation.",
+  "baseline_metrics": {
+    "p165_best": {
+      "tp": 1318,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.54757,
+      "recall": 0.525518,
+      "f1": 0.536317,
+      "center_recall": 0.585726,
+      "prediction_inflation": 0.959729,
+      "by_area_iou_recall": {
+        "large": 0.809375,
+        "medium": 0.558511,
+        "small": 0.572172,
+        "tiny": 0.218927,
+        "xlarge": 0.492611
+      },
+      "by_area_center_recall": {
+        "large": 0.810937,
+        "medium": 0.617021,
+        "small": 0.613784,
+        "tiny": 0.371469,
+        "xlarge": 0.487685
+      }
+    },
+    "p176_best": {
+      "tp": 1299,
+      "predicted": 2188,
+      "gold": 2508,
+      "precision": 0.593693,
+      "recall": 0.517943,
+      "f1": 0.553237,
+      "center_recall": 0.561404,
+      "prediction_inflation": 0.872408,
+      "by_area_iou_recall": {
+        "large": 0.8,
+        "medium": 0.505319,
+        "small": 0.570871,
+        "tiny": 0.218927,
+        "xlarge": 0.482759
+      },
+      "by_area_center_recall": {
+        "large": 0.803125,
+        "medium": 0.590426,
+        "small": 0.605982,
+        "tiny": 0.310734,
+        "xlarge": 0.477833
+      }
+    }
+  },
+  "searched_policy_count": 217,
+  "passing_policy_count": 217,
+  "best_policy": {
+    "name": "p177_l3_b3_blk0_s0.29_i0.08_d20_a1",
+    "labels": [
+      "shower",
+      "column",
+      "stair"
+    ],
+    "buckets": [
+      "tiny",
+      "small",
+      "medium"
+    ],
+    "blocked_label_buckets": [],
+    "min_score": 0.2929,
+    "max_iou_with_core": 0.08,
+    "min_center_dist": 20.0,
+    "max_add_per_page": 1,
+    "append_nms_iou": 0.75
+  },
+  "best_metrics": {
+    "tp": 1301,
+    "predicted": 2195,
+    "gold": 2508,
+    "precision": 0.592711,
+    "recall": 0.51874,
+    "f1": 0.553264,
+    "center_recall": 0.5626,
+    "prediction_inflation": 0.875199,
+    "by_area_iou_recall": {
+      "large": 0.8,
+      "medium": 0.505319,
+      "small": 0.573472,
+      "tiny": 0.218927,
+      "xlarge": 0.482759
+    },
+    "by_area_center_recall": {
+      "large": 0.803125,
+      "medium": 0.590426,
+      "small": 0.609883,
+      "tiny": 0.310734,
+      "xlarge": 0.477833
+    }
+  },
+  "delta_vs_p176": {
+    "precision": -0.000982,
+    "recall": 0.000797,
+    "f1": 2.7e-05,
+    "center_recall": 0.001196,
+    "prediction_inflation": 0.002791
+  },
+  "delta_vs_p165": {
+    "precision": 0.045141,
+    "recall": -0.006778,
+    "f1": 0.016947,
+    "center_recall": -0.023126,
+    "prediction_inflation": -0.08453
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.29_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2195,
+        "gold": 2508,
+        "precision": 0.592711,
+        "recall": 0.51874,
+        "f1": 0.553264,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875199,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000982,
+        "recall": 0.000797,
+        "f1": 2.7e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.002791
+      },
+      "delta_vs_p165": {
+        "precision": 0.045141,
+        "recall": -0.006778,
+        "f1": 0.016947,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.08453
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_noop",
+        "labels": [],
+        "buckets": [],
+        "blocked_label_buckets": [],
+        "min_score": 2.0,
+        "max_iou_with_core": 0.0,
+        "min_center_dist": 0.0,
+        "max_add_per_page": 0,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2188,
+        "gold": 2508,
+        "precision": 0.593693,
+        "recall": 0.517943,
+        "f1": 0.553237,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.872408,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.0
+      },
+      "delta_vs_p165": {
+        "precision": 0.046123,
+        "recall": -0.007575,
+        "f1": 0.01692,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.087321
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk0_s0.29_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2196,
+        "gold": 2508,
+        "precision": 0.592441,
+        "recall": 0.51874,
+        "f1": 0.553146,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875598,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001252,
+        "recall": 0.000797,
+        "f1": -9.1e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.00319
+      },
+      "delta_vs_p165": {
+        "precision": 0.044871,
+        "recall": -0.006778,
+        "f1": 0.016829,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.084131
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.29_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2196,
+        "gold": 2508,
+        "precision": 0.592441,
+        "recall": 0.51874,
+        "f1": 0.553146,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875598,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001252,
+        "recall": 0.000797,
+        "f1": -9.1e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.00319
+      },
+      "delta_vs_p165": {
+        "precision": 0.044871,
+        "recall": -0.006778,
+        "f1": 0.016829,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.084131
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.29_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2196,
+        "gold": 2508,
+        "precision": 0.592441,
+        "recall": 0.51874,
+        "f1": 0.553146,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875598,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001252,
+        "recall": 0.000797,
+        "f1": -9.1e-05,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.00319
+      },
+      "delta_vs_p165": {
+        "precision": 0.044871,
+        "recall": -0.006778,
+        "f1": 0.016829,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.084131
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.08_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.15_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.29_i0.30_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.08_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.15_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.29_i0.30_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk0_s0.29_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk0_s0.29_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.29_i0.08_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2197,
+        "gold": 2508,
+        "precision": 0.592171,
+        "recall": 0.51874,
+        "f1": 0.553029,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.875997,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001522,
+        "recall": 0.000797,
+        "f1": -0.000208,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003589
+      },
+      "delta_vs_p165": {
+        "precision": 0.044601,
+        "recall": -0.006778,
+        "f1": 0.016712,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083732
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.08_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.15_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.30_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk0_s0.34_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.08_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.15_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.30_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l3_b3_blk6_s0.34_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.08_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.08_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.15_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.15_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.30_d12_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 12.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.34_i0.30_d20_a1",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.34,
+        "max_iou_with_core": 0.3,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 1,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1299,
+        "predicted": 2190,
+        "gold": 2508,
+        "precision": 0.593151,
+        "recall": 0.517943,
+        "f1": 0.553001,
+        "center_recall": 0.561404,
+        "prediction_inflation": 0.873206,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.000542,
+        "recall": 0.0,
+        "f1": -0.000236,
+        "center_recall": 0.0,
+        "prediction_inflation": 0.000798
+      },
+      "delta_vs_p165": {
+        "precision": 0.045581,
+        "recall": -0.007575,
+        "f1": 0.016684,
+        "center_recall": -0.024322,
+        "prediction_inflation": -0.086523
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk0_s0.29_i0.08_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.08,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2198,
+        "gold": 2508,
+        "precision": 0.591902,
+        "recall": 0.51874,
+        "f1": 0.552911,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.876396,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001791,
+        "recall": 0.000797,
+        "f1": -0.000326,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003988
+      },
+      "delta_vs_p165": {
+        "precision": 0.044332,
+        "recall": -0.006778,
+        "f1": 0.016594,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083333
+      }
+    },
+    {
+      "policy": {
+        "name": "p177_l4_b3_blk6_s0.29_i0.15_d20_a2",
+        "labels": [
+          "shower",
+          "column",
+          "stair",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [
+          "appliance|small",
+          "generic_symbol|medium",
+          "sink|medium",
+          "bathtub|xlarge",
+          "equipment|tiny",
+          "column|xlarge"
+        ],
+        "min_score": 0.2929,
+        "max_iou_with_core": 0.15,
+        "min_center_dist": 20.0,
+        "max_add_per_page": 2,
+        "append_nms_iou": 0.75
+      },
+      "metrics": {
+        "tp": 1301,
+        "predicted": 2198,
+        "gold": 2508,
+        "precision": 0.591902,
+        "recall": 0.51874,
+        "f1": 0.552911,
+        "center_recall": 0.5626,
+        "prediction_inflation": 0.876396,
+        "by_area_iou_recall": {
+          "large": 0.8,
+          "medium": 0.505319,
+          "small": 0.573472,
+          "tiny": 0.218927,
+          "xlarge": 0.482759
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.609883,
+          "tiny": 0.310734,
+          "xlarge": 0.477833
+        }
+      },
+      "delta_vs_p176": {
+        "precision": -0.001791,
+        "recall": 0.000797,
+        "f1": -0.000326,
+        "center_recall": 0.001196,
+        "prediction_inflation": 0.003988
+      },
+      "delta_vs_p165": {
+        "precision": 0.044332,
+        "recall": -0.006778,
+        "f1": 0.016594,
+        "center_recall": -0.023126,
+        "prediction_inflation": -0.083333
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p177_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_prune_then_backfill_p177.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_prune_then_backfill_p177.md"
+  }
+}

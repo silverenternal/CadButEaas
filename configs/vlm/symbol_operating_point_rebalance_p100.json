@@ -1,0 +1,58 @@
+{
+  "id": "SCI-P1-100-symbol-operating-point-rebalance",
+  "created_on": "2026-05-15",
+  "input_report": "reports/vlm/symbol_yolov8s_seg_rect_v28_smoke_v30_page_eval.json",
+  "claim_boundary": "Derived from existing smoke_v30 raster detector threshold grid; no retraining and no new model-output relation claim.",
+  "old_recall_gate_selected": {
+    "score_threshold": 0.005,
+    "nms_threshold": 0.65,
+    "precision": 0.101201,
+    "recall": 0.71977,
+    "f1": 0.177452,
+    "center_recall": 0.882917,
+    "candidate_inflation": 7.112284,
+    "tiny_iou_recall": 0.451827,
+    "typed_accuracy_on_iou_matches": 0.962667
+  },
+  "recommended_balanced_f1": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.45,
+    "precision": 0.398601,
+    "recall": 0.601727,
+    "f1": 0.479541,
+    "center_recall": 0.706334,
+    "candidate_inflation": 1.509597,
+    "tiny_iou_recall": 0.305648,
+    "typed_accuracy_on_iou_matches": 0.972887
+  },
+  "recommended_precision_at_recall60": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.45,
+    "precision": 0.398601,
+    "recall": 0.601727,
+    "f1": 0.479541,
+    "center_recall": 0.706334,
+    "candidate_inflation": 1.509597,
+    "tiny_iou_recall": 0.305648,
+    "typed_accuracy_on_iou_matches": 0.972887
+  },
+  "recommended_low_inflation_at_recall60": {
+    "score_threshold": 0.05,
+    "nms_threshold": 0.45,
+    "precision": 0.398601,
+    "recall": 0.601727,
+    "f1": 0.479541,
+    "center_recall": 0.706334,
+    "candidate_inflation": 1.509597,
+    "tiny_iou_recall": 0.305648,
+    "typed_accuracy_on_iou_matches": 0.972887
+  },
+  "delta_balanced_vs_old": {
+    "precision": 0.2974,
+    "recall": -0.118043,
+    "f1": 0.302089,
+    "center_recall": -0.176583,
+    "candidate_inflation": -5.602687
+  },
+  "decision": "Use balanced_f1 operating point for precision-sensitive downstream MoE symbol proposals; keep old recall_gate only for rescue/recall sweeps."
+}

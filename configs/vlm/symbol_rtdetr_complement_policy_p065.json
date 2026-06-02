@@ -1,0 +1,15 @@
+{
+  "version": "symbol_rtdetr_complement_policy_p065",
+  "status": "optional_complement_policy",
+  "default_detector_backbone": "v28_yolov8s_seg_rect",
+  "complement_source": "p061_rtdetr_l_bbox_smoke4000_v3",
+  "runtime_input_boundary": "Consumes detector page predictions generated from raster tile pixels only; no gold labels, parser geometry, SVG, CAD vectors, expected_json, or annotation paths at runtime.",
+  "gate": {
+    "labels": "sink_only",
+    "areas": "tiny_le_64",
+    "score_min": 0.2,
+    "max_iou_with_v28": 1.01,
+    "max_add_per_page": 20
+  },
+  "promotion_boundary": "Optional complement only. Frozen v28 remains the default detector baseline unless downstream pipeline explicitly enables this policy."
+}

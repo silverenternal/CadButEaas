@@ -1,0 +1,2292 @@
+{
+  "id": "P206d_p205b_ranker_regressor",
+  "claim_boundary": "P101-selected learned ranker/regressor; gold labels used only for offline supervision/evaluation. Requires independent validation before paper claim.",
+  "candidate_counts": {
+    "examples": 5711,
+    "positive_iou": 2305,
+    "center_positive": 2496
+  },
+  "training": {
+    "best": {
+      "score": 0.7464114832535885,
+      "epoch": 110,
+      "threshold": 0.5,
+      "val": {
+        "tp": 234,
+        "fp": 96,
+        "fn": 63,
+        "precision": 0.709091,
+        "recall": 0.787879,
+        "f1": 0.746411
+      }
+    },
+    "history_tail": [
+      {
+        "epoch": 30,
+        "loss": 0.685122,
+        "best_threshold": 0.5,
+        "val_metrics": {
+          "tp": 235,
+          "fp": 122,
+          "fn": 62,
+          "precision": 0.658263,
+          "recall": 0.791246,
+          "f1": 0.718654
+        }
+      },
+      {
+        "epoch": 40,
+        "loss": 0.626265,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 256,
+          "fp": 149,
+          "fn": 41,
+          "precision": 0.632099,
+          "recall": 0.861953,
+          "f1": 0.729345
+        }
+      },
+      {
+        "epoch": 50,
+        "loss": 0.583979,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 250,
+          "fp": 131,
+          "fn": 47,
+          "precision": 0.656168,
+          "recall": 0.841751,
+          "f1": 0.737463
+        }
+      },
+      {
+        "epoch": 60,
+        "loss": 0.567909,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 240,
+          "fp": 113,
+          "fn": 57,
+          "precision": 0.679887,
+          "recall": 0.808081,
+          "f1": 0.738462
+        }
+      },
+      {
+        "epoch": 70,
+        "loss": 0.55888,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 237,
+          "fp": 112,
+          "fn": 60,
+          "precision": 0.679083,
+          "recall": 0.79798,
+          "f1": 0.733746
+        }
+      },
+      {
+        "epoch": 80,
+        "loss": 0.5585,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 242,
+          "fp": 116,
+          "fn": 55,
+          "precision": 0.675978,
+          "recall": 0.814815,
+          "f1": 0.738931
+        }
+      },
+      {
+        "epoch": 90,
+        "loss": 0.550173,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 244,
+          "fp": 116,
+          "fn": 53,
+          "precision": 0.677778,
+          "recall": 0.821549,
+          "f1": 0.74277
+        }
+      },
+      {
+        "epoch": 100,
+        "loss": 0.548351,
+        "best_threshold": 0.5,
+        "val_metrics": {
+          "tp": 233,
+          "fp": 96,
+          "fn": 64,
+          "precision": 0.708207,
+          "recall": 0.784512,
+          "f1": 0.744409
+        }
+      },
+      {
+        "epoch": 110,
+        "loss": 0.544598,
+        "best_threshold": 0.5,
+        "val_metrics": {
+          "tp": 234,
+          "fp": 96,
+          "fn": 63,
+          "precision": 0.709091,
+          "recall": 0.787879,
+          "f1": 0.746411
+        }
+      },
+      {
+        "epoch": 120,
+        "loss": 0.541338,
+        "best_threshold": 0.45,
+        "val_metrics": {
+          "tp": 248,
+          "fp": 122,
+          "fn": 49,
+          "precision": 0.67027,
+          "recall": 0.835017,
+          "f1": 0.743628
+        }
+      }
+    ]
+  },
+  "baseline_metrics": {
+    "tp": 1299,
+    "predicted": 1942,
+    "gold": 2508,
+    "precision": 0.668898,
+    "recall": 0.517943,
+    "f1": 0.58382,
+    "center_recall": 0.552632,
+    "prediction_inflation": 0.774322,
+    "by_area_iou_recall": {
+      "large": 0.790625,
+      "medium": 0.484043,
+      "small": 0.577373,
+      "tiny": 0.220339,
+      "xlarge": 0.502463
+    },
+    "by_area_center_recall": {
+      "large": 0.801562,
+      "medium": 0.574468,
+      "small": 0.60078,
+      "tiny": 0.298023,
+      "xlarge": 0.453202
+    }
+  },
+  "best_policy": {
+    "name": "p206d_l5_t0.55_a3_r1",
+    "labels": [
+      "appliance",
+      "equipment",
+      "shower",
+      "sink",
+      "stair"
+    ],
+    "rank_threshold": 0.55,
+    "max_add_per_row": 3,
+    "max_iou_to_core": 0.08,
+    "min_dist_to_core": 8,
+    "apply_regression": true,
+    "delta_clamp": 1.2
+  },
+  "best_metrics": {
+    "tp": 1307,
+    "predicted": 1955,
+    "gold": 2508,
+    "precision": 0.668542,
+    "recall": 0.521132,
+    "f1": 0.585705,
+    "center_recall": 0.555423,
+    "prediction_inflation": 0.779506,
+    "by_area_iou_recall": {
+      "large": 0.79375,
+      "medium": 0.5,
+      "small": 0.579974,
+      "tiny": 0.221751,
+      "xlarge": 0.502463
+    },
+    "by_area_center_recall": {
+      "large": 0.803125,
+      "medium": 0.585106,
+      "small": 0.603381,
+      "tiny": 0.299435,
+      "xlarge": 0.458128
+    }
+  },
+  "delta_vs_baseline": {
+    "precision": -0.000356,
+    "recall": 0.003189,
+    "f1": 0.001885,
+    "center_recall": 0.002791,
+    "prediction_inflation": 0.005184
+  },
+  "decision": "promote_candidate",
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a3_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1955,
+        "gold": 2508,
+        "precision": 0.668542,
+        "recall": 0.521132,
+        "f1": 0.585705,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779506,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a5_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1955,
+        "gold": 2508,
+        "precision": 0.668542,
+        "recall": 0.521132,
+        "f1": 0.585705,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779506,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a8_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1955,
+        "gold": 2508,
+        "precision": 0.668542,
+        "recall": 0.521132,
+        "f1": 0.585705,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779506,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a5_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1957,
+        "gold": 2508,
+        "precision": 0.667859,
+        "recall": 0.521132,
+        "f1": 0.585442,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.780303,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a8_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1957,
+        "gold": 2508,
+        "precision": 0.667859,
+        "recall": 0.521132,
+        "f1": 0.585442,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.780303,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a2_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1306,
+        "predicted": 1954,
+        "gold": 2508,
+        "precision": 0.668373,
+        "recall": 0.520734,
+        "f1": 0.585388,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779107,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.45_a8_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1310,
+        "predicted": 1968,
+        "gold": 2508,
+        "precision": 0.66565,
+        "recall": 0.522329,
+        "f1": 0.585344,
+        "center_recall": 0.557416,
+        "prediction_inflation": 0.784689,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.583875,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.30226,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.45_a5_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1309,
+        "predicted": 1965,
+        "gold": 2508,
+        "precision": 0.666158,
+        "recall": 0.52193,
+        "f1": 0.58529,
+        "center_recall": 0.557018,
+        "prediction_inflation": 0.783493,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.583875,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.607282,
+          "tiny": 0.300847,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a3_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1306,
+        "predicted": 1955,
+        "gold": 2508,
+        "precision": 0.668031,
+        "recall": 0.520734,
+        "f1": 0.585257,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.779506,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a1_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 1953,
+        "gold": 2508,
+        "precision": 0.668203,
+        "recall": 0.520335,
+        "f1": 0.585071,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.778708,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.298023,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a2_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 1954,
+        "gold": 2508,
+        "precision": 0.667861,
+        "recall": 0.520335,
+        "f1": 0.584939,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.779107,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.298023,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a2_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.668375,
+        "recall": 0.519936,
+        "f1": 0.584885,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a3_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.668375,
+        "recall": 0.519936,
+        "f1": 0.584885,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a5_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.668375,
+        "recall": 0.519936,
+        "f1": 0.584885,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a8_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.668375,
+        "recall": 0.519936,
+        "f1": 0.584885,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a3_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.668033,
+        "recall": 0.519936,
+        "f1": 0.584753,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.45_a3_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1963,
+        "gold": 2508,
+        "precision": 0.665818,
+        "recall": 0.521132,
+        "f1": 0.584657,
+        "center_recall": 0.55622,
+        "prediction_inflation": 0.782695,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.582575,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.605982,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a1_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1953,
+        "gold": 2508,
+        "precision": 0.667691,
+        "recall": 0.519936,
+        "f1": 0.584622,
+        "center_recall": 0.554625,
+        "prediction_inflation": 0.778708,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.578674,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.602081,
+          "tiny": 0.298023,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a5_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1953,
+        "gold": 2508,
+        "precision": 0.667691,
+        "recall": 0.519936,
+        "f1": 0.584622,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778708,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a8_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1953,
+        "gold": 2508,
+        "precision": 0.667691,
+        "recall": 0.519936,
+        "f1": 0.584622,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778708,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a1_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1950,
+        "gold": 2508,
+        "precision": 0.668205,
+        "recall": 0.519537,
+        "f1": 0.584567,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777512,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.35_a8_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.35,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1314,
+        "predicted": 1988,
+        "gold": 2508,
+        "precision": 0.660966,
+        "recall": 0.523923,
+        "f1": 0.58452,
+        "center_recall": 0.558612,
+        "prediction_inflation": 0.792663,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.505319,
+          "small": 0.583875,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.30226,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.45_a2_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1306,
+        "predicted": 1961,
+        "gold": 2508,
+        "precision": 0.665987,
+        "recall": 0.520734,
+        "f1": 0.584471,
+        "center_recall": 0.555821,
+        "prediction_inflation": 0.781898,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.581274,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.604681,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a2_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.667863,
+        "recall": 0.519537,
+        "f1": 0.584436,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.45_a1_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1305,
+        "predicted": 1958,
+        "gold": 2508,
+        "precision": 0.666496,
+        "recall": 0.520335,
+        "f1": 0.584416,
+        "center_recall": 0.555423,
+        "prediction_inflation": 0.780702,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.489362,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a1_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.66752,
+        "recall": 0.519537,
+        "f1": 0.584305,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a2_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.66752,
+        "recall": 0.519537,
+        "f1": 0.584305,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a3_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.66752,
+        "recall": 0.519537,
+        "f1": 0.584305,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a5_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.66752,
+        "recall": 0.519537,
+        "f1": 0.584305,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.55_a8_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1952,
+        "gold": 2508,
+        "precision": 0.66752,
+        "recall": 0.519537,
+        "f1": 0.584305,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778309,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.35_a2_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.35,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1310,
+        "predicted": 1976,
+        "gold": 2508,
+        "precision": 0.662955,
+        "recall": 0.522329,
+        "f1": 0.5843,
+        "center_recall": 0.557416,
+        "prediction_inflation": 0.787879,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.581274,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.604681,
+          "tiny": 0.300847,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a1_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1949,
+        "gold": 2508,
+        "precision": 0.668035,
+        "recall": 0.519139,
+        "f1": 0.584249,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777113,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a2_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1949,
+        "gold": 2508,
+        "precision": 0.668035,
+        "recall": 0.519139,
+        "f1": 0.584249,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777113,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a3_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1949,
+        "gold": 2508,
+        "precision": 0.668035,
+        "recall": 0.519139,
+        "f1": 0.584249,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777113,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a5_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1949,
+        "gold": 2508,
+        "precision": 0.668035,
+        "recall": 0.519139,
+        "f1": 0.584249,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777113,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.55_a8_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.55,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1949,
+        "gold": 2508,
+        "precision": 0.668035,
+        "recall": 0.519139,
+        "f1": 0.584249,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777113,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.45_a3_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1956,
+        "gold": 2508,
+        "precision": 0.666667,
+        "recall": 0.519936,
+        "f1": 0.584229,
+        "center_recall": 0.554625,
+        "prediction_inflation": 0.779904,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.300847,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a2_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1953,
+        "gold": 2508,
+        "precision": 0.667179,
+        "recall": 0.519537,
+        "f1": 0.584174,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.778708,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.35_a1_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.35,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1307,
+        "predicted": 1967,
+        "gold": 2508,
+        "precision": 0.664464,
+        "recall": 0.521132,
+        "f1": 0.584134,
+        "center_recall": 0.55622,
+        "prediction_inflation": 0.78429,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.579974,
+          "tiny": 0.221751,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.603381,
+          "tiny": 0.299435,
+          "xlarge": 0.463054
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a1_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 1,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1950,
+        "gold": 2508,
+        "precision": 0.667692,
+        "recall": 0.519139,
+        "f1": 0.584118,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777512,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.489362,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.298023,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a2_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 2,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1950,
+        "gold": 2508,
+        "precision": 0.667692,
+        "recall": 0.519139,
+        "f1": 0.584118,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777512,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a3_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1954,
+        "gold": 2508,
+        "precision": 0.666837,
+        "recall": 0.519537,
+        "f1": 0.584043,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.779107,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a5_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1954,
+        "gold": 2508,
+        "precision": 0.666837,
+        "recall": 0.519537,
+        "f1": 0.584043,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.779107,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.50_a8_r0",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1303,
+        "predicted": 1954,
+        "gold": 2508,
+        "precision": 0.666837,
+        "recall": 0.519537,
+        "f1": 0.584043,
+        "center_recall": 0.554226,
+        "prediction_inflation": 0.779107,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.458128
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l5_t0.35_a5_r1",
+        "labels": [
+          "appliance",
+          "equipment",
+          "shower",
+          "sink",
+          "stair"
+        ],
+        "rank_threshold": 0.35,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1312,
+        "predicted": 1985,
+        "gold": 2508,
+        "precision": 0.660957,
+        "recall": 0.523126,
+        "f1": 0.58402,
+        "center_recall": 0.558214,
+        "prediction_inflation": 0.791467,
+        "by_area_iou_recall": {
+          "large": 0.79375,
+          "medium": 0.5,
+          "small": 0.582575,
+          "tiny": 0.223164,
+          "xlarge": 0.512315
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.30226,
+          "xlarge": 0.46798
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a3_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 3,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.66735,
+        "recall": 0.519139,
+        "f1": 0.583987,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a5_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.66735,
+        "recall": 0.519139,
+        "f1": 0.583987,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.50_a8_r0",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.5,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": false,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1302,
+        "predicted": 1951,
+        "gold": 2508,
+        "precision": 0.66735,
+        "recall": 0.519139,
+        "f1": 0.583987,
+        "center_recall": 0.553828,
+        "prediction_inflation": 0.777911,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.494681,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.579787,
+          "small": 0.60078,
+          "tiny": 0.299435,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.45_a5_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 5,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1958,
+        "gold": 2508,
+        "precision": 0.665986,
+        "recall": 0.519936,
+        "f1": 0.583968,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.780702,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.30226,
+          "xlarge": 0.453202
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p206d_l3_t0.45_a8_r1",
+        "labels": [
+          "bathtub",
+          "shower",
+          "sink"
+        ],
+        "rank_threshold": 0.45,
+        "max_add_per_row": 8,
+        "max_iou_to_core": 0.08,
+        "min_dist_to_core": 8,
+        "apply_regression": true,
+        "delta_clamp": 1.2
+      },
+      "metrics": {
+        "tp": 1304,
+        "predicted": 1958,
+        "gold": 2508,
+        "precision": 0.665986,
+        "recall": 0.519936,
+        "f1": 0.583968,
+        "center_recall": 0.555024,
+        "prediction_inflation": 0.780702,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.5,
+          "small": 0.577373,
+          "tiny": 0.221751,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.803125,
+          "medium": 0.585106,
+          "small": 0.60078,
+          "tiny": 0.30226,
+          "xlarge": 0.453202
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "checkpoint": "checkpoints/symbol_p205b_ranker_regressor_p206d/model.pt",
+    "json": "configs/vlm/symbol_p205b_ranker_regressor_p206d.json",
+    "md": "reports/vlm/symbol_p205b_ranker_regressor_p206d_eval.md",
+    "overlay": "reports/vlm/symbol_p205b_ranker_regressor_p206d_overlay.jsonl"
+  }
+}

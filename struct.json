@@ -1,0 +1,1272 @@
+{
+  "schema_version": "cadstruct_model_structure_v2_3",
+  "updated": "2026-05-10",
+  "name": "CadStruct raster-only MoE drawing recognition model",
+  "purpose": "Recognize non-vector architectural drawings from raster images and emit an auditable constrained scene graph.",
+  "hard_contract": {
+    "inference_input": "Raster image only. SVG/parser/expected_json geometry and semantic labels are forbidden as model input.",
+    "offline_labels_allowed_for": [
+      "training",
+      "dev policy selection",
+      "locked evaluation",
+      "error diagnosis",
+      "upper-bound analysis"
+    ],
+    "production_quality_target": "Core precision/recall/F1 metrics should reach >=0.98 on locked evaluation.",
+    "architecture_principle": "Domain-structured MoE: independent experts plus explicit relation/topology reconstruction and auditable constraint fusion, not one opaque monolithic VLM.",
+    "leakage_rule": "Every field and feature must be marked as inference_available, offline_only, or derived_from_inference_available before it can be used by a production module."
+  },
+  "developer_experience_policy": {
+    "principle": "Logical decoupling must not make the system harder to run, debug, or iterate. Architecture boundaries are audit and replacement boundaries, not a mandate to split the implementation into many isolated services.",
+    "execution_model": "Keep one-click aggregated execution for the common paths, with module-level scripts reserved for debugging, replacement, and focused training.",
+    "required_entrypoints": {
+      "smoke_pipeline": {
+        "purpose": "Fast local sanity check across the whole raster-to-graph path.",
+        "contract": "Must run without manually chaining more than one command and must emit an artifact manifest."
+      },
+      "locked_pipeline": {
+        "purpose": "Reproducible full locked evaluation path.",
+        "contract": "Must pin inputs/checkpoints/configs and write all eval/audit/review artifacts to predictable paths."
+      },
+      "module_debug": {
+        "purpose": "Focused debugging of one stage without running the full pipeline.",
+        "contract": "Each module may expose a script, but it must accept the same artifacts produced by the aggregated pipeline."
+      }
+    },
+    "current_aggregated_entrypoints": [
+      {
+        "script": "scripts/vlm/image_only_moe_v17_pipeline.py",
+        "command": "run-all",
+        "scope": "image-only candidate -> crops -> experts -> fusion -> evaluation -> audits"
+      }
+    ],
+    "implementation_rules": [
+      "Prefer shared helpers and schemas over duplicate per-script field validation.",
+      "Every new module boundary must be accompanied by a default config and an aggregated pipeline hook.",
+      "A developer should be able to reproduce the latest smoke and locked reports from a single command each.",
+      "Artifact paths should be collected in a manifest so developers do not need to inspect multiple scripts to find outputs.",
+      "Audit traces should be generated automatically by shared emitters; developers should not hand-write provenance in every call site.",
+      "Do not introduce service boundaries, network hops, or package splits unless they remove real operational complexity."
+    ],
+    "non_goals": [
+      "No immediate microservice split.",
+      "No requirement that every logical module becomes a separate package.",
+      "No manual multi-command workflow for normal training/evaluation loops."
+    ],
+    "current_reset_decision": "One-command v18 smoke/locked manifest runners are canonical control points. Long copied command sequences remain diagnostic until folded behind these runners."
+  },
+  "pipeline_entrypoints": {
+    "image_only_v17_run_all": {
+      "status": "implemented",
+      "level": "smoke_or_dev_regression",
+      "command": ".venv/bin/python scripts/vlm/image_only_moe_v17_pipeline.py run-all",
+      "scope": "image-only candidate -> crops -> existing experts -> fusion -> evaluation -> audits -> visual review",
+      "primary_inputs": [
+        "reports/vlm/image_only_structured_moe_proposals_v16.jsonl",
+        "configs/vlm/image_only_moe_contract_v1.json"
+      ],
+      "primary_outputs": [
+        "reports/vlm/image_only_moe_candidates_with_crops_v17.jsonl",
+        "reports/vlm/image_only_moe_expert_predictions_v17.jsonl",
+        "reports/vlm/image_only_moe_predictions_v17.jsonl",
+        "reports/vlm/image_only_moe_v17_eval.json",
+        "reports/vlm/image_only_moe_fusion_audit_v17.json",
+        "reports/vlm/visual_demo_image_only_moe_v17/coverage_audit.json"
+      ],
+      "artifact_manifest": "reports/vlm/image_only_moe_v17_run_manifest.json",
+      "manifest_status": "planned",
+      "developer_note": "This is the current reference pattern for developer-friendly aggregation."
+    },
+    "relation_graph_v18_smoke": {
+      "status": "implemented_as_command_sequence",
+      "level": "smoke",
+      "commands": [
+        "python -m py_compile scripts/vlm/relation_graph_reconstruction_v18.py scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py scripts/vlm/train_relation_graph_policy_v18.py scripts/vlm/select_relation_graph_candidates_v18.py scripts/vlm/audit_relation_graph_reconstruction_v18.py scripts/vlm/mine_relation_graph_hard_cases_v18.py scripts/vlm/train_relation_graph_listwise_policy_v18.py",
+        ".venv/bin/python scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py --smoke --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --output reports/vlm/relation_graph_reconstruction_v18_dataset_smoke.jsonl --audit reports/vlm/relation_graph_reconstruction_v18_dataset_smoke_audit.json",
+        ".venv/bin/python scripts/vlm/train_relation_graph_listwise_policy_v18.py --smoke --dataset reports/vlm/relation_graph_reconstruction_v18_dataset_smoke.jsonl --base-model checkpoints/relation_graph_policy_v18/model.json --hard-cases reports/vlm/relation_graph_hard_cases_v18.jsonl --model-output checkpoints/relation_graph_policy_v18/listwise_model_smoke.json --eval-output reports/vlm/relation_graph_listwise_policy_v18_smoke_eval.json --audit-output reports/vlm/relation_graph_listwise_policy_v18_smoke_audit.json",
+        ".venv/bin/python scripts/vlm/select_relation_graph_candidates_v18.py --smoke --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --model checkpoints/relation_graph_policy_v18/listwise_model_smoke.json --output reports/vlm/relation_graph_listwise_smoke_candidates_v18.jsonl --features-output reports/vlm/relation_graph_listwise_smoke_features_v18.jsonl --eval-output reports/vlm/relation_graph_listwise_smoke_selection_v18_eval.json --audit-output reports/vlm/relation_graph_listwise_smoke_selection_v18_audit.json",
+        ".venv/bin/python scripts/vlm/audit_relation_graph_reconstruction_v18.py --smoke --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --baseline-eval reports/vlm/relation_graph_reconstruction_v18_eval.json --model checkpoints/relation_graph_policy_v18/listwise_model_smoke.json --audit-output reports/vlm/relation_graph_listwise_smoke_reconstruction_v18_audit.json --review-pack reports/vlm/relation_graph_listwise_smoke_reconstruction_v18_review_pack.json"
+      ],
+      "primary_inputs": [
+        "reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl",
+        "reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl",
+        "checkpoints/relation_graph_policy_v18/model.json"
+      ],
+      "primary_outputs": [
+        "reports/vlm/relation_graph_reconstruction_v18_dataset_smoke.jsonl",
+        "checkpoints/relation_graph_policy_v18/listwise_model_smoke.json",
+        "reports/vlm/relation_graph_listwise_smoke_candidates_v18.jsonl",
+        "reports/vlm/relation_graph_listwise_smoke_reconstruction_v18_audit.json"
+      ],
+      "artifact_manifest": "reports/vlm/relation_graph_v18_smoke_manifest.json",
+      "manifest_status": "planned",
+      "developer_note": "This is currently a command sequence. The next implementation improvement is a wrapper runner that executes it as one command and emits the manifest."
+    },
+    "relation_graph_v18_locked": {
+      "status": "implemented_as_command_sequence",
+      "level": "locked_candidate",
+      "commands": [
+        "python -m py_compile scripts/vlm/relation_graph_reconstruction_v18.py scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py scripts/vlm/train_relation_graph_policy_v18.py scripts/vlm/select_relation_graph_candidates_v18.py scripts/vlm/audit_relation_graph_reconstruction_v18.py scripts/vlm/mine_relation_graph_hard_cases_v18.py scripts/vlm/train_relation_graph_listwise_policy_v18.py",
+        ".venv/bin/python scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --output reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl --audit reports/vlm/relation_graph_reconstruction_v18_dataset_audit.json",
+        ".venv/bin/python scripts/vlm/train_relation_graph_listwise_policy_v18.py --locked --dataset reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl --base-model checkpoints/relation_graph_policy_v18/model.json --hard-cases reports/vlm/relation_graph_hard_cases_v18.jsonl --model-output checkpoints/relation_graph_policy_v18/listwise_model.json --eval-output reports/vlm/relation_graph_listwise_policy_v18_eval.json --audit-output reports/vlm/relation_graph_listwise_policy_v18_audit.json",
+        ".venv/bin/python scripts/vlm/select_relation_graph_candidates_v18.py --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --model checkpoints/relation_graph_policy_v18/listwise_model.json --output reports/vlm/relation_graph_listwise_candidates_v18.jsonl --features-output reports/vlm/relation_graph_listwise_features_v18.jsonl --eval-output reports/vlm/relation_graph_listwise_selection_v18_eval.json --audit-output reports/vlm/relation_graph_listwise_selection_v18_audit.json",
+        ".venv/bin/python scripts/vlm/audit_relation_graph_reconstruction_v18.py --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --baseline-eval reports/vlm/relation_graph_reconstruction_v18_eval.json --model checkpoints/relation_graph_policy_v18/listwise_model.json --audit-output reports/vlm/relation_graph_listwise_reconstruction_v18_audit.json --review-pack reports/vlm/relation_graph_listwise_reconstruction_v18_review_pack.json"
+      ],
+      "primary_inputs": [
+        "reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl",
+        "reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl",
+        "checkpoints/relation_graph_policy_v18/model.json",
+        "reports/vlm/relation_graph_hard_cases_v18.jsonl"
+      ],
+      "primary_outputs": [
+        "reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl",
+        "checkpoints/relation_graph_policy_v18/listwise_model.json",
+        "reports/vlm/relation_graph_listwise_candidates_v18.jsonl",
+        "reports/vlm/relation_graph_listwise_features_v18.jsonl",
+        "reports/vlm/relation_graph_listwise_selection_v18_eval.json",
+        "reports/vlm/relation_graph_listwise_reconstruction_v18_audit.json",
+        "reports/vlm/relation_graph_listwise_reconstruction_v18_review_pack.json"
+      ],
+      "artifact_manifest": "reports/vlm/relation_graph_v18_locked_manifest.json",
+      "manifest_status": "planned",
+      "developer_note": "This is the active P0 relation-graph path. It should become the next one-command runner."
+    },
+    "full_raster_moe_v18_locked": {
+      "status": "planned",
+      "level": "production_promotion",
+      "command": "TBD after candidate frontend, symbol type, OCR/text graph, and graph reconstruction gates are connected",
+      "scope": "raster input -> candidate frontend -> expert inference -> symbol type -> graph reconstruction -> scene graph -> locked eval/review",
+      "artifact_manifest": "reports/vlm/full_raster_moe_v18_locked_manifest.json",
+      "manifest_status": "planned"
+    },
+    "cadstruct_moe_v18_smoke_runner": {
+      "status": "implemented_manifest_runner",
+      "level": "smoke_or_dev_regression",
+      "command": ".venv/bin/python scripts/vlm/run_cadstruct_moe_smoke_v18.py",
+      "scope": "canonical smoke control point for raster-only MoE; currently emits manifest and points to existing v17/image-only and v18 relation assets",
+      "primary_inputs": [
+        "configs/vlm/image_only_moe_contract_v1.json",
+        "reports/vlm/image_only_structured_moe_proposals_v16.jsonl",
+        "reports/vlm/relation_graph_scored_rows_cache_v18.jsonl"
+      ],
+      "primary_outputs": [
+        "reports/vlm/cadstruct_moe_smoke_manifest_v18.json"
+      ],
+      "artifact_manifest": "reports/vlm/cadstruct_moe_smoke_manifest_v18.json",
+      "manifest_status": "implemented",
+      "gate_decision": "diagnostic_only_until_integrated_runner_executes_all_stages"
+    },
+    "cadstruct_moe_v18_locked_runner": {
+      "status": "implemented_manifest_runner_blocked_on_integration",
+      "level": "locked_candidate",
+      "command": ".venv/bin/python scripts/vlm/run_cadstruct_moe_locked_v18.py",
+      "scope": "canonical locked control point for raster input -> experts -> topology -> scene graph -> audit",
+      "primary_inputs": [
+        "struct.json",
+        "todo.json",
+        "datasets/cadstruct_cubicasa5k_moe_locked"
+      ],
+      "primary_outputs": [
+        "reports/vlm/cadstruct_moe_locked_manifest_v18.json"
+      ],
+      "artifact_manifest": "reports/vlm/cadstruct_moe_locked_manifest_v18.json",
+      "manifest_status": "implemented",
+      "gate_decision": "fail_until_full_locked_pipeline_is_connected"
+    }
+  },
+  "artifact_manifest_contract": {
+    "schema_version": "cadstruct_artifact_manifest_v1",
+    "purpose": "One JSON document per aggregated run so developers can find every input, output, metric, audit, and review artifact without reading multiple scripts.",
+    "required_fields": [
+      "schema_version",
+      "run_id",
+      "pipeline_id",
+      "started_at",
+      "finished_at",
+      "command_or_commands",
+      "cwd",
+      "git_status_summary",
+      "inputs",
+      "checkpoints",
+      "outputs",
+      "eval_reports",
+      "audit_reports",
+      "review_packs",
+      "metrics_summary",
+      "gate_decision",
+      "failure_reasons",
+      "source_integrity_summary"
+    ],
+    "field_contract": {
+      "inputs": "List of objects with path, role, exists, sha256_or_size_when_available.",
+      "checkpoints": "List of model/checkpoint paths with model_id, exists, and checksum/mtime when available.",
+      "outputs": "Generated JSON/JSONL/model artifacts.",
+      "eval_reports": "Machine-readable metric reports used for gates.",
+      "audit_reports": "Detailed diagnostics and contract/source-integrity reports.",
+      "review_packs": "Human review artifacts such as overlay JSON, HTML, or image folders.",
+      "metrics_summary": "Small stable summary only; full metrics stay in eval/audit reports.",
+      "gate_decision": "One of pass, fail, blocked, diagnostic_only, not_evaluated.",
+      "failure_reasons": "List of concise blocking reasons if gate_decision is not pass.",
+      "source_integrity_summary": "Raster-only and leakage status aggregated from reports."
+    },
+    "writer_policy": "Every aggregated pipeline entrypoint must write this manifest even on failure, with missing artifacts marked exists=false instead of omitted."
+  },
+  "validator_registry": {
+    "DetectorCandidate": {
+      "status": "implemented_partial",
+      "command": ".venv/bin/python scripts/vlm/image_only_moe_v17_pipeline.py audit-contract",
+      "alternate_helper": "scripts/vlm/candidate_contract.py",
+      "input_globs": [
+        "reports/vlm/*candidate*.jsonl",
+        "reports/vlm/*detector_adapter*.jsonl"
+      ],
+      "output_audit": "reports/vlm/moe_expert_runtime_contract_v17.json",
+      "blocking_conditions": [
+        "source_integrity_violations > 0",
+        "missing candidate_id",
+        "invalid bbox",
+        "missing provenance or audit_trace"
+      ]
+    },
+    "RelationEdgeCandidate": {
+      "status": "implemented_partial",
+      "command": ".venv/bin/python scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --output reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl --audit reports/vlm/relation_graph_reconstruction_v18_dataset_audit.json",
+      "input_globs": [
+        "reports/vlm/topology_relations_v18_*_candidates.jsonl"
+      ],
+      "output_audit": "reports/vlm/relation_graph_reconstruction_v18_dataset_audit.json",
+      "blocking_conditions": [
+        "missing source/target candidate ids",
+        "component_id_missing_edges > 0",
+        "relation not in relation_taxonomy"
+      ]
+    },
+    "SelectedRelationEdge": {
+      "status": "implemented_partial",
+      "command": ".venv/bin/python scripts/vlm/select_relation_graph_candidates_v18.py --input reports/vlm/topology_relations_v18_symbol_boundary_fixed_candidates.jsonl --adapter reports/vlm/detector_adapter_v18_symbol_boundary_fixed_candidates.jsonl --model checkpoints/relation_graph_policy_v18/listwise_model.json --output reports/vlm/relation_graph_listwise_candidates_v18.jsonl --features-output reports/vlm/relation_graph_listwise_features_v18.jsonl --eval-output reports/vlm/relation_graph_listwise_selection_v18_eval.json --audit-output reports/vlm/relation_graph_listwise_selection_v18_audit.json",
+      "input_globs": [
+        "reports/vlm/relation_graph_listwise_candidates_v18.jsonl"
+      ],
+      "output_audit": "reports/vlm/relation_graph_listwise_selection_v18_audit.json",
+      "blocking_conditions": [
+        "selection_trace missing",
+        "recall_drop_abs > 0 for protected gate",
+        "source_integrity violation"
+      ]
+    },
+    "SceneGraph": {
+      "status": "planned",
+      "command": "TBD scene graph validator over final fused graph",
+      "input_globs": [
+        "reports/vlm/*scene_graph*.jsonl",
+        "reports/vlm/*predictions*.jsonl"
+      ],
+      "output_audit": "reports/vlm/scene_graph_contract_audit.json",
+      "blocking_conditions": [
+        "invalid_graph_rate > 0",
+        "node without provenance",
+        "relation endpoint missing"
+      ]
+    },
+    "FeatureLeakage": {
+      "status": "planned",
+      "command": "TBD shared leakage scanner using struct.json feature_sources",
+      "input_globs": [
+        "reports/vlm/**/*.json",
+        "reports/vlm/**/*.jsonl"
+      ],
+      "output_audit": "reports/vlm/feature_leakage_audit.json",
+      "blocking_conditions": [
+        "offline_only field present in inference artifact",
+        "gold_key used by production selector",
+        "expected_json/SVG/parser geometry used at inference"
+      ]
+    },
+    "SourceIntegrity": {
+      "status": "implemented_partial",
+      "command": "rg -n 'source_integrity_violations[^0-9]*[1-9]|annotation_geometry_used_at_inference[^f]|svg_candidate_ids_used[^f]' reports/vlm",
+      "input_globs": [
+        "reports/vlm/**/*.json",
+        "reports/vlm/**/*.jsonl"
+      ],
+      "output_audit": "reports/vlm/source_integrity_audit.json",
+      "blocking_conditions": [
+        "source_integrity_violations > 0",
+        "model_input != raster_image_only"
+      ]
+    }
+  },
+  "end_to_end_dataflow": [
+    {
+      "step": 0,
+      "id": "input_raster",
+      "module": "raster_loader_or_external_upload",
+      "input": [
+        "PNG/JPEG/rasterized PDF page"
+      ],
+      "output": [
+        "RasterPage"
+      ],
+      "owned_by": "core IO",
+      "audit_focus": [
+        "source_mode must remain image_only_raster_moe",
+        "no vector geometry leakage"
+      ]
+    },
+    {
+      "step": 1,
+      "id": "candidate_frontend",
+      "module": "raster candidate frontend",
+      "submodules": [
+        "objectness_detectors",
+        "panoptic_region_or_segment_detectors",
+        "primitive_line_and_wall_detectors",
+        "candidate_canonicalizer",
+        "candidate_budgeter"
+      ],
+      "current_scripts": [
+        "scripts/vlm/image_only_moe_v17_pipeline.py",
+        "scripts/vlm/generate_patch_heatmap_symbol_candidates_v18.py",
+        "scripts/vlm/repair_room_wall_supported_candidates_v18.py"
+      ],
+      "input": [
+        "RasterPage"
+      ],
+      "output": [
+        "RawCandidateProposal stream"
+      ],
+      "families": [
+        "boundary",
+        "space",
+        "symbol",
+        "text",
+        "sheet"
+      ],
+      "design_intent": "Recall-first raster proposal generation. This stage should over-generate plausible objects, but each proposal must preserve enough provenance for later canonicalization and graph reconstruction.",
+      "current_known_issues": [
+        "space and symbol recall are still far below the 0.98 target on locked replay",
+        "patch heatmap symbol candidates improve recoverable gold but add too many rows per gained gold",
+        "room-wall supported repair improves room recall but remains non-adoptable",
+        "candidate failure types are mixed together: missing object, coarse object, shifted object, and cap displacement need separate audits"
+      ],
+      "audit_focus": [
+        "candidate recall by family",
+        "candidate granularity",
+        "lost baseline gold keys",
+        "rows per gained gold",
+        "cap displacement loss"
+      ]
+    },
+    {
+      "step": 2,
+      "id": "candidate_contract_normalization",
+      "module": "detector candidate adapter",
+      "current_scripts": [
+        "scripts/vlm/candidate_contract.py"
+      ],
+      "input": [
+        "RawCandidateProposal stream"
+      ],
+      "output": [
+        "DetectorCandidate stream"
+      ],
+      "contract_version": "detector_candidate_contract_v1",
+      "design_intent": "Normalize all detector outputs into one auditable stream before routing and graph construction.",
+      "audit_focus": [
+        "route mismatch",
+        "missing provenance",
+        "missing audit_trace",
+        "source_integrity violations"
+      ]
+    },
+    {
+      "step": 3,
+      "id": "routing",
+      "module": "deterministic MoE router with learned-router ablation",
+      "current_mapping": {
+        "boundary": "wall_opening",
+        "space": "room_space",
+        "symbol": "symbol_fixture",
+        "text": "text_dimension",
+        "sheet": "sheet_layout"
+      },
+      "input": [
+        "DetectorCandidate stream"
+      ],
+      "output": [
+        "RoutedCandidate stream"
+      ],
+      "design_intent": "Keep expert ownership explicit and auditable. Deterministic routing is the main model path; learned routing is diagnostic/future top-k support.",
+      "audit_focus": [
+        "wrong_expert_rate",
+        "route_trace",
+        "family distribution"
+      ]
+    },
+    {
+      "step": 4,
+      "id": "crop_and_context_extraction",
+      "module": "candidate evidence builder",
+      "current_scripts": [
+        "scripts/vlm/image_only_moe_v17_pipeline.py"
+      ],
+      "input": [
+        "RoutedCandidate stream",
+        "RasterPage"
+      ],
+      "output": [
+        "CandidateEvidence stream"
+      ],
+      "design_intent": "Give every expert local visual evidence plus lightweight page context while keeping provenance tied to the candidate id.",
+      "audit_focus": [
+        "missing crop paths",
+        "bbox validity",
+        "context feature availability"
+      ]
+    },
+    {
+      "step": 5,
+      "id": "expert_inference",
+      "module": "independent domain experts",
+      "input": [
+        "RoutedCandidate stream",
+        "CandidateEvidence stream"
+      ],
+      "output": [
+        "ExpertPrediction stream"
+      ],
+      "design_intent": "Run separately replaceable experts, each with its own dataset, checkpoint, calibration, and locked gate.",
+      "experts": [
+        "wall_opening",
+        "room_space",
+        "symbol_fixture",
+        "text_dimension",
+        "sheet_layout"
+      ],
+      "audit_focus": [
+        "per-expert precision/recall/F1",
+        "confusion matrix",
+        "expert usage",
+        "calibration by family"
+      ]
+    },
+    {
+      "step": 6,
+      "id": "symbol_instance_and_type_path",
+      "module": "symbol objectness, instance separation, and type classification",
+      "status": "required_v2_split_from_symbol_fixture",
+      "current_scripts": [
+        "scripts/vlm/build_symbol_crop_dataset_v18.py",
+        "scripts/vlm/build_symbol_objectness_dataset_v18.py",
+        "scripts/vlm/train_symbol_type_classifier_v18.py"
+      ],
+      "input": [
+        "DetectorCandidate stream",
+        "CandidateEvidence stream"
+      ],
+      "output": [
+        "SymbolInstance stream",
+        "SymbolTypePrediction stream"
+      ],
+      "design_intent": "Do not ask one crop classifier to solve objectness, instance separation, and semantic typing at once.",
+      "audit_focus": [
+        "symbol_objectness_recall",
+        "instance_split_recall",
+        "type_precision",
+        "type_recall",
+        "long_tail_class_recall",
+        "abstain coverage"
+      ]
+    },
+    {
+      "step": 7,
+      "id": "relation_candidate_construction",
+      "module": "topology relation builder",
+      "current_scripts": [
+        "scripts/vlm/build_topology_relations_v18.py",
+        "scripts/vlm/train_relation_reranker_v18.py"
+      ],
+      "input": [
+        "DetectorCandidate stream",
+        "ExpertPrediction stream",
+        "SymbolInstance stream",
+        "candidate clusters"
+      ],
+      "output": [
+        "RelationEdgeCandidate stream"
+      ],
+      "relations": [
+        "bounded_by",
+        "contains_symbol",
+        "labeled_by_text",
+        "adjacent_to"
+      ],
+      "design_intent": "Construct a high-recall relation graph before pruning. Relation selection should be learned as graph reconstruction, not only scalar confidence/NMS.",
+      "audit_focus": [
+        "edge recall",
+        "edge precision",
+        "duplicate support edges",
+        "component overflow",
+        "bridge positives"
+      ]
+    },
+    {
+      "step": 8,
+      "id": "graph_reconstruction",
+      "module": "relation-aware page/component graph reconstruction",
+      "replaces_old_view": "relation_aware_compression as a post-hoc cap/reranker",
+      "submodules": [
+        "graph_node_canonicalization",
+        "edge_proposal_generation",
+        "wall_segment_duplicate_collapse",
+        "page_component_listwise_policy",
+        "constraint_decoding",
+        "graph_no_regression_gate"
+      ],
+      "current_scripts": [
+        "scripts/vlm/relation_graph_reconstruction_v18.py",
+        "scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py",
+        "scripts/vlm/train_relation_graph_policy_v18.py",
+        "scripts/vlm/train_relation_graph_listwise_policy_v18.py",
+        "scripts/vlm/select_relation_graph_candidates_v18.py",
+        "scripts/vlm/audit_relation_graph_reconstruction_v18.py",
+        "scripts/vlm/mine_relation_graph_hard_cases_v18.py"
+      ],
+      "input": [
+        "RelationEdgeCandidate stream",
+        "candidate geometry features",
+        "component graph features",
+        "hard-case labels for training only"
+      ],
+      "output": [
+        "SelectedRelationEdge stream",
+        "selection audit",
+        "review pack"
+      ],
+      "current_policy": {
+        "family": "page_component_level_listwise_with_pair_caps",
+        "no_regression_gate": "preserve original relation recall, bridge positives, and at least one positive edge per gold_key",
+        "bounded_by": {
+          "threshold": 0.01,
+          "max_per_pair": 999999,
+          "max_per_source_side": 48,
+          "status": "safe_but_still_too_weak"
+        },
+        "contains_symbol": {
+          "threshold": 0.01,
+          "max_per_pair": 16
+        },
+        "labeled_by_text": {
+          "threshold": 0.01,
+          "max_per_pair": 4
+        },
+        "adjacent_to": {
+          "threshold": 0.01,
+          "max_per_pair": 8,
+          "max_pair_tail_slots": 2
+        }
+      },
+      "current_metrics": {
+        "dataset_edge_rows": 302862,
+        "positive_edges": 42500,
+        "listwise_selected_relations": 301391,
+        "listwise_candidate_reduction": 0.004858,
+        "bounded_by_predicted_reduction": 0.00173,
+        "bounded_by_recall_drop_abs": 0.0,
+        "contains_symbol_recall_drop_abs": 0.0,
+        "labeled_by_text_recall_drop_abs": 0.0,
+        "adjacent_to_recall_drop_abs": 0.0
+      },
+      "required_next_architecture_change": "Add wall-segment duplicate collapse inside each bounded_by room-side group so caps apply to segment groups rather than raw detector fragments.",
+      "audit_focus": [
+        "gold_key_recall",
+        "bridge_recall",
+        "recall_drop_abs",
+        "candidate_reduction",
+        "duplicate_positive_reduction",
+        "wall_segment_group_recall"
+      ]
+    },
+    {
+      "step": 9,
+      "id": "constraint_fusion",
+      "module": "scene graph fusion and graph validator",
+      "input": [
+        "ExpertPrediction stream",
+        "SymbolTypePrediction stream",
+        "SelectedRelationEdge stream"
+      ],
+      "output": [
+        "SceneGraph"
+      ],
+      "design_intent": "Fuse expert predictions and selected relations into a legal scene graph with explicit invalid-rate checks.",
+      "audit_focus": [
+        "invalid graph rate",
+        "relation precision/recall",
+        "node precision/recall",
+        "constraint violations"
+      ]
+    },
+    {
+      "step": 10,
+      "id": "review_and_export",
+      "module": "visual review pack and downstream export",
+      "input": [
+        "SceneGraph",
+        "audit reports",
+        "RasterPage"
+      ],
+      "output": [
+        "JSON scene graph",
+        "visual overlays",
+        "failure gallery",
+        "metrics report"
+      ],
+      "design_intent": "Make every prediction traceable back to image evidence, candidate provenance, expert output, and graph-policy decision.",
+      "audit_focus": [
+        "human reviewability",
+        "failure clustering",
+        "regression diagnosis"
+      ]
+    }
+  ],
+  "module_contracts": {
+    "RasterPage": {
+      "producer": "input_raster",
+      "consumers": [
+        "candidate_frontend",
+        "crop_and_context_extraction",
+        "review_and_export"
+      ],
+      "required_fields": [
+        "row_id",
+        "image_path",
+        "width",
+        "height",
+        "source_integrity"
+      ],
+      "validation": [
+        "image_path exists",
+        "width > 0",
+        "height > 0",
+        "source_integrity.model_input == raster_image_only"
+      ]
+    },
+    "RawCandidateProposal": {
+      "producer": "candidate_frontend",
+      "consumers": [
+        "candidate_contract_normalization"
+      ],
+      "required_fields": [
+        "id or candidate_id",
+        "bbox",
+        "family",
+        "confidence"
+      ],
+      "optional_fields": [
+        "payload",
+        "source",
+        "route_trace",
+        "crop_hint",
+        "primitive_trace"
+      ],
+      "validation": [
+        "bbox has 4 coordinates",
+        "bbox area > 0",
+        "family in boundary/space/symbol/text/sheet"
+      ]
+    },
+    "DetectorCandidate": {
+      "producer": "candidate_contract_normalization",
+      "consumers": [
+        "routing",
+        "crop_and_context_extraction",
+        "relation_candidate_construction"
+      ],
+      "contract_version": "detector_candidate_contract_v1",
+      "required_fields": [
+        "candidate_id",
+        "row_id",
+        "family",
+        "route",
+        "candidate_type",
+        "bbox",
+        "confidence",
+        "payload",
+        "source_integrity",
+        "provenance",
+        "audit_trace"
+      ],
+      "validation_script": "scripts/vlm/candidate_contract.py",
+      "validation": [
+        "route matches family mapping unless explicitly marked diagnostic",
+        "provenance.row_id == row_id",
+        "no offline labels in payload"
+      ]
+    },
+    "RoutedCandidate": {
+      "producer": "routing",
+      "consumers": [
+        "crop_and_context_extraction",
+        "expert_inference"
+      ],
+      "required_fields": [
+        "candidate_id",
+        "row_id",
+        "family",
+        "expert",
+        "bbox",
+        "payload"
+      ],
+      "validation": [
+        "expert in model_registry",
+        "candidate_id exists in DetectorCandidate stream"
+      ]
+    },
+    "CandidateEvidence": {
+      "producer": "crop_and_context_extraction",
+      "consumers": [
+        "expert_inference",
+        "symbol_instance_and_type_path"
+      ],
+      "required_fields": [
+        "candidate_id",
+        "crop_paths",
+        "bbox",
+        "page_context",
+        "geometry_features"
+      ],
+      "validation": [
+        "all crop_paths exist",
+        "geometry_features are inference_available or derived_from_inference_available"
+      ]
+    },
+    "ExpertPrediction": {
+      "producer": "expert_inference",
+      "consumers": [
+        "relation_candidate_construction",
+        "constraint_fusion"
+      ],
+      "required_fields": [
+        "candidate_id",
+        "label",
+        "confidence",
+        "bbox",
+        "metadata",
+        "source"
+      ],
+      "validation": [
+        "label in expert label space",
+        "confidence in [0,1]",
+        "source names the expert checkpoint or rule"
+      ]
+    },
+    "SymbolInstance": {
+      "producer": "symbol_instance_and_type_path",
+      "consumers": [
+        "relation_candidate_construction",
+        "constraint_fusion"
+      ],
+      "required_fields": [
+        "symbol_instance_id",
+        "candidate_id",
+        "row_id",
+        "bbox",
+        "instance_group_id",
+        "objectness_score"
+      ],
+      "validation": [
+        "one candidate can emit multiple instances only with split audit",
+        "objectness_score in [0,1]"
+      ]
+    },
+    "SymbolTypePrediction": {
+      "producer": "symbol_instance_and_type_path",
+      "consumers": [
+        "constraint_fusion"
+      ],
+      "required_fields": [
+        "symbol_instance_id",
+        "symbol_type",
+        "confidence",
+        "abstain_flag",
+        "model_id"
+      ],
+      "validation": [
+        "production-enabled type classes must pass locked precision/recall gates",
+        "low-confidence symbols remain abstain-only"
+      ]
+    },
+    "RelationEdgeCandidate": {
+      "producer": "relation_candidate_construction",
+      "consumers": [
+        "graph_reconstruction"
+      ],
+      "required_fields": [
+        "relation_id",
+        "row_id",
+        "relation",
+        "source_candidate_id",
+        "target_candidate_id",
+        "source_cluster_id",
+        "target_cluster_id",
+        "features"
+      ],
+      "validation": [
+        "relation in relation_taxonomy.candidate_relations",
+        "source/target type constraints satisfied or warning emitted"
+      ]
+    },
+    "SelectedRelationEdge": {
+      "producer": "graph_reconstruction",
+      "consumers": [
+        "constraint_fusion"
+      ],
+      "required_fields": [
+        "relation_id",
+        "row_id",
+        "canonical_relation",
+        "source_node_id",
+        "target_node_id",
+        "score",
+        "selection_trace"
+      ],
+      "validation": [
+        "selection_trace records selected_or_suppressed reason",
+        "no_regression gate result attached for locked eval"
+      ]
+    },
+    "SceneGraph": {
+      "producer": "constraint_fusion",
+      "consumers": [
+        "review_and_export",
+        "downstream CAD/EaaS services"
+      ],
+      "required_fields": [
+        "row_id",
+        "nodes",
+        "relations",
+        "constraints",
+        "provenance",
+        "metrics"
+      ],
+      "validation": [
+        "stable ids",
+        "invalid graph rate tracked",
+        "every node/relation has provenance"
+      ]
+    }
+  },
+  "relation_taxonomy": {
+    "candidate_relations": {
+      "bounded_by": {
+        "canonical_relation": "bounds",
+        "direction": "room_or_space -> boundary_or_wall_segment",
+        "source_types": [
+          "room",
+          "space"
+        ],
+        "target_types": [
+          "wall",
+          "opening",
+          "window",
+          "boundary",
+          "wall_segment"
+        ],
+        "cardinality": "many boundary segments per room; duplicate raw fragments must collapse to wall segments",
+        "graph_constraints": [
+          "room should have enough side coverage",
+          "wall/opening fragments should not create unbounded duplicate support"
+        ]
+      },
+      "contains_symbol": {
+        "canonical_relation": "contains",
+        "direction": "room_or_space -> symbol_instance",
+        "source_types": [
+          "room",
+          "space"
+        ],
+        "target_types": [
+          "symbol",
+          "symbol_instance"
+        ],
+        "cardinality": "a symbol instance should normally have one containing room; ambiguous cases require abstain/review",
+        "graph_constraints": [
+          "preserve at least one edge for each recoverable gold_key",
+          "suppress duplicate support edges"
+        ]
+      },
+      "labeled_by_text": {
+        "canonical_relation": "labeled_by",
+        "direction": "room_or_space_or_symbol -> text",
+        "source_types": [
+          "room",
+          "space",
+          "symbol",
+          "wall",
+          "opening"
+        ],
+        "target_types": [
+          "text"
+        ],
+        "cardinality": "many-to-few, with room labels and dimension labels separated by text intent",
+        "graph_constraints": [
+          "room-label text should not be confused with dimension text"
+        ]
+      },
+      "adjacent_to": {
+        "canonical_relation": "adjacent_to",
+        "direction": "undirected node-node relation represented as directed edge pair or canonical ordered pair",
+        "source_types": [
+          "room",
+          "space",
+          "wall",
+          "opening",
+          "symbol"
+        ],
+        "target_types": [
+          "room",
+          "space",
+          "wall",
+          "opening",
+          "symbol"
+        ],
+        "cardinality": "sparse graph; bridge positives must be protected",
+        "graph_constraints": [
+          "avoid dense clique expansion",
+          "retain topology-critical bridge edges"
+        ]
+      }
+    },
+    "final_scene_graph_relations": {
+      "bounds": "Canonical room/space to boundary relation derived from bounded_by.",
+      "contains": "Canonical containment relation for room/space to symbol/text-like child nodes.",
+      "attached_to": "Attachment relation for fixtures/openings to walls or rooms; may be produced by constraint fusion.",
+      "adjacent_to": "Canonical adjacency relation.",
+      "labeled_by": "Canonical semantic label link from text to target object.",
+      "dimension_of": "Canonical dimension text/line relation, separate from room label text."
+    }
+  },
+  "model_registry": {
+    "wall_opening": {
+      "stage": "expert_inference",
+      "family": "boundary",
+      "model_kind": "graph/message-passing plus multi-scale crop features",
+      "current_metric_summary": "README reports accuracy=0.993, macro F1=0.989, R2=0.980; upstream raster boundary recall is still below 0.98.",
+      "locked_gate": {
+        "macro_f1": 0.98,
+        "boundary_detection_recall": 0.98
+      },
+      "replacement_contract": "May be replaced if it emits ExpertPrediction with the same label space and calibration report."
+    },
+    "room_space": {
+      "stage": "expert_inference",
+      "family": "space",
+      "model_kind": "context MLP plus text dictionary features",
+      "current_metric_summary": "README reports macro F1=0.989 and recall@IoU0.5=1.0; candidate generation remains the limiting factor.",
+      "locked_gate": {
+        "macro_f1": 0.98,
+        "space_detection_recall": 0.98
+      },
+      "replacement_contract": "Must keep room node ids stable enough for relation graph reconstruction."
+    },
+    "symbol_fixture": {
+      "stage": "expert_inference",
+      "family": "symbol",
+      "model_kind": "legacy 9-class tabular/tree classifier over symbol proposals",
+      "current_metric_summary": "README reports macro F1=0.872; todo notes typed precision/F1 are far below the 0.98 production target in current objectness stream.",
+      "locked_gate": {
+        "symbol_type_precision": 0.98,
+        "symbol_type_recall": 0.98,
+        "symbol_type_f1": 0.98
+      },
+      "replacement_contract": "Should be split into symbol_instance_detector plus symbol_type_classifier before production enablement."
+    },
+    "text_dimension": {
+      "stage": "expert_inference",
+      "family": "text",
+      "model_kind": "calibrated tree model plus OCR features",
+      "current_metric_summary": "README reports standalone dimension macro F1=0.984 and relation F1=0.998; E2E remains dependent on localization and graph linking.",
+      "locked_gate": {
+        "text_localization_recall": 0.98,
+        "ocr_normalized_accuracy": 0.98,
+        "labeled_by_text_precision": 0.98,
+        "labeled_by_text_recall": 0.98
+      },
+      "replacement_contract": "OCR normalization, text localization, and labeled_by_text graph policy must remain separately auditable."
+    },
+    "sheet_layout": {
+      "stage": "expert_inference",
+      "family": "sheet",
+      "model_kind": "rule placeholder",
+      "current_metric_summary": "Non-core extension; lacks real locked gold layout labels.",
+      "locked_gate": {
+        "real_gold_layout_dataset_required": true
+      },
+      "replacement_contract": "Cannot be promoted to core model until real layout gold exists."
+    },
+    "relation_graph_policy_v18": {
+      "stage": "graph_reconstruction",
+      "checkpoint": "checkpoints/relation_graph_policy_v18/model.json",
+      "listwise_checkpoint": "checkpoints/relation_graph_policy_v18/listwise_model.json",
+      "training_dataset": "reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl",
+      "hard_cases": "reports/vlm/relation_graph_hard_cases_v18.jsonl",
+      "eval_reports": [
+        "reports/vlm/relation_graph_reconstruction_v18_eval.json",
+        "reports/vlm/relation_graph_listwise_selection_v18_eval.json",
+        "reports/vlm/relation_graph_listwise_reconstruction_v18_audit.json"
+      ],
+      "current_metric_summary": "Safe listwise policies preserve original relation recall but reduce only 0.4858% of relation candidates.",
+      "locked_gate": {
+        "relation_recall_drop_abs": 0.0,
+        "candidate_reduction": 0.6,
+        "graph_precision": 0.98,
+        "graph_recall": 0.98
+      },
+      "replacement_contract": "Any replacement must emit SelectedRelationEdge with selection_trace and pass gold_key/bridge no-regression gates."
+    }
+  },
+  "feature_sources": {
+    "inference_available": [
+      "raster pixels",
+      "image metadata",
+      "candidate bbox",
+      "candidate confidence",
+      "candidate family/route",
+      "crop pixels",
+      "page context derived from candidate stream",
+      "geometry features derived from candidate bbox and image size",
+      "component graph features derived from candidate/relation candidates",
+      "model scores emitted at inference"
+    ],
+    "offline_only": [
+      "gold bbox",
+      "gold semantic type",
+      "expected_json",
+      "SVG/parser geometry",
+      "gold_key",
+      "positive/negative relation labels",
+      "locked evaluation labels",
+      "hard-case bucket labels"
+    ],
+    "derived_from_inference_available": [
+      "cluster_id",
+      "symbol_instance_id generated by inference policy",
+      "relation duplicate count",
+      "room-side group",
+      "wall-segment group generated from candidate geometry",
+      "component id",
+      "bridge degree"
+    ],
+    "leakage_tests": [
+      "candidate payload must not contain raw_label/base_raw_label/parser_raw_label/gold_candidate at inference",
+      "graph selection must not read gold_key or _label_positive at inference",
+      "review packs may include gold only when explicitly marked offline evaluation"
+    ]
+  },
+  "runtime_budgets": {
+    "candidate_frontend": {
+      "max_candidates_per_page_target": 1200,
+      "max_added_patch_candidates_per_page_target": 48,
+      "audit_metric": "rows_per_gained_gold",
+      "fallback": "emit high-recall stream with provenance, then mark budget overflow for graph policy"
+    },
+    "relation_candidate_construction": {
+      "max_edges_per_page_target": 5000,
+      "current_full_stream_edges": 302862,
+      "audit_metric": "edge_count_per_page and component_edge_p99",
+      "fallback": "do not hard-drop recall-critical relations; mark overflow and defer to graph_no_regression_gate"
+    },
+    "graph_reconstruction": {
+      "candidate_reduction_target": 0.6,
+      "current_candidate_reduction": 0.004858,
+      "recall_drop_allowed": 0.0,
+      "audit_metric": "candidate_reduction with gold_key_recall and bridge_recall"
+    },
+    "scene_graph_fusion": {
+      "invalid_graph_rate_target": 0.0,
+      "audit_metric": "invalid graph rate plus per-relation precision/recall"
+    },
+    "latency_resource": {
+      "current_reference": "README references reports/vlm/real_upstream_latency_resource_v1.json with replay/fusion P50=2654ms and P95=2691ms, excluding OCR/VLM/expert inference.",
+      "required_v2_budget_fields": [
+        "p50_ms",
+        "p95_ms",
+        "peak_rss_mb",
+        "oom_or_skip_count"
+      ]
+    }
+  },
+  "evaluation_protocol": {
+    "split_policy": {
+      "train": "Allowed for model fitting.",
+      "dev": "Allowed for policy selection and calibration.",
+      "locked": "Allowed for final evaluation only; no repeated threshold tuning after inspection.",
+      "external_or_wild": "No claim until human-gold labels exist for the target source."
+    },
+    "promotion_gates": {
+      "candidate_frontend": [
+        "family recall >= 0.98",
+        "no lost baseline recoverable gold keys",
+        "source_integrity passes"
+      ],
+      "symbol_type": [
+        "overall precision/recall/F1 >= 0.98",
+        "each production-enabled class precision/recall >= 0.98 or abstain-only"
+      ],
+      "graph_reconstruction": [
+        "recall_drop_abs == 0.0 against baseline",
+        "gold_key_recall == 1.0 for recoverable positives",
+        "bridge_recall == 1.0",
+        "candidate_reduction >= 0.60"
+      ],
+      "scene_graph": [
+        "final_scene_graph_precision >= 0.98",
+        "final_scene_graph_recall >= 0.98",
+        "invalid_graph_rate == 0.0"
+      ]
+    },
+    "required_reports": [
+      "dataset audit",
+      "locked eval",
+      "calibration audit",
+      "hard-case audit",
+      "visual review pack for failures",
+      "source-integrity audit"
+    ],
+    "known_bad_proxy_metrics": [
+      "patch-record AUC without dense replay",
+      "gold-centered hard-case performance without inference-aligned generation",
+      "candidate cap sweeps that improve precision by losing recoverable gold"
+    ]
+  },
+  "uncertainty_contract": {
+    "principle": "A module may abstain or route to review when calibrated confidence is insufficient; it must not silently emit production-enabled labels below gate.",
+    "required_fields": [
+      "confidence",
+      "calibration_model_id",
+      "abstain_flag",
+      "review_reason"
+    ],
+    "review_triggers": [
+      "symbol type below production threshold",
+      "multiple containing rooms with similar score",
+      "graph policy would drop a bridge positive under locked audit",
+      "component overflow above runtime budget",
+      "missing crop or invalid bbox"
+    ]
+  },
+  "module_boundaries_for_auditability": {
+    "candidate_frontend": {
+      "question_answered": "Did the raster detector produce enough usable object proposals?",
+      "failure_signals": [
+        "missing candidate",
+        "coarse candidate covers multiple objects",
+        "candidate center shifted outside room",
+        "cap displacement loss"
+      ]
+    },
+    "expert_models": {
+      "question_answered": "Given a proposal, did the right expert classify it correctly?",
+      "failure_signals": [
+        "wrong semantic type",
+        "low confidence positive",
+        "high confidence negative",
+        "calibration mismatch"
+      ]
+    },
+    "graph_reconstruction": {
+      "question_answered": "Did graph reconstruction keep true relations while removing duplicate support edges?",
+      "failure_signals": [
+        "lost gold_key",
+        "lost bridge positive",
+        "duplicate support overflow",
+        "component overflow",
+        "weak candidate reduction"
+      ]
+    },
+    "constraint_fusion": {
+      "question_answered": "Did final graph assembly enforce legal topology without hiding upstream errors?",
+      "failure_signals": [
+        "invalid graph",
+        "relation contradiction",
+        "gold-id repair dependency",
+        "untraceable edge"
+      ]
+    }
+  },
+  "current_bottleneck_map": [
+    {
+      "area": "space and symbol candidate generation",
+      "severity": "P0",
+      "why": "Candidate recall upper-bounds final node/edge recall. Current recoverable symbol recall remains far from 0.98.",
+      "next_design_direction": "Dense seed/component supervision aligned with inference, plus detector reconstruction rather than patch-record AUC tuning."
+    },
+    {
+      "area": "relation-aware graph reconstruction",
+      "severity": "P0",
+      "why": "Dense relation graph has high duplicate volume. Current safe listwise policies preserve recall but reduce only 0.4858% of relation candidates.",
+      "next_design_direction": "Wall-segment duplicate collapse for bounded_by, then true graph reconstruction/link prediction with explicit bridge/gold_key constraints."
+    },
+    {
+      "area": "symbol instance and type model",
+      "severity": "P0",
+      "why": "SymbolFixture standalone is below the desired 0.98 target and current symbol candidates are noisy/coarse.",
+      "next_design_direction": "Separate true symbol type detector/classifier from objectness candidate generation, with hard-negative and long-tail audit splits."
+    },
+    {
+      "area": "OCR/text localization and linking",
+      "severity": "P1",
+      "why": "Text expert is comparatively strong, but end-to-end text performance depends on localization and labeled_by_text graph links.",
+      "next_design_direction": "Keep OCR normalization separate from text-box detection and graph linking so each error type is auditable."
+    }
+  ],
+  "architecture_rework_plan": {
+    "p0_next_changes": [
+      "Implement a shared pipeline runner that executes pipeline_entrypoints command sequences and writes artifact_manifest_contract manifests.",
+      "Add manifest emitters for image_only_v17_run_all, relation_graph_v18_smoke, and relation_graph_v18_locked.",
+      "Convert validator_registry planned entries into shared helpers rather than copy-pasted per-script checks.",
+      "Make relation_taxonomy the single source of truth for relation construction and fusion.",
+      "Add wall-segment duplicate collapse to graph_reconstruction.",
+      "Split symbol_fixture into symbol_instance_detector and symbol_type_classifier.",
+      "Add graph-level dataset and loss contract following graph reconstruction rather than post-hoc cap tuning.",
+      "Expose module debug commands only after they are wired into the aggregated pipeline and artifact manifest."
+    ],
+    "research_alignment": [
+      "Raster-to-Graph style structural graph prediction for floorplans",
+      "GraphDoc-style document relation graph generation and graph-level metrics",
+      "self-constructing graph networks for learnable topology induction",
+      "panoptic symbol spotting with primitive plus image evidence"
+    ]
+  },
+  "canonical_artifacts": {
+    "plans": [
+      "todo.json"
+    ],
+    "structure_audit": [
+      "struct_audit.json"
+    ],
+    "candidate_contract": [
+      "scripts/vlm/candidate_contract.py"
+    ],
+    "image_only_pipeline": [
+      "scripts/vlm/image_only_moe_v17_pipeline.py"
+    ],
+    "relation_graph_rebuild": [
+      "scripts/vlm/relation_graph_reconstruction_v18.py",
+      "scripts/vlm/build_relation_graph_reconstruction_dataset_v18.py",
+      "scripts/vlm/train_relation_graph_listwise_policy_v18.py",
+      "scripts/vlm/select_relation_graph_candidates_v18.py",
+      "scripts/vlm/audit_relation_graph_reconstruction_v18.py"
+    ],
+    "latest_relation_reports": [
+      "reports/vlm/relation_graph_reconstruction_v18_dataset.jsonl",
+      "reports/vlm/relation_graph_listwise_candidates_v18.jsonl",
+      "reports/vlm/relation_graph_listwise_selection_v18_eval.json",
+      "reports/vlm/relation_graph_listwise_reconstruction_v18_audit.json"
+    ],
+    "high_level_docs": [
+      "README.md"
+    ]
+  }
+}

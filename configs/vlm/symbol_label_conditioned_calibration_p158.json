@@ -1,0 +1,2284 @@
+{
+  "id": "SCI-P2-158-symbol-label-conditioned-calibration-relabel-rescue",
+  "created_on": "2026-05-17",
+  "decision": "negative_keep_p157_label_cleanup_not_adopted",
+  "claim_boundary": "Post-hoc label threshold/relabel/drop sweep on 74-row public-raster overlay subset. Runtime policy uses predicted label/score/bbox only; gold targets are evaluation-only.",
+  "baseline_metrics": {
+    "p157_best": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283,
+      "center_recall": 0.58453,
+      "prediction_inflation": 0.959729
+    }
+  },
+  "baseline_detail": {
+    "symbol_iou_any": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283
+    },
+    "symbol_iou_label_exact": {
+      "tp": 1293,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.537183,
+      "recall": 0.51555,
+      "f1": 0.526144
+    },
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729,
+    "by_label_recall": {
+      "appliance": 0.791541,
+      "bathtub": 1.0,
+      "column": 0.452381,
+      "equipment": 0.534934,
+      "generic_symbol": 0.867647,
+      "shower": 0.169856,
+      "sink": 0.516739,
+      "stair": 0.303738
+    },
+    "by_pred_label_precision_any": {
+      "appliance": 0.609977,
+      "bathtub": 0.142857,
+      "column": 0.495652,
+      "equipment": 0.557823,
+      "generic_symbol": 0.599022,
+      "shower": 0.432927,
+      "sink": 0.531157,
+      "stair": 0.436242
+    },
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.563069,
+      "tiny": 0.218927,
+      "xlarge": 0.497537
+    }
+  },
+  "searched_policy_count": 432,
+  "passing_policy_count": 138,
+  "best_policy": {
+    "name": "p158_sh0.0_st0.0_col0.0_bt0.0_rel0_drop0",
+    "thresholds": {
+      "shower": 0.0,
+      "stair": 0.0,
+      "column": 0.0,
+      "bathtub": 0.0
+    },
+    "relabel": {},
+    "drop_buckets": {}
+  },
+  "best_metrics": {
+    "tp": 1313,
+    "predicted": 2407,
+    "gold": 2508,
+    "precision": 0.545492,
+    "recall": 0.523525,
+    "f1": 0.534283,
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729
+  },
+  "best_detail": {
+    "symbol_iou_any": {
+      "tp": 1313,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.545492,
+      "recall": 0.523525,
+      "f1": 0.534283
+    },
+    "symbol_iou_label_exact": {
+      "tp": 1293,
+      "predicted": 2407,
+      "gold": 2508,
+      "precision": 0.537183,
+      "recall": 0.51555,
+      "f1": 0.526144
+    },
+    "center_recall": 0.58453,
+    "prediction_inflation": 0.959729,
+    "by_label_recall": {
+      "appliance": 0.791541,
+      "bathtub": 1.0,
+      "column": 0.452381,
+      "equipment": 0.534934,
+      "generic_symbol": 0.867647,
+      "shower": 0.169856,
+      "sink": 0.516739,
+      "stair": 0.303738
+    },
+    "by_pred_label_precision_any": {
+      "appliance": 0.609977,
+      "bathtub": 0.142857,
+      "column": 0.495652,
+      "equipment": 0.557823,
+      "generic_symbol": 0.599022,
+      "shower": 0.432927,
+      "sink": 0.531157,
+      "stair": 0.436242
+    },
+    "by_area_iou_recall": {
+      "large": 0.810937,
+      "medium": 0.558511,
+      "small": 0.563069,
+      "tiny": 0.218927,
+      "xlarge": 0.497537
+    }
+  },
+  "delta_vs_p157": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "center_recall": 0.0,
+    "prediction_inflation": 0.0
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.0_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.3_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.0_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.3_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.0_col0.4_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.0,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.0_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.3_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.0_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.3_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1293,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.537183,
+          "recall": 0.51555,
+          "f1": 0.526144
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1222,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.507686,
+          "recall": 0.487241,
+          "f1": 0.497253
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.303738
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.436242
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.36_col0.4_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.36,
+          "column": 0.4,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1313,
+        "predicted": 2407,
+        "gold": 2508,
+        "precision": 0.545492,
+        "recall": 0.523525,
+        "f1": 0.534283,
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1313,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.545492,
+          "recall": 0.523525,
+          "f1": 0.534283
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2407,
+          "gold": 2508,
+          "precision": 0.510179,
+          "recall": 0.489633,
+          "f1": 0.499695
+        },
+        "center_recall": 0.58453,
+        "prediction_inflation": 0.959729,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.555556,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.497537
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.0_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1291,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.537917,
+          "recall": 0.514753,
+          "f1": 0.52608
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.294393
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.443662
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1220,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.508333,
+          "recall": 0.486443,
+          "f1": 0.497148
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.294393
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.443662
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.0_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.0
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.511667,
+          "recall": 0.489633,
+          "f1": 0.500407
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.558984,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.3_rel0_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {},
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1291,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.537917,
+          "recall": 0.514753,
+          "f1": 0.52608
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.294393
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.599022,
+          "shower": 0.432927,
+          "sink": 0.531157,
+          "stair": 0.443662
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "shower": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1220,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.508333,
+          "recall": 0.486443,
+          "f1": 0.497148
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.0,
+          "sink": 0.516739,
+          "stair": 0.294393
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.551483,
+          "sink": 0.531157,
+          "stair": 0.443662
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    },
+    {
+      "policy": {
+        "name": "p158_sh0.0_st0.4_col0.0_bt0.3_rel1_drop0",
+        "thresholds": {
+          "shower": 0.0,
+          "stair": 0.4,
+          "column": 0.0,
+          "bathtub": 0.3
+        },
+        "relabel": {
+          "stair": "generic_symbol"
+        },
+        "drop_buckets": {}
+      },
+      "metrics": {
+        "tp": 1311,
+        "predicted": 2400,
+        "gold": 2508,
+        "precision": 0.54625,
+        "recall": 0.522727,
+        "f1": 0.53423,
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938
+      },
+      "detail": {
+        "symbol_iou_any": {
+          "tp": 1311,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.54625,
+          "recall": 0.522727,
+          "f1": 0.53423
+        },
+        "symbol_iou_label_exact": {
+          "tp": 1228,
+          "predicted": 2400,
+          "gold": 2508,
+          "precision": 0.511667,
+          "recall": 0.489633,
+          "f1": 0.500407
+        },
+        "center_recall": 0.583333,
+        "prediction_inflation": 0.956938,
+        "by_label_recall": {
+          "appliance": 0.791541,
+          "bathtub": 1.0,
+          "column": 0.452381,
+          "equipment": 0.534934,
+          "generic_symbol": 0.867647,
+          "shower": 0.169856,
+          "sink": 0.516739,
+          "stair": 0.0
+        },
+        "by_pred_label_precision_any": {
+          "appliance": 0.609977,
+          "bathtub": 0.142857,
+          "column": 0.495652,
+          "equipment": 0.557823,
+          "generic_symbol": 0.558984,
+          "shower": 0.432927,
+          "sink": 0.531157
+        },
+        "by_area_iou_recall": {
+          "large": 0.809375,
+          "medium": 0.558511,
+          "small": 0.563069,
+          "tiny": 0.218927,
+          "xlarge": 0.492611
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_policy_moe_overlay_p158_best.jsonl",
+    "config_json": "/home/hugo/codes/CadButEaas/configs/vlm/symbol_label_conditioned_calibration_p158.json",
+    "report_md": "/home/hugo/codes/CadButEaas/reports/vlm/symbol_label_conditioned_calibration_p158.md"
+  },
+  "official_materialized_eval": "reports/vlm/symbol_label_conditioned_calibration_p158_eval.json",
+  "official_comparison": {
+    "policy_id": "p158_best",
+    "baseline_policy": "p157_best",
+    "delta_precision": 0.0,
+    "delta_recall": 0.0,
+    "delta_f1": 0.0,
+    "delta_center_recall": 0.0,
+    "delta_prediction_inflation": 0.0
+  },
+  "recommendation": {
+    "keep_current_best": "p157_best",
+    "reason": "best P158 policy is no-op; threshold/relabel/drop variants that improve precision lose enough recall to fail F1 gate.",
+    "next": "Proceed to P159 support-aware duplicate merge, because label-only cleanup is exhausted for now."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "id": "SCI-P1-105-image-only-proposal-generator-repair",
+  "created_on": "2026-05-15",
+  "decision": "pixel_audit_shows_room_and_symbol_masks_have_signal_but_component_extraction_is_bad; text_mask_is_near_failure",
+  "script": "scripts/vlm/audit_image_only_mask_quality_p105.py",
+  "outputs": {
+    "summary": "reports/vlm/image_only_mask_quality_audit_p105.json",
+    "report": "reports/vlm/image_only_mask_quality_audit_p105.md"
+  },
+  "claim_boundary": "offline pixel-level mask audit; target masks are evaluation-only and not runtime inputs",
+  "diagnosis_by_family": {
+    "wall": {
+      "threshold": 96,
+      "tp_pixels": 1031460,
+      "pred_pixels": 2261832,
+      "gold_pixels": 1340724,
+      "precision": 0.456029,
+      "recall": 0.769331,
+      "f1": 0.572627,
+      "iou": 0.401175,
+      "pred_to_gold_ratio": 1.687023,
+      "diagnosis": "mask_signal_usable_needs_extraction_tuning"
+    },
+    "opening": {
+      "threshold": 96,
+      "tp_pixels": 27419,
+      "pred_pixels": 426852,
+      "gold_pixels": 145712,
+      "precision": 0.064235,
+      "recall": 0.188173,
+      "f1": 0.095776,
+      "iou": 0.050297,
+      "pred_to_gold_ratio": 2.929422,
+      "diagnosis": "weak_signal_needs_training_or_calibration"
+    },
+    "window": {
+      "threshold": 32,
+      "tp_pixels": 46258,
+      "pred_pixels": 538744,
+      "gold_pixels": 182002,
+      "precision": 0.085863,
+      "recall": 0.254162,
+      "f1": 0.128361,
+      "iou": 0.068582,
+      "pred_to_gold_ratio": 2.960099,
+      "diagnosis": "weak_signal_needs_training_or_calibration"
+    },
+    "room": {
+      "threshold": 160,
+      "tp_pixels": 5250192,
+      "pred_pixels": 11848076,
+      "gold_pixels": 5472588,
+      "precision": 0.443126,
+      "recall": 0.959362,
+      "f1": 0.606234,
+      "iou": 0.434962,
+      "pred_to_gold_ratio": 2.164986,
+      "diagnosis": "mask_signal_usable_needs_extraction_tuning"
+    },
+    "room_boundary": {
+      "threshold": 32,
+      "tp_pixels": 194687,
+      "pred_pixels": 810988,
+      "gold_pixels": 424885,
+      "precision": 0.240062,
+      "recall": 0.458211,
+      "f1": 0.31506,
+      "iou": 0.186986,
+      "pred_to_gold_ratio": 1.908724,
+      "diagnosis": "weak_signal_needs_training_or_calibration"
+    },
+    "symbol": {
+      "threshold": 192,
+      "tp_pixels": 202754,
+      "pred_pixels": 1632948,
+      "gold_pixels": 294059,
+      "precision": 0.124164,
+      "recall": 0.689501,
+      "f1": 0.210434,
+      "iou": 0.117589,
+      "pred_to_gold_ratio": 5.55313,
+      "diagnosis": "mask_has_recall_but_overpredicts_needs_component_suppression"
+    },
+    "text": {
+      "threshold": 16,
+      "tp_pixels": 5303,
+      "pred_pixels": 1213544,
+      "gold_pixels": 60912,
+      "precision": 0.00437,
+      "recall": 0.08706,
+      "f1": 0.008322,
+      "iou": 0.004178,
+      "pred_to_gold_ratio": 19.922905,
+      "diagnosis": "mask_generator_failure_or_label_alignment_issue"
+    }
+  },
+  "p104_context": {
+    "best_non_oracle_space_f1": 0.008523,
+    "best_non_oracle_symbol_f1": 0.001085,
+    "best_non_oracle_text_f1": 0.0
+  },
+  "next_recommendation": "P106 should implement mask-to-box extraction repair for room/symbol using pixel thresholds and morphology/box splitting; text likely needs retraining or OCR-specific branch."
+}

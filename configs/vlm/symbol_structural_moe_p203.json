@@ -1,0 +1,190 @@
+{
+  "id": "P203_structural_symbol_moe_ablation",
+  "claim_boundary": "This is an internal P101 overlay ablation assembled from previously materialized raster-only inference artifacts. Several policies were selected on P101, so numbers are planning/ablation evidence and require independent held-out validation before paper claims.",
+  "stages": [
+    {
+      "id": "P192_box_refiner_baseline",
+      "role": "detector_plus_hand_box_refine_baseline",
+      "overlay": "reports/vlm/symbol_box_refiner_p192_overlay.jsonl",
+      "metrics": {
+        "tp": 1333,
+        "predicted": 2208,
+        "gold": 2508,
+        "precision": 0.603714,
+        "recall": 0.531499,
+        "f1": 0.56531,
+        "center_recall": 0.570175,
+        "prediction_inflation": 0.880383,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.515957,
+          "small": 0.595579,
+          "tiny": 0.216102,
+          "xlarge": 0.522167
+        },
+        "by_area_center_recall": {
+          "large": 0.821875,
+          "medium": 0.606383,
+          "small": 0.629389,
+          "tiny": 0.293785,
+          "xlarge": 0.482759
+        }
+      }
+    },
+    {
+      "id": "P197b_detector_fusion_box_refine",
+      "role": "clean_box_detector_plus_fusion_plus_box_refine",
+      "overlay": "reports/vlm/symbol_box_refiner_p197b_over_p196c_best_overlay.jsonl",
+      "metrics": {
+        "tp": 1351,
+        "predicted": 2249,
+        "gold": 2508,
+        "precision": 0.600711,
+        "recall": 0.538676,
+        "f1": 0.568005,
+        "center_recall": 0.575359,
+        "prediction_inflation": 0.89673,
+        "by_area_iou_recall": {
+          "large": 0.814063,
+          "medium": 0.537234,
+          "small": 0.607282,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.826562,
+          "medium": 0.62234,
+          "small": 0.630689,
+          "tiny": 0.300847,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "id": "P200_crop_verifier",
+      "role": "crop_level_precision_verifier",
+      "overlay": "reports/vlm/symbol_crop_verifier_p200_overlay.jsonl",
+      "metrics": {
+        "tp": 1329,
+        "predicted": 2137,
+        "gold": 2508,
+        "precision": 0.6219,
+        "recall": 0.529904,
+        "f1": 0.572228,
+        "center_recall": 0.565789,
+        "prediction_inflation": 0.852073,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.531915,
+          "small": 0.582575,
+          "tiny": 0.218927,
+          "xlarge": 0.527094
+        },
+        "by_area_center_recall": {
+          "large": 0.823438,
+          "medium": 0.611702,
+          "small": 0.607282,
+          "tiny": 0.298023,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "id": "P198_over_P200_recall_specialist",
+      "role": "sink_shower_specialist_recall_branch_after_crop_gate",
+      "overlay": "reports/vlm/symbol_sink_shower_specialist_p198_over_p200_best_overlay.jsonl",
+      "metrics": {
+        "tp": 1339,
+        "predicted": 2165,
+        "gold": 2508,
+        "precision": 0.618476,
+        "recall": 0.533892,
+        "f1": 0.573079,
+        "center_recall": 0.569777,
+        "prediction_inflation": 0.863238,
+        "by_area_iou_recall": {
+          "large": 0.810937,
+          "medium": 0.531915,
+          "small": 0.592978,
+          "tiny": 0.220339,
+          "xlarge": 0.53202
+        },
+        "by_area_center_recall": {
+          "large": 0.823438,
+          "medium": 0.611702,
+          "small": 0.618986,
+          "tiny": 0.299435,
+          "xlarge": 0.487685
+        }
+      }
+    },
+    {
+      "id": "P202_context_verifier",
+      "role": "candidate_context_graph_precision_verifier",
+      "overlay": "reports/vlm/symbol_context_verifier_p202_overlay.jsonl",
+      "metrics": {
+        "tp": 1299,
+        "predicted": 1942,
+        "gold": 2508,
+        "precision": 0.668898,
+        "recall": 0.517943,
+        "f1": 0.58382,
+        "center_recall": 0.552632,
+        "prediction_inflation": 0.774322,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.484043,
+          "small": 0.577373,
+          "tiny": 0.220339,
+          "xlarge": 0.502463
+        },
+        "by_area_center_recall": {
+          "large": 0.801562,
+          "medium": 0.574468,
+          "small": 0.60078,
+          "tiny": 0.298023,
+          "xlarge": 0.453202
+        }
+      }
+    }
+  ],
+  "current_best": {
+    "id": "P202_context_verifier",
+    "role": "candidate_context_graph_precision_verifier",
+    "overlay": "reports/vlm/symbol_context_verifier_p202_overlay.jsonl",
+    "metrics": {
+      "tp": 1299,
+      "predicted": 1942,
+      "gold": 2508,
+      "precision": 0.668898,
+      "recall": 0.517943,
+      "f1": 0.58382,
+      "center_recall": 0.552632,
+      "prediction_inflation": 0.774322,
+      "by_area_iou_recall": {
+        "large": 0.790625,
+        "medium": 0.484043,
+        "small": 0.577373,
+        "tiny": 0.220339,
+        "xlarge": 0.502463
+      },
+      "by_area_center_recall": {
+        "large": 0.801562,
+        "medium": 0.574468,
+        "small": 0.60078,
+        "tiny": 0.298023,
+        "xlarge": 0.453202
+      }
+    }
+  },
+  "interpretation": [
+    "P200 crop verifier provides a meaningful precision-gating jump over detector/box-refine stages.",
+    "P198 sink/shower specialist recovers a small amount of recall when fused after P200, showing expert complementarity.",
+    "P202 context verifier gives the largest recent gain by suppressing false positives, but also drops recall; the next research need is a better high-recall proposal source that P202 can safely gate.",
+    "Current structural direction is publishable as a MoE parser only if supported by held-out validation and transparent claim boundaries."
+  ],
+  "outputs": {
+    "json": "configs/vlm/symbol_structural_moe_p203.json",
+    "md": "reports/vlm/symbol_structural_moe_p203_locked_ablation.md"
+  }
+}

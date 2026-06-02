@@ -1,0 +1,405 @@
+{
+  "version": "v32",
+  "name": "symbol_frontend_moe_contract",
+  "updated": "2026-05-11",
+  "scope": "Raster-only symbol frontend MoE for non-vector floorplan recognition.",
+  "runtime_contract": {
+    "allowed_inputs": [
+      "raster image pixels",
+      "model weights",
+      "runtime configuration",
+      "raster-derived candidate fields"
+    ],
+    "forbidden_inputs": [
+      "SVG/parser geometry",
+      "CAD vector primitives",
+      "expected_json",
+      "gold labels",
+      "annotation paths",
+      "offline semantic ids",
+      "oracle match fields"
+    ],
+    "offline_allowed_uses": [
+      "supervised training",
+      "locked evaluation",
+      "hard-case mining",
+      "source-integrity audit"
+    ]
+  },
+  "candidate_set_schema": {
+    "required_runtime_fields": [
+      "page_id",
+      "candidate_id",
+      "bbox",
+      "score",
+      "label",
+      "label_id",
+      "proposal_source"
+    ],
+    "optional_runtime_fields": [
+      "mask",
+      "center_score",
+      "selector_score",
+      "quality_score",
+      "refined_bbox",
+      "keep",
+      "drop_reason",
+      "suppression_reason",
+      "expert_trace"
+    ],
+    "forbidden_runtime_fields": [
+      "gold_key",
+      "matched_gold_key",
+      "best_iou_rank_for_gold",
+      "score_rank_for_gold",
+      "same_gold_positive_count",
+      "same_gold_coverage_count",
+      "expected_json",
+      "annotation_path",
+      "svg_geometry",
+      "parser_geometry",
+      "semantic_id",
+      "oracle_label"
+    ]
+  },
+  "metric_claim_policy": {
+    "forbidden": "No single aggregate score may claim frontend progress.",
+    "required": [
+      "expert-specific metric gates",
+      "source_integrity",
+      "smoke_or_locked_scope",
+      "per-class error buckets",
+      "per-size error buckets",
+      "runtime_input_integrity"
+    ]
+  },
+  "experts": [
+    {
+      "id": "high_recall_proposal_expert",
+      "status": "active_baseline",
+      "primary_metric": "center_recall / IoU recall upper bound",
+      "must_not_optimize": [
+        "precision",
+        "candidate_inflation",
+        "type accuracy"
+      ],
+      "inputs": [
+        "raster image pixels",
+        "proposal model weights",
+        "runtime configuration"
+      ],
+      "outputs": [
+        "CandidateSet proposals with bbox, score, label, label_id, proposal_source"
+      ],
+      "runtime_fields": [
+        "page_id",
+        "candidate_id",
+        "bbox",
+        "score",
+        "label",
+        "label_id",
+        "proposal_source",
+        "mask",
+        "center_score",
+        "expert_trace"
+      ],
+      "runtime_forbidden_fields": [
+        "gold_key",
+        "matched_gold_key",
+        "expected_json",
+        "annotation_path",
+        "svg_geometry",
+        "parser_geometry"
+      ],
+      "stage_gates": {
+        "raw_union_center_recall_smoke_min": 0.91,
+        "raw_union_iou_0_30_recall_smoke_min": 0.72,
+        "tiny_iou_recall_must_be_reported": true
+      },
+      "assets": [
+        {
+          "id": "mask_v28_weights",
+          "kind": "model_weights",
+          "path": "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+          "required_now": true
+        },
+        {
+          "id": "mask_v28_smoke_predictions",
+          "kind": "predictions",
+          "path": "reports/vlm/symbol_yolov8s_seg_rect_v28_smoke_v30_page_predictions.jsonl",
+          "required_now": true
+        },
+        {
+          "id": "center_branch_v30_weights",
+          "kind": "model_weights",
+          "path": "checkpoints/symbol_center_branch_v30/model.pt",
+          "required_now": true
+        },
+        {
+          "id": "center_branch_v30_smoke_predictions",
+          "kind": "predictions",
+          "path": "reports/vlm/symbol_center_branch_v30_smoke_predictions.jsonl",
+          "required_now": true
+        }
+      ]
+    },
+    {
+      "id": "box_quality_refiner_expert",
+      "status": "planned_p0",
+      "primary_metric": "IoU@0.30/0.50 and tiny/small box tightness",
+      "must_not_optimize": [
+        "page-level candidate count",
+        "proposal recall"
+      ],
+      "inputs": [
+        "raster crop around candidate bbox",
+        "candidate bbox",
+        "proposal_source",
+        "runtime configuration"
+      ],
+      "outputs": [
+        "refined_bbox",
+        "quality_score",
+        "box_uncertainty"
+      ],
+      "runtime_fields": [
+        "page_id",
+        "candidate_id",
+        "bbox",
+        "proposal_source",
+        "refined_bbox",
+        "quality_score",
+        "expert_trace"
+      ],
+      "runtime_forbidden_fields": [
+        "gold_key",
+        "matched_gold_key",
+        "best_iou_rank_for_gold",
+        "expected_json",
+        "annotation_path",
+        "svg_geometry",
+        "parser_geometry"
+      ],
+      "stage_gates": {
+        "tiny_iou_recall_improves": true,
+        "overall_iou_0_30_recall_not_drop": true,
+        "center_recall_not_optimized_here": true
+      },
+      "assets": [
+        {
+          "id": "box_quality_refiner_v32_manifest",
+          "kind": "dataset_manifest",
+          "path": "datasets/symbol_box_quality_refiner_v32/manifest.json",
+          "required_now": false
+        },
+        {
+          "id": "box_quality_refiner_v32_weights",
+          "kind": "model_weights",
+          "path": "checkpoints/symbol_box_quality_refiner_v32/model.pt",
+          "required_now": false
+        }
+      ]
+    },
+    {
+      "id": "duplicate_support_suppression_expert",
+      "status": "active_baseline_needs_upgrade",
+      "primary_metric": "precision / candidate_inflation under fixed recall floor",
+      "must_not_optimize": [
+        "type accuracy",
+        "raw proposal recall",
+        "box regression"
+      ],
+      "inputs": [
+        "CandidateSet runtime fields",
+        "selector model weights",
+        "runtime configuration"
+      ],
+      "outputs": [
+        "keep",
+        "selector_score",
+        "drop_reason",
+        "suppression_reason"
+      ],
+      "runtime_fields": [
+        "page_id",
+        "candidate_id",
+        "bbox",
+        "score",
+        "label",
+        "label_id",
+        "proposal_source",
+        "selector_score",
+        "keep",
+        "drop_reason",
+        "suppression_reason",
+        "expert_trace"
+      ],
+      "runtime_forbidden_fields": [
+        "gold_key",
+        "matched_gold_key",
+        "best_iou_rank_for_gold",
+        "score_rank_for_gold",
+        "same_gold_positive_count",
+        "same_gold_coverage_count",
+        "expected_json",
+        "annotation_path",
+        "svg_geometry",
+        "parser_geometry"
+      ],
+      "stage_gates": {
+        "phase_b_center_recall_smoke_min": 0.9,
+        "phase_b_iou_0_30_recall_smoke_min": 0.72,
+        "phase_b_precision_smoke_min": 0.12,
+        "phase_b_candidate_inflation_smoke_max": 7.0
+      },
+      "assets": [
+        {
+          "id": "coverage_selector_v31_weights",
+          "kind": "model_weights",
+          "path": "checkpoints/symbol_proposal_merger_v31/coverage_selector.joblib",
+          "required_now": true
+        },
+        {
+          "id": "proposal_eval_v31_smoke_cache",
+          "kind": "eval_cache",
+          "path": "reports/vlm/symbol_proposal_eval_v31_smoke_cache.jsonl",
+          "required_now": true,
+          "offline_only": true
+        },
+        {
+          "id": "proposal_eval_v31_smoke_cache_manifest",
+          "kind": "eval_cache_manifest",
+          "path": "reports/vlm/symbol_proposal_eval_v31_smoke_cache_manifest.json",
+          "required_now": true,
+          "offline_only": true
+        }
+      ]
+    },
+    {
+      "id": "symbol_type_expert",
+      "status": "active_baseline",
+      "primary_metric": "typed accuracy / macro F1 on matched boxes",
+      "must_not_optimize": [
+        "proposal recall",
+        "candidate count",
+        "duplicate suppression"
+      ],
+      "inputs": [
+        "raster crop around candidate bbox",
+        "candidate bbox",
+        "runtime configuration"
+      ],
+      "outputs": [
+        "label",
+        "label_id",
+        "type_confidence",
+        "visual_evidence_score"
+      ],
+      "runtime_fields": [
+        "page_id",
+        "candidate_id",
+        "bbox",
+        "label",
+        "label_id",
+        "type_confidence",
+        "visual_evidence_score",
+        "expert_trace"
+      ],
+      "runtime_forbidden_fields": [
+        "gold_key",
+        "matched_gold_key",
+        "expected_json",
+        "annotation_path",
+        "svg_geometry",
+        "parser_geometry",
+        "oracle_label"
+      ],
+      "stage_gates": {
+        "typed_accuracy_on_iou_matches_smoke_min": 0.96,
+        "macro_f1_locked_must_be_reported": true
+      },
+      "assets": [
+        {
+          "id": "symbol_visual_evidence_v8_weights",
+          "kind": "model_weights",
+          "path": "checkpoints/symbol_visual_evidence_v8/model.joblib",
+          "required_now": true
+        },
+        {
+          "id": "symbol_visual_evidence_v8_eval",
+          "kind": "eval_report",
+          "path": "reports/vlm/symbol_visual_evidence_v8_eval.json",
+          "required_now": true
+        }
+      ]
+    },
+    {
+      "id": "page_coverage_auditor_router",
+      "status": "active_audit",
+      "primary_metric": "coverage loss attribution and expert routing decisions",
+      "must_not_optimize": [
+        "raw detection score",
+        "single aggregate frontend score"
+      ],
+      "inputs": [
+        "CandidateSet runtime fields",
+        "offline eval cache during audit",
+        "runtime configuration"
+      ],
+      "outputs": [
+        "per-class error buckets",
+        "per-size error buckets",
+        "source_integrity",
+        "expert routing trace",
+        "metric scope"
+      ],
+      "runtime_fields": [
+        "page_id",
+        "candidate_id",
+        "proposal_source",
+        "expert_trace",
+        "source_integrity",
+        "metric_scope"
+      ],
+      "runtime_forbidden_fields": [
+        "expected_json",
+        "annotation_path",
+        "svg_geometry",
+        "parser_geometry"
+      ],
+      "stage_gates": {
+        "source_integrity_required": true,
+        "per_class_error_buckets_required": true,
+        "per_size_error_buckets_required": true,
+        "smoke_or_locked_scope_required": true
+      },
+      "assets": [
+        {
+          "id": "v31_cache_manifest",
+          "kind": "eval_cache_manifest",
+          "path": "reports/vlm/symbol_proposal_eval_v31_smoke_cache_manifest.json",
+          "required_now": true,
+          "offline_only": true
+        },
+        {
+          "id": "v31_coverage_loss_report",
+          "kind": "eval_report",
+          "path": "reports/vlm/symbol_proposal_merger_v31_coverage_smoke_coverage_loss_adaptive_budget.json",
+          "required_now": true,
+          "offline_only": true
+        }
+      ]
+    }
+  ],
+  "current_artifact_assignment_required": [
+    "mask_v28_weights",
+    "mask_v28_smoke_predictions",
+    "center_branch_v30_weights",
+    "center_branch_v30_smoke_predictions",
+    "coverage_selector_v31_weights",
+    "proposal_eval_v31_smoke_cache",
+    "proposal_eval_v31_smoke_cache_manifest",
+    "symbol_visual_evidence_v8_weights"
+  ],
+  "next_task": "P0-02-cache-backed-suppression-audit-v31"
+}

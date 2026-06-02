@@ -1,15 +1,11 @@
 """Symbol/Fixture expert wrapper.
 
-Loads the trained v9 ExtraTrees model (13 features: bbox + room context + neighbor)
-and classifies symbols into 9 classes:
-  appliance, bathtub, column, equipment, generic_symbol, shower, sink, stair, table
+Loads the adopted v13 symbol fixture checkpoint when available. The older v9
+ExtraTrees model remains as a compatibility fallback for historical streams.
 
-v9 improvements over v8:
-- Uses class_weight='balanced' for better rare-class handling
-- generic_symbol F1: 0.065 → 0.476, bathtub F1: 0.76 → 1.00
-- Overall dev F1: 0.755 → 0.872
-
-Falls back to passthrough ("generic_symbol") if model checkpoint is not found.
+The v13 checkpoint is a historical candidate-level SVG/CubiCasa expert, not a
+raster-only symbol body/type detector. Keep its feature contract explicit so it
+does not get mistaken for a non-SVG visual model.
 """
 
 from __future__ import annotations
@@ -21,15 +17,17 @@ from typing import Any
 import numpy as np
 
 from ..schema import ExpertPrediction, RoutedCandidate
-from .base import BaseExpert, PassthroughExpert
+from .base import PassthroughExpert
 
-FEATURE_NAMES = [
+FEATURE_NAMES_V9 = [
     "cx", "cy", "width", "height", "area_norm", "log_aspect_ratio",
     "room_wet", "room_living", "room_service", "room_outdoor",
     "neighbor_count", "neighbor_avg_area_log", "neighbor_area_ratio_log",
 ]
 
-_MODEL_DIR = Path(__file__).resolve().parents[4] / "checkpoints" / "symbol_fixture_expert_v9"
+ROOT = Path(__file__).resolve().parents[4]
+_MODEL_DIR_V13 = ROOT / "checkpoints" / "symbol_fixture_expert_v13"
+_MODEL_DIR_V9 = ROOT / "checkpoints" / "symbol_fixture_expert_v9"
 
 
 def _normalize_bbox(value: Any) -> list[float] | None:
@@ -114,6 +112,46 @@ def _extract_features(
     return bbox_feats + room_feats + neighbor_feats
 
 
+def _extract_features_v13(
+    candidate: RoutedCandidate,
+    symbol_payload: dict[str, Any],
+    all_symbol_areas: list[float],
+) -> list[float] | None:
+    """Match the adopted v13 checkpoint feature contract.
+
+    The trainer used metadata.width/height when present and otherwise left
+    coordinates unnormalized against a 1x1 canvas. Preserve that behavior here
+    for reproducibility instead of silently introducing a 2000px default.
+    """
+    bbox = _normalize_bbox(symbol_payload.get("bbox") or candidate.bbox)
+    if bbox is None:
+        return None
+
+    x1, y1, x2, y2 = bbox
+    w = max(x2 - x1, 1e-6)
+    h = max(y2 - y1, 1e-6)
+    area = w * h
+    meta = symbol_payload.get("metadata") or symbol_payload.get("_page_metadata") or {}
+    page_w = float(meta.get("width") or 1.0)
+    page_h = float(meta.get("height") or 1.0)
+    raw_label = str(
+        symbol_payload.get("raw_label")
+        or symbol_payload.get("symbol_type")
+        or ""
+    ).lower()
+    return [
+        (x1 + x2) / 2.0 / max(page_w, 1.0),
+        (y1 + y2) / 2.0 / max(page_h, 1.0),
+        w / max(page_w, 1.0),
+        h / max(page_h, 1.0),
+        area / max(page_w * page_h, 1.0),
+        max(w, h) / max(min(w, h), 1e-6),
+        float(symbol_payload.get("rotation") or 0.0) / 360.0,
+        float(symbol_payload.get("hard_case_focus") or 0.0),
+        float(raw_label in {"appliance", "equipment", "electricalappliance", "firebox", "fireplace"}),
+    ]
+
+
 class SymbolFixtureExpert(PassthroughExpert):
     """Symbol/Fixture expert using trained v8 ExtraTrees model.
 
@@ -121,25 +159,45 @@ class SymbolFixtureExpert(PassthroughExpert):
     """
 
     def __init__(self) -> None:
-        super().__init__(name="symbol_fixture", family="symbol")
+        super().__init__(
+            name="symbol_fixture",
+            family="symbol",
+            label_space=("appliance", "bathtub", "column", "equipment", "generic_symbol", "shower", "sink", "stair", "table"),
+            checkpoint_hint=str(_MODEL_DIR_V13 / "model.joblib"),
+        )
         self.default_label = "generic_symbol"
         self._model: Any = None
         self._scaler: Any = None
         self._class_names: list[str] = []
+        self._model_version = "unloaded"
         self._load_model()
 
     def _load_model(self) -> None:
-        model_path = _MODEL_DIR / "model_v9.joblib"
-        if not model_path.exists():
-            return
         try:
             import joblib
-            data = joblib.load(str(model_path))
-            self._model = data.get("classifier")
-            self._scaler = data.get("scaler")
-            self._class_names = data.get("class_names", [])
+            v13_path = _MODEL_DIR_V13 / "model.joblib"
+            if v13_path.exists():
+                data = joblib.load(str(v13_path))
+                self._model = data.get("model")
+                self._scaler = None
+                self._class_names = list(data.get("labels") or [])
+                self._model_version = "v13"
+                self.checkpoint_hint = str(v13_path)
+                return
+
+            v9_path = _MODEL_DIR_V9 / "model_v9.joblib"
+            if v9_path.exists():
+                data = joblib.load(str(v9_path))
+                self._model = data.get("classifier")
+                self._scaler = data.get("scaler")
+                self._class_names = data.get("class_names", [])
+                self._model_version = "v9"
+                self.checkpoint_hint = str(v9_path)
         except Exception:
             self._model = None
+
+    def is_loaded(self) -> bool:
+        return self._model is not None
 
     def predict(self, candidates: list[RoutedCandidate]) -> list[ExpertPrediction]:
         if self._model is None:
@@ -170,7 +228,10 @@ class SymbolFixtureExpert(PassthroughExpert):
             if candidate.bbox is not None and "bbox" not in payload:
                 payload["bbox"] = list(candidate.bbox)
 
-            feats = _extract_features(payload, rooms, all_symbol_areas, mean_neighbor_area)
+            if self._model_version == "v13":
+                feats = _extract_features_v13(candidate, payload, all_symbol_areas)
+            else:
+                feats = _extract_features(payload, rooms, all_symbol_areas, mean_neighbor_area)
             if feats is None:
                 predictions.append(
                     ExpertPrediction(
@@ -197,8 +258,10 @@ class SymbolFixtureExpert(PassthroughExpert):
             y_pred_proba = self._model.predict_proba(X)
 
             for (candidate, _feats), pred_idx, proba in zip(feature_rows, y_pred, y_pred_proba):
-                if self._class_names and pred_idx < len(self._class_names):
-                    label = self._class_names[pred_idx]
+                if isinstance(pred_idx, str):
+                    label = pred_idx
+                elif self._class_names and int(pred_idx) < len(self._class_names):
+                    label = self._class_names[int(pred_idx)]
                 else:
                     label = str(pred_idx)
                 confidence = float(max(proba))
@@ -210,9 +273,13 @@ class SymbolFixtureExpert(PassthroughExpert):
                         label=label,
                         confidence=confidence,
                         bbox=candidate.bbox,
-                        source=f"{self.name}_v9_extra_trees",
+                        source=f"{self.name}_{self._model_version}_classifier",
                         metadata={
                             "candidate_type": candidate.candidate_type,
+                            "checkpoint": str(self.checkpoint_hint),
+                            "model_version": self._model_version,
+                            "feature_contract": "symbol_fixture_expert_v13_9d_candidate_contract",
+                            "runtime_boundary": "historical_candidate_classifier_not_raster_only_body_detector",
                             "all_probs": {
                                 self._class_names[i]: round(float(p), 4)
                                 for i, p in enumerate(proba)

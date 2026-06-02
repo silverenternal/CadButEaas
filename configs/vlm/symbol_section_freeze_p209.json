@@ -1,0 +1,28 @@
+{
+  "id": "P209_symbol_section_freeze_checklist",
+  "current_best_stage": "P206g",
+  "current_best_metrics": {
+    "precision": 0.668004,
+    "recall": 0.5311,
+    "f1": 0.591737,
+    "center_recall": 0.565789,
+    "prediction_inflation": 0.795056
+  },
+  "p208_frozen_delta_f1_vs_p202_ci95": [
+    0.002885,
+    0.013727
+  ],
+  "paper_claim_eligible": false,
+  "required_claim_boundary": "P101/bootstrap-bounded internal ablation only; not independent held-out/full-raster/cross-dataset/>0.95 evidence.",
+  "must_cite_artifacts": [
+    "paper_assets/symbol_moe_ablation_table_p207.md",
+    "paper_assets/symbol_moe_pipeline_p203.md",
+    "paper_assets/symbol_claim_boundary_p207.md",
+    "paper_assets/symbol_moe_manuscript_section_p209.md",
+    "configs/vlm/symbol_locked_validation_manifest_p208.json",
+    "configs/vlm/symbol_locked_validation_p208.json",
+    "reports/vlm/symbol_locked_validation_p208.md",
+    "reports/vlm/symbol_p206f_precision_repair_p206g.md"
+  ],
+  "freeze_status": "ready_for_bounded_manuscript_use"
+}

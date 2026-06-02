@@ -1,0 +1,183 @@
+{
+  "id": "SCI-P2-144-text-symbol-negative-evidence-cleanup",
+  "created_on": "2026-05-16",
+  "decision": "negative_evidence_taxonomy_ready_for_manuscript_v0_4",
+  "weak_metric_rows": [
+    {
+      "source": "image_only_target_level",
+      "family": "boundary",
+      "artifact": "p106_space_repair",
+      "precision": 0.095487,
+      "recall": 0.078854,
+      "f1": 0.086377,
+      "center_recall": 0.176438,
+      "inflation": 0.82581
+    },
+    {
+      "source": "image_only_target_level",
+      "family": "symbol",
+      "artifact": "p106_space_repair",
+      "precision": 0.018148,
+      "recall": 0.018424,
+      "f1": 0.018285,
+      "center_recall": 0.052732,
+      "inflation": 1.015248
+    },
+    {
+      "source": "image_only_target_level",
+      "family": "text",
+      "artifact": "p106_space_repair",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "center_recall": 0.0,
+      "inflation": 0.0
+    },
+    {
+      "source": "image_only_target_level",
+      "family": "boundary",
+      "artifact": "p107_symbol_peak",
+      "precision": 0.095487,
+      "recall": 0.078854,
+      "f1": 0.086377,
+      "center_recall": 0.176438,
+      "inflation": 0.82581
+    },
+    {
+      "source": "image_only_target_level",
+      "family": "symbol",
+      "artifact": "p107_symbol_peak",
+      "precision": 0.034493,
+      "recall": 0.073062,
+      "f1": 0.046862,
+      "center_recall": 0.243964,
+      "inflation": 2.11817
+    },
+    {
+      "source": "image_only_target_level",
+      "family": "text",
+      "artifact": "p107_symbol_peak",
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "center_recall": 0.0,
+      "inflation": 0.0
+    },
+    {
+      "source": "mask_pixel_quality",
+      "family": "opening",
+      "threshold": 96,
+      "precision": 0.064235,
+      "recall": 0.188173,
+      "f1": 0.095776,
+      "iou": 0.050297,
+      "pred_to_gold_ratio": 2.929422
+    },
+    {
+      "source": "mask_pixel_quality",
+      "family": "window",
+      "threshold": 32,
+      "precision": 0.085863,
+      "recall": 0.254162,
+      "f1": 0.128361,
+      "iou": 0.068582,
+      "pred_to_gold_ratio": 2.960099
+    },
+    {
+      "source": "mask_pixel_quality",
+      "family": "room_boundary",
+      "threshold": 32,
+      "precision": 0.240062,
+      "recall": 0.458211,
+      "f1": 0.31506,
+      "iou": 0.186986,
+      "pred_to_gold_ratio": 1.908724
+    },
+    {
+      "source": "mask_pixel_quality",
+      "family": "symbol",
+      "threshold": 192,
+      "precision": 0.124164,
+      "recall": 0.689501,
+      "f1": 0.210434,
+      "iou": 0.117589,
+      "pred_to_gold_ratio": 5.55313
+    },
+    {
+      "source": "mask_pixel_quality",
+      "family": "text",
+      "threshold": 16,
+      "precision": 0.00437,
+      "recall": 0.08706,
+      "f1": 0.008322,
+      "iou": 0.004178,
+      "pred_to_gold_ratio": 19.922905
+    }
+  ],
+  "taxonomy": [
+    {
+      "failure_mode": "Symbol candidate localization and operating-point instability",
+      "evidence": [
+        "P140 improves symbol F1 to 0.498955 with inflation 1.290271, but center remains 0.676635 and absolute F1 is below 0.95.",
+        "P136 found no center>=0.90 operating point from naive v28 threshold/top-k."
+      ],
+      "paper_use": "Positive bounded operating-point rescue plus remaining limitation.",
+      "future_work": "Dedicated detector/listwise selection with localization-aware loss and validation on full locked set."
+    },
+    {
+      "failure_mode": "Room/space mask-to-box overproduction",
+      "evidence": [
+        "P106 best box-space F1 remains 0.370752.",
+        "P141 high-center variant reaches center 0.922099 but inflation 4.977742 and F1 0.266489.",
+        "P137 room pixel recall exceeds 0.95 but precision/F1 are below 0.95."
+      ],
+      "paper_use": "Diagnostic evidence: room masks have recall-rich signal but current box extraction overproduces.",
+      "future_work": "Structured room merging, contour regularization, polygon reconstruction, and inflation-aware box selection."
+    },
+    {
+      "failure_mode": "Image-only text branch collapse",
+      "evidence": [
+        "Text target-level F1 is 0.0.",
+        "Text pixel F1 is 0.008322."
+      ],
+      "paper_use": "Main negative evidence or appendix limitation; do not claim text readiness.",
+      "future_work": "OCR-aware branch, text-region crops, external OCR integration, or separate annotation protocol."
+    },
+    {
+      "failure_mode": "Image-only symbol branch remains weak",
+      "evidence": [
+        "P107 symbol target-level F1 is 0.046862 despite P105 symbol pixel F1 0.210434."
+      ],
+      "paper_use": "Negative evidence showing dense mask signal does not convert to object boxes.",
+      "future_work": "Object-centric symbol detector or symbol proposal/refiner trained at box level."
+    },
+    {
+      "failure_mode": "Boundary/opening/window weak extraction",
+      "evidence": [
+        "Boundary target-level F1 is 0.086377.",
+        "Opening/window pixel F1 remain low in P105."
+      ],
+      "paper_use": "Appendix diagnostic unless paper needs a full failure taxonomy.",
+      "future_work": "Separate line/edge topology model and raster-to-vector wall/opening reconstruction."
+    },
+    {
+      "failure_mode": "Selector budget tradeoff",
+      "evidence": [
+        "P143 found zero all-gate policies in P124 top rows.",
+        "Low-inflation selector rows fail center; center-passing rows fail inflation."
+      ],
+      "paper_use": "Negative evidence for independent selector/budget layer.",
+      "future_work": "Structured global optimization with page/label budgets and spatial constraints."
+    },
+    {
+      "failure_mode": "Relation replay vs model-output gap",
+      "evidence": [
+        "P095 expected-json candidate F1 is 1.0.",
+        "P142 best model-output contains-symbol F1 is only 0.036225."
+      ],
+      "paper_use": "Use as claim-boundary evidence: relation logic works under expected-json but runtime graph quality remains blocked by upstream visual errors.",
+      "future_work": "Replay relation policy after improved symbol/room branches and evaluate on model-output graphs."
+    }
+  ],
+  "paper_recommendation": "Keep P140 symbol rescue as bounded positive. Keep P141/P142/P143 and image-only text/symbol/boundary as explicit negative evidence. Use this taxonomy to update v0.4 and avoid hiding failures."
+}

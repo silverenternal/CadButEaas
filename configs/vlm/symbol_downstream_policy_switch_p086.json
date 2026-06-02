@@ -1,0 +1,111 @@
+{
+  "id": "P0-86-symbol-downstream-policy-switch",
+  "created_on": "2026-05-15",
+  "purpose": "Minimal downstream switch contract for selecting final symbol policies in MoE smoke/eval without changing default runtime behavior.",
+  "default_policy": "v28_frozen_detector_baseline",
+  "recommended_downstream_opt_in": "p076_balanced_opt_in",
+  "policy_registry": "configs/vlm/symbol_final_policy_registry_p079.json",
+  "selection_contract": {
+    "config_key": "symbol_policy_id",
+    "cli_flag": "--symbol-policy",
+    "environment_variable": "CADSTRUCT_SYMBOL_POLICY",
+    "resolution_order": [
+      "explicit_cli_flag",
+      "explicit_config_key",
+      "environment_variable",
+      "default_policy"
+    ],
+    "default_behavior": "If no explicit policy is selected, use v28_frozen_detector_baseline."
+  },
+  "supported_policies": {
+    "v28_frozen_detector_baseline": {
+      "role": "default",
+      "overlay": "reports/vlm/symbol_policy_moe_overlay_p084/v28_frozen_detector_baseline.jsonl",
+      "locked_detector_predictions": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_predictions_p064_refresh.jsonl",
+      "downstream_smoke_p085": {
+        "records": 74,
+        "symbol_iou_recall": 0.712121,
+        "symbol_iou_precision": 0.115929,
+        "label_exact_iou_recall": 0.699362,
+        "center_recall": 0.825359,
+        "prediction_inflation": 6.142743,
+        "invalid_graph_rate": 0.0,
+        "warnings_total": 4357
+      }
+    },
+    "p076_balanced_opt_in": {
+      "role": "downstream_opt_in",
+      "overlay": "reports/vlm/symbol_policy_moe_overlay_p084/p076_balanced_opt_in.jsonl",
+      "locked_detector_predictions": "reports/vlm/symbol_balanced_policy_p076_locked_predictions.jsonl",
+      "downstream_smoke_p085": {
+        "records": 74,
+        "symbol_iou_recall": 0.732855,
+        "symbol_iou_precision": 0.116123,
+        "label_exact_iou_recall": 0.720494,
+        "center_recall": 0.825758,
+        "prediction_inflation": 6.311005,
+        "invalid_graph_rate": 0.0,
+        "warnings_total": 4357
+      },
+      "delta_vs_default": {
+        "symbol_iou_recall": 0.020734,
+        "symbol_iou_precision": 0.000194,
+        "label_exact_iou_recall": 0.021132,
+        "center_recall": 0.000399,
+        "prediction_inflation": 0.168262,
+        "invalid_graph_rate": 0.0,
+        "warnings_total": 0
+      }
+    },
+    "p070_recall_opt_in": {
+      "role": "available_not_first_downstream_choice",
+      "locked_detector_predictions": "reports/vlm/symbol_precision_gated_policy_p070_locked_predictions.jsonl",
+      "reason": "Higher packaged detector recall than P0-76, but P0-76 is the first downstream opt-in because P0-85 measured a safer balanced graph-smoke tradeoff."
+    },
+    "p078_micro_balanced_optional": {
+      "role": "available_micro_balanced_optional",
+      "locked_detector_predictions": "reports/vlm/symbol_p076_selector_p078_locked_predictions.jsonl",
+      "reason": "Micro precision/inflation optimization over P0-76; not first downstream switch until separately overlaid/evaluated."
+    },
+    "p100_precision_at_recall70_opt_in": {
+      "role": "precision_sensitive_downstream_opt_in",
+      "overlay": "reports/vlm/symbol_policy_moe_overlay_p084/p100_precision_at_recall70.jsonl",
+      "locked_detector_predictions": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_precision_at_recall70_predictions_p100.jsonl",
+      "operating_point_config": "configs/vlm/symbol_detector_operating_points_p100.json",
+      "downstream_smoke_p100": {
+        "records": 74,
+        "symbol_iou_recall": 0.680622,
+        "symbol_iou_precision": 0.188182,
+        "symbol_iou_f1": 0.294844,
+        "label_exact_iou_recall": null,
+        "center_recall": 0.793461,
+        "prediction_inflation": 3.616826,
+        "invalid_graph_rate": 0.0,
+        "warnings_total": 4357
+      },
+      "delta_vs_default": {
+        "symbol_iou_recall": -0.031499,
+        "symbol_iou_precision": 0.072253,
+        "symbol_iou_f1": 0.095447,
+        "center_recall": -0.031898,
+        "prediction_inflation": -2.525917,
+        "invalid_graph_rate": 0.0,
+        "warnings_total": 0
+      },
+      "recommendation": "Use when downstream users prefer much lower false positives/candidate volume and can accept about 3.15pp lower symbol IoU recall versus v28 default."
+    }
+  },
+  "implementation_guidance": {
+    "adapter": "scripts/vlm/prepare_symbol_policy_moe_overlay_p084.py",
+    "evaluator": "scripts/vlm/evaluate_symbol_policy_moe_overlay_p085.py",
+    "do_not_modify_default_fusion_behavior": true,
+    "preferred_integration": "Add a thin wrapper or input resolver that reads this config and selects the overlay/prediction file. Keep scripts/vlm/fuse_scene_graph_v2.py defaults unchanged unless a future task explicitly requires a CLI input override."
+  },
+  "promotion_policy": {
+    "keep_default": "v28_frozen_detector_baseline",
+    "opt_in_recommendation": "p076_balanced_opt_in is recommended only when downstream users prefer the +0.020734 symbol IoU recall gain and accept +0.168262 prediction inflation.",
+    "reopen_symbol_detector_work_only_if": "Downstream task metrics remain bottlenecked by symbol recall after selecting p076_balanced_opt_in.",
+    "precision_opt_in_recommendation": "p100_precision_at_recall70_opt_in is recommended for precision-sensitive MoE experiments: +0.072253 symbol precision, +0.095447 F1, -2.525917 inflation, with -0.031499 recall vs default on P100 downstream smoke."
+  },
+  "precision_sensitive_downstream_opt_in": "p100_precision_at_recall70_opt_in"
+}

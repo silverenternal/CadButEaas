@@ -1,0 +1,98 @@
+{
+  "id": "symbol_detector_operating_points_p100",
+  "created_on": "2026-05-15",
+  "purpose": "Runtime/evaluation operating-point registry for raster symbol detector postprocessing.",
+  "model_family": "symbol_yolov8s_seg_rect_v28",
+  "weights": "runs/segment/runs/segment/runs/vlm/symbol_yolov8s_seg_rect_v28/weights/best.pt",
+  "source_smoke_report": "reports/vlm/symbol_yolov8s_seg_rect_v28_smoke_v30_page_eval.json",
+  "default_for_precision_sensitive_moe": "precision_at_recall70_p100",
+  "operating_points": {
+    "legacy_recall_gate_v28": {
+      "role": "legacy_high_recall_default_for_rescue_sweeps",
+      "score_threshold": 0.005,
+      "nms_threshold": 0.65,
+      "metrics_smoke_v30": {
+        "score_threshold": 0.005,
+        "nms_threshold": 0.65,
+        "precision": 0.101201,
+        "recall": 0.71977,
+        "f1": 0.177452,
+        "center_recall": 0.882917,
+        "candidate_inflation": 7.112284,
+        "tiny_iou_recall": 0.451827,
+        "typed_accuracy_on_iou_matches": 0.962667
+      }
+    },
+    "balanced_f1_p100": {
+      "role": "recommended_precision_sensitive_downstream_moe",
+      "score_threshold": 0.05,
+      "nms_threshold": 0.45,
+      "metrics_smoke_v30": {
+        "score_threshold": 0.05,
+        "nms_threshold": 0.45,
+        "precision": 0.398601,
+        "recall": 0.601727,
+        "f1": 0.479541,
+        "center_recall": 0.706334,
+        "candidate_inflation": 1.509597,
+        "tiny_iou_recall": 0.305648,
+        "typed_accuracy_on_iou_matches": 0.972887
+      },
+      "delta_vs_legacy_recall_gate": {
+        "precision": 0.2974,
+        "recall": -0.118043,
+        "f1": 0.302089,
+        "center_recall": -0.176583,
+        "candidate_inflation": -5.602687
+      },
+      "metrics_locked": {
+        "score_threshold": 0.05,
+        "nms_threshold": 0.45,
+        "precision": 0.220954,
+        "recall": 0.676398,
+        "f1": 0.333097,
+        "center_recall": 0.849507,
+        "candidate_inflation": 3.061266,
+        "tiny_iou_recall": 0.402077,
+        "typed_accuracy_on_iou_matches": 0.972644
+      },
+      "delta_locked_vs_legacy_selected": {
+        "precision": 0.104311,
+        "recall": -0.0625,
+        "f1": 0.131617,
+        "center_recall": -0.057977,
+        "candidate_inflation": -3.273438
+      }
+    },
+    "precision_at_recall70_p100": {
+      "role": "safer_precision_candidate_with_locked_iou_recall_floor_0_70",
+      "score_threshold": 0.05,
+      "nms_threshold": 0.55,
+      "metrics_locked": {
+        "score_threshold": 0.05,
+        "nms_threshold": 0.55,
+        "precision": 0.188292,
+        "recall": 0.702303,
+        "f1": 0.296966,
+        "center_recall": 0.874178,
+        "candidate_inflation": 3.729852,
+        "tiny_iou_recall": 0.446588,
+        "typed_accuracy_on_iou_matches": 0.971897
+      },
+      "delta_locked_vs_legacy_selected": {
+        "precision": 0.071649,
+        "recall": -0.036595,
+        "f1": 0.095486,
+        "center_recall": -0.033306,
+        "candidate_inflation": -2.604852
+      }
+    }
+  },
+  "claim_boundary": "Smoke-derived operating point. Use locked/full evaluation before reporting final model quality.",
+  "integration_guidance": [
+    "For low false-positive downstream MoE experiments, pass --score-threshold-grid 0.05 --nms-threshold-grid 0.45 --selection-mode balanced_f1 or directly use score_threshold=0.05,nms_threshold=0.45.",
+    "For recall-rescue experiments, keep legacy_recall_gate_v28 but report candidate inflation explicitly.",
+    "Do not use this as evidence for relation-graph quality without a downstream raster-to-scene-graph evaluation."
+  ],
+  "source_locked_report": "reports/vlm/symbol_yolov8s_seg_rect_v28_locked_page_eval_p064_refresh.json"
+}

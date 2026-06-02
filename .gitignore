@@ -14,6 +14,10 @@ __pycache__/
 *.pyc
 models/
 checkpoints/
+.claude/
+.qwen/
+._*
+todo.json.backup*
 
 # Monitoring (Prometheus + Grafana)
 monitoring/prometheus_data/
@@ -24,6 +28,16 @@ monitoring/*.env
 monitoring/secrets/
 
 # Generated raster VLM smoke data
+*.pt
+*.pth
+*.onnx
+*.engine
+*.pid
+logs/
+logs_*.out
+runs/
+paper_assets/
+datasets/
 datasets/external/
 datasets/cadstruct_smoke/
 datasets/cadstruct/*.jsonl
@@ -33,3 +47,4 @@ datasets/cadstruct_sft/manifest.json
 datasets/raster_vlm/*.jsonl
 datasets/raster_vlm/images/
 reports/vlm/
+logs/remote_moe_run.log

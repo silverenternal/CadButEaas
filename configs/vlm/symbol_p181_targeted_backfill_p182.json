@@ -1,0 +1,2939 @@
+{
+  "id": "SCI-P2-182-symbol-p181-targeted-backfill",
+  "created_on": "2026-05-17",
+  "decision": "positive_adopt_p182_official_eval_confirmed",
+  "baseline_metrics": {
+    "p181_best": {
+      "tp": 1274,
+      "predicted": 2060,
+      "gold": 2508,
+      "precision": 0.618447,
+      "recall": 0.507974,
+      "f1": 0.557793,
+      "center_recall": 0.545056,
+      "prediction_inflation": 0.821372,
+      "by_area_iou_recall": {
+        "large": 0.782813,
+        "medium": 0.489362,
+        "small": 0.570871,
+        "tiny": 0.218927,
+        "xlarge": 0.428571
+      },
+      "by_area_center_recall": {
+        "large": 0.785937,
+        "medium": 0.574468,
+        "small": 0.603381,
+        "tiny": 0.295198,
+        "xlarge": 0.408867
+      }
+    }
+  },
+  "searched_policy_count": 1153,
+  "passing_policy_count": 476,
+  "best_policy": {
+    "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a1_append_score",
+    "labels": [
+      "shower",
+      "stair",
+      "sink"
+    ],
+    "buckets": [
+      "tiny",
+      "small",
+      "medium"
+    ],
+    "blocked_label_buckets": [],
+    "min_score": 0.34,
+    "max_score": 1.0,
+    "max_iou": 0.08,
+    "min_dist": 20,
+    "max_add": 1,
+    "mode": "append",
+    "drop_score_max": 0.65,
+    "sort": "score",
+    "nms": 0.75
+  },
+  "best_metrics": {
+    "tp": 1281,
+    "predicted": 2081,
+    "gold": 2508,
+    "precision": 0.615569,
+    "recall": 0.510766,
+    "f1": 0.558292,
+    "center_recall": 0.548644,
+    "prediction_inflation": 0.829745,
+    "by_area_iou_recall": {
+      "large": 0.789062,
+      "medium": 0.505319,
+      "small": 0.570871,
+      "tiny": 0.218927,
+      "xlarge": 0.428571
+    },
+    "by_area_center_recall": {
+      "large": 0.792188,
+      "medium": 0.590426,
+      "small": 0.605982,
+      "tiny": 0.295198,
+      "xlarge": 0.408867
+    }
+  },
+  "top_candidates": [
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2081,
+        "gold": 2508,
+        "precision": 0.615569,
+        "recall": 0.510766,
+        "f1": 0.558292,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.829745,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.002878,
+        "recall": 0.002792,
+        "f1": 0.000499,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008373
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2081,
+        "gold": 2508,
+        "precision": 0.615569,
+        "recall": 0.510766,
+        "f1": 0.558292,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.829745,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.002878,
+        "recall": 0.002792,
+        "f1": 0.000499,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008373
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.15_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2082,
+        "gold": 2508,
+        "precision": 0.615274,
+        "recall": 0.510766,
+        "f1": 0.55817,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830144,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003173,
+        "recall": 0.002792,
+        "f1": 0.000377,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008772
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.15_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2082,
+        "gold": 2508,
+        "precision": 0.615274,
+        "recall": 0.510766,
+        "f1": 0.55817,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830144,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003173,
+        "recall": 0.002792,
+        "f1": 0.000377,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008772
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.08_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2082,
+        "gold": 2508,
+        "precision": 0.615274,
+        "recall": 0.510766,
+        "f1": 0.55817,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830144,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003173,
+        "recall": 0.002792,
+        "f1": 0.000377,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008772
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.08_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2082,
+        "gold": 2508,
+        "precision": 0.615274,
+        "recall": 0.510766,
+        "f1": 0.55817,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830144,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003173,
+        "recall": 0.002792,
+        "f1": 0.000377,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.008772
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.3_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.3,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.3_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.3,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.15_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.15_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2083,
+        "gold": 2508,
+        "precision": 0.614978,
+        "recall": 0.510766,
+        "f1": 0.558048,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830542,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003469,
+        "recall": 0.002792,
+        "f1": 0.000255,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.00917
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.15_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.15_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.15_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.15_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.15_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.15_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.15_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.15_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.08_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.08_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.08_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.08_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.3_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.3,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.08_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.08_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.08_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.08_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.3_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.3,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2084,
+        "gold": 2508,
+        "precision": 0.614683,
+        "recall": 0.510766,
+        "f1": 0.557927,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.830941,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003764,
+        "recall": 0.002792,
+        "f1": 0.000134,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009569
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.34_i0.08_d20_a1_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1280,
+        "predicted": 2081,
+        "gold": 2508,
+        "precision": 0.615089,
+        "recall": 0.510367,
+        "f1": 0.557856,
+        "center_recall": 0.548246,
+        "prediction_inflation": 0.829745,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003358,
+        "recall": 0.002393,
+        "f1": 6.3e-05,
+        "center_recall": 0.00319,
+        "prediction_inflation": 0.008373
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.34_i0.08_d20_a1_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1280,
+        "predicted": 2081,
+        "gold": 2508,
+        "precision": 0.615089,
+        "recall": 0.510367,
+        "f1": 0.557856,
+        "center_recall": 0.548246,
+        "prediction_inflation": 0.829745,
+        "by_area_iou_recall": {
+          "large": 0.7875,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.790625,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.003358,
+        "recall": 0.002393,
+        "f1": 6.3e-05,
+        "center_recall": 0.00319,
+        "prediction_inflation": 0.008373
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.2929_i0.08_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1283,
+        "predicted": 2092,
+        "gold": 2508,
+        "precision": 0.613289,
+        "recall": 0.511563,
+        "f1": 0.557826,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.834131,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.79375,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.005158,
+        "recall": 0.003589,
+        "f1": 3.3e-05,
+        "center_recall": 0.004785,
+        "prediction_inflation": 0.012759
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.2929_i0.08_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1283,
+        "predicted": 2092,
+        "gold": 2508,
+        "precision": 0.613289,
+        "recall": 0.511563,
+        "f1": 0.557826,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.834131,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.79375,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.005158,
+        "recall": 0.003589,
+        "f1": 3.3e-05,
+        "center_recall": 0.004785,
+        "prediction_inflation": 0.012759
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.2929_i0.08_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1283,
+        "predicted": 2092,
+        "gold": 2508,
+        "precision": 0.613289,
+        "recall": 0.511563,
+        "f1": 0.557826,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.834131,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.79375,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.005158,
+        "recall": 0.003589,
+        "f1": 3.3e-05,
+        "center_recall": 0.004785,
+        "prediction_inflation": 0.012759
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b3_blk0_s0.2929_i0.08_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1283,
+        "predicted": 2092,
+        "gold": 2508,
+        "precision": 0.613289,
+        "recall": 0.511563,
+        "f1": 0.557826,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.834131,
+        "by_area_iou_recall": {
+          "large": 0.790625,
+          "medium": 0.505319,
+          "small": 0.572172,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.79375,
+          "medium": 0.590426,
+          "small": 0.608583,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.005158,
+        "recall": 0.003589,
+        "f1": 3.3e-05,
+        "center_recall": 0.004785,
+        "prediction_inflation": 0.012759
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l3_b4_blk0_s0.2929_i0.08_d20_a1_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.2929,
+        "max_score": 1.0,
+        "max_iou": 0.08,
+        "min_dist": 20,
+        "max_add": 1,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1283,
+        "predicted": 2092,
+        "gold": 2508,
+        "precision": 0.613289,
+        "recall": 0.511563,
+        "f1": 0.557826,
+        "center_recall": 0.549841,
+        "prediction_inflation": 0.834131,
+        "by_area_iou_recall": {
+          "large": 0.792188,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.795312,
+          "medium": 0.590426,
+          "small": 0.607282,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.005158,
+        "recall": 0.003589,
+        "f1": 3.3e-05,
+        "center_recall": 0.004785,
+        "prediction_inflation": 0.012759
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.15_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.15_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.15_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b3_blk0_s0.34_i0.15_d20_a3_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.15_d20_a2_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.15_d20_a2_append_low_iou_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 2,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "low_iou_score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    },
+    {
+      "policy": {
+        "name": "p180_l4_b4_blk0_s0.34_i0.15_d20_a3_append_score",
+        "labels": [
+          "shower",
+          "stair",
+          "sink",
+          "equipment"
+        ],
+        "buckets": [
+          "tiny",
+          "small",
+          "medium",
+          "large"
+        ],
+        "blocked_label_buckets": [],
+        "min_score": 0.34,
+        "max_score": 1.0,
+        "max_iou": 0.15,
+        "min_dist": 20,
+        "max_add": 3,
+        "mode": "append",
+        "drop_score_max": 0.65,
+        "sort": "score",
+        "nms": 0.75
+      },
+      "metrics": {
+        "tp": 1281,
+        "predicted": 2085,
+        "gold": 2508,
+        "precision": 0.614388,
+        "recall": 0.510766,
+        "f1": 0.557805,
+        "center_recall": 0.548644,
+        "prediction_inflation": 0.83134,
+        "by_area_iou_recall": {
+          "large": 0.789062,
+          "medium": 0.505319,
+          "small": 0.570871,
+          "tiny": 0.218927,
+          "xlarge": 0.428571
+        },
+        "by_area_center_recall": {
+          "large": 0.792188,
+          "medium": 0.590426,
+          "small": 0.605982,
+          "tiny": 0.295198,
+          "xlarge": 0.408867
+        }
+      },
+      "delta_vs_p179": {
+        "precision": -0.004059,
+        "recall": 0.002792,
+        "f1": 1.2e-05,
+        "center_recall": 0.003588,
+        "prediction_inflation": 0.009968
+      }
+    }
+  ],
+  "outputs": {
+    "overlay": "reports/vlm/symbol_policy_moe_overlay_p182_best.jsonl",
+    "config_json": "configs/vlm/symbol_p181_targeted_backfill_p182.json",
+    "report_md": "reports/vlm/symbol_p181_targeted_backfill_p182.md"
+  },
+  "official_eval": "reports/vlm/symbol_p181_targeted_backfill_p182_eval.json",
+  "delta_vs_p181": {
+    "precision": -0.002878,
+    "recall": 0.002792,
+    "f1": 0.000499,
+    "center_recall": 0.003588,
+    "prediction_inflation": 0.008373
+  }
+}

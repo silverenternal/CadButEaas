@@ -1,0 +1,226 @@
+{
+  "id": "SCI-P2-141-room-box-postprocess-rescue",
+  "created_on": "2026-05-16",
+  "claim_boundary": "P141 uses existing P106 evaluated variants plus one successful additional postprocess variant before IO timeout. No training and no target-definition changes. Larger in-memory/grid sweeps were stopped because mask PNG IO on the mount was too slow.",
+  "evaluated_variants": 5,
+  "results": [
+    {
+      "variant": "p106_default",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_default.json",
+      "space": {
+        "precision": 0.293596,
+        "recall": 0.473768,
+        "f1": 0.36253,
+        "center_recall": 0.643879,
+        "inflation": 1.613672,
+        "tp": 298,
+        "predicted": 1015,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s64_sym192_a100",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s64_sym192_a100.json",
+      "space": {
+        "precision": 0.242354,
+        "recall": 0.667727,
+        "f1": 0.355631,
+        "center_recall": 0.81399,
+        "inflation": 2.755167,
+        "tp": 420,
+        "predicted": 1733,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s80_sym192_a250",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a250.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s80_sym192_a500",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "tmp_rt96_bt64_ms48_ma20",
+      "source": "/tmp/cad_p141/eval_rt96_bt64_ms48_ma20.json",
+      "space": {
+        "precision": 0.160013,
+        "recall": 0.796502,
+        "f1": 0.266489,
+        "center_recall": 0.922099,
+        "inflation": 4.977742,
+        "tp": 501,
+        "predicted": 3131,
+        "gold": 629
+      }
+    }
+  ],
+  "best_f1_top": [
+    {
+      "variant": "p106_s80_sym192_a250",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a250.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s80_sym192_a500",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_default",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_default.json",
+      "space": {
+        "precision": 0.293596,
+        "recall": 0.473768,
+        "f1": 0.36253,
+        "center_recall": 0.643879,
+        "inflation": 1.613672,
+        "tp": 298,
+        "predicted": 1015,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s64_sym192_a100",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s64_sym192_a100.json",
+      "space": {
+        "precision": 0.242354,
+        "recall": 0.667727,
+        "f1": 0.355631,
+        "center_recall": 0.81399,
+        "inflation": 2.755167,
+        "tp": 420,
+        "predicted": 1733,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "tmp_rt96_bt64_ms48_ma20",
+      "source": "/tmp/cad_p141/eval_rt96_bt64_ms48_ma20.json",
+      "space": {
+        "precision": 0.160013,
+        "recall": 0.796502,
+        "f1": 0.266489,
+        "center_recall": 0.922099,
+        "inflation": 4.977742,
+        "tp": 501,
+        "predicted": 3131,
+        "gold": 629
+      }
+    }
+  ],
+  "best_center_top": [
+    {
+      "variant": "tmp_rt96_bt64_ms48_ma20",
+      "source": "/tmp/cad_p141/eval_rt96_bt64_ms48_ma20.json",
+      "space": {
+        "precision": 0.160013,
+        "recall": 0.796502,
+        "f1": 0.266489,
+        "center_recall": 0.922099,
+        "inflation": 4.977742,
+        "tp": 501,
+        "predicted": 3131,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s64_sym192_a100",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s64_sym192_a100.json",
+      "space": {
+        "precision": 0.242354,
+        "recall": 0.667727,
+        "f1": 0.355631,
+        "center_recall": 0.81399,
+        "inflation": 2.755167,
+        "tp": 420,
+        "predicted": 1733,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s80_sym192_a250",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a250.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_s80_sym192_a500",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+      "space": {
+        "precision": 0.274181,
+        "recall": 0.572337,
+        "f1": 0.370752,
+        "center_recall": 0.742448,
+        "inflation": 2.08744,
+        "tp": 360,
+        "predicted": 1313,
+        "gold": 629
+      }
+    },
+    {
+      "variant": "p106_default",
+      "source": "reports/vlm/image_only_multifamily_target_eval_p106_default.json",
+      "space": {
+        "precision": 0.293596,
+        "recall": 0.473768,
+        "f1": 0.36253,
+        "center_recall": 0.643879,
+        "inflation": 1.613672,
+        "tp": 298,
+        "predicted": 1015,
+        "gold": 629
+      }
+    }
+  ],
+  "near_target_count": 0,
+  "stretch_target_count": 0,
+  "decision": "room_center_rescue_found_but_inflation_too_high",
+  "recommendation": "Do not adopt as main result because inflation is high and F1 drops; keep as evidence that recall/center can be increased at cost of overproduction."
+}

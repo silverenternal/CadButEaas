@@ -1,0 +1,184 @@
+{
+  "schema_version": "cadstruct_legacy_moe_registry_v1",
+  "updated": "2026-05-10",
+  "purpose": "Machine-readable index for the historical CubiCasa-derived CadStruct MoE assets. This separates reusable canonical experts from later raster-only experiments.",
+  "project_goal_boundary": {
+    "historical_baseline": "CubiCasa/SVG-derived structured expert training and typed-candidate MoE fusion.",
+    "current_product_goal": "Non-SVG raster-only drawing recognition. It may reuse historical experts only after raster candidates are converted into the same expert-facing contracts.",
+    "do_not_conflate": [
+      "Historical expert metrics are candidate/contract-level metrics.",
+      "Recent raster-only low precision mainly measures upstream candidate/relation reconstruction, not the intrinsic quality of the historical experts."
+    ]
+  },
+  "canonical_datasets": {
+    "cubicasa_moe": {
+      "path": "datasets/cadstruct_cubicasa5k_moe",
+      "manifest": "datasets/cadstruct_cubicasa5k_moe/manifest.json",
+      "role": "CubiCasa converted MoE supervision view",
+      "status": "canonical"
+    },
+    "cubicasa_moe_locked": {
+      "path": "datasets/cadstruct_cubicasa5k_moe_locked",
+      "manifest": "datasets/cadstruct_cubicasa5k_moe_locked/manifest.json",
+      "role": "Leakage-audited train/dev/locked/smoke split",
+      "status": "canonical"
+    },
+    "graph_node_lie_topology_raster_v3": {
+      "path": "datasets/cadstruct_graph_nodes_lie_topology_raster_v3",
+      "manifest": "datasets/cadstruct_graph_nodes_lie_topology_raster_v3/manifest.json",
+      "role": "Graph-node crop/GNN expert dataset with topology, Lie/SE(2), and raster crop features",
+      "status": "canonical_expert_dataset"
+    }
+  },
+  "canonical_entrypoints": {
+    "direct_split_expert_audit": {
+      "command": ".venv/bin/python scripts/vlm/audit_direct_split_expert_metrics.py",
+      "report": "reports/vlm/cadstruct_direct_split_expert_audit.json",
+      "status": "canonical_metric_boundary"
+    },
+    "smoke_manifest": {
+      "command": ".venv/bin/python scripts/vlm/run_cadstruct_moe_smoke_v18.py",
+      "manifest": "reports/vlm/cadstruct_moe_smoke_manifest_v18.json",
+      "status": "implemented_control_point"
+    },
+    "locked_manifest": {
+      "command": ".venv/bin/python scripts/vlm/run_cadstruct_moe_locked_v18.py",
+      "manifest": "reports/vlm/cadstruct_moe_locked_manifest_v18.json",
+      "status": "implemented_control_point_failing_until_raster_frontend_is_integrated"
+    },
+    "graph_node_readme": {
+      "path": "scripts/vlm/README.md",
+      "status": "developer_runbook"
+    }
+  },
+  "expert_families": {
+    "boundary": {
+      "responsibility": "Classify/refine wall, opening/door, and window candidates after candidate generation.",
+      "canonical_reports": [
+        "reports/vlm/boundary_expert_v13_eval.json",
+        "reports/vlm/boundary_geometry_refiner_v7_eval.json",
+        "reports/vlm/boundary_label_arbitration_v1_eval.json"
+      ],
+      "canonical_checkpoints": [
+        "checkpoints/boundary_geometry_refiner_v7/model.joblib",
+        "checkpoints/boundary_label_arbitration_v1/model.joblib"
+      ],
+      "known_good_metrics": {
+        "boundary_expert_v13_locked_accuracy": 1.0,
+        "boundary_expert_v13_locked_macro_f1": 1.0
+      },
+      "contract_boundary": "Requires structural/candidate-level boundary inputs; does not by itself solve raw raster full-page candidate generation.",
+      "status": "canonical_reusable"
+    },
+    "graph_node_crop_gnn": {
+      "responsibility": "Map primitive/crop graph nodes to hard_wall, door, and window labels with local visual and message-passing evidence.",
+      "canonical_dataset": "datasets/cadstruct_graph_nodes_lie_topology_raster_v3",
+      "canonical_checkpoint": "checkpoints/cadstruct_graph_node_crop_gnn_h384_c32_ms3_l2_e24/model_best.pt",
+      "canonical_reports": [
+        "reports/vlm/graph_node_crop_gnn_h384_c32_ms3_l2_e24_calibrated_dev.json",
+        "reports/vlm/graph_node_crop_gnn_h384_c32_ms3_l2_e24_calibrated_smoke.json",
+        "reports/vlm/graph_node_crop_gnn_h384_c32_ms3_l2_e24_fine_calibration_audit.json"
+      ],
+      "known_good_metrics": {
+        "dev_accuracy": 0.991147,
+        "dev_macro_f1": 0.986746,
+        "smoke_accuracy": 0.991165,
+        "smoke_macro_f1": 0.986652
+      },
+      "contract_boundary": "Requires node/crop/proposal records. It is not a detector from a blank full-page raster.",
+      "status": "canonical_quality_path"
+    },
+    "room_space": {
+      "responsibility": "Classify room/space candidates and support room-aware scene graph fusion.",
+      "canonical_checkpoint": "checkpoints/room_space_expert_v13/model.joblib",
+      "canonical_reports": [
+        "reports/vlm/room_space_expert_v13_eval.json",
+        "reports/vlm/expert_contribution_matrix_v13.json"
+      ],
+      "known_good_metrics": {
+        "locked_macro_f1_from_contribution_matrix": 0.9821291711858883
+      },
+      "contract_boundary": "Candidate-level room classification; not a raw raster room-polygon detector.",
+      "status": "canonical_reusable"
+    },
+    "symbol_fixture": {
+      "responsibility": "Classify fixture/symbol candidates and expose long-tail/open-set confusion.",
+      "canonical_reports": [
+        "reports/vlm/symbol_fixture_expert_v13_eval.json",
+        "reports/vlm/expert_contribution_matrix_v13.json"
+      ],
+      "known_good_metrics": {
+        "locked_macro_f1_from_contribution_matrix": 0.883069
+      },
+      "contract_boundary": "Reusable for candidate-level symbol classification, but current raster-only product still needs a true symbol body/type detector.",
+      "status": "weak_canonical_needs_rebuild_for_raster"
+    },
+    "text_dimension": {
+      "responsibility": "Classify and link dimension/note text candidates after text localization/OCR.",
+      "canonical_reports": [
+        "reports/vlm/text_dimension_expert_v13_eval.json",
+        "reports/vlm/text_dimension_expert_v2_eval.json",
+        "reports/vlm/expert_contribution_matrix_v13.json"
+      ],
+      "known_good_metrics": {
+        "text_dimension_v2_locked_accuracy": 0.988009592326139,
+        "text_dimension_v13_locked_macro_f1_from_contribution_matrix": 0.973128
+      },
+      "contract_boundary": "Layout-aware text/dimension expert; not a raw OCR engine replacement.",
+      "status": "canonical_reusable_with_text_candidate_dependency"
+    }
+  },
+  "direct_split_metric_boundary": {
+    "report": "reports/vlm/cadstruct_direct_split_expert_audit.json",
+    "script": "scripts/vlm/audit_direct_split_expert_metrics.py",
+    "use_for": "Standalone expert quality and reusable asset decisions.",
+    "do_not_use_for": "End-to-end raster-only product quality; use raster locked runners for that.",
+    "current_summary": {
+      "boundary_macro_f1": 1.0,
+      "graph_node_crop_gnn_macro_f1": 0.986746,
+      "room_space_macro_f1": 0.9821291711858883,
+      "symbol_fixture_macro_f1": 0.883069,
+      "text_dimension_macro_f1": 0.973128
+    }
+  },
+  "router_and_fusion": {
+    "domain_structured_router": {
+      "report": "reports/vlm/domain_structured_moe_route_audit_v1.json",
+      "table": "reports/vlm/domain_structured_moe_main_router_table_v1.json",
+      "known_good_metrics": {
+        "deterministic_structured_router_accuracy": 1.0,
+        "learned_geometry_page_context_router_accuracy": 0.847698
+      },
+      "decision": "Use deterministic typed-candidate routing as the main auditable MoE mechanism. Learned/top-k routing remains ablation or diagnostic."
+    },
+    "scene_graph_export": {
+      "scripts": [
+        "scripts/vlm/export_moe_scene_graph.py",
+        "scripts/vlm/fuse_scene_graph.py",
+        "scripts/vlm/fuse_scene_graph_v2.py"
+      ],
+      "status": "historical_fusion_assets"
+    }
+  },
+  "experimental_raster_rebuild_assets": {
+    "public_raster_moe_supervision_v19": {
+      "manifest": "datasets/public_raster_moe_supervision_v19/manifest.json",
+      "status": "experimental_rebuild_input",
+      "note": "Useful for non-SVG/raster-only rebuild, but not evidence that historical experts failed."
+    },
+    "boundary_public_raster_v19": {
+      "manifest": "datasets/boundary_expert_public_raster_v19/manifest.json",
+      "audit": "reports/vlm/boundary_public_raster_v19_dataset_audit.json",
+      "status": "experimental_rebuild_input",
+      "note": "CubiCasa-only structural boundary view for future tile-based detector/segmenter work."
+    }
+  },
+  "documentation": {
+    "human_entrypoint": "docs/cadstruct/README.md",
+    "historical_baseline_doc": "docs/cadstruct/legacy-cubicasa-moe.md",
+    "cubicasa_svg_case_doc": "docs/cadstruct/cubicasa-svg-case.md",
+    "cubicasa_svg_case_manifest": "reports/vlm/cubicasa_svg_case/case_manifest.json",
+    "raster_only_architecture": "struct.json",
+    "raster_only_todo": "todo.json"
+  }
+}

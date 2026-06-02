@@ -1,0 +1,47 @@
+{
+  "id": "SCI-P2-145-manuscript-v0-4-after-rescue-sprint",
+  "created_on": "2026-05-16",
+  "decision": "rescue_sprint_complete_manuscript_v0_4_ready",
+  "safe_baseline": "reports/vlm/manuscript_draft_v0_3_p138.md",
+  "updated_manuscript": "reports/vlm/manuscript_draft_v0_4_p145.md",
+  "rescue_results": [
+    {
+      "task": "P140 symbol operating point",
+      "status": "bounded_success",
+      "headline": "F1 0.525029, precision 0.511338, recall 0.539474, inflation 1.055024",
+      "claim": "Use as improved bounded symbol operating point; not high-accuracy recognition."
+    },
+    {
+      "task": "P141 room box postprocess",
+      "status": "partial_negative",
+      "headline": "Best F1 0.370752; high-center variant center 0.922099 but inflation 4.977742",
+      "claim": "Room masks have center/recall signal but box extraction overproduces; not main success."
+    },
+    {
+      "task": "P142 relation model-output smoke",
+      "status": "negative_boundary",
+      "headline": "Best model-output contains-symbol F1 0.036225",
+      "claim": "P095 remains expected-json positive only; model-output relation is blocked by upstream graph quality."
+    },
+    {
+      "task": "P143 selector budget",
+      "status": "negative_tradeoff",
+      "headline": "0 pass-all rows; low-inflation policies fail center and center-passing policies fail inflation",
+      "claim": "Selector remains negative evidence."
+    },
+    {
+      "task": "P144 negative taxonomy",
+      "status": "paper_support",
+      "headline": "7 failure modes and 11 weak metric rows consolidated",
+      "claim": "Use to strengthen limitations/future work."
+    }
+  ],
+  "paper_position_after_rescue": "The paper now has a stronger bounded symbol result and clearer negative evidence. It still should not claim full end-to-end raster scene-graph robustness or high-accuracy component recognition.",
+  "remaining_human_work": [
+    "verified citations",
+    "Figure 1 schematic",
+    "optional Figure 2 with P140 symbol result",
+    "journal template formatting",
+    "final human claim audit"
+  ]
+}

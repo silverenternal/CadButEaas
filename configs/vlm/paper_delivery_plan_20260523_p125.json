@@ -1,0 +1,168 @@
+{
+  "id": "SCI-P2-125-paper-delivery-plan-20260523",
+  "created_on": "2026-05-16",
+  "deadline": "2026-05-23",
+  "decision": "paper_delivery_first_metrics_are_sufficient_for_draft_but_claims_must_be_bounded",
+  "rationale": [
+    "The current evidence is enough to draft a submission-oriented manuscript with bounded claims: P100/P101 symbol precision opt-in, P106 room extraction, P095 contains replay, and P108/P110 claim matrix.",
+    "P123/P124 show further selector compression has diminishing returns and should not block the paper draft.",
+    "The May 23 deadline requires manuscript assembly, figures/tables, and claim hygiene over additional open-ended model tuning."
+  ],
+  "paper_delivery_status": {
+    "can_write_now": true,
+    "can_submit_without_caveats": false,
+    "recommended_framing": "audit-gated MoE raster floorplan scene-graph parsing with explicit policy handoff, target-level raster evidence, relation replay evidence, and transparent negative results",
+    "must_not_claim": [
+      "fully solved raster scene-graph parsing",
+      "industrial/real drawing generalization without reviewed labels",
+      "model-output contains relation robustness beyond available evidence",
+      "image-only symbol/text branch readiness"
+    ]
+  },
+  "evidence_to_use": [
+    {
+      "claim": "P100 precision-sensitive symbol opt-in improves weak precision/inflation metrics",
+      "artifacts": [
+        "reports/vlm/raster_moe_target_level_eval_p101.json",
+        "reports/vlm/symbol_precision_opt_in_handoff_p100.md"
+      ],
+      "paper_use": "main quantitative table; limited 74-row locked overlay subset"
+    },
+    {
+      "claim": "P106 room/space mask-to-box repair is a positive image-only raster result",
+      "artifacts": [
+        "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+        "reports/vlm/mask_to_box_extraction_repair_p106.md"
+      ],
+      "paper_use": "secondary/ablation table and failure-analysis section"
+    },
+    {
+      "claim": "P095 contains relation opt-in passes expected-json/dev and secondary smoke validation",
+      "artifacts": [
+        "reports/vlm/contains_relation_policy_validation_p095_summary.json"
+      ],
+      "paper_use": "relation-policy evidence with explicit oracle/expected-json boundary"
+    },
+    {
+      "claim": "P123/P124 support-aware compression and lightweight selector do not pass gates",
+      "artifacts": [
+        "reports/vlm/symbol_support_rule_compressor_p123.md",
+        "reports/vlm/symbol_selector_p124.md"
+      ],
+      "paper_use": "negative evidence / bottleneck analysis; do not make it a main contribution"
+    },
+    {
+      "claim": "P108/P110 provide claim boundaries and manuscript skeleton",
+      "artifacts": [
+        "reports/vlm/raster_evidence_consolidation_p108.md",
+        "reports/vlm/manuscript_skeleton_evidence_map_p110.md"
+      ],
+      "paper_use": "structure, limitations, and reproducibility framing"
+    }
+  ],
+  "day_by_day_plan": [
+    {
+      "date": "2026-05-16",
+      "goal": "Freeze claim boundaries and paper delivery plan",
+      "deliverables": [
+        "P125 delivery plan",
+        "todo.json deadline sync"
+      ],
+      "blockers": []
+    },
+    {
+      "date": "2026-05-17",
+      "goal": "Create manuscript draft v0.1",
+      "deliverables": [
+        "reports/vlm/paper_draft_outline_p126.md",
+        "paper/ or reports/vlm manuscript draft skeleton"
+      ],
+      "blockers": [
+        "Need final title/author/target journal preference if available"
+      ]
+    },
+    {
+      "date": "2026-05-18",
+      "goal": "Build tables from existing metrics",
+      "deliverables": [
+        "claim-evidence table",
+        "P100/P101 symbol table",
+        "P106/P107 diagnostic table",
+        "P095 relation table"
+      ],
+      "blockers": []
+    },
+    {
+      "date": "2026-05-19",
+      "goal": "Draft methods and runtime contract sections",
+      "deliverables": [
+        "MoE pipeline section",
+        "runtime-forbidden inputs section",
+        "policy handoff section"
+      ],
+      "blockers": []
+    },
+    {
+      "date": "2026-05-20",
+      "goal": "Draft experiments and limitations sections",
+      "deliverables": [
+        "bounded experiment claims",
+        "negative results section",
+        "limitations/submission gaps"
+      ],
+      "blockers": []
+    },
+    {
+      "date": "2026-05-21",
+      "goal": "Create figures and polish narrative",
+      "deliverables": [
+        "pipeline figure draft",
+        "policy flow figure draft",
+        "final table captions"
+      ],
+      "blockers": [
+        "Need figure style preference if any"
+      ]
+    },
+    {
+      "date": "2026-05-22",
+      "goal": "Internal review and claim audit",
+      "deliverables": [
+        "claim audit checklist",
+        "draft v0.9",
+        "missing citation placeholders"
+      ],
+      "blockers": [
+        "Need human decision on target journal and author order"
+      ]
+    },
+    {
+      "date": "2026-05-23",
+      "goal": "Paper handoff package",
+      "deliverables": [
+        "manuscript draft",
+        "artifact index",
+        "figure/table pack",
+        "known limitations list"
+      ],
+      "blockers": []
+    }
+  ],
+  "technical_work_policy_until_deadline": {
+    "allowed": [
+      "small scripts that extract tables from existing JSON/MD artifacts",
+      "lightweight sanity checks for already completed results",
+      "documentation and claim-audit updates"
+    ],
+    "defer_until_after_deadline": [
+      "new long-running model training",
+      "full public-raster inference if environment remains unstable",
+      "more handcrafted image-only symbol/text postprocessing",
+      "unbounded selector sweeps"
+    ]
+  },
+  "next_task": {
+    "id": "SCI-P2-126-paper-draft-outline-and-table-extraction",
+    "goal": "Create the first manuscript draft outline and extract paper-ready metric tables from existing artifacts."
+  }
+}

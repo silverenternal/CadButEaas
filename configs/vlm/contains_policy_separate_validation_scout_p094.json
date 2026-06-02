@@ -1,0 +1,92 @@
+{
+  "id": "SCI-P0-94-contains-policy-separate-validation-scout",
+  "created_on": "2026-05-15",
+  "decision": {
+    "selected_primary_validation_path": "datasets/cadstruct_cubicasa5k_moe/dev.jsonl",
+    "selected_secondary_validation_path": "datasets/cadstruct_real_world_benchmark_v3/smoke.jsonl",
+    "do_not_promote_runtime_yet": true,
+    "reason": "P0-93 passed only on locked oracle smoke. The dev split provides 493 MoE records with low overlap against the locked smoke path and full expected_json scene graph supervision; real_world_benchmark_v3 smoke provides a smaller model-output-adjacent sanity path."
+  },
+  "candidate_policy_under_validation": {
+    "policy_id": "center_ratio_1_top4",
+    "policy_config": "configs/vlm/contains_relation_policy_p092.json",
+    "replay_wrapper": "scripts/vlm/apply_contains_relation_policy_p093.py",
+    "source_result": "reports/vlm/contains_relation_policy_replay_p093.json"
+  },
+  "available_paths": {
+    "datasets/cadstruct_cubicasa5k_moe/dev.jsonl": {
+      "rows": 493,
+      "schema": "moe_expected_json_scene_graph",
+      "overlap_with_locked_smoke": 5,
+      "pros": [
+        "Larger than 64-row smoke.",
+        "Has expected_json and scene_graph supervision.",
+        "Can reuse fusion_v2 + P0-93 replay wrapper directly."
+      ],
+      "cons": [
+        "Still CubiCasa/SVG-derived oracle supervision, not real raster model-output validation.",
+        "Small overlap with locked smoke must be reported."
+      ],
+      "recommendation": "primary_validation"
+    },
+    "datasets/cadstruct_real_world_benchmark_v3/smoke.jsonl": {
+      "rows": 64,
+      "schema": "moe_expected_json_scene_graph",
+      "overlap_with_locked_smoke": 1,
+      "pros": [
+        "Different smoke path and original image naming; useful sanity check.",
+        "Has expected_json and scene_graph supervision."
+      ],
+      "cons": [
+        "Only 64 rows.",
+        "Still expected_json supervised; not sufficient alone for publication claim."
+      ],
+      "recommendation": "secondary_sanity_validation"
+    },
+    "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke.jsonl": {
+      "rows": 64,
+      "schema": "model_fused_scene_graph_output",
+      "pros": [
+        "Exercises registered expert output path rather than pure oracle predictions."
+      ],
+      "cons": [
+        "Already fused output; applying contains policy requires a graph-output wrapper and careful gold alignment.",
+        "Same locked smoke family; not enough as independent validation."
+      ],
+      "recommendation": "later_model_output_sanity"
+    },
+    "datasets/public_raster_moe_supervision_v19/dev.jsonl": {
+      "rows": 1002,
+      "schema": "raster_targets_not_full_expected_json_scene_graph",
+      "pros": [
+        "Larger raster target dev split."
+      ],
+      "cons": [
+        "No direct expected_json scene_graph contract for immediate fusion_v2 relation replay.",
+        "Requires adapter before use."
+      ],
+      "recommendation": "future_adapter_validation"
+    }
+  },
+  "validation_protocol": {
+    "primary": [
+      "Run P0-93 replay wrapper on datasets/cadstruct_cubicasa5k_moe/dev.jsonl.",
+      "Compare baseline vs center_ratio_1_top4 relation F1, contains precision/recall, missing/extra contains.",
+      "Apply P0-92 promotion gates unchanged.",
+      "Report overlap count with locked smoke and avoid claiming full cross-dataset generalization."
+    ],
+    "secondary": [
+      "Run same replay on datasets/cadstruct_real_world_benchmark_v3/smoke.jsonl as a sanity check.",
+      "If primary and secondary both pass, package as validation-positive opt-in candidate but still avoid default runtime promotion until model-output validation."
+    ]
+  },
+  "promotion_boundary": {
+    "can_claim_after_p095_if_pass": "validated_on_non_locked_dev_or_secondary_smoke_as_opt_in_candidate",
+    "cannot_claim_yet": [
+      "SCI2-ready generalization",
+      "runtime default promotion",
+      "real industrial drawing robustness"
+    ],
+    "next_task": "SCI-P0-95-end-to-end-independent-validation"
+  }
+}

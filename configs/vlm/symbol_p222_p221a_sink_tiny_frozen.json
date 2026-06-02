@@ -1,0 +1,38 @@
+{
+  "id": "P222_frozen_P221a_sink_tiny_subcandidate",
+  "created": "2026-05-21",
+  "base_overlay": "reports/vlm/symbol_p218_p217_frozen_overlay.jsonl",
+  "rule": {
+    "name": "p221a_sink_area_lte64_score_ge05_box4_center",
+    "parent_label": "sink",
+    "parent_max_area": 64.0,
+    "parent_min_score": 0.5,
+    "subcandidate_width": 4.0,
+    "subcandidate_height": 4.0,
+    "subcandidate_center": "parent_bbox_center",
+    "score_scale": 0.5
+  },
+  "runtime_input_allowed": [
+    "parent symbol label",
+    "parent confidence/score",
+    "parent bbox geometry",
+    "frozen numeric constants"
+  ],
+  "runtime_input_forbidden": [
+    "row_id as feature or decision key",
+    "gold labels",
+    "annotation paths",
+    "expected_json",
+    "SVG geometry",
+    "parser geometry",
+    "target bbox/center/area at runtime"
+  ],
+  "outputs": {
+    "overlay": "reports/vlm/symbol_p222_p221a_frozen_overlay.jsonl",
+    "eval": "reports/vlm/symbol_p222_p221a_frozen_eval.json",
+    "bootstrap_json": "reports/vlm/symbol_p222_p221a_bootstrap_validation.json",
+    "bootstrap_md": "reports/vlm/symbol_p222_p221a_bootstrap_validation.md",
+    "source_integrity": "reports/vlm/symbol_p222_p221a_source_integrity.md"
+  },
+  "claim_boundary": "Frozen runtime-safe rule over P217/P218 overlay; P101/bootstrap-bounded until independent validation."
+}

@@ -1,0 +1,153 @@
+{
+  "id": "SCI-P2-139-extended-metric-rescue-roadmap",
+  "created_on": "2026-05-16",
+  "decision": "do_not_freeze_delivery_yet; open a structured metric-rescue sprint with explicit risk and stop gates",
+  "rationale": "P135-P138 made the paper safe, but only used quick existing-artifact sweeps. Several metrics may still improve with targeted postprocessing, richer selectors, and evaluation-scope cleanup before final submission.",
+  "global_policy": {
+    "primary_goal": "Improve paper-facing metrics where plausible without inventing claims or changing target definitions silently.",
+    "secondary_goal": "If a metric cannot be improved, convert it into a stronger negative/ablation story with clearer error buckets.",
+    "stop_rule": "Stop a rescue branch if it cannot improve the relevant headline by at least a meaningful delta within its time budget or if it requires unbounded training before the deadline.",
+    "claim_rule": "Every improved metric must state dataset split, evidence mode, evaluation threshold, and whether it is model-output, postprocess, expected-json replay, or oracle-assisted."
+  },
+  "priority_lanes": [
+    {
+      "lane": "Lane A: Public-raster symbol operating point rescue",
+      "priority": "P0",
+      "why": "Symbol is central to the MoE story. P136 showed no center>=0.90 from naive v28 threshold/top-k, but best balanced F1 improved to 0.367019; there may be gains via label-specific thresholds, NMS/box merging, tiny-symbol handling, and P124 selector features.",
+      "current_metrics": [
+        "P100 F1 0.295190, precision 0.188403, recall 0.681419, center 0.824163, inflation 3.616826",
+        "P136 best balanced F1 0.367019, precision 0.254678, recall 0.656699, center 0.766348, inflation 2.578549"
+      ],
+      "target_metrics": [
+        "Near-term: F1 >= 0.38 with inflation <= 3.0",
+        "Stretch: F1 >= 0.45 or center >= 0.85 with inflation <= 4.0",
+        "Do not target: F1 >= 0.95, unrealistic for current detector"
+      ],
+      "tasks": [
+        "Run label-specific score threshold sweeps instead of one global threshold.",
+        "Add NMS/duplicate suppression sweep by same-label and any-label IoU.",
+        "Analyze per-label failures; rescue easy labels separately rather than one global policy.",
+        "Use P124 selector probabilities as a re-ranker if prediction IDs/features can be joined.",
+        "Create error buckets: missed tiny, duplicated large, wrong label, over-dense equipment/shower/sink."
+      ],
+      "artifacts": [
+        "reports/vlm/symbol_label_threshold_sweep_p140.md",
+        "configs/vlm/symbol_label_threshold_sweep_p140.json"
+      ]
+    },
+    {
+      "lane": "Lane B: Room/space box extraction rescue",
+      "priority": "P0",
+      "why": "P137 shows room pixel recall >0.95 but low precision/F1; the gap is likely postprocessing, not pure model failure. Better connected components, morphology, contour simplification, area filtering, and room merging may lift box-level F1.",
+      "current_metrics": [
+        "Pixel room best F1 0.606234, recall 0.959362, precision 0.443126",
+        "Box space F1 0.370752, center 0.742448"
+      ],
+      "target_metrics": [
+        "Near-term: box space F1 >= 0.45",
+        "Stretch: center recall >= 0.80 with inflation <= 2.0",
+        "Pixel-level: keep recall >= 0.95 while improving precision if possible"
+      ],
+      "tasks": [
+        "Locate existing mask-to-box extraction script/settings from P106.",
+        "Sweep connected component min area, closing/opening kernel, contour simplification, and merge thresholds.",
+        "Optimize box-level room/space F1 and center recall, not just pixel recall.",
+        "Add qualitative failure gallery for room over-segmentation vs under-segmentation."
+      ],
+      "artifacts": [
+        "reports/vlm/room_box_postprocess_rescue_p141.md",
+        "configs/vlm/room_box_postprocess_rescue_p141.json"
+      ]
+    },
+    {
+      "lane": "Lane C: Relation result strengthening without overclaiming",
+      "priority": "P1",
+      "why": "P095 candidate is already 1.0 but bounded to expected-json replay. The rescue is not metric improvement; it is credibility improvement by replaying on noisier model-output subsets if available.",
+      "current_metrics": [
+        "Expected-json candidate F1 1.0 on primary and secondary smoke",
+        "Not runtime model-output robustness"
+      ],
+      "target_metrics": [
+        "Maintain relation F1 >0.95 on one model-output smoke path if available",
+        "If unavailable, produce explicit limitation and future eval protocol"
+      ],
+      "tasks": [
+        "Search for model-output scene graph predictions with room/symbol boxes and relation candidates.",
+        "Run contains policy on a small model-output smoke subset if schemas match.",
+        "If not possible, write a reproducibility protocol for model-output relation validation."
+      ],
+      "artifacts": [
+        "reports/vlm/contains_model_output_smoke_plan_p142.md",
+        "configs/vlm/contains_model_output_smoke_plan_p142.json"
+      ]
+    },
+    {
+      "lane": "Lane D: Selector/compressor rescue",
+      "priority": "P1",
+      "why": "P124 AUC 0.854388/AP 0.637250 shows signal; failure is inflation. A listwise budget/constraint layer may pass gates without retraining.",
+      "current_metrics": [
+        "P124 center 0.851437, tiny 0.455373, inflation 8.865563, F1 0.141305",
+        "Fails inflation gate"
+      ],
+      "target_metrics": [
+        "Pass center/tiny while reducing inflation <= 7.919152",
+        "Stretch: inflation <= 5 with small center drop"
+      ],
+      "tasks": [
+        "Sweep page-level budgets, label budgets, spatial suppression on P124 dev predictions.",
+        "Use objective that penalizes inflation more strongly.",
+        "Report as selector rescue only if all gates pass; otherwise keep negative."
+      ],
+      "artifacts": [
+        "reports/vlm/selector_budget_rescue_p143.md",
+        "configs/vlm/selector_budget_rescue_p143.json"
+      ]
+    },
+    {
+      "lane": "Lane E: Text/symbol image-only branch triage",
+      "priority": "P2",
+      "why": "Current metrics are too low for quick rescue, but error analysis can improve paper quality. Only attempt if there is a clear OCR or threshold script already available.",
+      "current_metrics": [
+        "image-only symbol box F1 <=0.046862",
+        "text box F1 0.0",
+        "text pixel F1 0.008322"
+      ],
+      "target_metrics": [
+        "No near-term positive claim expected",
+        "Produce stronger negative evidence/error taxonomy"
+      ],
+      "tasks": [
+        "Search for OCR outputs or text candidate artifacts.",
+        "If available, evaluate text recall-only smoke; otherwise keep negative.",
+        "Create failure taxonomy and future-work plan."
+      ],
+      "artifacts": [
+        "reports/vlm/text_symbol_negative_evidence_p144.md",
+        "configs/vlm/text_symbol_negative_evidence_p144.json"
+      ]
+    }
+  ],
+  "execution_order": [
+    "P140 symbol label-threshold/NMS rescue",
+    "P141 room box postprocess rescue",
+    "P143 selector budget rescue",
+    "P142 relation model-output smoke if artifacts exist",
+    "P144 text/symbol negative evidence cleanup",
+    "P145 update manuscript tables/claims after rescue sprint"
+  ],
+  "paper_update_policy": "Do not update manuscript headline claims until a rescue artifact is complete and validated. Keep v0.3 as safe baseline; create v0.4 only after P140/P141/P143 decisions.",
+  "risk_register": [
+    {
+      "risk": "Metric chasing delays paper",
+      "mitigation": "Each lane has stop gates and must produce either improved metric or stronger negative evidence."
+    },
+    {
+      "risk": "Evaluation scope drift",
+      "mitigation": "Every artifact records source files, split, evidence mode, and target definitions."
+    },
+    {
+      "risk": "Overclaiming a partial submetric",
+      "mitigation": "Balanced metrics and caveats remain mandatory; recall-only >0.95 is not solved extraction."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "SCI-P2-109-decision-branch-model-quality-vs-manuscript-packaging",
+  "created_on": "2026-05-15",
+  "input_evidence": "configs/vlm/raster_evidence_consolidation_p108.json",
+  "decision": "choose_manuscript_packaging_first_with_parallel_model_quality_backlog",
+  "rationale": [
+    "The evidence matrix is now clear enough to write an honest manuscript skeleton and identify missing experiments.",
+    "Continuing handcrafted image-only symbol/text repair gave diminishing returns; dedicated training would be a larger new engineering branch.",
+    "A paper skeleton will expose exactly which baselines, ablations, and annotation gaps must be filled before SCI2 submission."
+  ],
+  "branch_options": {
+    "model_quality_first": {
+      "recommended_when": "GPU/training time is available and goal is stronger final metrics before writing.",
+      "next_tasks": [
+        "dedicated symbol detector/localization branch",
+        "OCR/text branch",
+        "full public-raster coverage generation",
+        "model-output relation validation"
+      ],
+      "expected_benefit": "Stronger SCI2 evidence if successful.",
+      "risk": "Longer open-ended engineering cycle; may delay manuscript framing."
+    },
+    "manuscript_packaging_first": {
+      "recommended_when": "Need to clarify publishable story, target venue, missing evidence, and experiment table now.",
+      "next_tasks": [
+        "paper skeleton",
+        "claim-to-evidence table",
+        "baseline/ablation checklist",
+        "real annotation review plan",
+        "figure/table inventory"
+      ],
+      "expected_benefit": "Fast clarity on SCI2 gap and a structured submission roadmap.",
+      "risk": "Still cannot submit until missing experiments are completed."
+    }
+  },
+  "selected_next_task": {
+    "id": "SCI-P2-110-manuscript-skeleton-and-evidence-map",
+    "goal": "Create an honest manuscript skeleton with claims, evidence, missing experiments, figures/tables, and target-journal positioning.",
+    "required_artifacts": [
+      "configs/vlm/manuscript_skeleton_evidence_map_p110.json",
+      "reports/vlm/manuscript_skeleton_evidence_map_p110.md"
+    ]
+  },
+  "parallel_backlog": [
+    "Train/evaluate dedicated symbol detector branch for image-only v15 or full public-raster coverage.",
+    "Add OCR/text branch for raster text targets.",
+    "Validate contains relation on true model-output raster predictions.",
+    "Human-review real-scene pilot annotations before any real drawing metric claim."
+  ]
+}

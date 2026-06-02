@@ -1,0 +1,78 @@
+{
+  "id": "SCI-P0-175-paper-package-QA",
+  "created_on": "2026-05-17",
+  "decision": "paper_review_package_ready_for_human_pass",
+  "deadline": "2026-05-23",
+  "package_status": {
+    "missing_artifacts": [],
+    "checks": {
+      "no_stale_p160_current_best": true,
+      "has_p165_current_best": true,
+      "has_expected_json_caveat": true,
+      "has_literature_future_path": true
+    },
+    "all_checks_passed": true
+  },
+  "headline_metrics": {
+    "symbol_policy": "p165_best",
+    "precision": 0.54757,
+    "recall": 0.525518,
+    "f1": 0.536317,
+    "center_recall": 0.585726,
+    "prediction_inflation": 0.959729,
+    "scope": "74-row public-raster overlay subset; P101 target-level evaluator"
+  },
+  "core_artifacts": [
+    "reports/vlm/manuscript_draft_v0_6_p174.md",
+    "reports/vlm/claim_evidence_table_p174.md",
+    "reports/vlm/final_claim_audit_p163.md",
+    "reports/vlm/paper_metric_tables_p168_p165_freeze.md",
+    "reports/vlm/symbol_f1_rescue_final_decision_p168.md",
+    "reports/vlm/literature_symbol_painpoint_survey_p169.md",
+    "reports/vlm/symbol_disagreement_backfill_p165_eval.json",
+    "configs/vlm/manuscript_sync_p174.json",
+    "configs/vlm/final_claim_audit_p163.json",
+    "configs/vlm/paper_metric_tables_p168_p165_freeze.json"
+  ],
+  "paper_sections_ready": [
+    {
+      "section": "manuscript draft",
+      "artifact": "reports/vlm/manuscript_draft_v0_6_p174.md",
+      "status": "ready_for_human_edit"
+    },
+    {
+      "section": "claim-evidence table",
+      "artifact": "reports/vlm/claim_evidence_table_p174.md",
+      "status": "ready"
+    },
+    {
+      "section": "symbol metric table",
+      "artifact": "reports/vlm/paper_metric_tables_p168_p165_freeze.md",
+      "status": "ready"
+    },
+    {
+      "section": "claim audit",
+      "artifact": "reports/vlm/final_claim_audit_p163.md",
+      "status": "ready"
+    },
+    {
+      "section": "related work notes",
+      "artifact": "reports/vlm/literature_symbol_painpoint_survey_p169.md",
+      "status": "ready"
+    }
+  ],
+  "must_preserve_caveats": [
+    "P165 is bounded to the 74-row public-raster overlay subset.",
+    "Do not claim >0.95 symbol recognition.",
+    "P161 is a P160-style relative guardrail, not direct P165 generalization proof.",
+    "Expected-json relation replay F1 1.000000 is not runtime model-output robustness.",
+    "Literature metrics are not directly comparable to P101 target-level F1."
+  ],
+  "recommended_human_pass": [
+    "Polish abstract and introduction wording for venue style.",
+    "Decide which appendix tables to include in main paper vs supplement.",
+    "Create figures from the figure/table placeholders.",
+    "Check citation formatting for P169 literature sources.",
+    "Verify author/institution/journal formatting separately."
+  ]
+}

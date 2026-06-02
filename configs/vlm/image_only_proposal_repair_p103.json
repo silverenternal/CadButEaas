@@ -1,0 +1,66 @@
+{
+  "id": "SCI-P1-103-image-only-proposal-repair",
+  "created_on": "2026-05-15",
+  "decision": "proposal_stage_contains_high_recall_for_space_symbol_text_but_moe_fusion_drops_them",
+  "claim_boundary": "diagnostic passthrough over raster proposal boxes; not a trained model improvement and not relation-graph evidence",
+  "inputs": {
+    "gold_and_proposals": "reports/vlm/image_only_multitask_proposal_v15_locked_predictions.jsonl",
+    "baseline_predictions": "reports/vlm/image_only_moe_predictions_v15.jsonl",
+    "repaired_predictions": "reports/vlm/image_only_moe_predictions_v15_p103_passthrough.jsonl"
+  },
+  "scripts": {
+    "repair": "scripts/vlm/repair_image_only_proposal_passthrough_p103.py",
+    "eval": "scripts/vlm/evaluate_image_only_multifamily_p102.py"
+  },
+  "outputs": {
+    "baseline_eval": "reports/vlm/image_only_multifamily_target_eval_p102.json",
+    "passthrough_eval": "reports/vlm/image_only_multifamily_target_eval_p103_passthrough.json",
+    "report": "reports/vlm/image_only_proposal_repair_p103.md"
+  },
+  "family_deltas": {
+    "boundary": {
+      "baseline_f1": 0.086377,
+      "passthrough_f1": 0.086377,
+      "delta_f1": 0.0,
+      "baseline_recall": 0.078854,
+      "passthrough_recall": 0.078854,
+      "delta_recall": 0.0,
+      "baseline_precision": 0.095487,
+      "passthrough_precision": 0.095487,
+      "delta_precision": 0.0
+    },
+    "space": {
+      "baseline_f1": 0.00311,
+      "passthrough_f1": 0.988994,
+      "delta_f1": 0.985884,
+      "baseline_recall": 0.00159,
+      "passthrough_recall": 1.0,
+      "delta_recall": 0.99841,
+      "baseline_precision": 0.071429,
+      "passthrough_precision": 0.978227,
+      "delta_precision": 0.906798
+    },
+    "symbol": {
+      "baseline_f1": 0.0,
+      "passthrough_f1": 0.859689,
+      "delta_f1": 0.859689,
+      "baseline_recall": 0.0,
+      "passthrough_recall": 0.949809,
+      "delta_recall": 0.949809,
+      "baseline_precision": 0.0,
+      "passthrough_precision": 0.785189,
+      "delta_precision": 0.785189
+    },
+    "text": {
+      "baseline_f1": 0.0,
+      "passthrough_f1": 1.0,
+      "delta_f1": 1.0,
+      "baseline_recall": 0.0,
+      "passthrough_recall": 1.0,
+      "delta_recall": 1.0,
+      "baseline_precision": 0.0,
+      "passthrough_precision": 1.0,
+      "delta_precision": 1.0
+    }
+  }
+}

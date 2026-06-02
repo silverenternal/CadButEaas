@@ -1,0 +1,27 @@
+{
+  "id": "SCI-P2-169-literature-symbol-painpoint-survey",
+  "created_on": "2026-05-17",
+  "decision": "use_literature_to_plan_post-paper_symbol_work_not_to_change_p165_freeze",
+  "current_project_best": {
+    "policy": "p165_best",
+    "precision": 0.54757,
+    "recall": 0.525518,
+    "f1": 0.536317,
+    "prediction_inflation": 0.959729
+  },
+  "main_findings": [
+    "Direct architectural symbol spotting work uses tile-based detector training/inference to address tiny symbols in large drawings.",
+    "CAD/FloorPlanCAD literature uses graph/CNN-GCN context for panoptic symbol spotting, suggesting our score-only selector is under-featured.",
+    "Small-object detection literature supports SAHI-style slicing, but duplicate suppression and inflation control are critical.",
+    "Multi-task floorplan recognition uses boundary/room context, supporting a context-aware symbol selector rather than isolated bbox policies.",
+    "Reported AP/PQ/mIoU numbers are not directly comparable to our P101 target-level F1 and should only be used as related work, not a SOTA claim."
+  ],
+  "recommended_next_tasks": [
+    "P170 tile/sliced symbol detector audit",
+    "P171 sliced inference plus merge policy",
+    "P172 context-aware selector with room/wall/text-neighborhood features",
+    "P173 class-balanced specialist training for shower/column/stair",
+    "P174 related-work section update"
+  ],
+  "report": "reports/vlm/literature_symbol_painpoint_survey_p169.md"
+}

@@ -140,7 +140,7 @@ SYMBOL_ALIASES = {
     "watertap": "equipment",
     "tap": "equipment",
     "faucet": "equipment",
-    "electricitysign": "equipment",
+    "electricitysign": "generic_symbol",
     "heatersign": "equipment",
 }
 
@@ -167,7 +167,16 @@ LABEL_PRIORITY = {
 }
 
 IMAGE_SUFFIXES = [".png", ".jpg", ".jpeg"]
+CUBICASA_IMAGE_PRIORITY = [
+    "F1_scaled.png",
+    "F1_scaled.jpg",
+    "F1_scaled.jpeg",
+    "F1_original.png",
+    "F1_original.jpg",
+    "F1_original.jpeg",
+]
 NUMBER_RE = re.compile(r"[-+]?(?:\d*\.\d+|\d+)")
+PATH_TOKEN_RE = re.compile(r"[AaCcHhLlMmQqSsTtVvZz]|[-+]?(?:\d*\.\d+|\d+)(?:[eE][-+]?\d+)?")
 IDENTITY_TRANSFORM = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 OPENING_LABELS = {"door", "window", "opening"}
 WALL_LABELS = {"hard_wall", "partition_wall"}
@@ -208,7 +217,7 @@ def main() -> None:
         "splits": {name: len(rows) for name, rows in splits.items()},
         "label_counts": label_counts(records),
         "family_counts": family_counts(records),
-        "conversion_policy": "Generic SVG class/id mapping; audit labels before paper use.",
+        "conversion_policy": "Generic SVG class/id mapping; SVG path bboxes honor common absolute/relative commands; audit labels before paper use.",
     }
     (output_dir / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
@@ -241,25 +250,40 @@ def parse_svg_elements(svg_path: Path, min_bbox_area: float) -> list[dict[str, A
 
     def visit(
         element: ET.Element,
-        inherited: tuple[str | None, str | None, str, tuple[float, float, float, float, float, float]] = (
+        inherited: tuple[str | None, str | None, str, tuple[float, float, float, float, float, float], bool, float | None] = (
             None,
             None,
             "",
             IDENTITY_TRANSFORM,
+            False,
+            None,
         ),
     ) -> None:
         nonlocal index
         tag = strip_namespace(element.tag)
+        hidden = inherited[4] or element_is_hidden(element)
+        transform = compose_transform(inherited[3], parse_transform(element.attrib.get("transform")))
+        font_size = first_number(element.attrib.get("font-size")) or inherited[5]
+        if hidden:
+            next_inherited = (inherited[0], inherited[1], inherited[2], transform, True, font_size)
+            for child in list(element):
+                visit(child, next_inherited)
+            return
         own_label, own_family, own_raw_label = infer_label(element)
+        if tag == "text":
+            inferred_text_label = infer_text_label_from_content(text_content_from_element(tag, element), own_label)
+            if inferred_text_label is not None:
+                own_label = inferred_text_label
+                own_family = "text"
+                own_raw_label = own_raw_label or "visible_numeric_text"
         label = own_label if own_family is not None else inherited[0]
         family = own_family if own_family is not None else inherited[1]
         raw_label = own_raw_label if own_family is not None else inherited[2]
-        transform = compose_transform(inherited[3], parse_transform(element.attrib.get("transform")))
         if family is None:
-            next_inherited = (inherited[0], inherited[1], inherited[2], transform)
+            next_inherited = (inherited[0], inherited[1], inherited[2], transform, False, font_size)
         else:
-            next_inherited = (label, family, raw_label, transform)
-            bbox = bbox_from_element(tag, element)
+            next_inherited = (label, family, raw_label, transform, False, font_size)
+            bbox = bbox_from_element(tag, element, font_size)
             if bbox is not None and bbox_area(bbox) >= min_bbox_area:
                 bbox = transform_bbox(bbox, transform)
                 shape = shape_features_from_element(tag, element, bbox, transform)
@@ -271,9 +295,10 @@ def parse_svg_elements(svg_path: Path, min_bbox_area: float) -> list[dict[str, A
                         "raw_label": raw_label,
                         "tag": tag,
                         "bbox": [round(value, 3) for value in bbox],
+                        "geometry": geometry_from_element(tag, element, transform),
                         "shape_features": shape,
                         "text": text_content_from_element(tag, element),
-                        "font_size": first_number(element.attrib.get("font-size")),
+                        "font_size": font_size,
                     }
                 )
                 index += 1
@@ -292,7 +317,7 @@ def record_from_elements(
     elements: list[dict[str, Any]],
 ) -> dict[str, Any]:
     boundary = [item for item in elements if item["family"] == "boundary"]
-    spaces = [item for item in elements if item["family"] == "space"]
+    spaces = [item for item in elements if item["family"] == "space" and not is_suspicious_space_subpath(item)]
     symbols = [item for item in elements if item["family"] == "symbol"]
     texts = [item for item in elements if item["family"] == "text"]
 
@@ -303,6 +328,12 @@ def record_from_elements(
             "semantic_type": node["semantic_type"],
             "confidence": 1.0,
             "source": "cubicasa5k_svg",
+            "raw_label": node.get("raw_label"),
+            "source_id": node.get("source_id"),
+            "tag": node.get("tag"),
+            "geometry": node.get("geometry") or {},
+            "shape_features": node.get("shape_features") or {},
+            "bbox": node.get("bbox"),
         }
         for node in primitive_graph["nodes"]
     ]
@@ -314,6 +345,9 @@ def record_from_elements(
             "shape_features": item.get("shape_features") or {},
             "confidence": 1.0,
             "source": "cubicasa5k_svg",
+            "raw_label": item.get("raw_label"),
+            "tag": item.get("tag"),
+            "geometry": item.get("geometry") or {},
         }
         for item in spaces
     ]
@@ -325,6 +359,10 @@ def record_from_elements(
             "rotation": 0.0,
             "confidence": 1.0,
             "source": "cubicasa5k_svg",
+            "raw_label": item.get("raw_label"),
+            "tag": item.get("tag"),
+            "geometry": item.get("geometry") or {},
+            "shape_features": item.get("shape_features") or {},
         }
         for item in symbols
     ]
@@ -337,6 +375,9 @@ def record_from_elements(
             "font_size": item.get("font_size"),
             "confidence": 1.0,
             "source": "cubicasa5k_svg",
+            "raw_label": item.get("raw_label"),
+            "tag": item.get("tag"),
+            "geometry": item.get("geometry") or {},
         }
         for item in texts
     ]
@@ -347,6 +388,9 @@ def record_from_elements(
             "bbox": item["bbox"],
             "confidence": 1.0,
             "source": "cubicasa5k_svg",
+            "raw_label": item.get("raw_label"),
+            "tag": item.get("tag"),
+            "geometry": item.get("geometry") or {},
         }
         for item in texts
         if item["label"].startswith("dimension_")
@@ -396,6 +440,10 @@ def primitive_graph_from_boundary(boundary: list[dict[str, Any]]) -> dict[str, A
                 "source_id": item["id"],
                 "primitive_type": "svg_bbox",
                 "semantic_type": item["label"],
+                "raw_label": item.get("raw_label"),
+                "tag": item.get("tag"),
+                "geometry": item.get("geometry") or {},
+                "shape_features": item.get("shape_features") or {},
                 "bbox": bbox,
                 "centroid": [round((bbox[0] + bbox[2]) / 2, 3), round((bbox[1] + bbox[3]) / 2, 3)],
                 "length": round(max(bbox[2] - bbox[0], bbox[3] - bbox[1]), 3),
@@ -444,6 +492,24 @@ def scene_graph_from_candidates(
     return {"nodes": nodes, "edges": edges}
 
 
+def is_suspicious_space_subpath(item: dict[str, Any]) -> bool:
+    label = str(item.get("label") or "").lower()
+    raw_label = str(item.get("raw_label") or "").lower()
+    if label not in {"toilet", "bathroom", "unknown_room"} and raw_label not in {"toilet", "toiletseat"}:
+        return False
+    bbox = item.get("bbox")
+    if not isinstance(bbox, list) or len(bbox) != 4:
+        return False
+    width = max(0.0, float(bbox[2]) - float(bbox[0]))
+    height = max(0.0, float(bbox[3]) - float(bbox[1]))
+    area = width * height
+    shape = item.get("shape_features") if isinstance(item.get("shape_features"), dict) else {}
+    point_count = float(shape.get("point_count") or 0.0)
+    # CubiCasa sometimes places fixture subpaths under a semantic space class.
+    # Very small Toilet polygons are not stable room regions and should not be exported as rooms.
+    return area < 5000.0 and max(width, height) < 80.0 and point_count <= 8.0
+
+
 def infer_label(element: ET.Element) -> tuple[str | None, str | None, str]:
     values: list[str] = []
     for key in ("class", "id", "data-name", "name"):
@@ -471,19 +537,21 @@ def infer_label(element: ET.Element) -> tuple[str | None, str | None, str]:
     return None, None, values[0] if values else ""
 
 
-def bbox_from_element(tag: str, element: ET.Element) -> list[float] | None:
+def bbox_from_element(tag: str, element: ET.Element, inherited_font_size: float | None = None) -> list[float] | None:
     attrs = element.attrib
     if tag == "rect":
         return rect_bbox(attrs)
     if tag == "text":
-        return text_bbox(element)
+        return text_bbox(element, inherited_font_size)
     if tag == "circle":
         return circle_bbox(attrs)
     if tag == "ellipse":
         return ellipse_bbox(attrs)
     if tag in {"polygon", "polyline"}:
         return points_bbox(attrs.get("points"))
-    if tag in {"path", "line"}:
+    if tag == "path":
+        return path_bbox(attrs.get("d"))
+    if tag == "line":
         return numeric_bbox(attrs)
     return numeric_bbox(attrs)
 
@@ -501,7 +569,7 @@ def rect_bbox(attrs: dict[str, str]) -> list[float] | None:
     return [x, y, x + width, y + height]
 
 
-def text_bbox(element: ET.Element) -> list[float] | None:
+def text_bbox(element: ET.Element, inherited_font_size: float | None = None) -> list[float] | None:
     attrs = element.attrib
     try:
         x = first_number(attrs.get("x"))
@@ -510,10 +578,15 @@ def text_bbox(element: ET.Element) -> list[float] | None:
         return numeric_bbox(attrs)
     if x is None or y is None:
         return numeric_bbox(attrs)
-    font_size = first_number(attrs.get("font-size")) or 10.0
+    font_size = first_number(attrs.get("font-size")) or inherited_font_size or 10.0
     text = "".join(element.itertext()).strip()
     width = max(font_size, len(text) * font_size * 0.55)
     height = max(font_size, 1.0)
+    anchor = (attrs.get("text-anchor") or "").strip().lower()
+    if anchor == "middle":
+        x -= width / 2.0
+    elif anchor == "end":
+        x -= width
     return [x, y - height, x + width, y]
 
 
@@ -521,6 +594,74 @@ def text_content_from_element(tag: str, element: ET.Element) -> str:
     if tag != "text":
         return ""
     return " ".join("".join(element.itertext()).split())
+
+
+def infer_text_label_from_content(text: str, current_label: str | None) -> str | None:
+    stripped = text.strip()
+    if not stripped:
+        return current_label
+    if current_label in {"dimension_text", "room_label", "note_text"}:
+        return current_label
+    if looks_like_dimension_text(stripped):
+        return "dimension_text"
+    if any(char.isdigit() for char in stripped):
+        return "note_text"
+    return current_label
+
+
+def looks_like_dimension_text(text: str) -> bool:
+    normalized = text.strip().lower().replace(",", ".")
+    if not any(char.isdigit() for char in normalized):
+        return False
+    return bool(re.fullmatch(r"(?:\d+(?:\.\d+)?\s*(?:m|mm|cm|m2|m²)?|\d+\s*[x×]\s*\d+)", normalized))
+
+
+def geometry_from_element(
+    tag: str,
+    element: ET.Element,
+    transform: tuple[float, float, float, float, float, float] = IDENTITY_TRANSFORM,
+) -> dict[str, Any]:
+    points = [transform_point(point, transform) for point in points_from_element(tag, element)]
+    if tag in {"polygon", "polyline"} and len(points) >= 2:
+        return {"type": tag, "points": round_points(points)}
+    if tag == "line" and len(points) >= 2:
+        return {"type": "line", "points": round_points(points[:2])}
+    if tag == "rect":
+        bbox = rect_bbox(element.attrib)
+        if bbox:
+            rect_points = [
+                (bbox[0], bbox[1]),
+                (bbox[2], bbox[1]),
+                (bbox[2], bbox[3]),
+                (bbox[0], bbox[3]),
+            ]
+            return {"type": "polygon", "points": round_points(transform_point(point, transform) for point in rect_points)}
+    return {"type": "bbox"}
+
+
+def round_points(points: Any) -> list[list[float]]:
+    return [[round(float(x), 3), round(float(y), 3)] for x, y in points]
+
+
+def element_is_hidden(element: ET.Element) -> bool:
+    display = (element.attrib.get("display") or "").strip().lower()
+    visibility = (element.attrib.get("visibility") or "").strip().lower()
+    if display == "none" or visibility in {"hidden", "collapse"}:
+        return True
+    style = parse_style(element.attrib.get("style"))
+    return style.get("display") == "none" or style.get("visibility") in {"hidden", "collapse"}
+
+
+def parse_style(value: str | None) -> dict[str, str]:
+    if not value:
+        return {}
+    pairs: dict[str, str] = {}
+    for item in value.split(";"):
+        if ":" not in item:
+            continue
+        key, raw_value = item.split(":", 1)
+        pairs[key.strip().lower()] = raw_value.strip().lower()
+    return pairs
 
 
 def circle_bbox(attrs: dict[str, str]) -> list[float] | None:
@@ -571,6 +712,149 @@ def numeric_bbox(attrs: dict[str, str]) -> list[float] | None:
         if value:
             numbers.extend(float(item) for item in NUMBER_RE.findall(value))
     return bbox_from_numbers(numbers)
+
+
+def path_bbox(value: str | None) -> list[float] | None:
+    if not value:
+        return None
+    tokens = PATH_TOKEN_RE.findall(value)
+    if not tokens:
+        return None
+
+    points: list[tuple[float, float]] = []
+    index = 0
+    command = ""
+    current = (0.0, 0.0)
+    start = (0.0, 0.0)
+
+    def is_command(token: str) -> bool:
+        return len(token) == 1 and token.isalpha()
+
+    def read_number() -> float | None:
+        nonlocal index
+        if index >= len(tokens) or is_command(tokens[index]):
+            return None
+        value = float(tokens[index])
+        index += 1
+        return value
+
+    def read_pair(relative: bool) -> tuple[float, float] | None:
+        x = read_number()
+        y = read_number()
+        if x is None or y is None:
+            return None
+        if relative:
+            return current[0] + x, current[1] + y
+        return x, y
+
+    while index < len(tokens):
+        if is_command(tokens[index]):
+            command = tokens[index]
+            index += 1
+        if not command:
+            break
+        op = command
+        lower = op.lower()
+        relative = op.islower()
+
+        if lower == "z":
+            current = start
+            points.append(current)
+            command = ""
+            continue
+
+        if lower == "m":
+            first = read_pair(relative)
+            if first is None:
+                break
+            current = first
+            start = current
+            points.append(current)
+            command = "l" if relative else "L"
+            while index < len(tokens) and not is_command(tokens[index]):
+                point = read_pair(relative)
+                if point is None:
+                    break
+                current = point
+                points.append(current)
+            continue
+
+        if lower == "l":
+            while index < len(tokens) and not is_command(tokens[index]):
+                point = read_pair(relative)
+                if point is None:
+                    break
+                current = point
+                points.append(current)
+            continue
+
+        if lower == "h":
+            while index < len(tokens) and not is_command(tokens[index]):
+                x = read_number()
+                if x is None:
+                    break
+                current = (current[0] + x, current[1]) if relative else (x, current[1])
+                points.append(current)
+            continue
+
+        if lower == "v":
+            while index < len(tokens) and not is_command(tokens[index]):
+                y = read_number()
+                if y is None:
+                    break
+                current = (current[0], current[1] + y) if relative else (current[0], y)
+                points.append(current)
+            continue
+
+        if lower == "q":
+            while index < len(tokens) and not is_command(tokens[index]):
+                control = read_pair(relative)
+                end = read_pair(relative)
+                if control is None or end is None:
+                    break
+                points.extend([control, end])
+                current = end
+            continue
+
+        if lower == "c":
+            while index < len(tokens) and not is_command(tokens[index]):
+                c1 = read_pair(relative)
+                c2 = read_pair(relative)
+                end = read_pair(relative)
+                if c1 is None or c2 is None or end is None:
+                    break
+                points.extend([c1, c2, end])
+                current = end
+            continue
+
+        if lower in {"s", "t"}:
+            per_segment = 2 if lower == "s" else 1
+            while index < len(tokens) and not is_command(tokens[index]):
+                segment_points = [read_pair(relative) for _ in range(per_segment)]
+                if any(point is None for point in segment_points):
+                    break
+                points.extend(point for point in segment_points if point is not None)
+                current = segment_points[-1] or current
+            continue
+
+        if lower == "a":
+            while index < len(tokens) and not is_command(tokens[index]):
+                values = [read_number() for _ in range(7)]
+                if any(item is None for item in values):
+                    break
+                end_x, end_y = float(values[5]), float(values[6])
+                current = (current[0] + end_x, current[1] + end_y) if relative else (end_x, end_y)
+                rx, ry = abs(float(values[0])), abs(float(values[1]))
+                points.extend([(current[0] - rx, current[1] - ry), (current[0] + rx, current[1] + ry), current])
+            continue
+
+        return numeric_bbox({"d": value})
+
+    if not points:
+        return numeric_bbox({"d": value})
+    xs = [point[0] for point in points]
+    ys = [point[1] for point in points]
+    return [min(xs), min(ys), max(xs), max(ys)]
 
 
 def bbox_from_numbers(numbers: list[float]) -> list[float] | None:
@@ -717,6 +1001,10 @@ def compactness(area: float, perimeter: float) -> float:
 
 
 def find_image_for_svg(svg_path: Path) -> Path | None:
+    for name in CUBICASA_IMAGE_PRIORITY:
+        candidate = svg_path.parent / name
+        if candidate.exists():
+            return candidate
     for suffix in IMAGE_SUFFIXES:
         same_stem = svg_path.with_suffix(suffix)
         if same_stem.exists():

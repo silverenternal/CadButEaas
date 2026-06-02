@@ -1,0 +1,97 @@
+{
+  "version": "symbol_detector_frontier_baseline_v47",
+  "task": "P0-22-frontier-symbol-detector-baseline-plan",
+  "objective": "Rebuild symbol detector baseline on a shared page-level eval and stop treating crop refiner as the main path.",
+  "baseline_candidates": [
+    {
+      "name": "symbol_yolov8n_pretrained_v22_smoke",
+      "report": "reports/vlm/symbol_yolov8n_pretrained_v22_smoke_page_eval.json",
+      "after_metrics": {
+        "matched": 1362,
+        "predicted": 36812,
+        "gold": 2432,
+        "precision": 0.036999,
+        "recall": 0.560033,
+        "f1": 0.069412,
+        "candidate_inflation": 15.136513
+      },
+      "role": "early recall-first baseline"
+    },
+    {
+      "name": "symbol_yolov8n_seg_rect_v27",
+      "report": "reports/vlm/symbol_yolov8n_seg_rect_v27_page_eval.json",
+      "after_metrics": {
+        "matched": 1789,
+        "predicted": 19217,
+        "gold": 2432,
+        "precision": 0.093095,
+        "recall": 0.735609,
+        "f1": 0.165273,
+        "candidate_inflation": 7.901727
+      },
+      "role": "best known local YOLO-style detector baseline"
+    },
+    {
+      "name": "symbol_yolo11n_recall_v24",
+      "report": "reports/vlm/symbol_yolo11n_recall_v24_page_eval.json",
+      "after_metrics": {
+        "matched": 1749,
+        "predicted": 16116,
+        "gold": 2432,
+        "precision": 0.108526,
+        "recall": 0.719161,
+        "f1": 0.188592,
+        "candidate_inflation": 6.626645
+      },
+      "role": "higher precision but lower matched count than seg_rect_v27"
+    },
+    {
+      "name": "symbol_yolo_p2_transfer_recall_v24",
+      "report": "reports/vlm/symbol_yolo_p2_transfer_recall_v24_page_eval.json",
+      "after_metrics": {
+        "matched": 1760,
+        "predicted": 18343,
+        "gold": 2432,
+        "precision": 0.095949,
+        "recall": 0.723684,
+        "f1": 0.169434,
+        "candidate_inflation": 7.542352
+      },
+      "role": "transfer baseline with stronger recall than early v22"
+    }
+  ],
+  "selected_baseline": "symbol_yolov8n_seg_rect_v27",
+  "comparison_target": "v45 page refiner and new detector baselines must be evaluated on the same compact page-level eval protocol.",
+  "train_view": {
+    "datasets": [
+      "datasets/floorplancad_symbol_pretrain_v16",
+      "datasets/external/floorplancad",
+      "datasets/cadstruct_symbols_v1",
+      "datasets/image_only_symbol_detector_v18",
+      "datasets/image_only_symbol_objectness_v18"
+    ],
+    "smoke_dataset": "datasets/symbol_tile_detector_tiny_sahi_v21_smoke",
+    "locked_eval": "reports/vlm/symbol_yolov8n_seg_rect_v27_page_eval.json",
+    "notes": [
+      "Use FloorPlanCAD as the main external bbox/type source.",
+      "Use CubiCasa-derived symbol assets only as raster supervision, not runtime geometry.",
+      "Keep smoke_v30 / smoke splits for fast iteration before any locked run."
+    ]
+  },
+  "suppression_policy_target": {
+    "current_problem": "candidate inflation remains too high and duplicate/support negatives are not being resolved structurally",
+    "goal_precision_floor": 0.2,
+    "goal_recall_floor": 0.72,
+    "target_candidate_inflation_ceiling": 8.0,
+    "expected_next_step": "learned listwise suppression on top of detector boxes"
+  },
+  "source_integrity": {
+    "runtime_input": "raster image only",
+    "offline_supervision": [
+      "FloorPlanCAD bbox/detections",
+      "CubiCasa-derived offline raster supervision",
+      "existing symbol detector assets"
+    ],
+    "svg_or_cad_geometry_at_runtime": false
+  }
+}

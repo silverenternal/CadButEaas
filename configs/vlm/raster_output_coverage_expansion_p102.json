@@ -1,0 +1,109 @@
+{
+  "id": "SCI-P1-102-expand-raster-output-coverage-and-non-symbol-families",
+  "created_on": "2026-05-15",
+  "decision": "raster_only_multifamily_path_exists_but_not_ready_for_sci_claims",
+  "assets": {
+    "public_raster_target_level_symbol_overlay": {
+      "targets": "datasets/public_raster_moe_supervision_v19/locked.jsonl",
+      "eval": "reports/vlm/raster_moe_target_level_eval_p101.json",
+      "coverage": "74 CubiCasa overlay rows scored for symbols only; full target availability has 992 rows across CubiCasa5K/FloorPlanCAD.",
+      "best_current_policy": "p100_precision_at_recall70 for precision-sensitive symbol target-level metrics"
+    },
+    "image_only_multifamily_v15": {
+      "gold_boxes": "reports/vlm/image_only_multitask_proposal_v15_locked_predictions.jsonl",
+      "predictions": "reports/vlm/image_only_moe_predictions_v15.jsonl",
+      "eval": "reports/vlm/image_only_multifamily_target_eval_p102.json",
+      "coverage": "61 rows, 256x256 image-only raster supervision, boundary/space/symbol/text target boxes available",
+      "claim_boundary": "separate image-only path; not directly comparable to public_raster_moe_supervision_v19 without scaling/alignment adapter"
+    },
+    "model_v13_real_visual_e2e": {
+      "predictions": "reports/vlm/real_upstream_model_predictions_model_v13_real_infer_rel_contains_boundary_room_symbol_v14.jsonl",
+      "eval": "reports/vlm/model_v13_real_visual_e2e_text_aware_boundary_room_symbol_v14_eval.json",
+      "coverage": "5 CubiCasa model_visual_demo records with boundary/space/symbol/text scene graph nodes",
+      "limitation": "uses SVG/proposal geometry path in metadata; useful as component audit, not pure raster-only publication evidence"
+    }
+  },
+  "key_findings": {
+    "p101_symbol_p100_vs_v28": {
+      "policy_id": "p100_precision_at_recall70",
+      "baseline_policy": "v28_frozen_detector_baseline",
+      "delta_precision": 0.072279,
+      "delta_recall": -0.031898,
+      "delta_f1": 0.095458,
+      "delta_center_recall": -0.040271,
+      "delta_prediction_inflation": -2.525917
+    },
+    "image_only_v15_family_metrics": {
+      "boundary": {
+        "iou_any": {
+          "tp": 421,
+          "predicted": 4409,
+          "gold": 5339,
+          "precision": 0.095487,
+          "recall": 0.078854,
+          "f1": 0.086377
+        },
+        "center_any": {
+          "hit": 942,
+          "gold": 5339,
+          "recall": 0.176438
+        },
+        "prediction_inflation": 0.82581
+      },
+      "space": {
+        "iou_any": {
+          "tp": 1,
+          "predicted": 14,
+          "gold": 629,
+          "precision": 0.071429,
+          "recall": 0.00159,
+          "f1": 0.00311
+        },
+        "center_any": {
+          "hit": 7,
+          "gold": 629,
+          "recall": 0.011129
+        },
+        "prediction_inflation": 0.022258
+      },
+      "symbol": {
+        "iou_any": {
+          "tp": 0,
+          "predicted": 409,
+          "gold": 1574,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "center_any": {
+          "hit": 8,
+          "gold": 1574,
+          "recall": 0.005083
+        },
+        "prediction_inflation": 0.259848
+      },
+      "text": {
+        "iou_any": {
+          "tp": 0,
+          "predicted": 0,
+          "gold": 523,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0
+        },
+        "center_any": {
+          "hit": 0,
+          "gold": 523,
+          "recall": 0.0
+        },
+        "prediction_inflation": 0.0
+      }
+    }
+  },
+  "next_actions": [
+    "Do not use image_only_v15 as SCI-quality multi-family evidence yet; boundary F1 is 0.086377 and space/symbol/text are near zero.",
+    "Build a scaling/alignment adapter only if image_only_v15 rows can be mapped back to public_raster_moe_supervision_v19 image ids.",
+    "Prioritize improving image-only proposal extraction for space/symbol/text before relation-graph claims.",
+    "Keep P100 symbol precision opt-in as the current strongest raster target-level improvement."
+  ]
+}

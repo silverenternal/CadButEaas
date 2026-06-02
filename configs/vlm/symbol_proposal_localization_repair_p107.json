@@ -1,0 +1,49 @@
+{
+  "id": "SCI-P1-107-symbol-proposal-localization-repair",
+  "created_on": "2026-05-15",
+  "decision": "small_positive_but_insufficient_symbol_peak_policy",
+  "script": "scripts/vlm/build_symbol_peak_proposals_p107.py",
+  "claim_boundary": "non-oracle symbol probability peak boxes on image-only v15 path; target-level only; no gold runtime inputs",
+  "selected_variant": "t224_b8_r4",
+  "selected_predictions": "reports/vlm/image_only_moe_predictions_v15_p107_t224_b8_r4.jsonl",
+  "selected_eval": "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json",
+  "variant_evals": {
+    "t160_b8_r4": "reports/vlm/image_only_multifamily_target_eval_p107_t160_b8_r4.json",
+    "t192_b8_r4": "reports/vlm/image_only_multifamily_target_eval_p107_t192_b8_r4.json",
+    "t192_b12_r5": "reports/vlm/image_only_multifamily_target_eval_p107_t192_b12_r5.json",
+    "t224_b8_r4": "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json"
+  },
+  "baseline_p106_eval": "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+  "metrics": {
+    "p106_symbol": {
+      "tp": 29,
+      "predicted": 1598,
+      "gold": 1574,
+      "precision": 0.018148,
+      "recall": 0.018424,
+      "f1": 0.018285
+    },
+    "p107_symbol_best": {
+      "tp": 115,
+      "predicted": 3334,
+      "gold": 1574,
+      "precision": 0.034493,
+      "recall": 0.073062,
+      "f1": 0.046862
+    },
+    "p107_space_retained": {
+      "tp": 360,
+      "predicted": 1313,
+      "gold": 629,
+      "precision": 0.274181,
+      "recall": 0.572337,
+      "f1": 0.370752
+    }
+  },
+  "interpretation": [
+    "Peak boxes improve symbol F1 over P106 but remain far below useful quality.",
+    "Precision remains extremely low because symbol probability maps are diffuse/noisy.",
+    "A learned symbol detector or dedicated localization head is needed; simple mask/peak extraction is not enough."
+  ],
+  "next_recommendation": "P108 should package current image-only state as room-positive/symbol-negative and pivot to either symbol detector training or paper evidence around P100 public-raster symbol detector plus P106 room repair."
+}

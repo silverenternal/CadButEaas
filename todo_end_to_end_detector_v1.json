@@ -1,0 +1,53 @@
+{
+  "title": "CadStruct 最小端到端检测/分割原型计划 v1",
+  "created": "2026-05-07",
+  "phase": "planned",
+  "claim_boundary": "This prototype is for raster proposal generation. It does not replace the existing parser-candidate MoE until locked evaluation proves improvement.",
+  "tasks": [
+    {
+      "id": "E2E-V1-T1",
+      "title": "生成 CubiCasa wall/room raster mask 数据",
+      "status": "pending",
+      "outputs": [
+        "datasets/cubicasa_raster_masks_v1/",
+        "reports/vlm/cubicasa_raster_mask_manifest_v1.json"
+      ]
+    },
+    {
+      "id": "E2E-V1-T2",
+      "title": "生成 symbol/text detector box 数据与 no-object hard negatives",
+      "status": "pending",
+      "outputs": [
+        "datasets/cubicasa_symbol_text_detector_v1/",
+        "reports/vlm/symbol_text_detector_dataset_audit_v1.json"
+      ]
+    },
+    {
+      "id": "E2E-V1-T3",
+      "title": "训练最小 wall/room segmentation prototype",
+      "status": "pending",
+      "outputs": [
+        "checkpoints/raster_wall_room_segmenter_v1/",
+        "reports/vlm/raster_wall_room_segmenter_v1_eval.json"
+      ]
+    },
+    {
+      "id": "E2E-V1-T4",
+      "title": "训练最小 symbol/text detector prototype",
+      "status": "pending",
+      "outputs": [
+        "checkpoints/raster_symbol_text_detector_v1/",
+        "reports/vlm/raster_symbol_text_detector_v1_eval.json"
+      ]
+    },
+    {
+      "id": "E2E-V1-T5",
+      "title": "接入 MoE proposal bridge 并做 raw detector vs parser-candidate 对照",
+      "status": "pending",
+      "outputs": [
+        "reports/vlm/raster_proposal_bridge_ablation_v1.json",
+        "reports/vlm/raster_proposal_visual_pack_v1/"
+      ]
+    }
+  ]
+}

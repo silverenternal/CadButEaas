@@ -1,5 +1,14 @@
 # Raster VLM Sidecar
 
+## CadStruct asset ownership
+
+This directory contains both canonical CubiCasa-derived MoE assets and later raster-only experiments. Use these two files before choosing an entry point:
+
+- `docs/cadstruct/legacy-cubicasa-moe.md`: human-readable ownership and module boundaries for the historical CubiCasa/MoE expert stack.
+- `configs/vlm/cadstruct_legacy_moe_registry.json`: machine-readable registry for canonical datasets, checkpoints, reports, and experimental raster rebuild assets.
+
+Do not treat every script in this directory as part of the current production path. Many files are ablations, diagnostics, or failed raster-only experiments kept for auditability.
+
 Create an isolated environment with `uv`:
 
 ```bash

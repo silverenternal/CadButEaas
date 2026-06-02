@@ -1,0 +1,31 @@
+{
+  "id": "SCI-P2-114-run-symbol-eval-sanity-or-subset",
+  "created_on": "2026-05-16",
+  "decision": "sanity_async_launched_but_crashed_or_staled_before_outputs_due_to_environment_import_issue",
+  "run": {
+    "run_id": "p114_sanity_20260516_132705",
+    "mode": "sanity",
+    "status_file": "reports/vlm/full_symbol_eval_p113_logs/full_public_raster_symbol_eval_sanity_p113_p114_sanity_20260516_132705.status.json",
+    "log_file": "reports/vlm/full_symbol_eval_p113_logs/full_public_raster_symbol_eval_sanity_p113_p114_sanity_20260516_132705.log",
+    "eval_output": "reports/vlm/full_public_raster_symbol_eval_sanity_p113_p114_sanity_20260516_132705.json",
+    "predictions_output": "reports/vlm/full_public_raster_symbol_eval_sanity_p113_p114_sanity_20260516_132705_predictions.jsonl",
+    "derived_state": "stale_or_crashed_no_outputs"
+  },
+  "diagnostics": {
+    "torch_import_timeout_seconds": 20,
+    "torch_import_exit_code": 124,
+    "ultralytics_import_timeout_seconds": 20,
+    "ultralytics_import_exit_code": 124,
+    "nvidia_smi": "not_found"
+  },
+  "interpretation": [
+    "Full tile assets exist from P112, and P113 runner launches correctly.",
+    "P114 sanity did not produce outputs; process disappeared without exit log.",
+    "Short diagnostics show torch and ultralytics imports time out in the current environment, so subset/full inference should not be launched until the Python/GPU environment is fixed or run on a stable remote session."
+  ],
+  "next_recommendation": {
+    "id": "SCI-P2-115-inference-environment-diagnosis",
+    "goal": "Diagnose and fix torch/ultralytics import/runtime environment before retrying P113 sanity/subset/full."
+  },
+  "claim_boundary": "No symbol eval metrics were produced in P114. Do not claim full/subset performance."
+}

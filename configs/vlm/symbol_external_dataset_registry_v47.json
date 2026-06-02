@@ -1,0 +1,268 @@
+{
+  "version": "symbol_external_dataset_registry_v47",
+  "datasets": {
+    "FloorPlanCAD": {
+      "name": "FloorPlanCAD",
+      "path": "datasets/external/floorplancad",
+      "available": true,
+      "trainable": true,
+      "license": "CC BY-NC-SA 4.0",
+      "source": "https://huggingface.co/datasets/Voxel51/FloorPlanCAD",
+      "split_counts": {
+        "data": 5308
+      },
+      "sample_count": 5308,
+      "image_file_count": 5308,
+      "metadata_file_present": true,
+      "readme_present": true,
+      "symbol_summary": {
+        "raw_label_counts_top30": {
+          "double_door": 7808,
+          "stair": 6026,
+          "wall": 4710,
+          "sliding_door": 4261,
+          "chair": 3318,
+          "bath": 3099,
+          "window": 1910,
+          "escalator": 1748,
+          "table": 1730,
+          "half_height_cabinet": 1683,
+          "parking": 1643,
+          "class_31": 1287,
+          "wardrobe": 990,
+          "toilet": 843,
+          "railing": 741,
+          "elevator": 650,
+          "single_door": 629,
+          "bed": 612,
+          "sink": 545,
+          "bath_tub": 520,
+          "tv_cabinet": 509,
+          "urinal": 467,
+          "high_cabinet": 448,
+          "sofa": 444,
+          "class_35": 426,
+          "squat_toilet": 317,
+          "bedside_cupboard": 311,
+          "refrigerator": 221,
+          "washing_machine": 200,
+          "gas_stove": 163
+        },
+        "mapped_label_counts": {
+          "generic_symbol": 1421,
+          "equipment": 84,
+          "stair": 49,
+          "bathtub": 38,
+          "table": 23,
+          "sink": 4
+        },
+        "mapped_total": 1619,
+        "mapped_current_symbol_space": 1619,
+        "mapped_current_symbol_ratio": 1.0,
+        "invalid_targets": 43259,
+        "area_bucket_counts": {
+          "tiny_le_64": 1619
+        }
+      },
+      "class_map": {
+        "sink": "sink",
+        "shower": "shower",
+        "stair": "stair",
+        "stairs": "stair",
+        "escalator": "stair",
+        "table": "table",
+        "bathtub": "bathtub",
+        "bath_tub": "bathtub",
+        "bath": "bathtub",
+        "column": "column",
+        "chair": "equipment",
+        "bed": "equipment",
+        "sofa": "equipment",
+        "wardrobe": "equipment",
+        "half_height_cabinet": "equipment",
+        "high_cabinet": "equipment",
+        "tv_cabinet": "equipment",
+        "bedside_cupboard": "equipment",
+        "parking": "generic_symbol",
+        "toilet": "equipment",
+        "squat_toilet": "equipment",
+        "urinal": "equipment",
+        "single_door": "generic_symbol",
+        "double_door": "generic_symbol",
+        "sliding_door": "generic_symbol",
+        "window": "generic_symbol",
+        "bay_window": "generic_symbol",
+        "blind_window": "generic_symbol",
+        "opening_symbol": "generic_symbol",
+        "wall": null,
+        "class_31": "generic_symbol",
+        "class_32": "generic_symbol",
+        "class_34": "generic_symbol",
+        "class_35": "generic_symbol"
+      },
+      "source_integrity": {
+        "runtime_input": "raster image only",
+        "offline_supervision": "FiftyOne detections from local export",
+        "svg_or_cad_geometry_at_runtime": false
+      },
+      "decision": "use_for_symbol_bbox_pretrain_and_type_pretrain"
+    },
+    "floorplancad_symbol_pretrain_v16": {
+      "name": "floorplancad_symbol_pretrain_v16",
+      "path": "datasets/floorplancad_symbol_pretrain_v16",
+      "available": true,
+      "trainable": true,
+      "license": "CC BY-NC-SA 4.0 / derived local raster export",
+      "source": "datasets/external/floorplancad + local converted raster export",
+      "rows": 1500,
+      "image_file_count": 1500,
+      "class_map": {
+        "sink": "sink",
+        "shower": "shower",
+        "stair": "stair",
+        "stairs": "stair",
+        "escalator": "stair",
+        "table": "table",
+        "bathtub": "bathtub",
+        "bath_tub": "bathtub",
+        "bath": "bathtub",
+        "column": "column",
+        "chair": "equipment",
+        "bed": "equipment",
+        "sofa": "equipment",
+        "wardrobe": "equipment",
+        "half_height_cabinet": "equipment",
+        "high_cabinet": "equipment",
+        "tv_cabinet": "equipment",
+        "bedside_cupboard": "equipment",
+        "parking": "generic_symbol",
+        "toilet": "equipment",
+        "squat_toilet": "equipment",
+        "urinal": "equipment",
+        "single_door": "generic_symbol",
+        "double_door": "generic_symbol",
+        "sliding_door": "generic_symbol",
+        "window": "generic_symbol",
+        "bay_window": "generic_symbol",
+        "blind_window": "generic_symbol",
+        "opening_symbol": "generic_symbol",
+        "wall": null,
+        "class_31": "generic_symbol",
+        "class_32": "generic_symbol",
+        "class_34": "generic_symbol",
+        "class_35": "generic_symbol"
+      },
+      "mapped_label_counts": {
+        "generic_symbol": 6465,
+        "equipment": 4136,
+        "stair": 2749,
+        "bathtub": 990,
+        "table": 893,
+        "sink": 204
+      },
+      "invalid_targets": 0,
+      "source_integrity": {
+        "runtime_input": "raster image only",
+        "offline_supervision": "local converted bbox JSONL",
+        "svg_or_cad_geometry_at_runtime": false
+      },
+      "decision": "use_for_symbol_bbox_pretrain_and_type_pretrain"
+    },
+    "CubiCasa5K": {
+      "name": "CubiCasa5K",
+      "path": "datasets/external/cubicasa5k",
+      "available": true,
+      "trainable": false,
+      "source": "https://github.com/CubiCasa/CubiCasa5k",
+      "license": "Apache-2.0",
+      "counts": {
+        "image_files": 0,
+        "json_files": 0,
+        "jsonl_files": 0
+      },
+      "role": "raster_symbol_and_room_source_only; offline SVG-derived supervision only",
+      "decision": "research_only_until_bbox_labels_are_verified"
+    },
+    "CVC-FP": {
+      "name": "CVC-FP",
+      "path": "datasets/external/cvc_fp",
+      "available": true,
+      "trainable": false,
+      "source": "https://dag.cvc.uab.es/dataset/cvc-fp-database-for-structural-floor-plan-analysis/",
+      "license": "CC BY-NC 4.0",
+      "counts": {
+        "image_files": 0,
+        "json_files": 0,
+        "jsonl_files": 0
+      },
+      "role": "structural floor-plan auxiliary source",
+      "decision": "research_only_until_bbox_labels_are_verified"
+    },
+    "ResPlan": {
+      "name": "ResPlan",
+      "path": "datasets/external/resplan",
+      "available": true,
+      "trainable": false,
+      "source": "local package / README",
+      "license": "license in repo",
+      "counts": {
+        "image_files": 0,
+        "json_files": 0,
+        "jsonl_files": 0
+      },
+      "role": "layout/topology auxiliary source",
+      "decision": "research_only_until_bbox_labels_are_verified"
+    },
+    "MLStructFP": {
+      "name": "MLStructFP",
+      "path": "datasets/external/mlstructfp",
+      "available": true,
+      "trainable": false,
+      "source": "repo/README.rst",
+      "license": "repo license",
+      "counts": {
+        "image_files": 9,
+        "json_files": 1,
+        "jsonl_files": 0
+      },
+      "role": "blocked until public download link is resolved",
+      "decision": "research_only_until_bbox_labels_are_verified"
+    },
+    "CubiCasa5K_hf": {
+      "name": "CubiCasa5K_hf",
+      "path": "datasets/external/cubicasa5k_hf",
+      "available": true,
+      "trainable": false,
+      "source": "huggingface mirror metadata",
+      "license": "Apache-2.0 mirror metadata",
+      "counts": {
+        "image_files": 0,
+        "json_files": 2,
+        "jsonl_files": 0
+      },
+      "role": "mirror metadata only",
+      "decision": "research_only_until_bbox_labels_are_verified"
+    }
+  },
+  "summary": {
+    "available_symbol_bbox_sources": [
+      "FloorPlanCAD",
+      "floorplancad_symbol_pretrain_v16"
+    ],
+    "research_only_sources": [
+      "CubiCasa5K",
+      "CVC-FP",
+      "ResPlan",
+      "MLStructFP",
+      "CubiCasa5K_hf"
+    ],
+    "blocked_sources": [
+      "MLStructFP"
+    ]
+  },
+  "source_integrity": {
+    "runtime_input": "raster image only",
+    "offline_supervision": "all labels are offline and for audit/training only",
+    "svg_or_cad_geometry_at_runtime": false
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "P206d_paired_bootstrap_validation",
+  "claim_boundary": "Paired bootstrap over the same 74 P101 rows used for planning; this is internal stability evidence, not an independent held-out paper claim.",
+  "baseline_overlay": "reports/vlm/symbol_p205b_crop_ranker_p206f_overlay.jsonl",
+  "candidate_overlay": "reports/vlm/symbol_p206f_precision_repair_p206g_overlay.jsonl",
+  "baseline_name": "P206f",
+  "candidate_name": "P206g_precision_repair",
+  "bootstrap_iterations": 1000,
+  "seed": 206,
+  "row_count": 74,
+  "baseline_metrics": {
+    "tp": 1329,
+    "predicted": 1996,
+    "gold": 2508,
+    "precision": 0.665832,
+    "recall": 0.529904,
+    "f1": 0.590142,
+    "center_recall": 0.564992,
+    "prediction_inflation": 0.795853
+  },
+  "candidate_metrics": {
+    "tp": 1332,
+    "predicted": 1994,
+    "gold": 2508,
+    "precision": 0.668004,
+    "recall": 0.5311,
+    "f1": 0.591737,
+    "center_recall": 0.565789,
+    "prediction_inflation": 0.795056
+  },
+  "bootstrap": {
+    "f1_delta": {
+      "mean": 0.001627,
+      "ci95": [
+        0.000388,
+        0.003054
+      ],
+      "prob_positive": 0.998
+    },
+    "precision_delta": {
+      "mean": 0.00218,
+      "ci95": [
+        -1.1e-05,
+        0.005138
+      ],
+      "prob_positive": 0.972
+    },
+    "recall_delta": {
+      "mean": 0.001242,
+      "ci95": [
+        0.0,
+        0.002752
+      ],
+      "prob_positive": 0.967
+    },
+    "center_delta": {
+      "mean": 0.000832,
+      "ci95": [
+        -0.000446,
+        0.002492
+      ],
+      "prob_positive": 0.803
+    }
+  },
+  "outputs": {
+    "json": "configs/vlm/symbol_p206g_vs_p206f_bootstrap_validation.json",
+    "md": "reports/vlm/symbol_p206g_vs_p206f_bootstrap_validation.md"
+  }
+}

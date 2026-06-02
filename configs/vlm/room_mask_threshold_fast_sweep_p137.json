@@ -1,0 +1,285 @@
+{
+  "id": "SCI-P2-137-room-mask-threshold-fast-sweep",
+  "created_on": "2026-05-16",
+  "source_artifacts": [
+    "reports/vlm/image_only_mask_quality_audit_p105.json",
+    "reports/vlm/image_only_multifamily_target_eval_p106_s80_sym192_a500.json",
+    "reports/vlm/image_only_multifamily_target_eval_p107_t224_b8_r4.json"
+  ],
+  "claim_boundary": "Existing P105 threshold grid and P106/P107 box evaluations only; no training, no changed target definitions, no solved room extraction claim unless balanced metrics support it.",
+  "room_threshold_rows": [
+    {
+      "family": "room",
+      "threshold": 16,
+      "precision": 0.38561,
+      "recall": 0.998817,
+      "f1": 0.55641,
+      "iou": 0.385434,
+      "pred_to_gold_ratio": 2.590223
+    },
+    {
+      "family": "room",
+      "threshold": 32,
+      "precision": 0.402905,
+      "recall": 0.997665,
+      "f1": 0.574001,
+      "iou": 0.402526,
+      "pred_to_gold_ratio": 2.476178
+    },
+    {
+      "family": "room",
+      "threshold": 64,
+      "precision": 0.417657,
+      "recall": 0.994914,
+      "f1": 0.588336,
+      "iou": 0.416768,
+      "pred_to_gold_ratio": 2.38213
+    },
+    {
+      "family": "room",
+      "threshold": 96,
+      "precision": 0.429674,
+      "recall": 0.991442,
+      "f1": 0.599525,
+      "iou": 0.428087,
+      "pred_to_gold_ratio": 2.307427
+    },
+    {
+      "family": "room",
+      "threshold": 128,
+      "precision": 0.436737,
+      "recall": 0.98303,
+      "f1": 0.604783,
+      "iou": 0.433469,
+      "pred_to_gold_ratio": 2.250851
+    },
+    {
+      "family": "room",
+      "threshold": 160,
+      "precision": 0.443126,
+      "recall": 0.959362,
+      "f1": 0.606234,
+      "iou": 0.434962,
+      "pred_to_gold_ratio": 2.164986
+    },
+    {
+      "family": "room",
+      "threshold": 192,
+      "precision": 0.44552,
+      "recall": 0.900031,
+      "f1": 0.596011,
+      "iou": 0.424513,
+      "pred_to_gold_ratio": 2.020184
+    }
+  ],
+  "room_best_f1": {
+    "family": "room",
+    "threshold": 160,
+    "precision": 0.443126,
+    "recall": 0.959362,
+    "f1": 0.606234,
+    "iou": 0.434962,
+    "pred_to_gold_ratio": 2.164986
+  },
+  "room_best_precision": {
+    "family": "room",
+    "threshold": 192,
+    "precision": 0.44552,
+    "recall": 0.900031,
+    "f1": 0.596011,
+    "iou": 0.424513,
+    "pred_to_gold_ratio": 2.020184
+  },
+  "room_best_recall": {
+    "family": "room",
+    "threshold": 16,
+    "precision": 0.38561,
+    "recall": 0.998817,
+    "f1": 0.55641,
+    "iou": 0.385434,
+    "pred_to_gold_ratio": 2.590223
+  },
+  "room_best_f1_with_pred_to_gold_lte_2": {
+    "family": "room",
+    "threshold": 160,
+    "precision": 0.443126,
+    "recall": 0.959362,
+    "f1": 0.606234,
+    "iou": 0.434962,
+    "pred_to_gold_ratio": 2.164986
+  },
+  "metrics_ge_095": [
+    {
+      "family": "room",
+      "threshold": 16,
+      "metric": "recall",
+      "value": 0.998817,
+      "precision": 0.38561,
+      "recall": 0.998817,
+      "f1": 0.55641,
+      "iou": 0.385434,
+      "pred_to_gold_ratio": 2.590223
+    },
+    {
+      "family": "room",
+      "threshold": 32,
+      "metric": "recall",
+      "value": 0.997665,
+      "precision": 0.402905,
+      "recall": 0.997665,
+      "f1": 0.574001,
+      "iou": 0.402526,
+      "pred_to_gold_ratio": 2.476178
+    },
+    {
+      "family": "room",
+      "threshold": 64,
+      "metric": "recall",
+      "value": 0.994914,
+      "precision": 0.417657,
+      "recall": 0.994914,
+      "f1": 0.588336,
+      "iou": 0.416768,
+      "pred_to_gold_ratio": 2.38213
+    },
+    {
+      "family": "room",
+      "threshold": 96,
+      "metric": "recall",
+      "value": 0.991442,
+      "precision": 0.429674,
+      "recall": 0.991442,
+      "f1": 0.599525,
+      "iou": 0.428087,
+      "pred_to_gold_ratio": 2.307427
+    },
+    {
+      "family": "room",
+      "threshold": 128,
+      "metric": "recall",
+      "value": 0.98303,
+      "precision": 0.436737,
+      "recall": 0.98303,
+      "f1": 0.604783,
+      "iou": 0.433469,
+      "pred_to_gold_ratio": 2.250851
+    },
+    {
+      "family": "room",
+      "threshold": 160,
+      "metric": "recall",
+      "value": 0.959362,
+      "precision": 0.443126,
+      "recall": 0.959362,
+      "f1": 0.606234,
+      "iou": 0.434962,
+      "pred_to_gold_ratio": 2.164986
+    },
+    {
+      "family": "wall",
+      "threshold": 16,
+      "metric": "recall",
+      "value": 0.961634,
+      "precision": 0.192596,
+      "recall": 0.961634,
+      "f1": 0.320919,
+      "iou": 0.191128,
+      "pred_to_gold_ratio": 4.993001
+    },
+    {
+      "family": "opening",
+      "threshold": 16,
+      "metric": "recall",
+      "value": 0.959914,
+      "precision": 0.012726,
+      "recall": 0.959914,
+      "f1": 0.025118,
+      "iou": 0.012719,
+      "pred_to_gold_ratio": 75.431921
+    },
+    {
+      "family": "symbol",
+      "threshold": 16,
+      "metric": "recall",
+      "value": 0.9874,
+      "precision": 0.023588,
+      "recall": 0.9874,
+      "f1": 0.046075,
+      "iou": 0.023581,
+      "pred_to_gold_ratio": 41.860348
+    },
+    {
+      "family": "symbol",
+      "threshold": 32,
+      "metric": "recall",
+      "value": 0.983578,
+      "precision": 0.024532,
+      "recall": 0.983578,
+      "f1": 0.04787,
+      "iou": 0.024522,
+      "pred_to_gold_ratio": 40.094144
+    },
+    {
+      "family": "symbol",
+      "threshold": 64,
+      "metric": "recall",
+      "value": 0.973305,
+      "precision": 0.027983,
+      "recall": 0.973305,
+      "f1": 0.054401,
+      "iou": 0.027961,
+      "pred_to_gold_ratio": 34.782367
+    },
+    {
+      "family": "symbol",
+      "threshold": 96,
+      "metric": "recall",
+      "value": 0.955757,
+      "precision": 0.058704,
+      "recall": 0.955757,
+      "f1": 0.110615,
+      "iou": 0.058545,
+      "pred_to_gold_ratio": 16.280828
+    }
+  ],
+  "box_metrics": [
+    {
+      "artifact": "p106",
+      "family": "boundary",
+      "precision": 0.095487,
+      "recall": 0.078854,
+      "f1": 0.086377,
+      "center_recall": 0.176438,
+      "inflation": 0.82581
+    },
+    {
+      "artifact": "p106",
+      "family": "space",
+      "precision": 0.274181,
+      "recall": 0.572337,
+      "f1": 0.370752,
+      "center_recall": 0.742448,
+      "inflation": 2.08744
+    },
+    {
+      "artifact": "p107",
+      "family": "boundary",
+      "precision": 0.095487,
+      "recall": 0.078854,
+      "f1": 0.086377,
+      "center_recall": 0.176438,
+      "inflation": 0.82581
+    },
+    {
+      "artifact": "p107",
+      "family": "space",
+      "precision": 0.274181,
+      "recall": 0.572337,
+      "f1": 0.370752,
+      "center_recall": 0.742448,
+      "inflation": 2.08744
+    }
+  ],
+  "decision": "only_room_recall_above_095_precision_and_f1_below_095",
+  "recommendation": "May mention high room pixel recall only with precision/F1 caveat; keep room result as diagnostic below-0.95 overall."
+}

@@ -1,0 +1,146 @@
+{
+  "id": "SCI-P0-96-paper-baseline-and-ablation-suite",
+  "created_on": "2026-05-15",
+  "purpose": "Define a paper-ready baseline/ablation matrix for CadStruct raster floorplan MoE scene-graph parsing and identify missing evidence before SCI2 positioning.",
+  "readiness_decision": {
+    "sci2_ready_now": false,
+    "reason": "Contains relation opt-in is validated on expected-json dev/smoke paths, but paper-level baseline matrix, model-output validation, and cross-source/real drawing evidence are still incomplete.",
+    "next_priority": "SCI-P1-97-cross-dataset-or-real-drawing-eval"
+  },
+  "available_evidence": {
+    "oracle_fusion_v2_locked_smoke": {
+      "source": "reports/vlm/scene_graph_fusion_v2_eval.json",
+      "records": 64,
+      "node_f1": 1.0,
+      "relation_f1": 0.918303,
+      "invalid_graph_rate": 0.0,
+      "role": "oracle/fusion upper-bound style evidence"
+    },
+    "registered_expert_model_locked_smoke": {
+      "source": "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json",
+      "records": 64,
+      "node_f1": 0.723279,
+      "relation_f1": 1.0,
+      "by_family_node_f1": {
+        "boundary": 0.774974,
+        "space": 0.886297,
+        "symbol": 0.456018,
+        "text": 0.994737
+      },
+      "role": "registered expert model-output sanity on SVG-derived candidates"
+    },
+    "symbol_policy_overlay_p085": {
+      "source": "reports/vlm/symbol_policy_moe_overlay_p085_summary.json",
+      "records": 74,
+      "v28_symbol_iou_recall": 0.712121,
+      "p076_symbol_iou_recall": 0.732855,
+      "p076_delta": 0.020734,
+      "invalid_graph_delta": 0.0,
+      "role": "symbol default vs opt-in downstream overlay evidence"
+    },
+    "contains_policy_p095_dev": {
+      "source": "reports/vlm/contains_relation_policy_replay_p095_dev.json",
+      "records": 493,
+      "baseline_relation_f1": 0.926172,
+      "candidate_relation_f1": 1.0,
+      "relation_f1_delta": 0.073828,
+      "missing_contains": "2035_to_0",
+      "extra_contains": "277_to_0",
+      "role": "primary non-locked expected-json validation for contains opt-in"
+    },
+    "contains_policy_p095_real_v3_smoke": {
+      "source": "reports/vlm/contains_relation_policy_replay_p095_real_v3_smoke.json",
+      "records": 64,
+      "baseline_relation_f1": 0.918303,
+      "candidate_relation_f1": 1.0,
+      "relation_f1_delta": 0.081697,
+      "missing_contains": "335_to_0",
+      "extra_contains": "52_to_0",
+      "role": "secondary expected-json sanity validation for contains opt-in"
+    }
+  },
+  "paper_ablation_matrix": [
+    {
+      "row_id": "A0_oracle_expected_json_fusion_baseline",
+      "variant": "Existing fusion_v2 on expected_json oracle nodes",
+      "available": true,
+      "evidence": "reports/vlm/scene_graph_fusion_v2_eval.json",
+      "claim_type": "upper_bound_or_contract_validation"
+    },
+    {
+      "row_id": "A1_registered_expert_model_output",
+      "variant": "Registered expert checkpoints on SVG-derived candidates",
+      "available": true,
+      "evidence": "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json",
+      "claim_type": "model_output_sanity_not_raster_only_generalization"
+    },
+    {
+      "row_id": "A2_symbol_default_v28",
+      "variant": "Symbol v28 default downstream overlay",
+      "available": true,
+      "evidence": "reports/vlm/symbol_policy_moe_overlay_p085_summary.json",
+      "claim_type": "symbol_policy_default"
+    },
+    {
+      "row_id": "A3_symbol_p076_opt_in",
+      "variant": "Symbol P0-76 balanced opt-in downstream overlay",
+      "available": true,
+      "evidence": "reports/vlm/symbol_policy_moe_overlay_p085_summary.json",
+      "claim_type": "symbol_policy_opt_in"
+    },
+    {
+      "row_id": "A4_contains_default",
+      "variant": "Existing fusion_v2 contains relation behavior on dev/secondary paths",
+      "available": true,
+      "evidence": "reports/vlm/contains_relation_policy_validation_p095_summary.json",
+      "claim_type": "relation_policy_default"
+    },
+    {
+      "row_id": "A5_contains_center_ratio_1_top4_opt_in",
+      "variant": "Geometry-only contains opt-in center_ratio_1_top4",
+      "available": true,
+      "evidence": "reports/vlm/contains_relation_policy_validation_p095_summary.json",
+      "claim_type": "relation_policy_opt_in_validated_expected_json"
+    },
+    {
+      "row_id": "A6_symbol_plus_contains_opt_in",
+      "variant": "Combined P0-76 symbol opt-in + contains opt-in",
+      "available": false,
+      "missing_reason": "Needs combined replay on model/detector overlay path; current contains validation uses expected_json nodes and current symbol evidence uses overlay path separately.",
+      "priority": "P0_for_paper"
+    },
+    {
+      "row_id": "A7_no_moe_single_pipeline_baseline",
+      "variant": "Single-pass/non-MoE floorplan scene graph parser baseline",
+      "available": false,
+      "missing_reason": "No paper-ready non-MoE baseline table has been assembled.",
+      "priority": "P0_for_sci"
+    },
+    {
+      "row_id": "A8_external_or_cross_dataset_baseline",
+      "variant": "Cross-dataset or real drawing baseline",
+      "available": false,
+      "missing_reason": "No independent external/industrial drawing evaluation yet.",
+      "priority": "P1_for_sci2"
+    }
+  ],
+  "minimum_next_experiments": [
+    "Create model-output or detector-overlay replay for contains policy to reduce expected-json dependence.",
+    "Build a no-MoE or simple-rule baseline table for node/relation F1.",
+    "Run combined symbol+contains opt-in where schemas permit fair comparison.",
+    "Add cross-dataset or small real drawing evaluation before SCI2 claim."
+  ],
+  "paper_claim_boundary": {
+    "can_claim_now": [
+      "Audit-driven symbol policy handoff with default/opt-in separation.",
+      "Contains relation opt-in validated on non-locked expected-json dev and secondary smoke paths.",
+      "Clear relation error attribution and promotion-gated replay workflow."
+    ],
+    "cannot_claim_yet": [
+      "SCI2-ready generalization.",
+      "Runtime default superiority on model-output path.",
+      "Cross-dataset or industrial drawing robustness.",
+      "Superiority over strong external baselines."
+    ]
+  }
+}

@@ -98,7 +98,12 @@ class SheetLayoutExpert(PassthroughExpert):
     """
 
     def __init__(self) -> None:
-        super().__init__(name="sheet_layout", family="sheet")
+        super().__init__(
+            name="sheet_layout",
+            family="sheet",
+            label_space=tuple(LAYOUT_LABELS),
+            checkpoint_hint=None,
+        )
         self.default_label = "title_block"
 
     def _get_page_size(self, candidates: list[RoutedCandidate]) -> tuple[float, float]:
@@ -153,3 +158,6 @@ class SheetLayoutExpert(PassthroughExpert):
             )
 
         return predictions
+
+    def is_loaded(self) -> bool:
+        return True

@@ -29,12 +29,7 @@ WALL_LOCKED = ROOT / "datasets/cadstruct_real_world_benchmark_v1/wall_opening/mi
 
 sys.path.insert(0, str(ROOT / "scripts/vlm"))
 
-# Import real expert classes
-from cadstruct_moe.experts.text_dimension import TextDimensionExpert
-from cadstruct_moe.experts.symbol_fixture import SymbolFixtureExpert
-from cadstruct_moe.experts.room_space import RoomSpaceExpert
-from cadstruct_moe.experts.sheet_layout import SheetLayoutExpert
-from cadstruct_moe.experts.wall_opening import WallOpeningExpert
+from cadstruct_moe import build_default_experts, describe_experts, summarize_expert_execution
 from cadstruct_moe.schema import RoutedCandidate
 
 
@@ -199,19 +194,19 @@ def main() -> None:
           f"symbol={len(gold_by_family['symbol'])}, "
           f"text={len(gold_by_family['text'])}")
 
-    # Initialize real experts
-    wall_expert = WallOpeningExpert()
-    room_expert = RoomSpaceExpert()
-    symbol_expert = SymbolFixtureExpert()
-    text_expert = TextDimensionExpert()
-    sheet_expert = SheetLayoutExpert()
+    # Initialize real experts from the registry so each family is a replaceable module
+    expert_bundle = build_default_experts()
+    wall_expert = expert_bundle["boundary"]
+    room_expert = expert_bundle["space"]
+    symbol_expert = expert_bundle["symbol"]
+    text_expert = expert_bundle["text"]
+    sheet_expert = expert_bundle["sheet"]
 
     print(f"\nExpert status:")
-    print(f"  WallOpening:    model={'loaded' if getattr(wall_expert, '_model', None) else 'passthrough'}")
-    print(f"  RoomSpace:      model={'loaded' if room_expert._model else 'passthrough'}")
-    print(f"  SymbolFixture:  model={'loaded' if symbol_expert._model else 'passthrough'}")
-    print(f"  TextDimension:  model={'loaded' if text_expert._model else 'passthrough'}")
-    print(f"  SheetLayout:    rule-based (no trained model)")
+    for family, spec in describe_experts(expert_bundle).items():
+        loaded = bool(spec.get("loaded", False))
+        model_kind = spec.get("model_kind")
+        print(f"  {family:<12} model={'loaded' if loaded else 'passthrough'} | {model_kind}")
 
     # Run each expert using real models
     expert_results = {}
@@ -416,7 +411,12 @@ def run_expert(
             "source": pred.source,
         })
     gold_count = len(gold_by_family.get(family, []))
-    print(f"  Predictions: {len(results)}, Gold: {gold_count}, Source: {predictions[0].source if predictions else 'N/A'}")
+    audit = summarize_expert_execution(expert, candidates, predictions)
+    print(
+        f"  Predictions: {len(results)}, Gold: {gold_count}, "
+        f"Fallback: {audit['fallback_prediction_count']}, Missing: {audit['missing_prediction_count']}, "
+        f"Source: {predictions[0].source if predictions else 'N/A'}"
+    )
     return results
 
 
@@ -435,8 +435,10 @@ def run_expert_batched(
     """
     results = []
     first_source = "N/A"
+    all_predictions: list = []
     for candidates in candidate_batches:
         predictions = expert.predict(candidates)
+        all_predictions.extend(predictions)
         if predictions and first_source == "N/A":
             first_source = predictions[0].source
         for pred in predictions:
@@ -452,6 +454,8 @@ def run_expert_batched(
                 "source": pred.source,
             })
     gold_count = len(gold_by_family.get(family, []))
+    flat_candidates = [candidate for batch in candidate_batches for candidate in batch]
+    audit = summarize_expert_execution(expert, flat_candidates, all_predictions)
     print(
         f"  Predictions: {len(results)}, Gold: {gold_count}, "
         f"Batches: {len(candidate_batches)}, Source: {first_source}"

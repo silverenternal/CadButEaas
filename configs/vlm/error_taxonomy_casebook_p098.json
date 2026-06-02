@@ -1,0 +1,109 @@
+{
+  "id": "SCI-P1-98-error-taxonomy-and-casebook",
+  "created_on": "2026-05-15",
+  "purpose": "Publication-oriented error taxonomy and casebook plan for CadStruct MoE scene-graph parsing, based only on existing audits/reports and pending manual pilot labels.",
+  "evidence_sources": {
+    "symbol_policy": [
+      "reports/vlm/symbol_downstream_policy_handoff_p088.md",
+      "reports/vlm/symbol_policy_moe_overlay_p085_summary.json"
+    ],
+    "contains_relation": [
+      "reports/vlm/contains_relation_error_audit_p090.json",
+      "reports/vlm/contains_relation_policy_validation_p095_summary.json"
+    ],
+    "model_output": [
+      "reports/vlm/cubicasa_svg_case/model_fused_scene_graph_locked_smoke_eval.json"
+    ],
+    "cross_source_assets": [
+      "reports/vlm/cross_source_target_eval_scout_p097a.md",
+      "reports/vlm/real_registry_annotation_pilot_p097b.md"
+    ]
+  },
+  "taxonomy": [
+    {
+      "id": "E1_symbol_detection_recall_precision_tradeoff",
+      "family": "symbol",
+      "description": "Symbol detector policies trade recall, precision proxy, and prediction inflation; v28 remains default, P0-76 is opt-in.",
+      "evidence": "P0-85: P0-76 improves symbol IoU recall by +0.020734 with inflation increase +0.168262 and no graph-health regression.",
+      "casebook_need": "Visual examples showing recovered symbols vs extra candidates, especially tiny sinks/showers/equipment."
+    },
+    {
+      "id": "E2_contains_relation_underlinking",
+      "family": "relation",
+      "description": "Baseline fusion_v2 under-links geometrically valid room-symbol contains relations.",
+      "evidence": "P0-90/P0-95: dev missing contains 2035 and extra 277; center_ratio_1_top4 reduces both to 0 on expected-json validation paths.",
+      "casebook_need": "Before/after graph overlays for room-symbol containment, including multi-room ambiguity cases."
+    },
+    {
+      "id": "E3_multi_room_symbol_ambiguity",
+      "family": "relation",
+      "description": "Some symbols are validly contained by multiple room/space bboxes due overlapping room annotations or open-plan layouts.",
+      "evidence": "P0-93/P0-95 diagnostics: candidate adds 1966 multi-room symbols on dev and 318 on secondary smoke.",
+      "casebook_need": "Manual examples with ambiguous labels and reviewer notes; do not force single-edge ground truth."
+    },
+    {
+      "id": "E4_boundary_model_output_gap",
+      "family": "boundary",
+      "description": "Registered expert model-output path has non-symbol node weaknesses, especially boundary classification/coverage.",
+      "evidence": "Model fused smoke: boundary node F1 0.774974, space 0.886297, text 0.994737.",
+      "casebook_need": "Boundary false labels/misses in model-output path, separated from oracle expected-json fusion."
+    },
+    {
+      "id": "E5_space_quality_and_contains_dependency",
+      "family": "space",
+      "description": "Space nodes are better than boundary/symbol in registered model smoke but still interact with contains relation quality.",
+      "evidence": "Model fused smoke: space node F1 0.886297; contains relation policies depend on room bboxes.",
+      "casebook_need": "Room bbox ambiguity cases and open-plan layouts."
+    },
+    {
+      "id": "E6_text_is_not_current_bottleneck",
+      "family": "text",
+      "description": "Text expert appears saturated in current registered model smoke and should be deprioritized unless new evidence appears.",
+      "evidence": "Model fused smoke: text node F1 0.994737.",
+      "casebook_need": "Only collect text cases if relation labeling or room-label errors appear in real pilot."
+    },
+    {
+      "id": "E7_cross_source_label_contract_gap",
+      "family": "data/generalization",
+      "description": "Cross-source assets exist, but public_raster has target labels without relation graph and real registry has metadata without labels.",
+      "evidence": "P1-97A: public_raster dev has CubiCasa5K/FloorPlanCAD targets; P1-97B/97C created a 30-record unlabeled scene-graph pilot.",
+      "casebook_need": "Use the pilot to create real/cross-source visual evidence; do not claim relation F1 before labels exist."
+    }
+  ],
+  "casebook_plan": {
+    "minimum_cases": 24,
+    "quota": {
+      "symbol_recovery_vs_extra": 4,
+      "contains_underlink_before_after": 4,
+      "multi_room_ambiguity": 4,
+      "boundary_model_output_gap": 4,
+      "space_room_bbox_ambiguity": 3,
+      "cross_source_floorplancad_or_cvc": 3,
+      "negative_or_failure_after_policy": 2
+    },
+    "case_record_schema": {
+      "case_id": "string",
+      "taxonomy_id": "one of taxonomy ids",
+      "source_dataset": "string",
+      "image_path": "string",
+      "evidence_artifact": "path",
+      "before_summary": "string",
+      "after_summary": "string or null",
+      "visual_required": true,
+      "claim_boundary": "string"
+    }
+  },
+  "paper_usage": {
+    "main_text": [
+      "Use E2/E3 to motivate relation-policy design and validation gates.",
+      "Use E1 to explain why symbol work is packaged as default/opt-in rather than endlessly tuned.",
+      "Use E7 to honestly state current generalization limits and annotation-pilot plan."
+    ],
+    "appendix": [
+      "Full error taxonomy table.",
+      "Casebook visual examples once rendered/annotated.",
+      "Per-source target availability from P1-97A."
+    ]
+  },
+  "next_step": "SCI-P2-99-manuscript-positioning-and-target-journal-scout"
+}

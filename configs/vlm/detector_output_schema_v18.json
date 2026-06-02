@@ -1,0 +1,52 @@
+{
+  "schema_version": "detector_output_schema_v18",
+  "task": "IMG-MOE-V18-P1-008",
+  "row_fields": [
+    "id",
+    "image",
+    "image_size",
+    "source_integrity",
+    "route_trace",
+    "scene_graph"
+  ],
+  "candidate_fields": [
+    "candidate_id",
+    "row_id",
+    "family",
+    "route",
+    "bbox",
+    "confidence",
+    "payload",
+    "source_integrity"
+  ],
+  "candidate_optional_fields": [
+    "candidate_contract_version",
+    "provenance",
+    "audit_trace",
+    "candidate_type"
+  ],
+  "families": {
+    "boundary": {
+      "route": "wall_opening",
+      "default_cap_per_page": 1200
+    },
+    "space": {
+      "route": "room_space",
+      "default_cap_per_page": 100
+    },
+    "text": {
+      "route": "text_dimension",
+      "default_cap_per_page": 50
+    },
+    "symbol": {
+      "route": "symbol_fixture",
+      "default_cap_per_page": 1200
+    }
+  },
+  "source_integrity_required": {
+    "source_mode": "image_only_raster_moe",
+    "svg_candidate_ids_used": false,
+    "annotation_geometry_used_at_inference": false,
+    "model_input": "raster_image_only"
+  }
+}
