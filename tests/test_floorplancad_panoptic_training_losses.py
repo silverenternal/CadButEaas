@@ -1,5 +1,6 @@
 from collections import Counter
 from argparse import Namespace
+from pathlib import Path
 
 import pytest
 import torch
@@ -40,6 +41,7 @@ from experiments.floorplancad_train_line_token_panoptic_moe import (
     objectness_schedule,
     objective_config_from_args,
     objective_config_hash,
+    output_protocol_claim_blockers,
     precision_phase_admission_ready,
     query_mask_objectness_scores,
     query_selected_primitive_indices,
@@ -195,6 +197,27 @@ def test_runtime_sq_rq_fuse_state_does_not_pollute_objective_hash():
     assert objective_config_hash(objective_config_from_args(runtime)) == objective_config_hash(
         objective_config_from_args(baseline)
     )
+
+
+def test_output_protocol_claim_blocks_newer_path_than_input_schema():
+    args = Namespace(
+        model_output=Path("reports/vlm/floorplancad_v6_bad/best.pt"),
+        last_model_output=None,
+        report=Path("results/floorplancad_v6_bad.json"),
+        diagnostic_checkpoint_dir=Path("reports/vlm/floorplancad_v6_bad/topk"),
+        checkpoint_archive_dir=None,
+        final_instance_gate_checkpoint=None,
+        final_instance_gate_report=None,
+        allow_output_protocol_name_mismatch=False,
+    )
+
+    blockers = output_protocol_claim_blockers(args, "v4")
+
+    assert any("model_output_claims_v6_with_input_v4" in blocker for blocker in blockers)
+    assert any("report_claims_v6_with_input_v4" in blocker for blocker in blockers)
+    assert output_protocol_claim_blockers(args, "v6") == []
+    args.allow_output_protocol_name_mismatch = True
+    assert output_protocol_claim_blockers(args, "v4") == []
 
 
 def test_teacher_query_loss_does_not_train_unmatched_queries_as_no_object():

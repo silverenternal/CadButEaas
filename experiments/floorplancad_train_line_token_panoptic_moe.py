@@ -231,6 +231,49 @@ def input_feature_schema_from_args(args: argparse.Namespace) -> str:
     return schema
 
 
+INPUT_FEATURE_SCHEMA_ORDER = {"v3": 3, "v4": 4, "v5": 5, "v6": 6}
+OUTPUT_PROTOCOL_CLAIM_PATH_FIELDS = (
+    "model_output",
+    "last_model_output",
+    "report",
+    "diagnostic_checkpoint_dir",
+    "checkpoint_archive_dir",
+    "final_instance_gate_checkpoint",
+    "final_instance_gate_report",
+)
+
+
+def protocol_schema_claims_from_path(path: Path | None) -> set[str]:
+    if path is None:
+        return set()
+    text = path.as_posix().lower()
+    return {
+        schema
+        for schema in INPUT_FEATURE_SCHEMA_ORDER
+        if re.search(rf"(?<![a-z0-9]){schema}(?![a-z0-9])", text)
+    }
+
+
+def output_protocol_claim_blockers(args: argparse.Namespace, input_feature_schema: str) -> list[str]:
+    if bool(getattr(args, "allow_output_protocol_name_mismatch", False)):
+        return []
+    input_order = INPUT_FEATURE_SCHEMA_ORDER[input_feature_schema]
+    blockers: list[str] = []
+    for field in OUTPUT_PROTOCOL_CLAIM_PATH_FIELDS:
+        path = getattr(args, field, None)
+        higher_claims = sorted(
+            schema
+            for schema in protocol_schema_claims_from_path(path)
+            if INPUT_FEATURE_SCHEMA_ORDER[schema] > input_order
+        )
+        if higher_claims:
+            claims = ",".join(higher_claims)
+            blockers.append(
+                f"{field}_claims_{claims}_with_input_{input_feature_schema}:{rel(path)}"
+            )
+    return blockers
+
+
 def model_feature_names_for_schema(schema: str) -> tuple[str, ...]:
     if schema == "v3":
         return MODEL_FEATURE_NAMES
@@ -9122,6 +9165,11 @@ def parse_args() -> argparse.Namespace:
         "--require-target-schema-v6", action=argparse.BooleanOptionalAction, default=False,
         help="Require structural-relation V6 targets for new training.",
     )
+    parser.add_argument(
+        "--allow-output-protocol-name-mismatch",
+        action="store_true",
+        help="Dangerous legacy-audit override: allow output/report paths to claim a newer protocol than --input-feature-schema.",
+    )
     parser.add_argument("--seed", type=int, default=20260630)
     return parser.parse_args()
 
@@ -9500,6 +9548,20 @@ def main() -> int:
         args.diagnostic_checkpoint_dir = args.model_output.with_name(f"{args.model_output.stem}_diagnostic_topk")
     if int(args.diagnostic_checkpoint_top_k) < 0:
         raise ValueError("--diagnostic-checkpoint-top-k must be non-negative")
+    input_feature_schema = input_feature_schema_from_args(args)
+    protocol_claim_blockers = output_protocol_claim_blockers(args, input_feature_schema)
+    if protocol_claim_blockers:
+        payload = {
+            "schema_version": "floorplancad_line_token_panoptic_moe_train_v1",
+            "created_utc": utc_now(),
+            "status": "blocked_protocol_claim_mismatch",
+            "input_feature_schema": input_feature_schema,
+            "blockers": protocol_claim_blockers,
+            "override": "--allow-output-protocol-name-mismatch",
+        }
+        write_json(args.report, payload)
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
+        return 2
     if args.require_final_instance_gate_for_best:
         required_placeholders = ("{checkpoint}", "{epoch}", "{report}")
         configuration_blockers = []
