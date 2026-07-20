@@ -33,6 +33,11 @@ from experiments.floorplancad_query_ownership import (  # noqa: E402
     decode_page_global_track_ownership,
     select_global_owners,
 )
+from experiments.floorplancad_panoptic_protocol import PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD  # noqa: E402
+from experiments.floorplancad_panoptic_scoring import (  # noqa: E402
+    mask_objectness_scores_np as mask_objectness_scores,
+    sigmoid_np,
+)
 from experiments.floorplancad_train_line_token_transformer_moe import IGNORE_LABEL, import_torch, parse_float, parse_int, rel, write_json  # noqa: E402
 
 DEFAULT_MODEL = ROOT / "reports/vlm/floorplancad_line_token_panoptic_moe/panoptic_component_moe.pt"
@@ -42,7 +47,7 @@ DEFAULT_REPORT = ROOT / "results/floorplancad_line_token_panoptic_moe_val_apply.
 DEFAULT_ROUTE_TRACE = ROOT / "results/floorplancad_line_token_panoptic_moe_val_apply_route_trace.json"
 DEFAULT_AFFINITY_SCORES = ROOT / "reports/vlm/floorplancad_line_token_ownership_affinity_expert/val_ownership_affinity_scores_full.jsonl"
 STUFF_LABELS = frozenset(range(30, 35))
-OBJECT_NORMALIZATION_THRESHOLD = 0.01
+OBJECT_NORMALIZATION_THRESHOLD = PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD
 
 
 def update_family_admission_counter(counters: Counter, family: str, stage: str) -> None:
@@ -65,15 +70,6 @@ def family_admission_payload(counters: Counter) -> dict[str, dict[str, int]]:
         if any(row.values()):
             payload[family] = row
     return payload
-
-
-def mask_objectness_scores(mask_logits: np.ndarray) -> np.ndarray:
-    if mask_logits.ndim != 2:
-        raise ValueError("mask logits must have shape [queries, tokens]")
-    probabilities = sigmoid_np(mask_logits)
-    support = probabilities > OBJECT_NORMALIZATION_THRESHOLD
-    support_count = np.maximum(support.sum(axis=1), 1)
-    return np.clip((probabilities * support).sum(axis=1) / support_count, 0.0, 1.0).astype(np.float32)
 
 
 def parse_family_float_overrides(value: str | None) -> dict[str, float]:
@@ -287,10 +283,6 @@ def softmax_np(logits: np.ndarray) -> np.ndarray:
     logits = logits - logits.max(axis=-1, keepdims=True)
     exp = np.exp(logits)
     return exp / np.maximum(exp.sum(axis=-1, keepdims=True), 1e-9)
-
-
-def sigmoid_np(logits: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-np.clip(logits, -40.0, 40.0)))
 
 
 def update_distribution_counters(counters: Counter, prefix: str, value: float) -> None:

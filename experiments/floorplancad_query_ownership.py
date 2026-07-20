@@ -6,20 +6,15 @@ from typing import Any
 
 import numpy as np
 
+from experiments.floorplancad_panoptic_protocol import PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD
+from experiments.floorplancad_panoptic_scoring import (
+    calibrated_proposal_score,
+    mask_objectness_score_np as mask_objectness_score,
+)
 
 OWNERSHIP_VERSION = "global_query_token_categorical_with_null_v2_window_normalized"
 DEFAULT_MIN_QUERY_SCORE = 0.2
-OBJECT_NORMALIZATION_THRESHOLD = 0.01
-
-
-def calibrated_proposal_score(class_score: float, quality_score: float) -> float:
-    """Score an already-admitted query without multiplying admission twice."""
-    return float(class_score) * float(quality_score)
-
-
-def mask_objectness_score(mask_probabilities: np.ndarray) -> float:
-    support = mask_probabilities > OBJECT_NORMALIZATION_THRESHOLD
-    return float(np.clip((mask_probabilities * support).sum() / max(int(support.sum()), 1), 0.0, 1.0))
+OBJECT_NORMALIZATION_THRESHOLD = PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD
 
 
 def ownership_config(*, hidden_dim: int, num_queries: int) -> dict[str, Any]:

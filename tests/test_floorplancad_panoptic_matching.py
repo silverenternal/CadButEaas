@@ -58,7 +58,7 @@ def test_greedy_diagnostics_report_cost_gap_and_assignment_churn():
 
 def test_greedy_matching_rejects_gap_at_or_above_one_percent(monkeypatch):
     monkeypatch.setattr(
-        "experiments.floorplancad_train_line_token_panoptic_moe.component_assignment_cost",
+        "experiments.floorplancad_panoptic_matching.component_assignment_cost",
         lambda *_args, **_kwargs: torch.tensor([[1.0, 2.0], [2.0, 100.0]]),
     )
     with pytest.raises(RuntimeError, match="not below the required 1%"):
@@ -75,7 +75,7 @@ def test_greedy_matching_rejects_gap_at_or_above_one_percent(monkeypatch):
 
 def test_greedy_matching_allows_audited_sub_one_percent_gap(monkeypatch):
     monkeypatch.setattr(
-        "experiments.floorplancad_train_line_token_panoptic_moe.component_assignment_cost",
+        "experiments.floorplancad_panoptic_matching.component_assignment_cost",
         lambda *_args, **_kwargs: torch.tensor([[1.0, 4.0], [4.0, 1.0]]),
     )
     labels, masks, positives, matched = match_component_queries(
@@ -94,7 +94,7 @@ def test_greedy_matching_allows_audited_sub_one_percent_gap(monkeypatch):
 
 def test_training_greedy_matching_stays_on_tensor_assignment_path(monkeypatch):
     monkeypatch.setattr(
-        "experiments.floorplancad_train_line_token_panoptic_moe.component_assignment_cost",
+        "experiments.floorplancad_panoptic_matching.component_assignment_cost",
         lambda *_args, **_kwargs: torch.tensor([[1.0, 4.0], [4.0, 1.0]]),
     )
     labels, masks, positives, matched = match_component_queries(
