@@ -10,6 +10,8 @@ TS="${TS:-$(date +%Y%m%d_%H%M%S)}"
 LOG_DIR="logs"
 OUT_DIR="reports/vlm/floorplancad_line_token_panoptic_moe_l_evalstable"
 TEACHER_PROPOSALS="${TEACHER_PROPOSALS:-reports/vlm/floorplancad_vecformer_teacher_dataset/train_val_teacher_proposals.jsonl}"
+TRAIN_CACHE="${TRAIN_CACHE:-reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536_v3_r2/train_windowed_primitive_cache.jsonl}"
+VAL_CACHE="${VAL_CACHE:-reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536_v3_r2/val_windowed_primitive_cache.jsonl}"
 mkdir -p "$LOG_DIR" "$OUT_DIR"
 
 if [[ "$CUDA_VISIBLE_DEVICES" != "0" ]]; then
@@ -19,8 +21,8 @@ fi
 
 for required in \
   "$TEACHER_PROPOSALS" \
-  reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536/train_windowed_primitive_cache.jsonl \
-  reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536/val_windowed_primitive_cache.jsonl
+  "$TRAIN_CACHE" \
+  "$VAL_CACHE"
 do
   if [[ ! -f "$required" ]]; then
     echo "missing required input: $required"
@@ -34,6 +36,10 @@ PIDFILE="$LOG_DIR/floorplancad_true_moe_l_evalstable_gpu0.pid"
 CMD=(
   .venv-vlm/bin/python
   experiments/floorplancad_train_line_token_panoptic_moe.py
+  --train "$TRAIN_CACHE"
+  --val "$VAL_CACHE"
+  --input-feature-schema v3
+  --require-target-schema-v3
   --device cuda:0
   --epochs "${EPOCHS:-80}"
   --hidden-dim "${HIDDEN_DIM:-512}"

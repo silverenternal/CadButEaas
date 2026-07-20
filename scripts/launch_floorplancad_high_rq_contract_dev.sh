@@ -10,6 +10,7 @@ LOG="$RUN_DIR/train.log"
 PID_FILE="$RUN_DIR/train.pid.json"
 LOCK_FILE="$RUN_DIR/train.lock"
 PYTHON="$ROOT/.venv-vlm/bin/python"
+RUNTIME_PROFILE="same_set_v4_dev"
 CHECKPOINT="$ROOT/reports/vlm/floorplancad_v4_same_set_overfit_32_v4_protocol_replay/best.pt"
 CACHE="$ROOT/datasets/floorplancad_v4_same_set_overfit_32_v1/same_set_windowed_primitive_cache.jsonl"
 

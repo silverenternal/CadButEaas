@@ -16,8 +16,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-DEFAULT_TRAIN = ROOT / "reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536_v2/train_windowed_primitive_cache.jsonl"
-DEFAULT_VAL = ROOT / "reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536_v2/val_windowed_primitive_cache.jsonl"
+
+from experiments.floorplancad_panoptic_runtime_config import DEFAULT_RUNTIME_PROFILE  # noqa: E402
+
+DEFAULT_TRAIN = DEFAULT_RUNTIME_PROFILE.train_path(ROOT)
+DEFAULT_VAL = DEFAULT_RUNTIME_PROFILE.val_path(ROOT)
 DEFAULT_MODEL = ROOT / "reports/vlm/floorplancad_line_token_panoptic_moe_bottleneck_scale_aligned/panoptic_component_moe.pt"
 DEFAULT_REPORT = ROOT / "results/floorplancad_line_token_panoptic_moe_bottleneck_scale_aligned_train.json"
 DEFAULT_LOG = ROOT / "logs/floorplancad_line_token_panoptic_moe_bottleneck_gpu1.log"

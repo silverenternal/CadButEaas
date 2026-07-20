@@ -34,6 +34,7 @@ from experiments.floorplancad_query_ownership import (  # noqa: E402
     select_global_owners,
 )
 from experiments.floorplancad_panoptic_protocol import PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD  # noqa: E402
+from experiments.floorplancad_panoptic_runtime_config import DEFAULT_RUNTIME_PROFILE  # noqa: E402
 from experiments.floorplancad_panoptic_scoring import (  # noqa: E402
     mask_objectness_scores_np as mask_objectness_scores,
     sigmoid_np,
@@ -41,7 +42,7 @@ from experiments.floorplancad_panoptic_scoring import (  # noqa: E402
 from experiments.floorplancad_train_line_token_transformer_moe import IGNORE_LABEL, import_torch, parse_float, parse_int, rel, write_json  # noqa: E402
 
 DEFAULT_MODEL = ROOT / "reports/vlm/floorplancad_line_token_panoptic_moe/panoptic_component_moe.pt"
-DEFAULT_CACHE = ROOT / "reports/vlm/floorplancad_line_json_primitive_cache_windowed_2048_s1536_v3_r2/val_windowed_primitive_cache.jsonl"
+DEFAULT_CACHE = DEFAULT_RUNTIME_PROFILE.val_path(ROOT)
 DEFAULT_OUTPUT = ROOT / "reports/vlm/floorplancad_line_token_panoptic_moe/val_predictions.jsonl"
 DEFAULT_REPORT = ROOT / "results/floorplancad_line_token_panoptic_moe_val_apply.json"
 DEFAULT_ROUTE_TRACE = ROOT / "results/floorplancad_line_token_panoptic_moe_val_apply_route_trace.json"

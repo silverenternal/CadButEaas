@@ -106,18 +106,17 @@ from experiments.floorplancad_panoptic_protocol import (  # noqa: E402
     PANOPTIC_OBJECT_NORMALIZATION_THRESHOLD,
     PANOPTIC_QUALITY_MASK_THRESHOLD,
     PANOPTIC_QUALITY_OBJECTIVE_VERSION,
-    PANOPTIC_TRAIN_CACHE_V3_R2,
-    PANOPTIC_VAL_CACHE_V3_R2,
     STUFF_LABELS,
     THING_LABELS,
 )
+from experiments.floorplancad_panoptic_runtime_config import DEFAULT_RUNTIME_PROFILE  # noqa: E402
 from experiments.floorplancad_panoptic_scoring import (  # noqa: E402
     query_mask_objectness_scores,
     rq_sq_quality_deployment_scores,
 )
 
-DEFAULT_TRAIN = ROOT / PANOPTIC_TRAIN_CACHE_V3_R2
-DEFAULT_VAL = ROOT / PANOPTIC_VAL_CACHE_V3_R2
+DEFAULT_TRAIN = DEFAULT_RUNTIME_PROFILE.train_path(ROOT)
+DEFAULT_VAL = DEFAULT_RUNTIME_PROFILE.val_path(ROOT)
 DEFAULT_MODEL = ROOT / "reports/vlm/floorplancad_line_token_panoptic_moe/panoptic_component_moe.pt"
 DEFAULT_REPORT = ROOT / "results/floorplancad_line_token_panoptic_moe_train.json"
 DEFAULT_BOTTLENECK_LEDGER = ROOT / "results/floorplancad_true_moe_pq95_runtime_locked_full433_adapter_bottleneck_ledger.json"
