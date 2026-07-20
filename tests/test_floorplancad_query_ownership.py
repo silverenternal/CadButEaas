@@ -75,6 +75,62 @@ def test_calibrated_proposal_score_does_not_apply_admission_twice() -> None:
     assert calibrated_proposal_score(0.8, 0.5) == pytest.approx(0.4)
 
 
+def test_instance_semantic_remask_removes_wrong_label_primitives() -> None:
+    query_logits = np.full((1, 36), -10.0, dtype=np.float32)
+    query_logits[0, 4] = 10.0
+    mask_logits = np.asarray([[10.0, 10.0, 10.0]], dtype=np.float32)
+    semantic_logits = np.full((3, 35), -10.0, dtype=np.float32)
+    semantic_logits[0, 4] = 10.0
+    semantic_logits[1, 8] = 10.0
+    semantic_logits[2, 4] = 10.0
+
+    instances, diagnostics = instances_from_windows(
+        [[101, 102, 103]],
+        [query_logits],
+        [mask_logits],
+        semantic_logits_rows=[semantic_logits],
+        query_admission_policy="respect_no_object",
+        min_query_score=0.0,
+        min_object_margin=0.0,
+        mask_threshold=0.5,
+        merge_iou_threshold=0.25,
+        merge_overlap_threshold=0.5,
+        max_instances=8,
+        instance_semantic_remask_policy="label_consistent_nonempty",
+    )
+
+    assert instances[0]["primitive_ids"] == [101, 103]
+    assert instances[0]["semantic_remask"]["removed_count"] == 1
+    assert diagnostics["semantic_remask_removed_primitives"] == 1
+
+
+def test_instance_semantic_remask_falls_back_when_all_primitives_disagree() -> None:
+    query_logits = np.full((1, 36), -10.0, dtype=np.float32)
+    query_logits[0, 4] = 10.0
+    mask_logits = np.asarray([[10.0, 10.0]], dtype=np.float32)
+    semantic_logits = np.full((2, 35), -10.0, dtype=np.float32)
+    semantic_logits[:, 8] = 10.0
+
+    instances, diagnostics = instances_from_windows(
+        [[101, 102]],
+        [query_logits],
+        [mask_logits],
+        semantic_logits_rows=[semantic_logits],
+        query_admission_policy="respect_no_object",
+        min_query_score=0.0,
+        min_object_margin=0.0,
+        mask_threshold=0.5,
+        merge_iou_threshold=0.25,
+        merge_overlap_threshold=0.5,
+        max_instances=8,
+        instance_semantic_remask_policy="label_consistent_nonempty",
+    )
+
+    assert instances[0]["primitive_ids"] == [101, 102]
+    assert instances[0]["semantic_remask"]["fallback_used"] is True
+    assert diagnostics["semantic_remask_fallback_instances"] == 1
+
+
 @pytest.mark.parametrize("ownership_enabled", [False, True])
 def test_quality_calibrated_score_controls_query_admission(ownership_enabled: bool) -> None:
     query_logits = np.full((1, 36), -5.0, dtype=np.float32)

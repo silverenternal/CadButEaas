@@ -3580,6 +3580,31 @@ def matching_assignment_churn(torch: Any, candidate_labels: Any, reference_label
     return (candidate_labels[active] != reference_labels[active]).float().mean()
 
 
+def query_selected_primitive_indices(
+    torch: Any,
+    seed_diagnostics: dict[str, Any] | None,
+    *,
+    batch_index: int,
+    num_queries: int,
+    token_count: int,
+    device: Any,
+) -> Any | None:
+    """Return VecFormer-style selected primitive ids for seeded thing queries."""
+    if not seed_diagnostics or "seed_indices" not in seed_diagnostics:
+        return None
+    seed_indices = seed_diagnostics["seed_indices"]
+    if seed_indices is None or seed_indices.ndim != 2 or batch_index >= int(seed_indices.shape[0]):
+        return None
+    result = torch.full((int(num_queries),), -1, dtype=torch.long, device=device)
+    count = min(int(seed_indices.shape[1]), int(num_queries))
+    if count <= 0:
+        return result
+    selected = seed_indices[int(batch_index), :count].to(device=device, dtype=torch.long)
+    valid = (selected >= 0) & (selected < int(token_count))
+    result[:count] = torch.where(valid, selected, torch.full_like(selected, -1))
+    return result
+
+
 TEACHER_PROVENANCE_FIELDS = ("split", "record_ids_sha256", "source_checkpoint_sha256", "gt_schema_sha256", "command")
 
 
@@ -4929,7 +4954,7 @@ def geometry_v2_auxiliary_loss(
     num_queries: int, primitive_weights: Any | None = None,
     intermediate_weight: float = 0.5, matching: str = "hungarian_cpu",
     query_class_weights: Any | None = None, thing_query_count: int | None = None,
-    typed_stuff_slots: bool = False,
+    typed_stuff_slots: bool = False, selected_primitive_indices: Any | None = None,
 ) -> tuple[Any, list[dict[str, Any]]]:
     """Per-layer class/focal/Dice supervision for geometry-v2 query states.
 
@@ -4946,6 +4971,7 @@ def geometry_v2_auxiliary_loss(
             torch, query_logits, mask_logits, target_labels, target_masks, num_queries,
             matching=matching, primitive_weights=primitive_weights,
             thing_query_count=thing_query_count, typed_stuff_slots=typed_stuff_slots,
+            selected_primitive_indices=selected_primitive_indices,
         )
         class_weights = None if query_class_weights is None else query_class_weights.float()
         class_term = torch.nn.functional.cross_entropy(query_logits.float(), query_labels, weight=class_weights)
@@ -6247,6 +6273,7 @@ def evaluate(
             geometry_aux_outputs = getattr(runtime_model, "last_aux_outputs", []) if geometry_decoder_mode == "geometry_v2" else []
             sq_rq_outputs = getattr(runtime_model, "last_sq_rq_outputs", None)
             router_diagnostics = getattr(runtime_model, "last_router_diagnostics", None)
+            query_seed_diagnostics = getattr(runtime_model, "last_query_seed_diagnostics", None)
             family_seed_logits_b = getattr(runtime_model, "last_family_seed_logits", None)
             component_seed_logits_b = getattr(runtime_model, "last_component_seed_logits", None)
             token_offsets_b = getattr(runtime_model, "last_token_offsets", None)
@@ -6268,10 +6295,19 @@ def evaluate(
                 partial_component_min_tokens=partial_component_min_tokens,
             )
             update_target_diagnostics(counters, target_diag)
+            selected_primitive_indices = query_selected_primitive_indices(
+                torch,
+                query_seed_diagnostics,
+                batch_index=0,
+                num_queries=num_queries,
+                token_count=y.numel(),
+                device=device,
+            )
             if availability["rq"]:
                 q_labels, q_masks, positives, matched = match_component_queries(
                     torch, query_logits, mask_logits, target_labels, target_masks, num_queries, matching=matching, primitive_weights=target_weights,
                     thing_query_count=thing_query_count, typed_stuff_slots=bool(getattr(runtime_model, "typed_stuff_slots", False)),
+                    selected_primitive_indices=selected_primitive_indices,
                 )
             else:
                 q_labels = torch.full((num_queries,), IGNORE_LABEL, dtype=torch.long, device=device)
@@ -6502,6 +6538,7 @@ def evaluate(
                     torch, record_aux, target_labels, target_masks,
                     num_queries=num_queries, primitive_weights=target_weights, query_class_weights=query_class_weights,
                     thing_query_count=thing_query_count, typed_stuff_slots=bool(getattr(runtime_model, "typed_stuff_slots", False)),
+                    selected_primitive_indices=selected_primitive_indices,
                 )
                 counters["geometry_aux_layers"] += len(geometry_diag)
             router_load_balance = (
@@ -10508,6 +10545,7 @@ def main() -> int:
             query_admission_logits_b = runtime_model.last_query_admission_logits
             sq_rq_outputs_b = runtime_model.last_sq_rq_outputs
             router_diagnostics_b = runtime_model.last_router_diagnostics
+            query_seed_diagnostics_b = getattr(runtime_model, "last_query_seed_diagnostics", None)
             family_seed_logits_b = getattr(runtime_model, "last_family_seed_logits", None)
             token_offsets_b = getattr(runtime_model, "last_token_offsets", None)
             token_affinity_b = getattr(runtime_model, "last_token_affinity_embeddings", None)
@@ -10628,11 +10666,20 @@ def main() -> int:
                     partial_component_min_tokens=args.partial_component_min_tokens,
                 )
                 update_target_diagnostics(counters, target_diag)
+                selected_primitive_indices = query_selected_primitive_indices(
+                    torch,
+                    query_seed_diagnostics_b,
+                    batch_index=batch_idx,
+                    num_queries=args.num_queries,
+                    token_count=token_count,
+                    device=device,
+                )
                 if availability["rq"]:
                     q_labels, q_masks, positives, matched = match_component_queries(
                         torch, query_logits, mask_logits, target_labels, target_masks, args.num_queries,
                         matching=(args.train_component_matching or args.component_matching), primitive_weights=target_weights,
                         thing_query_count=thing_query_count, typed_stuff_slots=bool(getattr(runtime_model, "typed_stuff_slots", False)),
+                        selected_primitive_indices=selected_primitive_indices,
                     )
                     if (
                         (args.train_component_matching or args.component_matching) == "greedy_gpu_train"
@@ -10643,6 +10690,7 @@ def main() -> int:
                             torch, query_logits, mask_logits, target_labels, target_masks, args.num_queries,
                             matching="hungarian_cpu", primitive_weights=target_weights,
                             thing_query_count=thing_query_count, typed_stuff_slots=bool(getattr(runtime_model, "typed_stuff_slots", False)),
+                            selected_primitive_indices=selected_primitive_indices,
                         )
                         churn = float(matching_assignment_churn(torch, q_labels, reference_labels).item())
                         counters["train_matching_exact_audits"] += 1
@@ -10907,6 +10955,7 @@ def main() -> int:
                         num_queries=args.num_queries, primitive_weights=target_weights, query_class_weights=query_class_weights,
                         matching=(args.train_component_matching or args.component_matching),
                         thing_query_count=thing_query_count, typed_stuff_slots=bool(getattr(runtime_model, "typed_stuff_slots", False)),
+                        selected_primitive_indices=selected_primitive_indices,
                     )
                 content_anchor_loss = (
                     family_seed_loss(torch, family_seed_logits, y, mask_valid, length_weights)

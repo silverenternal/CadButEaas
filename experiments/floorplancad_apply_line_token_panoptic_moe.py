@@ -142,6 +142,7 @@ def decoder_policy_manifest(
         "mask_threshold": float(args.mask_threshold),
         "semantic_stuff": bool(getattr(args, "semantic_stuff", True)),
         "semantic_stuff_min_score": float(getattr(args, "semantic_stuff_min_score", 0.35)),
+        "instance_semantic_remask_policy": getattr(args, "instance_semantic_remask_policy", "off"),
         "query_admission_policy": args.query_admission_policy,
         "ownership_decoder": args.ownership_decoder,
         "ownership_membership_gate": "mask_threshold_for_all_ownership_decoders",
@@ -448,6 +449,94 @@ def semantic_stuff_instances(
     return instances
 
 
+def semantic_labels_by_primitive(
+    record_ids: list[list[int]],
+    semantic_logits_rows: list[np.ndarray] | None,
+) -> dict[int, int]:
+    if semantic_logits_rows is None:
+        return {}
+    labels: dict[int, int] = {}
+    logits_by_primitive: dict[int, list[np.ndarray]] = defaultdict(list)
+    for primitive_ids, logits in zip(record_ids, semantic_logits_rows, strict=True):
+        if logits.shape[0] != len(primitive_ids) or logits.shape[1] != IGNORE_LABEL:
+            raise ValueError("semantic logits must align with primitive ids and FloorPlanCAD foreground classes")
+        for primitive_id, row in zip(primitive_ids, logits, strict=True):
+            logits_by_primitive[int(primitive_id)].append(np.asarray(row, dtype=np.float32))
+    for primitive_id, rows in logits_by_primitive.items():
+        mean_logits = np.mean(np.stack(rows, axis=0), axis=0)
+        labels[primitive_id] = int(softmax_np(mean_logits[None, :])[0].argmax())
+    return labels
+
+
+def semantic_consistency_remask_indices(
+    selected_indices: list[int],
+    primitive_ids: list[int],
+    semantic_labels: dict[int, int],
+    label: int,
+    *,
+    policy: str,
+) -> tuple[list[int], dict[str, Any]]:
+    if policy == "off" or not selected_indices or not semantic_labels:
+        return selected_indices, {
+            "policy": policy,
+            "available": bool(semantic_labels),
+            "original_count": len(selected_indices),
+            "kept_count": len(selected_indices),
+            "removed_count": 0,
+            "fallback_used": False,
+        }
+    if policy != "label_consistent_nonempty":
+        raise ValueError(f"unknown instance semantic remask policy: {policy}")
+    kept = [
+        idx for idx in selected_indices
+        if int(semantic_labels.get(int(primitive_ids[idx]), int(label))) == int(label)
+    ]
+    fallback_used = not kept
+    final_indices = selected_indices if fallback_used else kept
+    return final_indices, {
+        "policy": policy,
+        "available": True,
+        "original_count": len(selected_indices),
+        "kept_count": len(final_indices),
+        "removed_count": 0 if fallback_used else len(selected_indices) - len(final_indices),
+        "fallback_used": fallback_used,
+    }
+
+
+def semantic_consistency_remask_primitive_ids(
+    primitive_ids: list[int],
+    semantic_labels: dict[int, int],
+    label: int,
+    *,
+    policy: str,
+) -> tuple[list[int], dict[str, Any]]:
+    if policy == "off" or not primitive_ids or not semantic_labels:
+        return primitive_ids, {
+            "policy": policy,
+            "available": bool(semantic_labels),
+            "original_count": len(primitive_ids),
+            "kept_count": len(primitive_ids),
+            "removed_count": 0,
+            "fallback_used": False,
+        }
+    if policy != "label_consistent_nonempty":
+        raise ValueError(f"unknown instance semantic remask policy: {policy}")
+    kept = [
+        int(primitive_id) for primitive_id in primitive_ids
+        if int(semantic_labels.get(int(primitive_id), int(label))) == int(label)
+    ]
+    fallback_used = not kept
+    final_ids = primitive_ids if fallback_used else kept
+    return final_ids, {
+        "policy": policy,
+        "available": True,
+        "original_count": len(primitive_ids),
+        "kept_count": len(final_ids),
+        "removed_count": 0 if fallback_used else len(primitive_ids) - len(final_ids),
+        "fallback_used": fallback_used,
+    }
+
+
 def endpoint_affinity_expand_indices(
     selected_indices: list[int],
     mask_prob: np.ndarray,
@@ -497,6 +586,7 @@ def instances_from_windows(
     mask_logits_rows: list[np.ndarray],
     *,
     feature_rows: list[np.ndarray] | None = None,
+    semantic_logits_rows: list[np.ndarray] | None = None,
     quality_logits_rows: list[np.ndarray] | None = None,
     identity_embedding_rows: list[np.ndarray] | None = None,
     ownership_logits_rows: list[np.ndarray] | None = None,
@@ -515,12 +605,14 @@ def instances_from_windows(
     max_instances: int,
     window_merge_policy: str = "reciprocal",
     merge_center_distance_threshold: float = 0.5,
+    instance_semantic_remask_policy: str = "off",
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     proposals: list[dict[str, Any]] = []
     counters = Counter()
     ownership_quality_logits_rows = quality_logits_rows
     if feature_rows is None:
         feature_rows = [np.empty((len(primitive_ids), 0), dtype=np.float32) for primitive_ids in record_ids]
+    semantic_labels = semantic_labels_by_primitive(record_ids, semantic_logits_rows)
     if quality_logits_rows is None:
         quality_logits_rows = [np.zeros(query_logits.shape[0], dtype=np.float32) for query_logits in query_logits_rows]
         quality_enabled = False
@@ -575,6 +667,17 @@ def instances_from_windows(
             identity_embedding_rows, ownership_quality_logits_rows, admitted_rows, ignore_label=IGNORE_LABEL,
             ownership_membership_threshold=ownership_membership_threshold,
         )
+        for proposal in proposals:
+            remasked_ids, semantic_remask = semantic_consistency_remask_primitive_ids(
+                list(map(int, proposal.get("primitive_ids") or [])),
+                semantic_labels,
+                int(proposal.get("label", -1)),
+                policy=instance_semantic_remask_policy,
+            )
+            proposal["primitive_ids"] = remasked_ids
+            proposal["semantic_remask"] = semantic_remask
+            counters["semantic_remask_removed_primitives"] += int(semantic_remask["removed_count"])
+            counters["semantic_remask_fallback_instances"] += int(bool(semantic_remask["fallback_used"]))
         diagnostics = {
             "query_admission_policy": query_admission_policy,
             "family_min_query_score_overrides": dict(sorted((family_min_query_score_overrides or {}).items())),
@@ -589,6 +692,9 @@ def instances_from_windows(
             "recall_expanded_queries": 0,
             "recall_expansion_candidates": 0,
             "recall_expansion_added_primitives": 0,
+            "instance_semantic_remask_policy": instance_semantic_remask_policy,
+            "semantic_remask_removed_primitives": int(counters["semantic_remask_removed_primitives"]),
+            "semantic_remask_fallback_instances": int(counters["semantic_remask_fallback_instances"]),
                 "query_score_distributions": {
                 "object_margin": distribution_payload(counters, "object_margin"),
                 "object_score": distribution_payload(counters, "object_score"),
@@ -700,6 +806,16 @@ def instances_from_windows(
                 counters["rejected_empty_mask_queries"] += 1
                 update_family_admission_counter(counters, family, "rejected_empty_mask")
                 continue
+            selected_indices, semantic_remask = semantic_consistency_remask_indices(
+                selected_indices,
+                primitive_ids,
+                semantic_labels,
+                label,
+                policy=instance_semantic_remask_policy,
+            )
+            selected = [primitive_ids[idx] for idx in selected_indices]
+            counters["semantic_remask_removed_primitives"] += int(semantic_remask["removed_count"])
+            counters["semantic_remask_fallback_instances"] += int(bool(semantic_remask["fallback_used"]))
             sparse_weights = {"line_token_component_panoptic": 1.0}
             if int(expansion["added_indices"]) > 0:
                 sparse_weights = {"line_token_component_panoptic": 0.8, "endpoint_affinity_expander": 0.2}
@@ -717,6 +833,7 @@ def instances_from_windows(
                     "moe_route": "line_token_component_panoptic",
                     "sparse_expert_weights": sparse_weights,
                     "recall_expansion": expansion,
+                    "semantic_remask": semantic_remask,
                     "query_admission_policy": query_admission_policy,
                     "query_index": qidx,
                     "objectness_score": 1.0 - no_object_score,
@@ -761,6 +878,9 @@ def instances_from_windows(
         "recall_expanded_queries": int(counters["recall_expanded_queries"]),
         "recall_expansion_candidates": int(counters["recall_expansion_candidates"]),
         "recall_expansion_added_primitives": int(counters["recall_expansion_added_primitives"]),
+        "instance_semantic_remask_policy": instance_semantic_remask_policy,
+        "semantic_remask_removed_primitives": int(counters["semantic_remask_removed_primitives"]),
+        "semantic_remask_fallback_instances": int(counters["semantic_remask_fallback_instances"]),
         "admitted_object_query_rate": int(counters["admitted_object_queries"]) / max(int(counters["queries"]), 1),
         "proposal_query_rate": int(counters["proposal_queries"]) / max(int(counters["queries"]), 1),
         "query_score_distributions": {
@@ -931,6 +1051,20 @@ def merge_window_proposals(
     """
     if merge_policy not in {"reciprocal", "legacy_connected_components", "topology_consistency"}:
         raise ValueError(f"unknown window merge policy: {merge_policy}")
+
+    def aggregate_semantic_remask(fragments: list[dict[str, Any]]) -> dict[str, Any]:
+        rows = [item.get("semantic_remask") for item in fragments if isinstance(item.get("semantic_remask"), dict)]
+        if not rows:
+            return {"policy": "off", "available": False, "original_count": 0, "kept_count": 0, "removed_count": 0, "fallback_used": False}
+        return {
+            "policy": str(rows[0].get("policy", "off")),
+            "available": any(bool(row.get("available", False)) for row in rows),
+            "original_count": sum(int(row.get("original_count", 0)) for row in rows),
+            "kept_count": sum(int(row.get("kept_count", 0)) for row in rows),
+            "removed_count": sum(int(row.get("removed_count", 0)) for row in rows),
+            "fallback_used": any(bool(row.get("fallback_used", False)) for row in rows),
+        }
+
     if merge_policy in {"reciprocal", "topology_consistency"}:
         track_indices = reciprocal_identity_tracks(
             proposals,
@@ -965,6 +1099,7 @@ def merge_window_proposals(
                 "query_indices": sorted({int(item.get("query_index", -1)) for item in fragments if int(item.get("query_index", -1)) >= 0}),
                 "window_indices": sorted({int(item.get("window_index", -1)) for item in fragments if int(item.get("window_index", -1)) >= 0}),
                 "merged_fragments": len(fragments),
+                "semantic_remask": aggregate_semantic_remask(fragments),
                 "decoder": "topology_consistency_reciprocal_tracks" if merge_policy == "topology_consistency" else "reciprocal_adjacent_window_identity_tracks",
             })
         merged.sort(key=lambda item: item["score"], reverse=True)
@@ -986,6 +1121,7 @@ def merge_window_proposals(
             row["scores"] = [float(proposal.get("score", 0.0))]
             row["query_indices"] = [int(proposal.get("query_index", -1))]
             row["window_indices"] = [int(proposal.get("window_index", -1))]
+            row["semantic_remask_rows"] = [proposal] if isinstance(proposal.get("semantic_remask"), dict) else []
             row["merged_fragments"] = 1
             groups_by_label[label].append(row)
             continue
@@ -996,6 +1132,8 @@ def merge_window_proposals(
         target["scores"].append(float(proposal.get("score", 0.0)))
         target["query_indices"].append(int(proposal.get("query_index", -1)))
         target["window_indices"].append(int(proposal.get("window_index", -1)))
+        if isinstance(proposal.get("semantic_remask"), dict):
+            target.setdefault("semantic_remask_rows", []).append(proposal)
         target["merged_fragments"] += 1
         for group_index in reversed(matching[1:]):
             other = groups_by_label[label].pop(group_index)
@@ -1003,6 +1141,7 @@ def merge_window_proposals(
             target["scores"].extend(other["scores"])
             target["query_indices"].extend(other["query_indices"])
             target["window_indices"].extend(other["window_indices"])
+            target.setdefault("semantic_remask_rows", []).extend(other.get("semantic_remask_rows", []))
             target["merged_fragments"] += int(other["merged_fragments"])
 
     merged: list[dict[str, Any]] = []
@@ -1021,6 +1160,7 @@ def merge_window_proposals(
                 "query_indices": sorted(set(int(value) for value in group.pop("query_indices", []) if int(value) >= 0)),
                 "window_indices": sorted(set(int(value) for value in group.pop("window_indices", []) if int(value) >= 0)),
                 "merged_fragments": int(group.get("merged_fragments", 1)),
+                "semantic_remask": aggregate_semantic_remask(group.pop("semantic_remask_rows", [])),
                 "decoder": "overlap_graph_window_merge",
             }
             merged.append(row)
@@ -1772,6 +1912,12 @@ def parse_args() -> argparse.Namespace:
         help="Decode stuff from page-merged semantic logits after thing ownership/conflict resolution.",
     )
     parser.add_argument("--semantic-stuff-min-score", type=float, default=0.35)
+    parser.add_argument(
+        "--instance-semantic-remask-policy",
+        choices=["off", "label_consistent_nonempty"],
+        default="off",
+        help="Optionally remove instance primitives whose semantic prediction disagrees with the instance label; nonempty fallback preserves recall.",
+    )
     parser.add_argument("--recall-expansion-policy", choices=["off", "endpoint_affinity"], default="off")
     parser.add_argument("--recall-expansion-threshold", type=float, default=0.35)
     parser.add_argument("--recall-expansion-endpoint-radius", type=float, default=0.0025)
@@ -2005,6 +2151,7 @@ def main() -> int:
                 query_logits_by_record[record_id],
                 mask_logits_by_record[record_id],
                 feature_rows=features_by_record[record_id],
+                semantic_logits_rows=semantic_logits_by_record[record_id],
                 quality_logits_rows=quality_logits_by_record.get(record_id),
                 identity_embedding_rows=identity_embeddings_by_record.get(record_id),
                 ownership_logits_rows=ownership_logits_by_record.get(record_id),
@@ -2023,6 +2170,7 @@ def main() -> int:
                 max_instances=args.max_instances_per_record,
                 window_merge_policy=args.window_merge_policy,
                 merge_center_distance_threshold=args.merge_center_distance_threshold,
+                instance_semantic_remask_policy=args.instance_semantic_remask_policy,
             )
             before_reuse = primitive_reuse_diagnostics(instances)
             if ownership_logits_by_record.get(record_id) is not None:
@@ -2084,6 +2232,8 @@ def main() -> int:
             counters["recall_expanded_queries"] += int(query_admission["recall_expanded_queries"])
             counters["recall_expansion_candidates"] += int(query_admission["recall_expansion_candidates"])
             counters["recall_expansion_added_primitives"] += int(query_admission["recall_expansion_added_primitives"])
+            counters["semantic_remask_removed_primitives"] += int(query_admission.get("semantic_remask_removed_primitives", 0))
+            counters["semantic_remask_fallback_instances"] += int(query_admission.get("semantic_remask_fallback_instances", 0))
             counters["merged_fragments"] += sum(max(int(item.get("merged_fragments", 1)) - 1, 0) for item in instances)
             counters["pre_conflict_reused_primitives"] += int(before_reuse["reused_primitives"])
             counters["pre_conflict_cross_label_reused_primitives"] += int(before_reuse["cross_label_reused_primitives"])
@@ -2180,6 +2330,9 @@ def main() -> int:
             "recall_expanded_queries": counters["recall_expanded_queries"],
             "recall_expansion_candidates": counters["recall_expansion_candidates"],
             "recall_expansion_added_primitives": counters["recall_expansion_added_primitives"],
+            "instance_semantic_remask_policy": args.instance_semantic_remask_policy,
+            "semantic_remask_removed_primitives": counters["semantic_remask_removed_primitives"],
+            "semantic_remask_fallback_instances": counters["semantic_remask_fallback_instances"],
             "query_score_distributions": {
                 "object_margin": distribution_payload(counters, "object_margin"),
                 "object_score": distribution_payload(counters, "object_score"),
@@ -2226,6 +2379,7 @@ def main() -> int:
             "query_admission_policy": args.query_admission_policy,
             "model_mode": args.model_mode,
             "mask_threshold": args.mask_threshold,
+            "instance_semantic_remask_policy": args.instance_semantic_remask_policy,
             "recall_expansion_policy": args.recall_expansion_policy,
             "recall_expansion_threshold": args.recall_expansion_threshold,
             "recall_expansion_endpoint_radius": args.recall_expansion_endpoint_radius,

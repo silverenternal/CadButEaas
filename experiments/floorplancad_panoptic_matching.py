@@ -115,6 +115,42 @@ def assignment_cost_diagnostics(cost: Any, rows: list[int], cols: list[int], ref
     return {"candidate_cost": candidate, "reference_cost": reference, "relative_gap": relative_gap, "assignment_churn": churn}
 
 
+def selected_primitive_constrained_cost(
+    torch: Any,
+    cost: Any,
+    target_masks: Any,
+    target_indices: Any,
+    query_start: int,
+    selected_primitive_indices: Any | None,
+) -> Any:
+    """Apply VecFormer-style selected-primitive sparse matching when feasible.
+
+    A selected query may only match targets containing its selected primitive.
+    Queries without a selected primitive remain unconstrained. If the local
+    matrix would become infeasible for exact assignment, return the original
+    cost instead of silently dropping supervision.
+    """
+    if selected_primitive_indices is None:
+        return cost
+    if int(cost.numel()) <= 0:
+        return cost
+    local_query_count = int(cost.shape[0])
+    selected = selected_primitive_indices[query_start : query_start + local_query_count].to(cost.device).long()
+    selected_valid = (selected >= 0) & (selected < int(target_masks.shape[-1]))
+    if not bool(selected_valid.any().item()):
+        return cost
+    target_subset = target_masks.index_select(0, target_indices.to(target_masks.device)).to(cost.device)
+    safe_selected = selected.clamp(min=0, max=max(int(target_masks.shape[-1]) - 1, 0))
+    allowed = target_subset[:, safe_selected].transpose(0, 1).to(torch.bool)
+    allowed = torch.where(selected_valid.unsqueeze(1), allowed, torch.ones_like(allowed, dtype=torch.bool))
+    constrained = cost.masked_fill(~allowed, float("inf"))
+    row_feasible = torch.isfinite(constrained).any(dim=1)
+    col_feasible = torch.isfinite(constrained).any(dim=0)
+    if not bool(row_feasible.all().item()) or not bool(col_feasible.all().item()):
+        return cost
+    return constrained
+
+
 def match_component_queries(
     torch: Any,
     query_logits: Any,
@@ -129,6 +165,7 @@ def match_component_queries(
     *,
     no_object_label: int = DEFAULT_NO_OBJECT_LABEL,
     stuff_labels: tuple[int, ...] = STUFF_LABELS,
+    selected_primitive_indices: Any | None = None,
 ) -> tuple[Any, Any, int, int]:
     device = query_logits.device
     query_labels = torch.full((num_queries,), int(no_object_label), dtype=torch.long, device=device)
@@ -153,7 +190,10 @@ def match_component_queries(
                 raise ValueError("typed stuff slots require five dedicated stuff query positions")
             thing_targets = torch.nonzero((target_labels < min(stuff_labels)) | (target_labels > max(stuff_labels)), as_tuple=False).flatten()
             if thing_targets.numel():
-                local_cost = cost[:thing_query_count][:, thing_targets]
+                local_cost = selected_primitive_constrained_cost(
+                    torch, cost[:thing_query_count][:, thing_targets], target_masks, thing_targets,
+                    0, selected_primitive_indices,
+                )
                 if matching == "greedy_gpu_train":
                     local_rows, local_cols = greedy_assignment_gpu_tensor(torch, local_cost)
                     tensor_assignments.append((local_rows, thing_targets.index_select(0, local_cols)))
@@ -188,7 +228,10 @@ def match_component_queries(
         for (query_start, query_end), target_indices in zip(query_ranges, target_groups, strict=True):
             if target_indices.numel() == 0 or query_end <= query_start:
                 continue
-            local_cost = cost[query_start:query_end][:, target_indices]
+            local_cost = selected_primitive_constrained_cost(
+                torch, cost[query_start:query_end][:, target_indices], target_masks, target_indices,
+                query_start, selected_primitive_indices,
+            )
             if matching == "greedy_gpu_train":
                 local_rows, local_cols = greedy_assignment_gpu_tensor(torch, local_cost)
                 tensor_assignments.append((local_rows + query_start, target_indices.index_select(0, local_cols)))
@@ -214,7 +257,7 @@ def match_component_queries(
                     "greedy component assignment rejected: "
                     f"cost gap {diagnostics['relative_gap']:.6f} is not below the required 1%"
                 )
-        elif thing_query_count is None:
+        elif thing_query_count is None and selected_primitive_indices is None:
             rows, cols = linear_sum_assignment_fallback(cost)
     for qidx, tidx in zip(rows, cols, strict=True):
         query_labels[int(qidx)] = target_labels[int(tidx)]

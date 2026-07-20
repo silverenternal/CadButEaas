@@ -42,6 +42,7 @@ from experiments.floorplancad_train_line_token_panoptic_moe import (
     objective_config_hash,
     precision_phase_admission_ready,
     query_mask_objectness_scores,
+    query_selected_primitive_indices,
     query_objectness_loss,
     rq_query_supervision_losses,
     rq_sq_quality_calibration_loss,
@@ -759,6 +760,19 @@ def test_family_seed_loss_has_gradients_for_supported_families():
     assert seed_logits.grad is not None
     assert torch.count_nonzero(seed_logits.grad).item() > 0
     assert torch.count_nonzero(seed_logits.grad[2]).item() == 0
+
+
+def test_query_seed_diagnostics_exports_selected_primitive_indices_for_matching():
+    selected = query_selected_primitive_indices(
+        torch,
+        {"seed_indices": torch.tensor([[2, 0, 99]])},
+        batch_index=0,
+        num_queries=5,
+        token_count=4,
+        device=torch.device("cpu"),
+    )
+
+    assert selected.tolist() == [2, 0, -1, -1, -1]
 
 
 def test_joint_proxy_gate_rejects_nonconserved_component_proxy():

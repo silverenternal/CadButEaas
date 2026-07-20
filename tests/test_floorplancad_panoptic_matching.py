@@ -111,6 +111,57 @@ def test_training_greedy_matching_stays_on_tensor_assignment_path(monkeypatch):
     assert (positives, matched) == (2, 2)
 
 
+def test_selected_primitive_sparse_matching_aligns_with_vecformer(monkeypatch):
+    monkeypatch.setattr(
+        "experiments.floorplancad_panoptic_matching.component_assignment_cost",
+        lambda *_args, **_kwargs: torch.tensor([[1.0, 0.1], [0.2, 1.0]]),
+    )
+    target_masks = torch.tensor([
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ])
+
+    labels, masks, positives, matched = match_component_queries(
+        torch,
+        torch.zeros((2, 3)),
+        torch.zeros((2, 3)),
+        torch.tensor([1, 2]),
+        target_masks,
+        2,
+        matching="hungarian_cpu",
+        selected_primitive_indices=torch.tensor([0, 1]),
+    )
+
+    assert labels.tolist() == [1, 2]
+    assert masks.tolist() == target_masks.tolist()
+    assert (positives, matched) == (2, 2)
+
+
+def test_selected_primitive_sparse_matching_falls_back_when_infeasible(monkeypatch):
+    monkeypatch.setattr(
+        "experiments.floorplancad_panoptic_matching.component_assignment_cost",
+        lambda *_args, **_kwargs: torch.tensor([[1.0, 0.1], [0.2, 1.0]]),
+    )
+    target_masks = torch.tensor([
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+    ])
+
+    labels, _masks, _positives, matched = match_component_queries(
+        torch,
+        torch.zeros((2, 3)),
+        torch.zeros((2, 3)),
+        torch.tensor([1, 2]),
+        target_masks,
+        2,
+        matching="hungarian_cpu",
+        selected_primitive_indices=torch.tensor([2, 2]),
+    )
+
+    assert labels.tolist() == [2, 1]
+    assert matched == 2
+
+
 def test_teacher_distillation_reuses_gt_identity_query_without_conflict():
     gt_query_labels = torch.tensor([2, 3, IGNORE_LABEL])
     gt_query_masks = torch.tensor([[1.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]])

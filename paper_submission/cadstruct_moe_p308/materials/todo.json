@@ -1,77 +1,73 @@
 {
-  "title": "CadStruct RQ Recovery Source-Protocol Plan",
-  "schema_version": "todo_v15_rq_source_protocol_alignment_no_training",
-  "updated": "2026-07-20T15:45:00+08:00",
-  "status": "code_review_complete_no_training_started",
-  "strategy": "Do not start training and do not reproduce external baselines. Use VecFormer/CADTransformer source only to align data, matching, scoring, and metric protocol before the next CadStruct validation run.",
-  "goal_completion_rule": "If a stable CadStruct validation training is deliberately started later, mark the active goal complete. Current phase explicitly avoids training.",
+  "title": "CadStruct RQ Source-Protocol Recovery Plan",
+  "schema_version": "todo_v16_rq_source_protocol_no_training",
+  "updated": "2026-07-20T16:20:00+08:00",
+  "status": "source_protocol_code_review_complete_no_training_started",
+  "strategy": "Do not start training. Use external baseline source only as protocol reference, then gate CadStruct with deterministic tests before any validation run.",
+  "goal_completion_rule": "Current phase is code review only. If a later phase deliberately starts stable CadStruct validation training, mark that future goal complete.",
   "completed_this_pass": [
     {
-      "id": "C1-01",
-      "summary": "Audited VecFormer/CADTransformer source-level protocols: log1p-length IoU, VecFormer sparse matcher cost normalization, mask threshold/object-normalization scoring, CADTransformer center/neighbor/offset feature path.",
-      "evidence": [
-        "external_methods/VecFormer/model/vecformer/criterion/instance_criterion.py",
-        "external_methods/VecFormer/model/vecformer/modeling_vecformer.py",
-        "external_methods/VecFormer/model/vecformer/evaluator/evaluator.py",
-        "external_methods/CADTransformer/dataset.py",
-        "external_methods/CADTransformer/utils/utils_dataset.py"
-      ]
-    },
-    {
-      "id": "C1-02",
-      "summary": "CadStruct assignment cost now matches VecFormer-style positive class cost plus per-term cost normalization, preventing class/focal/dice scale imbalance from corrupting Hungarian matching.",
+      "id": "C2-01",
+      "summary": "Compared VecFormer source and found its query matching is selected-primitive constrained; CadStruct now supports the same constraint for seeded queries with infeasible-matrix fallback.",
       "files": [
+        "experiments/floorplancad_panoptic_matching.py",
         "experiments/floorplancad_train_line_token_panoptic_moe.py",
         "tests/test_floorplancad_panoptic_matching.py",
-        "tests/test_floorplancad_target_schema_v2_training_consumer.py"
-      ]
+        "tests/test_floorplancad_panoptic_training_losses.py"
+      ],
+      "baseline_reference": "external_methods/VecFormer/model/vecformer/criterion/instance_criterion.py"
     },
     {
-      "id": "C1-03",
-      "summary": "Deployment/admission score is upgraded to class probability × quality × mask objectness, matching VecFormer object-normalization behavior instead of admitting weak masks by class score alone.",
+      "id": "C2-02",
+      "summary": "Compared VecFormer panoptic decode and found semantic remasking before final panoptic output; CadStruct now has an explicit, auditable label_consistent_nonempty remask policy for both window and ownership decode paths.",
       "files": [
-        "experiments/floorplancad_train_line_token_panoptic_moe.py",
         "experiments/floorplancad_apply_line_token_panoptic_moe.py",
-        "experiments/floorplancad_query_ownership.py",
-        "tests/test_floorplancad_panoptic_training_losses.py",
-        "tests/test_floorplancad_feedback_repair.py",
-        "tests/test_floorplancad_query_ownership.py"
-      ]
+        "tests/test_floorplancad_apply_panoptic_contract.py"
+      ],
+      "baseline_reference": "external_methods/VecFormer/model/vecformer/modeling_vecformer.py"
     },
     {
-      "id": "C1-04",
-      "summary": "Quality objective protocol bumped to v6 and records object_normalization_threshold, so old v5 checkpoints cannot silently mix the previous class×quality scoring protocol.",
-      "files": [
-        "experiments/floorplancad_train_line_token_panoptic_moe.py",
-        "tests/test_floorplancad_checkpoint_abi_loading.py"
-      ]
-    },
-    {
-      "id": "C1-05",
-      "summary": "v6 structural-relation feature path was inspected; code supports it, but no full windowed v6 cache is currently present, so switching launch defaults now would fail rather than improve RQ.",
+      "id": "C2-03",
+      "summary": "Kept production defaults unchanged: content/component seeded queries remain disabled in the high-RQ preset, so new sparse matching is available but not silently promoted without an explicit protocol decision.",
       "evidence": [
-        "experiments/floorplancad_target_schema_v4.py",
-        "experiments/floorplancad_train_line_token_panoptic_moe.py",
-        "reports/vlm/*v6* windowed cache not found in current listing"
+        "scripts/launch_floorplancad_high_rq_contract_dev.sh",
+        "tests/test_floorplancad_high_rq_moe_regression.py",
+        "tests/test_floorplancad_pcgrad_production.py"
       ]
     }
   ],
   "external_protocol_alignment": {
     "VecFormer": [
-      "matching: class/BCE/Dice costs are normalized before weighting",
-      "score: class probability is multiplied by instance score and mask objectness",
-      "mask decoding: sigmoid(mask) > configured threshold; official default is 0.3",
-      "metric: PQ/SQ/RQ uses log(1+primitive_length) weighted IoU"
+      "query initialization: train queries can be sampled from primitive features and carry selected primitive ids",
+      "matching: selected primitive must belong to the target mask when sparse matching is feasible",
+      "decode: instance masks are semantically remasked before panoptic fusion",
+      "score/metric: class score, mask objectness, and log1p-length weighted IoU are part of the protocol"
     ],
     "CADTransformer": [
-      "data: xy primitive centers, graph neighbors, node/rgb features",
-      "instance grouping reference: instance-center offset supervision",
-      "metric: line-index IoU weighted by log(1+length)"
+      "data: primitive center, neighbor graph, and offset-style structural signals are core inputs",
+      "metric: line primitive IoU uses log1p primitive length weighting"
     ]
   },
   "pending_tasks": [
     {
       "id": "P0-01",
+      "title": "Decide seeded-query promotion gate",
+      "type": "protocol_decision_before_training",
+      "target_files": [
+        "scripts/launch_floorplancad_high_rq_contract_dev.sh",
+        "experiments/floorplancad_train_line_token_panoptic_moe.py",
+        "tests/test_floorplancad_high_rq_moe_regression.py",
+        "tests/test_floorplancad_pcgrad_production.py"
+      ],
+      "checks": [
+        "If enabling --content-seeded-queries or --component-seeded-queries, update preset tests and input protocol ABI deliberately.",
+        "Verify selected_primitive_indices diagnostics are non-empty in a smoke batch before using the sparse matcher as an RQ claim.",
+        "Do not enable seeded queries together with incompatible old checkpoints or stale input protocol metadata."
+      ],
+      "fix_plan": "Code capability is implemented. Promotion should be a small config/test patch after v6 cache availability is settled."
+    },
+    {
+      "id": "P0-02",
       "title": "Locate or build full v6 windowed cache",
       "type": "data_protocol_blocker",
       "target_files": [
@@ -79,32 +75,31 @@
         "experiments/floorplancad_build_line_json_primitive_cache.py"
       ],
       "checks": [
-        "Confirm train/val v6 windowed primitive cache exists before changing launch scripts.",
+        "Confirm train/val v6 windowed primitive cache exists before changing launch defaults.",
         "Verify v6 lineage forbids semantic_id, instance_id, and page_instance_id as model inputs.",
-        "If absent, rebuild cache once; do not silently train v3/v4 while claiming v6 structural features."
+        "If absent, rebuild cache once; do not train v3/v4 while reporting v6 structural-feature protocol."
       ],
       "fix_plan": "Data build task only; no model training in current phase."
     },
     {
-      "id": "P0-02",
-      "title": "Run pre-training protocol smoke after v6 cache exists",
+      "id": "P0-03",
+      "title": "Pre-training protocol smoke only after P0-01/P0-02",
       "type": "validation_before_training",
       "target_files": [
         "scripts/launch_floorplancad_high_rq_contract_dev.sh",
+        "experiments/floorplancad_apply_line_token_panoptic_moe.py",
         "experiments/floorplancad_train_line_token_panoptic_moe.py"
       ],
       "checks": [
-        "Launch script must explicitly use --input-feature-schema v6 and --require-target-schema-v6 only after v6 cache exists.",
-        "ABI report must show quality objective v6 and class×quality×mask-objectness score protocol.",
-        "First validation report must expose FN attribution, mask_objectness p10, admitted coverage, and calibrated RQ."
+        "Report must expose selected-primitive matching usage, semantic_remask_removed_primitives, admitted coverage, and calibrated RQ.",
+        "Run apply with --instance-semantic-remask-policy label_consistent_nonempty only as an explicit ablation/policy choice, not as a hidden default.",
+        "Abort if proxy metric configuration differs from official log1p-length weighted primitive IoU."
       ],
-      "fix_plan": "Update launch script only after cache availability is confirmed."
+      "fix_plan": "After cache/config gate, run a short smoke; still no long training until protocol diagnostics are sane."
     }
   ],
   "validation_done": [
-    ".venv-vlm/bin/python -m pytest tests/test_floorplancad_panoptic_matching.py tests/test_floorplancad_target_schema_v2_training_consumer.py tests/test_floorplancad_panoptic_training_losses.py tests/test_floorplancad_quality_gradient_and_ranking.py -q",
-    ".venv-vlm/bin/python -m pytest tests/test_floorplancad_query_ownership.py tests/test_floorplancad_panoptic_window_merge.py tests/test_floorplancad_apply_panoptic_contract.py tests/test_floorplancad_feedback_repair.py -q",
-    ".venv-vlm/bin/python -m pytest tests/test_floorplancad_checkpoint_abi_loading.py tests/test_floorplancad_apply_checkpoint_roundtrip.py tests/test_floorplancad_high_rq_moe_regression.py tests/test_floorplancad_pcgrad_production.py::test_training_presets_share_the_same_content_query_and_typed_stuff_architecture -q",
-    ".venv-vlm/bin/python -m py_compile experiments/floorplancad_train_line_token_panoptic_moe.py experiments/floorplancad_apply_line_token_panoptic_moe.py experiments/floorplancad_query_ownership.py"
+    "python -m py_compile experiments/floorplancad_apply_line_token_panoptic_moe.py experiments/floorplancad_panoptic_matching.py experiments/floorplancad_train_line_token_panoptic_moe.py",
+    ".venv-vlm/bin/python -m pytest tests/test_floorplancad_query_ownership.py tests/test_floorplancad_panoptic_matching.py tests/test_floorplancad_panoptic_training_losses.py::test_query_seed_diagnostics_exports_selected_primitive_indices_for_matching tests/test_floorplancad_panoptic_training_losses.py::test_quality_deployment_score_includes_mask_objectness_when_available -q"
   ]
 }
