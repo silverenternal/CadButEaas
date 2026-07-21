@@ -127,7 +127,7 @@ PANOPTIC_IDENTITY_HEAD_VERSION = "normalized_query_identity_embedding_v1"
 PANOPTIC_IDENTITY_DIM = 32
 PANOPTIC_GEOMETRY_DECODER_VERSION = "thing_query_relative_multiscale_v4_padding_safe_all_segment_neighbors"
 PANOPTIC_GEOMETRY_CHECKPOINT_ABI_VERSION = "floorplancad_panoptic_checkpoint_abi_v3_geometry_v2"
-PANOPTIC_SQ_RQ_VERSION = "prediction_only_cross_attention_v7_persisted_deployment_state"
+PANOPTIC_SQ_RQ_VERSION = "prediction_only_cross_attention_v9_bidirectional_gated_residual"
 PANOPTIC_SQ_RQ_DEPLOYMENT_VERSION = "sq_rq_fail_closed_deployment_v1"
 PANOPTIC_SQ_RQ_CHECKPOINT_ABI_VERSION = "floorplancad_panoptic_checkpoint_abi_v4_geometry_v2_sq_rq"
 PANOPTIC_OWNERSHIP_CHECKPOINT_ABI_VERSION = "floorplancad_panoptic_checkpoint_abi_v5_geometry_v2_sq_rq_ownership"
@@ -190,6 +190,71 @@ LOSS_EXPERT_GROUPS = {
     "topology_merge": ("ownership", "geometry_aux", "content_anchor", "identity", "offset_vote", "affinity"),
     "teacher_aux": ("teacher", "candidate_mask_prior"),
 }
+
+ROUTER_CONDITION_FEATURE_NAMES = frozenset({
+    "cx_norm",
+    "cy_norm",
+    "length_norm",
+    "log_length_norm",
+    "orientation",
+    "horizontal",
+    "vertical",
+    "layer_id_norm",
+    "segment_relative_length",
+    "segment_count_log1p",
+    "primitive_kind_path",
+    "primitive_kind_circle",
+    "primitive_kind_ellipse",
+    "primitive_kind_other",
+    "path_cmd_line",
+    "path_cmd_curve",
+    "path_cmd_arc",
+    "path_cmd_close",
+    "tangent_dx",
+    "tangent_dy",
+    "turn_angle_norm",
+    "primitive_closed",
+    "layer_has_peers",
+    "same_layer_fraction",
+    "page_primitive_count_log1p",
+    "bbox_width",
+    "bbox_height",
+    "bbox_area",
+    "bbox_aspect_log",
+    "bbox_compactness",
+    "endpoint_closure_residual",
+    "endpoint_span",
+    "horizontal_vertical_balance",
+    "turn_abs",
+    "turn_squared",
+    "closed_or_near_closed",
+    "segment_density_log1p",
+    "endpoint_start_degree_norm",
+    "endpoint_end_degree_norm",
+    "endpoint_degree_sum_norm",
+    "junction_t_score",
+    "junction_l_score",
+    "junction_x_score",
+    "nearest_long_straight_gap",
+    "parallel_neighbor_fraction",
+    "perpendicular_neighbor_fraction",
+    "containment_depth_norm",
+    "contains_neighbor_fraction",
+    "repetition_spacing_score",
+    "repetition_direction_score",
+    "same_layer_structural_neighbor_fraction",
+})
+WEAK_FAMILY_FEATURE_NAMES = ROUTER_CONDITION_FEATURE_NAMES - {
+    "cx_norm",
+    "cy_norm",
+    "layer_id_norm",
+}
+ROUTER_CONDITION_FALLBACK_INDICES = (4, 5, 6, 7, 8, 9, 10, 13, 14, 15)
+WEAK_FAMILY_FALLBACK_INDICES = (6, 7, 8, 9, 10, 13, 14, 15)
+OPTIONAL_SCHEMA_ADAPTER_PREFIXES = (
+    "router_condition_proj.",
+    "weak_family_feature_proj.",
+)
 
 
 def parse_int_set_csv(value: str | None) -> set[int]:
@@ -342,6 +407,32 @@ def feature_names_for_input_protocol(input_protocol: dict[str, Any] | None) -> t
     if target_schema == TARGET_SCHEMA_V6:
         return V6_MODEL_FEATURE_NAMES
     raise ValueError(f"unsupported checkpoint target schema: {target_schema}")
+
+
+def locked_feature_names_for_dim(feature_dim: int) -> tuple[str, ...] | None:
+    for names in (MODEL_FEATURE_NAMES, V4_MODEL_FEATURE_NAMES, V5_MODEL_FEATURE_NAMES, V6_MODEL_FEATURE_NAMES, tuple(BASE_FEATURES)):
+        if len(names) == int(feature_dim):
+            return tuple(names)
+    return None
+
+
+def feature_indices_by_name_for_dim(
+    feature_dim: int,
+    requested_names: frozenset[str],
+    *,
+    fallback_indices: tuple[int, ...],
+) -> tuple[int, ...]:
+    feature_names = locked_feature_names_for_dim(feature_dim)
+    if feature_names is None:
+        return tuple(index for index in fallback_indices if index < int(feature_dim))
+    return tuple(index for index, name in enumerate(feature_names) if name in requested_names)
+
+
+def feature_names_by_indices_for_dim(feature_dim: int, indices: tuple[int, ...]) -> tuple[str, ...]:
+    feature_names = locked_feature_names_for_dim(feature_dim)
+    if feature_names is None:
+        return tuple(f"feature_{index}" for index in indices)
+    return tuple(feature_names[index] for index in indices if index < len(feature_names))
 
 
 def validate_segment_input_protocol(input_protocol: dict[str, Any]) -> str:
@@ -559,15 +650,17 @@ def sparse_router_config(*, enabled: bool, hidden_dim: int, num_experts: int, to
         "temperature": float(temperature),
         "expert_manifest": expert_manifest,
         "route_trace_schema": "token_topk_v1",
-        "branch_router_status": "typed_branch_routers_enabled" if typed_branch_routers else "shared_router_only_pending_typed_branch_routers",
+        "branch_router_status": "typed_shared_expert_branch_routers_enabled" if typed_branch_routers else "shared_router_only_pending_typed_branch_routers",
         "typed_branch_routers": bool(typed_branch_routers),
         "branch_num_experts": int(branch_num_experts),
         "branch_top_k": int(branch_top_k),
         "branch_capacity_factor": float(branch_capacity_factor),
         "branch_dropless": bool(branch_dropless),
         "branch_names": ["semantic", "rq", "sq", "bridge"],
-        "expert_sharing_topology": "shared_encoder_pool_plus_private_task_adapters_v1",
-        "branch_specialization": "private_pool_low_entropy_with_shared_pool_load_balance_v1",
+        "expert_sharing_topology": "shared_encoder_pool_plus_shared_task_conditioned_branch_experts_v2",
+        "branch_specialization": "task_conditioned_router_low_entropy_with_shared_expert_load_balance_v2",
+        "router_condition_policy": "vecformer_inspired_geometry_layer_family_router_condition_v1",
+        "branch_condition_policy": "branch_task_embedding_plus_token_geometry_condition_v1",
         "input_source": "predicted_encoder_token_features",
         "forbidden_context": ["gt_labels", "gt_masks", "page_instance_id", "matched_target_indices"],
         "load_balance_diagnostic": "mean_router_probability_cv_squared",
@@ -582,7 +675,7 @@ def gradient_control_config(mode: str) -> dict[str, Any]:
         "mode": mode,
         "shared_parameters": [
             "input_proj", "encoder", "sparse_router", "sparse_experts", "sparse_router_norm",
-            "branch_routers", "bridge_gate", "sq_rq_cross_attention",
+            "branch_routers", "branch_shared_experts", "bridge_gate", "sq_rq_cross_attention",
         ],
         "task_groups": ["semantic", "query_mask_quality", "teacher", "identity", "ownership", "router"],
         "auxiliary_loss_owner": "query_mask_quality",
@@ -682,7 +775,7 @@ def sq_rq_config(
         "heads": int(heads),
         "num_labels": int(num_labels),
         "gradient_scale": float(gradient_scale),
-        "context_policy": "factorized_admission_soft_train_hard_eval_membership_topk_adaptive_gate_v3",
+        "context_policy": "bidirectional_factorized_admission_masked_cross_attention_learned_edge_token_gates_v5",
         "context_top_k": 8,
         "query_confidence_threshold": float(query_confidence_threshold),
         "query_confidence_semantics": "sigmoid_factorized_admission_probability",
@@ -696,6 +789,8 @@ def sq_rq_config(
         "sq_mask_residual_gate_init": 0.0,
         "sq_ownership_residual": "sq_token_ownership_logits_zero_initialized_gate",
         "sq_ownership_residual_gate_init": 0.0,
+        "rq_query_residual": "rq_token_query_logits_mask_quality_zero_initialized_gate",
+        "rq_query_residual_gate_init": 0.0,
         "no_object_class": int(num_labels) - 1,
         "context_source": "predicted_final_query_embedding_mask_class_and_factorized_admission_logits",
         "forbidden_context": ["gt_masks", "page_instance_id", "matched_target_indices"],
@@ -1196,6 +1291,7 @@ def validate_checkpoint_abi(
         "sparse_router_enabled": sparse_router_enabled,
         "sparse_router_config": metadata.get("sparse_router_config"),
         "input_protocol": input_protocol,
+        "feature_names": list(ckpt.get("feature_names") or []),
         "requires_segment_features": bool(input_protocol and input_protocol.get("segment_features")),
         "warning": None if ownership_enabled or not (geometry_mode or sq_rq_enabled) else "Pre-v5 geometry checkpoint is diagnostic-only because ownership-before-mask is absent.",
         "checkpoint_abi": metadata,
@@ -1212,13 +1308,21 @@ def read_json_file(path: Path | None) -> dict[str, Any]:
     return data if isinstance(data, dict) else {"status": "non_object_json", "path": rel(path)}
 
 
+def page_record_key(record: dict[str, Any]) -> str:
+    original = record.get("original_record_id")
+    if original is not None:
+        return str(original)
+    record_id = str(record.get("record_id") or "")
+    return record_id.split("::", 1)[0]
+
+
 def deterministic_stratified_validation_pages(path: Path, page_limit: int, seed: int) -> tuple[str, ...] | None:
     """Choose a deterministic page-level diagnostic subset with label/type coverage."""
     if int(page_limit) <= 0:
         return None
     page_strata: dict[str, set[tuple[str, int]]] = {}
     for record in iter_jsonl(path):
-        page_id = str(record.get("original_record_id") or record.get("record_id") or "")
+        page_id = page_record_key(record)
         if not page_id:
             continue
         strata = page_strata.setdefault(page_id, set())
@@ -1266,8 +1370,19 @@ def load_panoptic_target_arrays(
     legacy_diagnostic: bool = False,
     num_queries: int | None = None,
     max_segments_per_primitive: int = 32,
+    expected_target_schema: str | None = None,
+    expected_input_schema: str | None = None,
 ) -> tuple[Any, ...] | None:
     target_schema = record.get("target_schema_version")
+    if expected_target_schema is not None and target_schema != expected_target_schema:
+        raise ValueError(
+            f"target schema mismatch: expected={expected_target_schema} actual={target_schema}"
+        )
+    input_schema = record.get("input_schema_version")
+    if expected_input_schema is not None and input_schema != expected_input_schema:
+        raise ValueError(
+            f"input schema mismatch: expected={expected_input_schema} actual={input_schema}"
+        )
     if target_schema not in {TARGET_SCHEMA_V2, TARGET_SCHEMA_V3, TARGET_SCHEMA_V4, TARGET_SCHEMA_V5, TARGET_SCHEMA_V6}:
         if not legacy_diagnostic:
             raise ValueError(f"panoptic production requires {TARGET_SCHEMA_V2}; v1/fallback cache is forbidden")
@@ -1361,10 +1476,19 @@ def prefetch_training_arrays(
     rng: random.Random,
     input_level: str,
     num_queries: int,
+    expected_target_schema: str | None = None,
+    expected_input_schema: str | None = None,
 ) -> Iterable[tuple[dict[str, Any], Any, Any, Any, Any]]:
     if max_prefetch <= 0:
         for record in source:
-            arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+            arrays = load_panoptic_target_arrays(
+                record,
+                max_tokens,
+                training=True,
+                num_queries=num_queries,
+                expected_target_schema=expected_target_schema,
+                expected_input_schema=expected_input_schema,
+            )
             yield record, arrays, rng.getstate(), None, None
         return
 
@@ -1385,7 +1509,14 @@ def prefetch_training_arrays(
 
         def parse_record(record: dict[str, Any], rng_state_after_record: Any) -> tuple[dict[str, Any], Any, Any, Any, Any]:
             try:
-                arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+                arrays = load_panoptic_target_arrays(
+                    record,
+                    max_tokens,
+                    training=True,
+                    num_queries=num_queries,
+                    expected_target_schema=expected_target_schema,
+                    expected_input_schema=expected_input_schema,
+                )
                 return record, arrays, rng_state_after_record, None, None
             except Exception as exc:  # noqa: BLE001 - propagate worker parsing failures to the training thread.
                 return record, None, rng_state_after_record, type(exc).__name__, str(exc)
@@ -1405,7 +1536,14 @@ def prefetch_training_arrays(
                             exhausted = True
                             break
                         if record_row_count(record) > max_tokens:
-                            arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+                            arrays = load_panoptic_target_arrays(
+                                record,
+                                max_tokens,
+                                training=True,
+                                num_queries=num_queries,
+                                expected_target_schema=expected_target_schema,
+                                expected_input_schema=expected_input_schema,
+                            )
                             immediate: Future[Any] = Future()
                             immediate.set_result((record, arrays, seed_rng.getstate(), None, None))
                             pending[next_submit] = immediate
@@ -1444,7 +1582,14 @@ def prefetch_training_arrays(
         try:
             for record in source:
                 try:
-                    arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+                    arrays = load_panoptic_target_arrays(
+                        record,
+                        max_tokens,
+                        training=True,
+                        num_queries=num_queries,
+                        expected_target_schema=expected_target_schema,
+                        expected_input_schema=expected_input_schema,
+                    )
                     queue.put((record, arrays, worker_rng.getstate(), None, None))
                 except Exception as exc:  # noqa: BLE001 - propagate worker parsing failures to the training thread.
                     queue.put((record, None, worker_rng.getstate(), type(exc).__name__, str(exc)))
@@ -1519,7 +1664,14 @@ def feature_ingress_audit(
         records += 1
         target_schemas[str(record.get("target_schema_version"))] += 1
         input_schemas[str(record.get("input_schema_version"))] += 1
-        arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+        arrays = load_panoptic_target_arrays(
+            record,
+            max_tokens,
+            training=True,
+            num_queries=num_queries,
+            expected_target_schema=input_protocol.get("target_schema_version"),
+            expected_input_schema=input_protocol.get("input_schema_version"),
+        )
         if arrays is None:
             blockers.append(f"record_{records}_unloadable")
             continue
@@ -1557,7 +1709,7 @@ def feature_ingress_audit(
     if fail_closed:
         if expected_input_schema.endswith("_raw_semantic_segments"):
             required_nonconstant = {"primitive_kind_path", "path_cmd_line", "segment_order_norm", "tangent_dx", "tangent_dy", "same_layer_fraction"}
-            zero_std = set(primitive_stats["zero_std_columns"]) | set(segment_stats_payload["zero_std_columns"])
+            zero_std = set(primitive_stats["zero_std_columns"]) & set(segment_stats_payload["zero_std_columns"])
             missing_signal = sorted(required_nonconstant & zero_std)
             if missing_signal:
                 blockers.append(f"raw_semantic_feature_signal_missing:{missing_signal}")
@@ -1940,8 +2092,8 @@ def augment_geometry_features(
 
 def augment_candidate_descriptor_features(torch: Any, candidate_features: Any, parameters: dict[str, Any]) -> Any:
     """Apply the same page-level geometry transform to candidate bbox/center descriptors."""
-    if candidate_features.ndim != 3 or candidate_features.shape[-1] < 7:
-        raise ValueError("candidate_features must be [B,C,F] with bbox/center descriptor columns")
+    if candidate_features.ndim != 3 or candidate_features.shape[-1] < 8:
+        raise ValueError("candidate_features must be [B,C,F] with bbox, center, and area descriptor columns")
     required = {"flip_x", "flip_y", "rotations", "scale", "shift"}
     if required.difference(parameters):
         raise ValueError("geometry augmentation parameters are incomplete")
@@ -1997,7 +2149,7 @@ def unique_page_semantic_class_weights(
     counts = np.zeros(IGNORE_LABEL, dtype=np.float64)
     seen: set[tuple[str, int]] = set()
     for record in iter_jsonl(path, limit):
-        page_id = str(record.get("original_record_id") or record.get("record_id") or "")
+        page_id = page_record_key(record)
         for row in record.get("primitive_rows", []) if isinstance(record.get("primitive_rows"), list) else []:
             primitive_id = parse_int(row.get("primitive_id"), -1)
             label = parse_int(row.get("semantic_id"), IGNORE_LABEL)
@@ -2069,6 +2221,8 @@ def make_panoptic_model(
     route_conditioning_residual_scale: float = 0.10,
     dense_attention_adapter_residual_scale: float = 0.10,
 ) -> Any:
+    if int(feature_dim) <= 0:
+        raise ValueError("feature_dim must be positive")
     if geometry_decoder_mode not in {"legacy_debug", "geometry_v2"}:
         raise ValueError("geometry_decoder_mode must be legacy_debug or geometry_v2")
     router_config = sparse_router_config(
@@ -2277,16 +2431,16 @@ def make_panoptic_model(
                 )
                 self.sparse_router_norm = nn.LayerNorm(hidden_dim)
             if self.typed_branch_routers:
+                self.branch_shared_experts = nn.ModuleList(
+                    nn.Sequential(
+                        nn.Linear(hidden_dim, hidden_dim), nn.GELU(), nn.Linear(hidden_dim, hidden_dim)
+                    )
+                    for _ in range(self.branch_num_experts)
+                )
                 self.branch_routers = nn.ModuleDict()
                 for branch_name in ("semantic", "rq", "sq", "bridge"):
                     self.branch_routers[branch_name] = nn.ModuleDict({
                         "router": nn.Linear(hidden_dim, self.branch_num_experts),
-                        "experts": nn.ModuleList(
-                            nn.Sequential(
-                                nn.Linear(hidden_dim, hidden_dim), nn.GELU(), nn.Linear(hidden_dim, hidden_dim)
-                            )
-                            for _ in range(self.branch_num_experts)
-                        ),
                         "norm": nn.LayerNorm(hidden_dim),
                     })
                 self.bridge_gate = nn.Parameter(torch.zeros(()))
@@ -2301,11 +2455,21 @@ def make_panoptic_model(
             self.last_candidate_query_diagnostics: dict[str, Any] | None = None
             self.last_weak_family_feature_diagnostics: dict[str, Any] | None = None
             self.last_dense_attention_adapter_diagnostics: dict[str, Any] | None = None
+            self.last_router_condition_diagnostics: dict[str, Any] | None = None
             self.last_explicit_route_logits: Any | None = None
             self.last_explicit_route_diagnostics: dict[str, Any] | None = None
             self.last_component_seed_logits: Any | None = None
             self.last_token_offsets: Any | None = None
             self.last_token_affinity_embeddings: Any | None = None
+            self.last_family_seed_logits: Any | None = None
+            self.last_query_positions: Any | None = None
+            self.last_aux_outputs: list[dict[str, Any]] = []
+            self.last_sq_rq_outputs: dict[str, Any] | None = None
+            self.last_ownership_logits: Any | None = None
+            self.last_query_objectness_logits: Any | None = None
+            self.last_query_admission_logits: Any | None = None
+            self.last_geometry_topology_source: str | None = None
+            self._current_router_condition_tokens: Any | None = None
 
             self.semantic_head = nn.Linear(hidden_dim, int(num_labels) - 1)
             self.semantic_query_residual_enabled = bool(semantic_query_residual_enabled)
@@ -2313,6 +2477,7 @@ def make_panoptic_model(
             self.sq_mask_residual_gate = nn.Parameter(torch.zeros(()))
             self.sq_mask_residual_projection = nn.Linear(hidden_dim, hidden_dim)
             self.sq_ownership_residual_gate = nn.Parameter(torch.zeros(()))
+            self.rq_sq_query_residual_gate = nn.Parameter(torch.zeros(()))
             self.sq_rq_enabled = bool(sq_rq_enabled)
             self.sq_rq_runtime_enabled = bool(sq_rq_enabled)
             self.sq_rq_cross_attention = SqRqCrossAttention(
@@ -2341,6 +2506,26 @@ def make_panoptic_model(
             self.dense_attention_adapter_residual_scale = max(0.0, float(dense_attention_adapter_residual_scale))
             self.route_conditioning_runtime_scale = 1.0
             self.dense_attention_adapter_runtime_scale = 1.0
+            self.router_condition_feature_indices = feature_indices_by_name_for_dim(
+                feature_dim,
+                ROUTER_CONDITION_FEATURE_NAMES,
+                fallback_indices=ROUTER_CONDITION_FALLBACK_INDICES,
+            )
+            self.router_condition_feature_names = feature_names_by_indices_for_dim(
+                feature_dim, self.router_condition_feature_indices,
+            )
+            self.weak_family_feature_indices = feature_indices_by_name_for_dim(
+                feature_dim,
+                WEAK_FAMILY_FEATURE_NAMES,
+                fallback_indices=WEAK_FAMILY_FALLBACK_INDICES,
+            )
+            self.weak_family_feature_names = feature_names_by_indices_for_dim(
+                feature_dim, self.weak_family_feature_indices,
+            )
+            if len(self.router_condition_feature_indices) <= 0:
+                raise ValueError("router condition features resolved to an empty feature set")
+            if self.weak_family_feature_fusion and len(self.weak_family_feature_indices) <= 0:
+                raise ValueError("weak family feature fusion resolved to an empty feature set")
             if self.candidate_aware_queries:
                 if self.candidate_feature_dim <= 0:
                     raise ValueError("candidate-aware queries require a positive candidate_feature_dim")
@@ -2350,7 +2535,7 @@ def make_panoptic_model(
                 self.candidate_anchor_proj = nn.Linear(self.candidate_feature_dim, 2)
             if self.weak_family_feature_fusion:
                 self.weak_family_feature_proj = nn.Sequential(
-                    nn.Linear(12, hidden_dim), nn.LayerNorm(hidden_dim), nn.GELU(),
+                    nn.Linear(len(self.weak_family_feature_indices), hidden_dim), nn.LayerNorm(hidden_dim), nn.GELU(),
                 )
                 self.weak_family_feature_gate = nn.Linear(hidden_dim * 2, hidden_dim)
                 self.weak_family_feature_norm = nn.LayerNorm(hidden_dim)
@@ -2373,6 +2558,16 @@ def make_panoptic_model(
                 self.dense_adapter_norm_attn = nn.LayerNorm(hidden_dim)
                 self.dense_adapter_norm_ffn = nn.LayerNorm(hidden_dim)
                 self.dense_adapter_residual_logit_gate = nn.Parameter(torch.tensor(-4.0))
+            self.router_condition_proj = nn.Sequential(
+                nn.Linear(len(self.router_condition_feature_indices), hidden_dim),
+                nn.LayerNorm(hidden_dim),
+                nn.GELU(),
+            )
+            self.router_condition_gate = nn.Linear(hidden_dim * 2, hidden_dim)
+            self.router_condition_norm = nn.LayerNorm(hidden_dim)
+            self.router_condition_residual_logit_gate = nn.Parameter(torch.tensor(-4.0))
+            self.branch_task_embed = nn.Embedding(4, hidden_dim)
+            self.branch_name_to_index = {"semantic": 0, "rq": 1, "sq": 2, "bridge": 3}
             self.typed_stuff_slots = bool(typed_stuff_slots)
             if self.typed_stuff_slots and int(num_stuff_queries) != len(STUFF_LABELS):
                 raise ValueError("typed stuff slots require exactly five stuff queries")
@@ -2385,7 +2580,10 @@ def make_panoptic_model(
                 self.query_type_embed = nn.Embedding(2, hidden_dim)
                 self.query_anchor = nn.Linear(hidden_dim, 2)
                 self.thing_seed_score = nn.Linear(hidden_dim, 1)
-                if self.content_seeded_queries or self.component_seeded_queries:
+                if (
+                    self.component_seeded_queries
+                    or (self.content_seeded_queries and not self.explicit_route_classifier)
+                ):
                     self.family_seed_head = nn.Linear(hidden_dim, len(FAMILY_NAMES))
                 if self.component_seeded_queries:
                     self.component_seed_head = nn.Sequential(
@@ -2413,7 +2611,34 @@ def make_panoptic_model(
             self.token_ownership_head = nn.Linear(hidden_dim, hidden_dim)
             self.null_ownership_head = nn.Linear(hidden_dim, 1)
             self.ownership_residual_gate = nn.Parameter(torch.zeros(()))
-            self.last_aux_outputs: list[dict[str, Any]] = []
+
+        def _reset_forward_diagnostics(self) -> None:
+            self.last_router_diagnostics = None
+            self.last_typed_outputs = None
+            self.last_branch_router_diagnostics = {}
+            self.last_geometry_neighbor_indices = None
+            self.last_geometry_neighbor_valid = None
+            self.last_geometry_topology_source = None
+            self.last_segment_diagnostics = None
+            self.last_page_context_diagnostics = None
+            self.last_query_seed_diagnostics = None
+            self.last_candidate_query_diagnostics = None
+            self.last_weak_family_feature_diagnostics = None
+            self.last_dense_attention_adapter_diagnostics = None
+            self.last_router_condition_diagnostics = None
+            self.last_explicit_route_logits = None
+            self.last_explicit_route_diagnostics = None
+            self.last_component_seed_logits = None
+            self.last_token_offsets = None
+            self.last_token_affinity_embeddings = None
+            self.last_family_seed_logits = None
+            self.last_query_positions = None
+            self.last_aux_outputs = []
+            self.last_sq_rq_outputs = None
+            self.last_ownership_logits = None
+            self.last_query_objectness_logits = None
+            self.last_query_admission_logits = None
+            self._current_router_condition_tokens = None
 
         def _mask_query_label_domains(self, query_logits: Any) -> Any:
             """Enforce the FloorPlanCAD thing/stuff contract at every decoder output."""
@@ -2452,11 +2677,12 @@ def make_panoptic_model(
             no_object_label = fused.shape[-1] - 1
             if self.typed_stuff_slots:
                 thing_objectness = objectness_logits[:, : self.num_thing_queries]
-                thing_conditional = torch.log_softmax(query_logits[:, : self.num_thing_queries, :30], dim=-1)
+                thing_conditional = query_logits[:, : self.num_thing_queries, :30]
+                thing_conditional = thing_conditional - thing_conditional.max(dim=-1, keepdim=True).values.detach()
                 fused[:, : self.num_thing_queries, :30] = (
-                    thing_conditional + torch.nn.functional.logsigmoid(thing_objectness).unsqueeze(-1)
+                    thing_conditional + thing_objectness.unsqueeze(-1)
                 )
-                fused[:, : self.num_thing_queries, no_object_label] = torch.nn.functional.logsigmoid(-thing_objectness)
+                fused[:, : self.num_thing_queries, no_object_label] = 0.0
                 stuff_presence = (
                     self.stuff_presence_head(queries[:, self.num_thing_queries:]).squeeze(-1)
                     if admission_logits is None
@@ -2465,13 +2691,48 @@ def make_panoptic_model(
                 unified_admission_logits[:, self.num_thing_queries:] = stuff_presence
                 for slot_index, label in enumerate(STUFF_LABELS):
                     query_index = self.num_thing_queries + slot_index
-                    fused[:, query_index, label] = torch.nn.functional.logsigmoid(stuff_presence[:, slot_index])
-                    fused[:, query_index, no_object_label] = torch.nn.functional.logsigmoid(-stuff_presence[:, slot_index])
+                    fused[:, query_index, label] = stuff_presence[:, slot_index]
+                    fused[:, query_index, no_object_label] = 0.0
             else:
-                conditional = torch.log_softmax(query_logits[..., :no_object_label], dim=-1)
-                fused[..., :no_object_label] = conditional + torch.nn.functional.logsigmoid(objectness_logits).unsqueeze(-1)
-                fused[..., no_object_label] = torch.nn.functional.logsigmoid(-objectness_logits)
+                conditional = query_logits[..., :no_object_label]
+                conditional = conditional - conditional.max(dim=-1, keepdim=True).values.detach()
+                fused[..., :no_object_label] = conditional + objectness_logits.unsqueeze(-1)
+                fused[..., no_object_label] = 0.0
             return self._mask_query_label_domains(fused), unified_admission_logits
+
+        def _apply_candidate_mask_prior(
+            self,
+            mask_logits: Any,
+            candidate_token_masks: Any | None,
+            candidate_valid: Any | None,
+            candidate_count: int,
+        ) -> Any:
+            if not (
+                self.candidate_aware_queries
+                and candidate_token_masks is not None
+                and int(candidate_count) > 0
+                and self.candidate_mask_prior_logit > 0.0
+            ):
+                return mask_logits
+            if candidate_token_masks.ndim != 3 or candidate_token_masks.shape[0] != mask_logits.shape[0]:
+                raise ValueError("candidate_token_masks must have shape [batch, candidates, tokens]")
+            if candidate_token_masks.shape[1] < int(candidate_count) or candidate_token_masks.shape[2] != mask_logits.shape[-1]:
+                raise ValueError("candidate_token_masks must match candidate count and token count")
+            candidate_mask = candidate_token_masks[:, : int(candidate_count)].to(mask_logits.dtype)
+            if candidate_valid is not None:
+                candidate_mask = candidate_mask * candidate_valid[:, : int(candidate_count)].unsqueeze(-1).to(mask_logits.dtype)
+            mask_logits = mask_logits.clone()
+            mask_logits[:, : int(candidate_count), :] = (
+                mask_logits[:, : int(candidate_count), :]
+                + self.candidate_mask_prior_logit * candidate_mask
+            )
+            self.last_candidate_query_diagnostics = {
+                **(self.last_candidate_query_diagnostics or {"enabled": True}),
+                "mask_prior_policy": "primitive_id_candidate_mask_additive_logit_v2_persist_after_sq_rq_redecode",
+                "mask_prior_logit": self.candidate_mask_prior_logit,
+                "candidate_mask_token_total": candidate_mask.sum(dim=-1),
+            }
+            return mask_logits
 
         @staticmethod
         def _dispatch_selected_experts(features: Any, experts: Any, indices: Any, weights: Any) -> Any:
@@ -2500,7 +2761,19 @@ def make_panoptic_model(
             if valid_mask is None:
                 valid_mask = torch.ones(features.shape[:-1], dtype=torch.bool, device=features.device)
             valid_mask = valid_mask.to(torch.bool)
-            logits = block["router"](features)
+            branch_index = self.branch_name_to_index.get(branch_name, 0)
+            task_condition = self.branch_task_embed.weight[branch_index].to(features.dtype).view(
+                *((1,) * (features.ndim - 1)), -1
+            )
+            router_features = features + task_condition
+            condition = self._current_router_condition_tokens
+            uses_token_condition = bool(
+                condition is not None
+                and tuple(condition.shape[:2]) == tuple(features.shape[:2])
+            )
+            if uses_token_condition:
+                router_features = self.router_condition_norm(router_features + condition.to(features.dtype))
+            logits = block["router"](router_features)
             scaled_logits = logits / self.router_temperature
             values, indices = torch.topk(scaled_logits, self.branch_top_k, dim=-1)
             probability = torch.softmax(scaled_logits, dim=-1)
@@ -2539,7 +2812,9 @@ def make_panoptic_model(
             weight_sum = flat_weights.sum(dim=-1, keepdim=True)
             flat_weights = torch.where(weight_sum > 0, flat_weights / weight_sum.clamp_min(1e-12), flat_weights)
             weights = flat_weights.reshape_as(weights)
-            routed = block["norm"](features + self._dispatch_selected_experts(features, block["experts"], indices, weights))
+            routed = block["norm"](
+                features + self._dispatch_selected_experts(router_features, self.branch_shared_experts, indices, weights)
+            )
             routed = torch.where(valid_mask[..., None], routed, features)
             probability_mask = valid_mask[..., None].to(probability.dtype)
             mean_probability = (probability * probability_mask).sum(dim=tuple(range(probability.ndim - 1))) / probability_mask.sum().clamp_min(1.0)
@@ -2551,7 +2826,8 @@ def make_panoptic_model(
             return routed, {
                 "enabled": True,
                 "branch": branch_name,
-                "expert_pool": f"{branch_name}_private",
+                "expert_pool": "shared_task_conditioned_branch_pool_v1",
+                "expert_pool_shared_across_branches": True,
                 "topk_indices": indices,
                 "topk_weights": weights,
                 "mean_expert_probability": mean_probability,
@@ -2565,6 +2841,8 @@ def make_panoptic_model(
                 "usage_gate_passed": (assignment_fraction >= 0.05).all(),
                 "branch_dropless": bool(branch_dropless),
                 "routing_strategy": routing_strategy,
+                "condition_policy": "branch_task_embedding_plus_token_geometry_condition_v1",
+                "uses_token_condition": uses_token_condition,
             }
 
         @staticmethod
@@ -2590,6 +2868,8 @@ def make_panoptic_model(
             """Derive bounded primitive geometry summaries from retained segments."""
             valid = segment_valid & primitive_valid[..., None]
             valid_float = valid.to(segment_features.dtype)
+            valid_count = valid_float.sum(dim=-1)
+            has_valid_segment = primitive_valid & (valid_count > 0)
             x1, y1, x2, y2 = (segment_features[..., index] for index in range(4))
             inf = torch.full_like(x1, float("inf"))
             negative_inf = torch.full_like(x1, -float("inf"))
@@ -2601,16 +2881,17 @@ def make_panoptic_model(
             lengths = torch.sqrt(dx.square() + dy.square()) * valid_float
             total_length = lengths.sum(dim=-1)
             unit = lengths.clamp_min(1e-12)
-            direction_x = (dx * valid_float / unit).sum(dim=-1) / valid_float.sum(dim=-1).clamp_min(1.0)
-            direction_y = (dy * valid_float / unit).sum(dim=-1) / valid_float.sum(dim=-1).clamp_min(1.0)
-            horizontal = ((dx.abs() >= dy.abs()) & valid).to(segment_features.dtype).sum(dim=-1) / valid_float.sum(dim=-1).clamp_min(1.0)
-            vertical = ((dy.abs() > dx.abs()) & valid).to(segment_features.dtype).sum(dim=-1) / valid_float.sum(dim=-1).clamp_min(1.0)
+            denominator = valid_count.clamp_min(1.0)
+            direction_x = (dx * valid_float / unit).sum(dim=-1) / denominator
+            direction_y = (dy * valid_float / unit).sum(dim=-1) / denominator
+            horizontal = ((dx.abs() >= dy.abs()) & valid).to(segment_features.dtype).sum(dim=-1) / denominator
+            vertical = ((dy.abs() > dx.abs()) & valid).to(segment_features.dtype).sum(dim=-1) / denominator
             aggregate = torch.stack([
                 bbox_x1, bbox_y1, bbox_x2, bbox_y2,
                 total_length, torch.log1p(total_length), horizontal, vertical,
                 direction_x, direction_y,
             ], dim=-1)
-            return torch.where(primitive_valid[..., None], aggregate, torch.zeros_like(aggregate))
+            return torch.where(has_valid_segment[..., None], aggregate, torch.zeros_like(aggregate))
 
         def _quality_query_input(self, queries: Any) -> Any:
             scale = max(0.0, min(float(self.quality_query_gradient_scale), 1.0))
@@ -2621,9 +2902,8 @@ def make_panoptic_model(
         def _apply_weak_family_feature_fusion(self, x: Any, h: Any, primitive_valid: Any) -> Any:
             if not self.weak_family_feature_fusion:
                 return h
-            feature_indices = [6, 7, 8, 9, 10, 11, 13, 15, 31, 32, 36, 37]
             values = []
-            for index in feature_indices:
+            for index in self.weak_family_feature_indices:
                 if index < x.shape[-1]:
                     values.append(x[..., index])
                 else:
@@ -2634,8 +2914,9 @@ def make_panoptic_model(
             fused = self.weak_family_feature_norm(h + gate * weak_tokens)
             self.last_weak_family_feature_diagnostics = {
                 "enabled": True,
-                "feature_indices": feature_indices,
-                "feature_count": len(feature_indices),
+                "feature_indices": self.weak_family_feature_indices,
+                "feature_names": self.weak_family_feature_names,
+                "feature_count": len(self.weak_family_feature_indices),
                 "valid_token_count": primitive_valid.sum(dim=-1),
                 "mean_abs_feature": weak_features.detach().abs().mean(),
             }
@@ -2728,6 +3009,35 @@ def make_panoptic_model(
             }
             return torch.where(valid[..., None], routed, h), route_logits
 
+        def _build_router_condition_tokens(self, x: Any, h: Any, primitive_valid: Any) -> Any | None:
+            if not (self.learned_sparse_router or self.typed_branch_routers):
+                self._current_router_condition_tokens = None
+                self.last_router_condition_diagnostics = None
+                return None
+            values = []
+            for index in self.router_condition_feature_indices:
+                if index < x.shape[-1]:
+                    values.append(x[..., index])
+                else:
+                    values.append(torch.zeros(x.shape[:2], dtype=x.dtype, device=x.device))
+            raw_condition = torch.stack(values, dim=-1).to(h.dtype)
+            condition_tokens = self.router_condition_proj(raw_condition)
+            gate = torch.sigmoid(self.router_condition_gate(torch.cat([h, condition_tokens], dim=-1)))
+            learned_scale = torch.sigmoid(self.router_condition_residual_logit_gate).to(h.dtype)
+            condition_delta = learned_scale * gate * condition_tokens
+            condition_delta = condition_delta * primitive_valid.unsqueeze(-1).to(condition_delta.dtype)
+            self._current_router_condition_tokens = condition_delta
+            self.last_router_condition_diagnostics = {
+                "enabled": True,
+                "condition_policy": "vecformer_inspired_geometry_layer_family_router_condition_v1",
+                "feature_indices": self.router_condition_feature_indices,
+                "feature_names": self.router_condition_feature_names,
+                "learned_residual_gate": learned_scale.detach(),
+                "valid_token_count": primitive_valid.sum(dim=-1),
+                "mean_abs_condition": raw_condition.detach().abs().mean(),
+            }
+            return condition_delta
+
         def _final_quality_logits(
             self,
             queries: Any,
@@ -2747,8 +3057,9 @@ def make_panoptic_model(
                 + (1.0 - mask_probability) * (1.0 - mask_probability).clamp_min(1e-6).log()
             )
             entropy = (entropy * valid[:, None, :]).sum(dim=-1) / token_denominator
-            foreground = query_logits.detach().float()[..., :IGNORE_LABEL].max(dim=-1).values
-            no_object = query_logits.detach().float()[..., IGNORE_LABEL]
+            no_object_index = min(int(IGNORE_LABEL), int(query_logits.shape[-1]) - 1)
+            foreground = query_logits.detach().float()[..., :no_object_index].max(dim=-1).values
+            no_object = query_logits.detach().float()[..., no_object_index]
             class_margin = (foreground - no_object).clamp(min=-8.0, max=8.0)
             # Use a bounded empty-mask prior. The previous log(area) term strongly
             # suppressed small but valid CAD components, which hurts recall before
@@ -2887,17 +3198,10 @@ def make_panoptic_model(
             return_quality: bool = False,
             return_identity: bool = False,
         ) -> tuple[Any, ...]:
+            self._reset_forward_diagnostics()
+            if token_padding_mask is not None and token_padding_mask.shape != x.shape[:2]:
+                raise ValueError("token_padding_mask must have shape [batch, primitive]")
             h = self.input_proj(x)
-            self.last_segment_diagnostics = None
-            self.last_page_context_diagnostics = None
-            self.last_candidate_query_diagnostics = None
-            self.last_weak_family_feature_diagnostics = None
-            self.last_dense_attention_adapter_diagnostics = None
-            self.last_explicit_route_logits = None
-            self.last_explicit_route_diagnostics = None
-            self.last_component_seed_logits = None
-            self.last_token_offsets = None
-            self.last_token_affinity_embeddings = None
             if segment_features is not None:
                 if segment_features.ndim != 4 or segment_features.shape[:2] != x.shape[:2] or segment_features.shape[-1] != x.shape[-1]:
                     raise ValueError("segment_features must have shape [batch, primitive, segment, feature_dim]")
@@ -2993,14 +3297,13 @@ def make_panoptic_model(
             else:
                 h = self.encoder(h, src_key_padding_mask=token_padding_mask)
             h = self._apply_repeated_group_context(x, h, primitive_valid_for_context)
-            self.last_router_diagnostics = None
-            self.last_branch_router_diagnostics = {}
-            self.last_typed_outputs = None
-            self.last_query_seed_diagnostics = None
-            self.last_family_seed_logits = None
-            self.last_query_positions = None
+            router_condition_tokens = self._build_router_condition_tokens(x, h, primitive_valid_for_context)
             if self.learned_sparse_router:
-                router_logits = self.sparse_router(h) / self.router_temperature
+                router_features = (
+                    self.router_condition_norm(h + router_condition_tokens.to(h.dtype))
+                    if router_condition_tokens is not None else h
+                )
+                router_logits = self.sparse_router(router_features) / self.router_temperature
                 top_values, top_indices = torch.topk(router_logits, self.router_top_k, dim=-1)
                 probabilities = torch.softmax(router_logits, dim=-1)
                 if self.router_top_k == 1:
@@ -3011,7 +3314,9 @@ def make_panoptic_model(
                 else:
                     top_weights = torch.softmax(top_values, dim=-1).to(router_logits.dtype)
                     routing_strategy = "topk_softmax_selected_logits_v1"
-                h = self.sparse_router_norm(h + self._dispatch_selected_experts(h, self.sparse_experts, top_indices, top_weights))
+                h = self.sparse_router_norm(
+                    h + self._dispatch_selected_experts(router_features, self.sparse_experts, top_indices, top_weights)
+                )
                 if token_padding_mask is not None:
                     valid = (~token_padding_mask).unsqueeze(-1).to(probabilities.dtype)
                     mean_probability = (probabilities * valid).sum(dim=(0, 1)) / valid.sum().clamp_min(1.0)
@@ -3039,11 +3344,16 @@ def make_panoptic_model(
                     "assignment_fraction": assignment_fraction,
                     "routing_entropy": routing_entropy,
                     "routing_strategy": routing_strategy,
+                    "condition_policy": "vecformer_inspired_geometry_layer_family_router_condition_v1",
+                    "condition_gate": (
+                        None if self.last_router_condition_diagnostics is None
+                        else self.last_router_condition_diagnostics["learned_residual_gate"]
+                    ),
                     "config": router_config,
                     "route_trace": {
-                    "schema_version": "token_topk_v1",
-                    "branch": "shared_token_backbone",
-                    "expert_pool": "shared_encoder",
+                        "schema_version": "token_topk_v1",
+                        "branch": "shared_token_backbone",
+                        "expert_pool": "shared_encoder",
                         "expert_manifest": router_config["expert_manifest"],
                         "valid_token_count": (~token_padding_mask).sum(dim=1) if token_padding_mask is not None else torch.full((h.shape[0],), h.shape[1], device=h.device, dtype=torch.long),
                     },
@@ -3104,17 +3414,24 @@ def make_panoptic_model(
                     self.last_component_seed_logits = component_seed_logits
                 seed_mode = "disabled"
                 if self.content_seeded_queries or self.component_seeded_queries:
-                    family_seed_scores = family_seed_logits.max(dim=-1).values
-                    seed_scores = self.thing_seed_score(h_rq).squeeze(-1) + family_seed_scores
+                    thing_family_count = max(len(FAMILY_NAMES) - 1, 1)
+                    family_seed_scores = family_seed_logits[..., :thing_family_count].max(dim=-1).values
+                    seed_scores = family_seed_scores
                     if self.component_seeded_queries:
-                        component_family_scores = component_seed_logits[..., :len(FAMILY_NAMES)].max(dim=-1).values
+                        component_family_scores = component_seed_logits[..., :thing_family_count].max(dim=-1).values
                         component_size_scores = component_seed_logits[..., len(FAMILY_NAMES):].mean(dim=-1)
                         seed_scores = seed_scores + component_family_scores + 0.25 * component_size_scores
                         seed_mode = "component_family_bbox_topk_v1"
                     else:
-                        seed_mode = "family_token_topk_v1"
+                        seed_mode = "supervised_thing_family_token_topk_v2"
                     seed_scores = seed_scores.masked_fill(~token_valid_mask, -torch.finfo(seed_scores.dtype).max)
-                    seed_count = min(self.num_thing_queries, h_rq.shape[1])
+                    candidate_reserved_query_count = (
+                        int(candidate_count)
+                        if self.candidate_aware_queries and candidate_count > 0
+                        else 0
+                    )
+                    seed_query_start = min(candidate_reserved_query_count, self.num_thing_queries)
+                    seed_count = min(self.num_thing_queries - seed_query_start, h_rq.shape[1])
                     seed_values, seed_indices, seed_valid = self._content_seed_indices(
                         seed_scores, x, token_valid_mask, seed_count,
                     )
@@ -3122,7 +3439,10 @@ def make_panoptic_model(
                         h_rq, 1, seed_indices.unsqueeze(-1).expand(-1, -1, h_rq.shape[-1]),
                     )
                     thing_queries = thing_queries.clone()
-                    thing_queries[:, :seed_count] = thing_queries[:, :seed_count] + seed_tokens * seed_valid.unsqueeze(-1).to(seed_tokens.dtype)
+                    thing_queries[:, seed_query_start : seed_query_start + seed_count] = (
+                        thing_queries[:, seed_query_start : seed_query_start + seed_count]
+                        + seed_tokens * seed_valid.unsqueeze(-1).to(seed_tokens.dtype)
+                    )
                     seed_centers = torch.gather(
                         x[..., 4:6].clamp(0.0, 1.0), 1,
                         seed_indices.unsqueeze(-1).expand(-1, -1, 2),
@@ -3130,7 +3450,12 @@ def make_panoptic_model(
                     self.last_query_seed_diagnostics = {
                         "enabled": True,
                         "seed_mode": seed_mode,
+                        "match_constraint_enabled": False,
+                        "query_initialization_only": True,
+                        "query_start": seed_query_start,
+                        "candidate_reserved_query_count": candidate_reserved_query_count,
                         "seed_count": seed_count,
+                        "selected_valid_mask": seed_valid,
                         "selected_valid_count": seed_valid.sum(dim=-1),
                         "mean_seed_score": (seed_values * seed_valid.to(seed_values.dtype)).sum() / seed_valid.sum().clamp_min(1),
                         "seed_indices": seed_indices,
@@ -3167,11 +3492,19 @@ def make_panoptic_model(
                         query_positions[:, :candidate_count] = candidate_query_positions
                     if self.content_seeded_queries and self.last_query_seed_diagnostics is not None:
                         seed_count = int(self.last_query_seed_diagnostics["seed_count"])
-                        seed_valid = self.last_query_seed_diagnostics["selected_valid_count"]
+                        seed_query_start = int(self.last_query_seed_diagnostics.get("query_start", 0))
+                        seed_valid = self.last_query_seed_diagnostics.get("selected_valid_mask")
                         seed_centers = self.last_query_seed_diagnostics["seed_centers"]
                         if seed_count > 0:
                             query_positions = query_positions.clone()
-                            query_positions[:, :seed_count] = 0.5 * query_positions[:, :seed_count] + 0.5 * seed_centers
+                            if seed_valid is None:
+                                query_positions[:, seed_query_start : seed_query_start + seed_count] = seed_centers
+                            else:
+                                query_positions[:, seed_query_start : seed_query_start + seed_count] = torch.where(
+                                    seed_valid.unsqueeze(-1).to(torch.bool),
+                                    seed_centers,
+                                    query_positions[:, seed_query_start : seed_query_start + seed_count],
+                                )
                     self.last_query_positions = query_positions
                     q, attention = layer(q, query_positions, memory, memory_positions, memory_padding)
                     layer_query, layer_admission = self._apply_query_presence(
@@ -3217,30 +3550,12 @@ def make_panoptic_model(
             query_logits, _ = self._apply_query_presence(
                 conditional_query_logits, q, admission_logits=query_admission_logits
             )
-            if (
-                self.candidate_aware_queries
-                and candidate_token_masks is not None
-                and candidate_count > 0
-                and self.candidate_mask_prior_logit > 0.0
-            ):
-                if candidate_token_masks.ndim != 3 or candidate_token_masks.shape[0] != x.shape[0]:
-                    raise ValueError("candidate_token_masks must have shape [batch, candidates, tokens]")
-                if candidate_token_masks.shape[1] < candidate_count or candidate_token_masks.shape[2] != mask_logits.shape[-1]:
-                    raise ValueError("candidate_token_masks must match candidate count and token count")
-                candidate_mask = candidate_token_masks[:, :candidate_count].to(mask_logits.dtype)
-                if candidate_valid is not None:
-                    candidate_mask = candidate_mask * candidate_valid[:, :candidate_count].unsqueeze(-1).to(mask_logits.dtype)
-                mask_logits = mask_logits.clone()
-                mask_logits[:, :candidate_count, :] = (
-                    mask_logits[:, :candidate_count, :]
-                    + self.candidate_mask_prior_logit * candidate_mask
-                )
-                self.last_candidate_query_diagnostics = {
-                    **(self.last_candidate_query_diagnostics or {"enabled": True}),
-                    "mask_prior_policy": "primitive_id_candidate_mask_additive_logit_v1",
-                    "mask_prior_logit": self.candidate_mask_prior_logit,
-                    "candidate_mask_token_total": candidate_mask.sum(dim=-1),
-                }
+            mask_logits = self._apply_candidate_mask_prior(
+                mask_logits,
+                candidate_token_masks,
+                candidate_valid,
+                candidate_count,
+            )
             self.last_sq_rq_outputs = None
             semantic_pre_cross_tokens = h_semantic
             semantic_post_cross_tokens = semantic_pre_cross_tokens
@@ -3252,6 +3567,27 @@ def make_panoptic_model(
                     primitive_padding_mask=token_padding_mask,
                 )
                 semantic_post_cross_tokens = self.last_sq_rq_outputs["sq_tokens"]
+                rq_query_residual = (
+                    torch.tanh(self.rq_sq_query_residual_gate)
+                    * self.last_sq_rq_outputs["rq_query_residual"]
+                )
+                q = q + rq_query_residual
+                conditional_query_logits = self._mask_query_label_domains(self.query_class_head(q))
+                conditional_query_logits = self._mask_query_label_domains(
+                    conditional_query_logits + semantic_query_residual
+                )
+                query_logits, query_admission_logits = self._apply_query_presence(conditional_query_logits, q)
+                quality_logits = self.query_quality_head(self._quality_query_input(q)).squeeze(-1)
+                identity_embeddings = self.query_identity_head(q)
+                mask_logits = torch.einsum("bqh,bnh->bqn", self.query_mask_head(q), tmask) / math.sqrt(float(h_rq.shape[-1]))
+                mask_logits = self._apply_candidate_mask_prior(
+                    mask_logits,
+                    candidate_token_masks,
+                    candidate_valid,
+                    candidate_count,
+                )
+                self.last_sq_rq_outputs["rq_query_residual_applied"] = rq_query_residual
+                self.last_sq_rq_outputs["rq_query_residual_global_gate"] = torch.tanh(self.rq_sq_query_residual_gate)
             semantic_post_private_tokens, sq_route = self._route_typed_branch(
                 semantic_post_cross_tokens, "sq", token_valid_mask
             )
@@ -3295,6 +3631,11 @@ def make_panoptic_model(
                 "query_objectness_logits": query_admission_logits,
                 "query_admission_logits": query_admission_logits,
                 "semantic_query_residual": semantic_query_residual,
+                "rq_sq_query_residual": (
+                    None
+                    if self.last_sq_rq_outputs is None
+                    else self.last_sq_rq_outputs["rq_query_residual_applied"]
+                ),
                 "sq_mask_residual": sq_mask_residual,
                 "sq_cross_tokens": semantic_post_cross_tokens,
                 "sq_private_tokens": semantic_post_private_tokens,
@@ -3635,16 +3976,21 @@ def query_selected_primitive_indices(
     """Return VecFormer-style selected primitive ids for seeded thing queries."""
     if not seed_diagnostics or "seed_indices" not in seed_diagnostics:
         return None
+    if seed_diagnostics.get("match_constraint_enabled") is not True:
+        return None
+    query_start = int(seed_diagnostics.get("query_start", 0))
+    if query_start < 0 or query_start >= int(num_queries):
+        return None
     seed_indices = seed_diagnostics["seed_indices"]
     if seed_indices is None or seed_indices.ndim != 2 or batch_index >= int(seed_indices.shape[0]):
         return None
     result = torch.full((int(num_queries),), -1, dtype=torch.long, device=device)
-    count = min(int(seed_indices.shape[1]), int(num_queries))
+    count = min(int(seed_indices.shape[1]), int(num_queries) - query_start)
     if count <= 0:
         return result
     selected = seed_indices[int(batch_index), :count].to(device=device, dtype=torch.long)
     valid = (selected >= 0) & (selected < int(token_count))
-    result[:count] = torch.where(valid, selected, torch.full_like(selected, -1))
+    result[query_start : query_start + count] = torch.where(valid, selected, torch.full_like(selected, -1))
     return result
 
 
@@ -3782,9 +4128,36 @@ def load_candidate_proposals(path: Path | None, *, max_candidates: int, feature_
             if any(key in item for key in forbidden):
                 raise ValueError(f"candidate proposal leaked GT-only key for record {record_id}")
             features = item.get("candidate_features")
-            if not isinstance(features, list) or len(features) != int(feature_dim):
+            if not isinstance(features, list) or len(features) > int(feature_dim):
                 counters["feature_dim_mismatch"] += 1
                 continue
+            feature_values = [parse_float(value, 0.0) for value in features]
+            if not all(math.isfinite(value) for value in feature_values):
+                counters["non_finite_features"] += 1
+                continue
+            expert_prior = item.get("expert_prior") if isinstance(item.get("expert_prior"), dict) else {}
+            expert_score = parse_float(
+                expert_prior.get("score"),
+                parse_float(item.get("score"), parse_float(item.get("confidence"), 0.0)),
+            )
+            expert_label = parse_int(
+                expert_prior.get("predicted_label"),
+                parse_int(item.get("label"), -1),
+            )
+            if len(feature_values) < int(feature_dim):
+                source_feature_dim = len(feature_values)
+                feature_values = feature_values + [0.0] * (int(feature_dim) - len(feature_values))
+                if source_feature_dim < int(feature_dim):
+                    feature_values[source_feature_dim] = max(0.0, min(float(expert_score), 1.0))
+                if source_feature_dim + 1 < int(feature_dim):
+                    feature_values[source_feature_dim + 1] = (
+                        float(expert_label) / max(float(IGNORE_LABEL - 1), 1.0)
+                        if 0 <= expert_label < IGNORE_LABEL else -1.0
+                    )
+                one_hot_start = source_feature_dim + 2
+                if 0 <= expert_label < IGNORE_LABEL and one_hot_start + expert_label < int(feature_dim):
+                    feature_values[one_hot_start + expert_label] = max(0.0, min(float(expert_score), 1.0))
+                    counters["expert_prior_label_features"] += 1
             primitive_ids = item.get("primitive_ids")
             if not isinstance(primitive_ids, list):
                 counters["missing_primitive_ids"] += 1
@@ -3794,10 +4167,12 @@ def load_candidate_proposals(path: Path | None, *, max_candidates: int, feature_
                 counters["malformed_primitive_ids"] += 1
                 continue
             candidates.append({
-                "candidate_features": [parse_float(value, 0.0) for value in features],
+                "candidate_features": feature_values,
                 "primitive_ids": parsed_ids,
                 "proposal_source": item.get("proposal_source"),
                 "expert_owner": item.get("expert_owner"),
+                "expert_prior_label": expert_label,
+                "expert_prior_score": expert_score,
             })
             if len(candidates) >= int(max_candidates):
                 break
@@ -3815,6 +4190,18 @@ def load_candidate_proposals(path: Path | None, *, max_candidates: int, feature_
     }
 
 
+def candidate_record_lookup_keys(record: dict[str, Any]) -> tuple[str, ...]:
+    """Return candidate proposal keys from most-specific window id to base page id."""
+    record_id = str(record.get("record_id"))
+    keys = [record_id]
+    original = record.get("original_record_id")
+    if original is not None:
+        keys.append(str(original))
+    if "::" in record_id:
+        keys.append(record_id.split("::", 1)[0])
+    return tuple(dict.fromkeys(keys))
+
+
 def candidate_arrays_for_record(
     record: dict[str, Any],
     candidate_by_record: dict[str, list[dict[str, Any]]] | None,
@@ -3824,7 +4211,12 @@ def candidate_arrays_for_record(
 ) -> tuple[np.ndarray | None, np.ndarray | None, np.ndarray | None]:
     if not candidate_by_record or int(max_candidates) <= 0 or int(feature_dim) <= 0:
         return None, None, None
-    candidates = candidate_by_record.get(str(record.get("record_id")), [])[: int(max_candidates)]
+    candidates = []
+    for key in candidate_record_lookup_keys(record):
+        candidates = candidate_by_record.get(key, [])
+        if candidates:
+            break
+    candidates = candidates[: int(max_candidates)]
     if not candidates:
         return None, None, None
     features = np.zeros((int(max_candidates), int(feature_dim)), dtype=np.float32)
@@ -3842,7 +4234,12 @@ def candidate_arrays_for_record(
     token_count = len(primitive_ids)
     token_masks = np.zeros((int(max_candidates), token_count), dtype=np.float32)
     for index, row in enumerate(candidates):
-        features[index] = np.asarray(row["candidate_features"], dtype=np.float32)
+        feature_row = np.asarray(row.get("candidate_features"), dtype=np.float32)
+        if feature_row.shape != (int(feature_dim),) or not np.isfinite(feature_row).all():
+            raise ValueError(
+                f"candidate_features must be finite with width {int(feature_dim)}"
+            )
+        features[index] = feature_row
         padding[index] = False
         for primitive_id in row.get("primitive_ids", []):
             local = local_by_primitive_id.get(int(primitive_id))
@@ -3866,7 +4263,7 @@ def candidate_record_coverage(
     tokens_in_candidate_masks = 0
     for record in iter_jsonl(path, limit):
         if record_id_allowlist is not None:
-            page_id = str(record.get("original_record_id") or record.get("record_id") or "")
+            page_id = page_record_key(record)
             if page_id not in record_id_allowlist:
                 continue
         records += 1
@@ -3890,6 +4287,36 @@ def candidate_record_coverage(
         "candidates": candidates,
         "tokens_in_candidate_masks": tokens_in_candidate_masks,
     }
+
+
+def candidate_activation_blockers(
+    *,
+    candidate_aware_queries: bool,
+    max_candidate_queries: int,
+    candidate_feature_dim: int,
+    candidate_report: dict[str, Any],
+    val_candidate_report: dict[str, Any],
+    train_candidate_coverage: dict[str, Any],
+    val_candidate_coverage: dict[str, Any],
+) -> list[str]:
+    if not bool(candidate_aware_queries):
+        return []
+    blockers: list[str] = []
+    if int(max_candidate_queries) <= 0 or int(candidate_feature_dim) <= 0:
+        blockers.append("candidate_aware_requires_positive_max_candidates_and_feature_dim")
+    if candidate_report.get("enabled") is not True:
+        blockers.append("candidate_aware_requires_train_candidate_proposals")
+    elif int(candidate_report.get("candidates", 0)) <= 0:
+        blockers.append("train_candidate_proposals_have_no_valid_candidates")
+    if val_candidate_report.get("enabled") is not True:
+        blockers.append("candidate_aware_requires_validation_candidate_proposals")
+    elif int(val_candidate_report.get("candidates", 0)) <= 0:
+        blockers.append("validation_candidate_proposals_have_no_valid_candidates")
+    if int(train_candidate_coverage.get("records", 0)) > 0 and int(train_candidate_coverage.get("records_with_candidates", 0)) <= 0:
+        blockers.append("train_candidate_window_coverage_zero")
+    if int(val_candidate_coverage.get("records", 0)) > 0 and int(val_candidate_coverage.get("records_with_candidates", 0)) <= 0:
+        blockers.append("validation_candidate_window_coverage_zero")
+    return blockers
 
 
 def teacher_record_key(record: dict[str, Any]) -> str:
@@ -4123,7 +4550,7 @@ def align_teacher_to_gt_queries(
             gt_mask = q_masks[int(query_index)].float()
             intersection = float((teacher_mask * gt_mask).sum().item())
             union = float(((teacher_mask + gt_mask) > 0.0).float().sum().item())
-            iou = intersection / max(union, 1.0)
+            iou = intersection / max(union, 1e-6)
             if iou > best_iou:
                 best_iou = iou
                 best_query = int(query_index)
@@ -4269,6 +4696,23 @@ def build_query_class_weights(
     return weights
 
 
+def drop_shape_mismatched_optional_state(
+    state_dict: dict[str, Any],
+    model_state: dict[str, Any],
+    prefixes: tuple[str, ...],
+) -> list[str]:
+    dropped: list[str] = []
+    for key in list(state_dict):
+        if not key.startswith(prefixes) or key not in model_state:
+            continue
+        source = state_dict[key]
+        target = model_state[key]
+        if tuple(getattr(source, "shape", ())) != tuple(getattr(target, "shape", ())):
+            del state_dict[key]
+            dropped.append(key)
+    return dropped
+
+
 def load_init_checkpoint(torch: Any, model: Any, path: Path | None, args: argparse.Namespace, device: Any) -> dict[str, Any] | None:
     if path is None:
         return None
@@ -4280,6 +4724,11 @@ def load_init_checkpoint(torch: Any, model: Any, path: Path | None, args: argpar
         allow_quality_objective_mismatch=True,
     )
     state_dict = dict(ckpt["state_dict"])
+    dropped_optional_adapter_keys = drop_shape_mismatched_optional_state(
+        state_dict,
+        model.state_dict(),
+        OPTIONAL_SCHEMA_ADAPTER_PREFIXES,
+    )
     initialized_owner_residual_gate = False
     if "ownership_residual_gate" in model.state_dict() and "ownership_residual_gate" not in state_dict:
         state_dict["ownership_residual_gate"] = torch.zeros_like(model.state_dict()["ownership_residual_gate"])
@@ -4357,11 +4806,21 @@ def load_init_checkpoint(torch: Any, model: Any, path: Path | None, args: argpar
         and "dense_adapter_attn.in_proj_weight" in model.state_dict()
         and "dense_adapter_attn.in_proj_weight" not in state_dict
     )
+    migrating_router_condition = (
+        (bool(getattr(args, "learned_sparse_router", False)) or bool(getattr(args, "typed_branch_routers", False)))
+        and "router_condition_proj.0.weight" in model.state_dict()
+        and "router_condition_proj.0.weight" not in state_dict
+    )
     if migrating_router:
         incompatible = model.load_state_dict(state_dict, strict=False)
         allowed_prefixes = ("sparse_router.", "sparse_experts.", "sparse_router_norm.")
         if target_typed:
-            allowed_prefixes += ("branch_routers.", "bridge_gate")
+            allowed_prefixes += ("branch_routers.", "branch_shared_experts.", "bridge_gate")
+        if migrating_router_condition:
+            allowed_prefixes += (
+                "router_condition_proj.", "router_condition_gate.", "router_condition_norm.",
+                "router_condition_residual_logit_gate", "branch_task_embed.",
+            )
         if migrating_family_seed_head:
             allowed_prefixes += ("family_seed_head.",)
         if migrating_component_seed_head:
@@ -4396,9 +4855,16 @@ def load_init_checkpoint(torch: Any, model: Any, path: Path | None, args: argpar
             or migrating_weak_family_fusion
             or migrating_explicit_route_classifier
             or migrating_dense_attention_adapter
+            or migrating_router_condition
+            or bool(dropped_optional_adapter_keys)
         ):
             incompatible = model.load_state_dict(state_dict, strict=False)
-            allowed_prefixes = ("branch_routers.", "bridge_gate")
+            allowed_prefixes = ("branch_routers.", "branch_shared_experts.", "bridge_gate")
+            if migrating_router_condition:
+                allowed_prefixes += (
+                    "router_condition_proj.", "router_condition_gate.", "router_condition_norm.",
+                    "router_condition_residual_logit_gate", "branch_task_embed.",
+                )
             if migrating_family_seed_head:
                 allowed_prefixes += ("family_seed_head.",)
             if migrating_component_seed_head:
@@ -4435,22 +4901,31 @@ def load_init_checkpoint(torch: Any, model: Any, path: Path | None, args: argpar
         "source_quality_objective_version": checkpoint_abi.get("quality_objective_version"),
         "quality_objective_migration": checkpoint_abi.get("quality_objective_migration_allowed", False),
         "sq_rq_deployment": checkpoint_abi.get("sq_rq_deployment"),
+        "dropped_optional_adapter_keys": dropped_optional_adapter_keys,
         "strict_architecture_match": not (
             migrating_router
             or migrating_typed_branch
             or migrating_family_seed_head
             or migrating_component_seed_head
+            or migrating_candidate_adapter
+            or migrating_weak_family_fusion
             or migrating_explicit_route_classifier
             or migrating_dense_attention_adapter
+            or migrating_router_condition
             or initialized_owner_residual_gate
+            or bool(dropped_optional_adapter_keys)
         ),
         "migration": (
             "v6_weights_plus_new_random_router_parameters" if migrating_router else
             "v7_weights_plus_new_random_typed_branch_parameters" if migrating_typed_branch else
             "legacy_weights_plus_new_random_family_seed_head" if migrating_family_seed_head else
+            "legacy_weights_plus_new_random_candidate_adapter" if migrating_candidate_adapter else
+            "legacy_weights_plus_new_random_weak_family_fusion" if migrating_weak_family_fusion else
             "legacy_weights_plus_new_random_explicit_route_classifier" if migrating_explicit_route_classifier else
             "legacy_weights_plus_new_random_component_seed_head" if migrating_component_seed_head else
+            "legacy_weights_plus_new_random_router_condition" if migrating_router_condition else
             "legacy_weights_plus_new_random_dense_attention_adapter" if migrating_dense_attention_adapter else
+            "legacy_weights_plus_schema_adapter_reinitialization" if dropped_optional_adapter_keys else
             ("legacy_ownership_weights_plus_zero_owner_residual_gate" if initialized_owner_residual_gate else None)
         ),
     }
@@ -4516,10 +4991,6 @@ def weighted_mask_loss(
     logits = logits.float()
     targets = targets.float()
     bce = torch.nn.functional.binary_cross_entropy_with_logits(logits, targets, reduction="none")
-    if positive_weight != 1.0 or negative_weight != 1.0:
-        pos_weight = torch.full_like(targets, float(positive_weight))
-        neg_weight = torch.full_like(targets, float(negative_weight))
-        bce = bce * torch.where(targets >= 0.5, pos_weight, neg_weight)
     if focal_gamma > 0.0:
         probs = torch.sigmoid(logits)
         pt = torch.where(targets >= 0.5, probs, 1.0 - probs)
@@ -4528,7 +4999,27 @@ def weighted_mask_loss(
         probs = torch.sigmoid(logits)
     token_weights = torch.ones_like(targets[0]) if primitive_weights is None else primitive_weights.float().to(targets.device)
     token_weights = token_weights.clamp_min(0.0)
-    bce = (bce * token_weights.unsqueeze(0)).sum(dim=-1) / token_weights.sum().clamp_min(1e-6)
+    expanded_token_weights = token_weights.unsqueeze(0).expand_as(targets)
+    positive_tokens = targets >= 0.5
+    negative_tokens = ~positive_tokens
+    positive_denominator = (expanded_token_weights * positive_tokens.to(expanded_token_weights.dtype)).sum(dim=-1)
+    negative_denominator = (expanded_token_weights * negative_tokens.to(expanded_token_weights.dtype)).sum(dim=-1)
+    positive_term = (
+        bce * expanded_token_weights * positive_tokens.to(expanded_token_weights.dtype)
+    ).sum(dim=-1) / positive_denominator.clamp_min(1e-6)
+    negative_term = (
+        bce * expanded_token_weights * negative_tokens.to(expanded_token_weights.dtype)
+    ).sum(dim=-1) / negative_denominator.clamp_min(1e-6)
+    positive_active = (positive_denominator > 0.0).to(bce.dtype)
+    negative_active = (negative_denominator > 0.0).to(bce.dtype)
+    bce_weight_total = (
+        float(positive_weight) * positive_active
+        + float(negative_weight) * negative_active
+    ).clamp_min(1e-6)
+    bce = (
+        float(positive_weight) * positive_term * positive_active
+        + float(negative_weight) * negative_term * negative_active
+    ) / bce_weight_total
     weighted_probs = probs * token_weights.unsqueeze(0)
     weighted_targets = targets * token_weights.unsqueeze(0)
     inter = (probs * targets * token_weights.unsqueeze(0)).sum(dim=-1)
@@ -4544,13 +5035,13 @@ def weighted_mask_loss(
             token_weights=token_weights,
         )
     if positive_prob_floor_loss_weight > 0.0:
-        target_area_for_mean = weighted_targets.sum(dim=-1).clamp_min(1.0)
+        target_area_for_mean = weighted_targets.sum(dim=-1).clamp_min(1e-6)
         positive_prob_mean = (probs * weighted_targets).sum(dim=-1) / target_area_for_mean
         floor_gap = torch.relu(float(positive_prob_floor) - positive_prob_mean)
         dice = dice + float(positive_prob_floor_loss_weight) * floor_gap.square()
     if area_ratio_loss_weight > 0.0:
-        pred_area = weighted_probs.sum(dim=-1) + 1.0
-        target_area = weighted_targets.sum(dim=-1).clamp_min(1.0) + 1.0
+        pred_area = weighted_probs.sum(dim=-1).clamp_min(1e-6)
+        target_area = weighted_targets.sum(dim=-1).clamp_min(1e-6)
         log_area_ratio = torch.log(pred_area / target_area)
         area_loss = torch.nn.functional.smooth_l1_loss(log_area_ratio, torch.zeros_like(log_area_ratio), reduction="none")
         if area_overcoverage_weight != 1.0:
@@ -4728,7 +5219,9 @@ def token_offset_vote_loss(
     ).unsqueeze(0)
     component_mass = (masks * weights).sum(dim=-1, keepdim=True).clamp_min(1e-6)
     component_centers = torch.einsum("pn,nc,pn->pc", masks, centers, weights.expand_as(masks)) / component_mass
-    predicted_centers = (centers.unsqueeze(0) + 0.25 * torch.tanh(token_offsets.float()).unsqueeze(0)).clamp(0.0, 1.0)
+    predicted_centers = (
+        centers.unsqueeze(0) + 0.25 * torch.tanh(token_offsets.float()).unsqueeze(0)
+    ).clamp(0.0, 1.0).expand(masks.shape[0], -1, -1)
     token_error = torch.nn.functional.smooth_l1_loss(
         predicted_centers,
         component_centers.unsqueeze(1).expand_as(predicted_centers),
@@ -4825,7 +5318,7 @@ def family_recall_focus_loss(
         else:
             token_weights = primitive_weights.float().to(focus_masks.device).clamp_min(0.0).unsqueeze(0).expand_as(focus_masks)
         weighted_positive = positive_tokens.to(token_weights.dtype) * token_weights
-        denom = weighted_positive.sum(dim=-1).clamp_min(1.0)
+        denom = weighted_positive.sum(dim=-1).clamp_min(1e-6)
         mean_positive_probability = (probs * weighted_positive).sum(dim=-1) / denom
         losses.append(torch.relu(float(mask_positive_prob_floor) - mean_positive_probability).square().mean())
     if quality_logits is not None:
@@ -4884,7 +5377,7 @@ def hard_recall_mask_floor_loss(
     else:
         weights = primitive_weights.float().to(target.device).clamp_min(0.0).unsqueeze(0).expand_as(target)
     positive_weights = positive.to(weights.dtype) * weights
-    denom = positive_weights.sum(dim=-1).clamp_min(1.0)
+    denom = positive_weights.sum(dim=-1).clamp_min(1e-6)
     positive_mean = (probs * positive_weights).sum(dim=-1) / denom
     return torch.relu(float(probability_floor) - positive_mean).square().mean()
 
@@ -5025,7 +5518,7 @@ def geometry_v2_auxiliary_loss(
             probability = torch.sigmoid(logits)
             binary_ce = torch.nn.functional.binary_cross_entropy_with_logits(logits, targets, reduction="none")
             target_probability = probability * targets + (1.0 - probability) * (1.0 - targets)
-            focal_term = (binary_ce * (1.0 - target_probability).pow(2.0) * weights).sum() / weights.sum().clamp_min(1.0)
+            focal_term = (binary_ce * (1.0 - target_probability).pow(2.0) * weights).sum() / weights.sum().clamp_min(1e-6)
             numerator = 2.0 * (probability * targets * weights).sum(-1) + 1.0
             denominator = ((probability + targets) * weights).sum(-1) + 1.0
             dice_term = (1.0 - numerator / denominator).mean()
@@ -5121,7 +5614,20 @@ def rq_query_supervision_losses(
     """Mask query classification and no-object supervision when RQ targets are absent."""
     if not rq_available:
         return None, None
-    query = ce_query(query_logits, q_labels)
+    positive = q_labels != IGNORE_LABEL
+    if bool(positive.any().item()):
+        query = torch.nn.functional.cross_entropy(
+            query_logits.float()[positive, :IGNORE_LABEL],
+            q_labels[positive],
+            weight=(
+                None
+                if getattr(ce_query, "weight", None) is None
+                else ce_query.weight[:IGNORE_LABEL].to(query_logits.device)
+            ),
+            label_smoothing=float(getattr(ce_query, "label_smoothing", 0.0)),
+        )
+    else:
+        query = query_logits.sum() * 0.0
     objectness = query_objectness_loss(
         torch,
         query_logits,
@@ -5449,8 +5955,8 @@ def active_loss_experts_from_args(args: argparse.Namespace) -> set[str]:
         "quality_deployment_only": {"quality_deployment"},
         "rq_admission_only": {"rq_admission"},
         "mask_shape_only": {"mask_shape"},
-        "semantic_only": {"semantic"},
-        "topology_only": {"topology"},
+        "semantic_only": {"sq_semantic"},
+        "topology_only": {"topology_merge"},
         "teacher_aux_only": {"teacher_aux"},
     }
     if value in aliases:
@@ -5710,7 +6216,7 @@ def update_component_proxy(
     proxy_weights = proxy_weights_1d.unsqueeze(0).expand_as(target_binary).to(mask_prob.dtype)
     intersection = ((pred_binary & target_binary).to(mask_prob.dtype) * proxy_weights).sum(dim=-1)
     union = ((pred_binary | target_binary).to(mask_prob.dtype) * proxy_weights).sum(dim=-1)
-    matched_iou = intersection / union.clamp_min(1.0)
+    matched_iou = intersection / union.clamp_min(1e-6)
     admitted_positive = all_pred_labels[pos] != IGNORE_LABEL
     correctly_labeled = pred_labels == pos_labels
     true_positive = admitted_positive & correctly_labeled & (matched_iou >= 0.5)
@@ -5727,7 +6233,7 @@ def update_component_proxy(
     calibrated_pre_ownership_positive_binary = calibrated_pred_binary_pre_ownership[pos]
     calibrated_intersection = ((calibrated_positive_binary & target_binary).to(mask_prob.dtype) * proxy_weights).sum(dim=-1)
     calibrated_union = ((calibrated_positive_binary | target_binary).to(mask_prob.dtype) * proxy_weights).sum(dim=-1)
-    calibrated_iou = calibrated_intersection / calibrated_union.clamp_min(1.0)
+    calibrated_iou = calibrated_intersection / calibrated_union.clamp_min(1e-6)
     calibrated_true_positive = calibrated_proposal_positive & correctly_labeled & (calibrated_iou >= 0.5)
     calibrated_tp = int(calibrated_true_positive.sum().item())
     counters["calibrated_instance_proxy_tp"] += calibrated_tp
@@ -6233,6 +6739,8 @@ def evaluate(
     candidate_by_record: dict[str, list[list[float]]] | None = None,
     max_candidate_queries: int = 0,
     candidate_feature_dim: int = 0,
+    expected_target_schema: str | None = None,
+    expected_input_schema: str | None = None,
 ) -> dict[str, Any]:
     torch = pack["torch"]
     nn = pack["nn"]
@@ -6268,10 +6776,17 @@ def evaluate(
     with torch.no_grad():
         for record in iter_jsonl(path, limit):
             if record_id_allowlist is not None:
-                page_id = str(record.get("original_record_id") or record.get("record_id") or "")
+                page_id = page_record_key(record)
                 if page_id not in record_id_allowlist:
                     continue
-            arrays = load_panoptic_target_arrays(record, max_tokens, training=True, num_queries=num_queries)
+            arrays = load_panoptic_target_arrays(
+                record,
+                max_tokens,
+                training=True,
+                num_queries=num_queries,
+                expected_target_schema=expected_target_schema,
+                expected_input_schema=expected_input_schema,
+            )
             if arrays is None:
                 continue
             if len(arrays) == 8:
@@ -6622,7 +7137,7 @@ def evaluate(
                 diagnostic_weights,
                 pcgrad=pcgrad_diagnostic,
             )
-            page_id = str(record.get("original_record_id") or record.get("record_id"))
+            page_id = page_record_key(record)
             window_index = parse_int(record.get("window_index"), parse_int(record.get("window_start"), 0))
             previous = identity_previous.get(page_id)
             if availability["identity"] and identity_embeddings is not None and identity_loss_weight > 0.0 and previous is not None and window_index - previous[3] == 1:
@@ -7745,6 +8260,10 @@ def checkpoint_payload(
         "content_seeded_queries": bool(getattr(args, "content_seeded_queries", False)),
         "component_seeded_queries": bool(getattr(args, "component_seeded_queries", False)),
         "component_seed_loss_weight": float(getattr(args, "component_seed_loss_weight", 0.0)),
+        "candidate_aware_queries": bool(getattr(args, "candidate_aware_queries", False)),
+        "candidate_feature_dim": int(getattr(args, "candidate_feature_dim", 0)),
+        "max_candidate_queries": int(getattr(args, "max_candidate_queries", 0)),
+        "candidate_mask_prior_logit": float(getattr(args, "candidate_mask_prior_logit", 0.0)),
         "explicit_route_classifier": bool(getattr(args, "explicit_route_classifier", False)),
         "route_conditioning_residual_scale": float(getattr(args, "route_conditioning_residual_scale", 0.10)),
         "route_conditioning_enable_after_epoch": int(getattr(args, "route_conditioning_enable_after_epoch", 2)),
@@ -8225,6 +8744,8 @@ def optimizer_parameter_groups(model: Any, args: argparse.Namespace) -> list[dic
     grouped: dict[str, list[Any]] = {"backbone": [], "router": [], "heads": []}
     router_prefixes = (
         "sparse_router.", "sparse_experts.", "sparse_router_norm.", "branch_routers.",
+        "branch_shared_experts.", "router_condition_proj.", "router_condition_gate.",
+        "router_condition_norm.", "router_condition_residual_logit_gate", "branch_task_embed.",
         "route_family_head.", "route_family_embed.", "route_token_gate.",
         "route_token_norm.", "route_residual_logit_gate",
     )
@@ -8234,7 +8755,7 @@ def optimizer_parameter_groups(model: Any, args: argparse.Namespace) -> list[dic
         "family_seed_head.", "component_seed_head.", "thing_seed_score.",
     )
     gate_names = {
-        "bridge_gate", "semantic_query_residual_gate", "sq_mask_residual_gate",
+        "bridge_gate", "semantic_query_residual_gate", "rq_sq_query_residual_gate", "sq_mask_residual_gate",
         "sq_ownership_residual_gate", "ownership_residual_gate",
     }
     for name, parameter in runtime_model.named_parameters():
@@ -8333,10 +8854,12 @@ def gradient_control_parameter_groups(model: Any) -> tuple[list[Any], dict[str, 
         "query_decoder.", "query_embed.", "thing_query_embed.", "stuff_query_embed.",
         "query_type_embed.", "query_anchor.", "local_graph_proj.", "coarse_proj.",
         "sparse_router.", "sparse_experts.", "sparse_router_norm.", "branch_routers.",
+        "branch_shared_experts.", "router_condition_proj.", "router_condition_gate.",
+        "router_condition_norm.", "branch_task_embed.",
         "sq_rq_cross_attention.",
         "dense_adapter_attn.", "dense_adapter_ffn.",
         "dense_adapter_norm_attn.", "dense_adapter_norm_ffn.",
-        "dense_adapter_residual_logit_gate",
+        "dense_adapter_residual_logit_gate", "router_condition_residual_logit_gate",
     )
     shared_names = {"bridge_gate", "segment_fusion_gate", "context_fusion_gate"}
     for name, parameter in runtime_model.named_parameters():
@@ -8351,7 +8874,7 @@ def gradient_control_parameter_groups(model: Any) -> tuple[list[Any], dict[str, 
             "route_token_norm.", "route_residual_logit_gate",
         )):
             task_specific.setdefault("router", []).append(parameter)
-        elif name == "semantic_query_residual_gate":
+        elif name in {"semantic_query_residual_gate", "rq_sq_query_residual_gate"}:
             task_specific["query_mask_quality"].append(parameter)
         elif name.startswith("query_identity_head."):
             task_specific["identity"].append(parameter)
@@ -8529,7 +9052,9 @@ def load_resume_checkpoint(
     source_epoch = int(ckpt.get("epoch", 0) or 0)
     routed_parameter_prefixes = (
         "sparse_router.", "sparse_experts.", "sparse_router_norm.", "branch_routers.",
-        "bridge_gate", "semantic_query_residual_gate", "sq_mask_residual_gate",
+        "branch_shared_experts.", "router_condition_proj.", "router_condition_gate.",
+        "router_condition_norm.", "router_condition_residual_logit_gate", "branch_task_embed.",
+        "bridge_gate", "semantic_query_residual_gate", "rq_sq_query_residual_gate", "sq_mask_residual_gate",
         "sq_mask_residual_projection.", "sq_ownership_residual_gate", "ownership_residual_gate",
         "family_seed_head.", "component_seed_head.", "thing_seed_score.",
         "route_family_head.", "route_family_embed.", "route_token_gate.",
@@ -8644,6 +9169,26 @@ def scheduled_auxiliary_scale(epoch: int, enable_after_epoch: int, warmup_epochs
     return min(1.0, max(0.0, (int(epoch) - start_epoch + 1) / float(warmup)))
 
 
+STYLE_DROPOUT_FEATURE_NAMES = frozenset({
+    "stroke_width_norm",
+    "stroke_width_raw",
+    "rgb_r_norm",
+    "rgb_g_norm",
+    "rgb_b_norm",
+})
+
+
+def style_feature_indices_for_dim(feature_dim: int) -> tuple[int, ...]:
+    for names in (MODEL_FEATURE_NAMES, V4_MODEL_FEATURE_NAMES, V5_MODEL_FEATURE_NAMES, V6_MODEL_FEATURE_NAMES, BASE_FEATURES):
+        if len(names) == int(feature_dim):
+            return tuple(
+                index
+                for index, name in enumerate(names)
+                if name in STYLE_DROPOUT_FEATURE_NAMES
+            )
+    return tuple(index for index in (11, 12) if index < int(feature_dim))
+
+
 def style_feature_dropout_mask(torch: Any, batch_size: int, feature_dim: int, probability: float, device: Any) -> Any:
     """Sample one shared style-channel mask for primitive and segment inputs."""
     if not 0.0 <= float(probability) < 1.0:
@@ -8651,7 +9196,7 @@ def style_feature_dropout_mask(torch: Any, batch_size: int, feature_dim: int, pr
     mask = torch.ones((batch_size, 1, feature_dim), dtype=torch.float32, device=device)
     if probability <= 0.0:
         return mask
-    style_indices = [index for index in (11, 12, 13, 14, 15) if index < feature_dim]
+    style_indices = style_feature_indices_for_dim(feature_dim)
     if style_indices:
         keep = torch.rand((batch_size, len(style_indices)), device=device) >= float(probability)
         mask[:, 0, style_indices] = keep.to(mask.dtype)
@@ -9185,6 +9730,10 @@ def apply_training_preset(args: argparse.Namespace) -> dict[str, Any]:
             "development subset and train it with --limit-records 0"
         )
     input_feature_schema = input_feature_schema_from_args(args)
+    explicit_candidate_source = getattr(args, "candidate_proposals", None) is not None
+    explicit_val_candidate_source = getattr(args, "val_candidate_proposals", None) is not None
+    candidate_feature_dim = int(getattr(args, "candidate_feature_dim", 0))
+    max_candidate_queries = int(getattr(args, "max_candidate_queries", 0))
     required = {
         "geometry_decoder_mode": "geometry_v2",
         "input_feature_schema": input_feature_schema,
@@ -9200,37 +9749,38 @@ def apply_training_preset(args: argparse.Namespace) -> dict[str, Any]:
         "num_stuff_queries": len(STUFF_LABELS),
         "typed_stuff_slots": True,
         "learned_sparse_router": True,
-        "typed_branch_routers": False,
+        "typed_branch_routers": True,
+        "branch_dropless": True,
         "moe_branch_specialization_loss_weight": 0.0,
         "semantic_query_residual_enabled": True,
-        "content_seeded_queries": False,
+        "content_seeded_queries": True,
         "component_seeded_queries": False,
         "repeated_group_fusion": False,
         "relation_bias_enabled": False,
-        "offset_vote_enabled": False,
-        "candidate_aware_queries": False,
-        "candidate_feature_dim": 0,
-        "candidate_proposals": None,
-        "val_candidate_proposals": None,
-        "max_candidate_queries": 0,
-        "candidate_mask_prior_logit": 0.0,
-        "candidate_mask_prior_loss_weight": 0.0,
-        "candidate_ablation_tag": "",
-        "weak_family_feature_fusion": False,
+        "offset_vote_enabled": True,
+        "candidate_aware_queries": bool(explicit_candidate_source),
+        "candidate_feature_dim": max(candidate_feature_dim, 20 + 2 + IGNORE_LABEL) if explicit_candidate_source else 0,
+        "candidate_proposals": getattr(args, "candidate_proposals", None) if explicit_candidate_source else None,
+        "val_candidate_proposals": getattr(args, "val_candidate_proposals", None) if explicit_val_candidate_source else None,
+        "max_candidate_queries": max(max_candidate_queries, 64) if explicit_candidate_source else 0,
+        "candidate_mask_prior_logit": max(float(getattr(args, "candidate_mask_prior_logit", 0.0)), 0.0) if explicit_candidate_source else 0.0,
+        "candidate_mask_prior_loss_weight": max(float(getattr(args, "candidate_mask_prior_loss_weight", 0.0)), 0.0) if explicit_candidate_source else 0.0,
+        "candidate_ablation_tag": str(getattr(args, "candidate_ablation_tag", "")) if explicit_candidate_source else "",
+        "weak_family_feature_fusion": input_feature_schema == "v6",
         "quality_query_gradient_scale": 0.0,
-        "explicit_route_classifier": bool(getattr(args, "explicit_route_classifier", False)),
-        "route_classification_loss_weight": float(getattr(args, "route_classification_loss_weight", 0.0)),
+        "explicit_route_classifier": True,
+        "route_classification_loss_weight": max(float(getattr(args, "route_classification_loss_weight", 0.0)), 0.05),
         "route_conditioning_residual_scale": float(getattr(args, "route_conditioning_residual_scale", 0.10)),
         "route_conditioning_enable_after_epoch": max(int(getattr(args, "route_conditioning_enable_after_epoch", 2)), 1),
         "route_conditioning_warmup_epochs": max(int(getattr(args, "route_conditioning_warmup_epochs", 3)), 1),
-        "dense_attention_feature_adapter": bool(getattr(args, "dense_attention_feature_adapter", False)),
+        "dense_attention_feature_adapter": True,
         "dense_attention_window_size": max(int(getattr(args, "dense_attention_window_size", 128)), 1),
         "dense_attention_adapter_residual_scale": float(getattr(args, "dense_attention_adapter_residual_scale", 0.10)),
         "dense_attention_adapter_enable_after_epoch": max(int(getattr(args, "dense_attention_adapter_enable_after_epoch", 2)), 1),
         "dense_attention_adapter_warmup_epochs": max(int(getattr(args, "dense_attention_adapter_warmup_epochs", 3)), 1),
         "component_seed_loss_weight": 0.0,
-        "offset_vote_loss_weight": 0.0,
-        "affinity_loss_weight": 0.0,
+        "offset_vote_loss_weight": max(float(getattr(args, "offset_vote_loss_weight", 0.0)), 0.05),
+        "affinity_loss_weight": max(float(getattr(args, "affinity_loss_weight", 0.0)), 0.02),
         "quality_soft_target_weight": min(float(getattr(args, "quality_soft_target_weight", 0.5)), 0.5),
         "geometry_augmentation": False,
         "tensor_ring_rank": 0,
@@ -9315,9 +9865,13 @@ def apply_training_preset(args: argparse.Namespace) -> dict[str, Any]:
         ),
         "sq_rq_warmup_query_confidence_threshold": min(max(float(getattr(args, "sq_rq_warmup_query_confidence_threshold", 0.2)), 0.0), 0.4),
         "sq_rq_warmup_token_membership_threshold": min(max(float(getattr(args, "sq_rq_warmup_token_membership_threshold", 0.2)), 0.0), 0.4),
+        "hard_recall_families": ",".join(FAMILY_NAMES),
+        "rq_admission_expert_weight": max(float(getattr(args, "rq_admission_expert_weight", 0.0)), 0.05),
+        "mask_recall_expert_weight": max(float(getattr(args, "mask_recall_expert_weight", 0.0)), 0.05),
+        "quality_deployment_expert_weight": max(float(getattr(args, "quality_deployment_expert_weight", 0.0)), 0.05),
         "partial_component_policy": "exclude",
         "stuff_overlap_union_loss_weight": max(float(getattr(args, "stuff_overlap_union_loss_weight", 0.0)), 0.1),
-        "content_anchor_loss_weight": 0.0,
+        "content_anchor_loss_weight": max(float(getattr(args, "content_anchor_loss_weight", 0.0)), 0.05),
         "sq_rq_enabled": True,
         "sq_rq_enable_after_epoch": 1,
         "sq_rq_auto_fuse": (
@@ -9328,12 +9882,12 @@ def apply_training_preset(args: argparse.Namespace) -> dict[str, Any]:
         "sq_rq_max_semantic_loss_regression": min(
             max(float(getattr(args, "sq_rq_max_semantic_loss_regression", 0.001)), 0.0), 0.001
         ),
-        "content_seeded_queries": False,
+        "content_seeded_queries": True,
         "query_label_smoothing": 0.0,
         "sq_rq_gradient_scale": 0.0,
-        "offset_vote_enabled": False,
-        "offset_vote_loss_weight": 0.0,
-        "affinity_loss_weight": 0.0,
+        "offset_vote_enabled": True,
+        "offset_vote_loss_weight": max(float(getattr(args, "offset_vote_loss_weight", 0.0)), 0.05),
+        "affinity_loss_weight": max(float(getattr(args, "affinity_loss_weight", 0.0)), 0.02),
         "objectness_warmup_epochs": max(int(getattr(args, "objectness_warmup_epochs", 0)), 3),
         "teacher_allow_unmatched": False,
         "gradient_control": "sum" if bool(getattr(args, "quality_calibration_only", False)) else "pcgrad",
@@ -9344,7 +9898,7 @@ def apply_training_preset(args: argparse.Namespace) -> dict[str, Any]:
     }
     if args.training_preset == "production":
         required.update({
-            "branch_dropless": False,
+            "branch_dropless": True,
             "router_load_balance_loss_weight": max(float(getattr(args, "router_load_balance_loss_weight", 0.01)), 0.05),
             "router_z_loss_weight": max(float(getattr(args, "router_z_loss_weight", 0.001)), 0.001),
             "router_collapse_warmup_epochs": max(int(getattr(args, "router_collapse_warmup_epochs", 0)), 2),
@@ -9386,6 +9940,30 @@ def resolve_training_step_budget(
             "effective": int(args.lr_decay_steps),
             "source": "page_aware_planned_optimizer_steps",
         }
+    if training_preset.get("name") == "dev" and planned_total_steps > 0:
+        requested_warmup_steps = int(args.lr_warmup_steps)
+        capped_warmup_steps = max(1, min(requested_warmup_steps, max(1, planned_total_steps // 4)))
+        if capped_warmup_steps != requested_warmup_steps:
+            args.lr_warmup_steps = capped_warmup_steps
+            if int(args.lr_decay_steps) <= int(args.lr_warmup_steps):
+                args.lr_decay_steps = int(args.lr_warmup_steps) + 1
+            training_preset.setdefault("overrides", {})["lr_warmup_steps"] = {
+                "requested": requested_warmup_steps,
+                "effective": int(args.lr_warmup_steps),
+                "source": "dev_small_subset_step_budget_cap",
+            }
+        requested_objectness_warmup_epochs = int(getattr(args, "objectness_warmup_epochs", 0))
+        capped_objectness_warmup_epochs = min(
+            requested_objectness_warmup_epochs,
+            max(0, int(args.epochs) // 4),
+        )
+        if capped_objectness_warmup_epochs != requested_objectness_warmup_epochs:
+            args.objectness_warmup_epochs = capped_objectness_warmup_epochs
+            training_preset.setdefault("overrides", {})["objectness_warmup_epochs"] = {
+                "requested": requested_objectness_warmup_epochs,
+                "effective": int(args.objectness_warmup_epochs),
+                "source": "dev_small_subset_epoch_budget_cap",
+            }
     budget = {
         "source": "page_aware_jsonl_scan_v1",
         "records": sum(1 for _ in iter_jsonl(args.train, int(args.limit_records) or None)),
@@ -9614,7 +10192,14 @@ def main() -> int:
                 raise ValueError(f"new training requires {required_target_schema}")
             if first_record.get("input_schema_version") != input_protocol["input_schema_version"]:
                 raise ValueError(f"new training requires input schema {input_protocol['input_schema_version']}")
-            load_panoptic_target_arrays(first_record, args.max_tokens_per_record, training=True, num_queries=args.num_queries)
+            load_panoptic_target_arrays(
+                first_record,
+                args.max_tokens_per_record,
+                training=True,
+                num_queries=args.num_queries,
+                expected_target_schema=required_target_schema,
+                expected_input_schema=input_protocol["input_schema_version"],
+            )
         except ValueError as exc:
             target_schema_blockers.append(f"{split_name}_target_schema_invalid:{exc}")
     if target_schema_blockers:
@@ -9960,18 +10545,21 @@ def main() -> int:
         max_candidates=args.max_candidate_queries,
         feature_dim=args.candidate_feature_dim,
     ) if args.candidate_aware_queries and val_candidate_by_record else {"records": 0, "records_with_candidates": 0, "record_coverage": 0.0, "candidates": 0, "tokens_in_candidate_masks": 0}
-    if (
-        args.candidate_aware_queries
-        and int(args.max_candidate_queries) > 0
-        and int(args.candidate_feature_dim) > 0
-        and val_candidate_coverage["records"] > 0
-        and val_candidate_coverage["records_with_candidates"] == 0
-    ):
+    candidate_blockers = candidate_activation_blockers(
+        candidate_aware_queries=bool(args.candidate_aware_queries),
+        max_candidate_queries=int(args.max_candidate_queries),
+        candidate_feature_dim=int(args.candidate_feature_dim),
+        candidate_report=candidate_report,
+        val_candidate_report=val_candidate_report,
+        train_candidate_coverage=train_candidate_coverage,
+        val_candidate_coverage=val_candidate_coverage,
+    )
+    if candidate_blockers:
         payload = {
             "schema_version": "floorplancad_line_token_panoptic_moe_train_v1",
             "created_utc": utc_now(),
-            "status": "blocked_candidate_validation_coverage",
-            "blockers": ["candidate-aware validation candidate coverage is zero"],
+            "status": "blocked_candidate_activation",
+            "blockers": candidate_blockers,
             "candidate_report": candidate_report,
             "val_candidate_report": val_candidate_report,
             "train_candidate_coverage": train_candidate_coverage,
@@ -10609,6 +11197,7 @@ def main() -> int:
             router_diagnostics_b = runtime_model.last_router_diagnostics
             query_seed_diagnostics_b = getattr(runtime_model, "last_query_seed_diagnostics", None)
             family_seed_logits_b = getattr(runtime_model, "last_family_seed_logits", None)
+            component_seed_logits_b = getattr(runtime_model, "last_component_seed_logits", None)
             token_offsets_b = getattr(runtime_model, "last_token_offsets", None)
             token_affinity_b = getattr(runtime_model, "last_token_affinity_embeddings", None)
             route_logits_b = getattr(runtime_model, "last_explicit_route_logits", None)
@@ -10713,6 +11302,11 @@ def main() -> int:
                 quality_logits = quality_logits_b[batch_idx].float()
                 admission_logits = query_admission_logits_b[batch_idx].float()
                 family_seed_logits = None if family_seed_logits_b is None else family_seed_logits_b[batch_idx, :token_count].float()
+                component_seed_logits = (
+                    None
+                    if component_seed_logits_b is None
+                    else component_seed_logits_b[batch_idx, :token_count].float()
+                )
                 token_offsets = None if token_offsets_b is None else token_offsets_b[batch_idx, :token_count].float()
                 token_affinity = None if token_affinity_b is None else token_affinity_b[batch_idx, :token_count].float()
                 route_logits = None if route_logits_b is None else route_logits_b[batch_idx : batch_idx + 1, :token_count].float()
@@ -10771,10 +11365,10 @@ def main() -> int:
                     identity_ids.append(matched_ids)
                     identity_valid_rows.append(matched_valid)
                     identity_window_indices.append(parse_int(record.get("window_index"), parse_int(record.get("window_start"), 0)))
-                    identity_page_ids.append(str(record.get("original_record_id") or record.get("record_id")))
+                    identity_page_ids.append(page_record_key(record))
                 if bool(getattr(runtime_model, "typed_stuff_slots", False)):
                     stuff_union_rows.append((
-                        str(record.get("original_record_id") or record.get("record_id")),
+                        page_record_key(record),
                         parse_int(record.get("window_index"), 0),
                         torch.from_numpy(_prim_np).to(device),
                         mask_logits[int(thing_query_count):].clone(),
@@ -11233,6 +11827,13 @@ def main() -> int:
                 runtime_model.last_router_diagnostics = None
                 runtime_model.last_typed_outputs = None
                 runtime_model.last_family_seed_logits = None
+                runtime_model.last_query_admission_logits = None
+                runtime_model.last_query_objectness_logits = None
+                runtime_model.last_component_seed_logits = None
+                runtime_model.last_token_offsets = None
+                runtime_model.last_token_affinity_embeddings = None
+                runtime_model.last_explicit_route_logits = None
+                runtime_model.last_query_positions = None
             counters["optimizer_steps"] += int(bool(losses))
             counters["records_batched"] += batch_records_used
 
@@ -11256,6 +11857,8 @@ def main() -> int:
             rng=rng,
             input_level="primitive",
             num_queries=args.num_queries,
+            expected_target_schema=input_protocol["target_schema_version"],
+            expected_input_schema=input_protocol["input_schema_version"],
         )
         for record, arrays, rng_state_after_record, parse_error_type, parse_error_message in train_arrays_iter:
             rng_state_before_record = rng.getstate()
@@ -11425,6 +12028,8 @@ def main() -> int:
             candidate_by_record=val_candidate_by_record,
             max_candidate_queries=args.max_candidate_queries,
             candidate_feature_dim=args.candidate_feature_dim,
+            expected_target_schema=input_protocol["target_schema_version"],
+            expected_input_schema=input_protocol["input_schema_version"],
         )
         sq_rq_fuse_event = None
         if (
